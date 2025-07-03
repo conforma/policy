@@ -470,24 +470,34 @@ test_future_one_of_required_tasks_missing if {
 		with input.attestations as attestation_v1
 }
 
-test_required_task_from_untrusted if {
+test_future_required_tasks if {
 	attestations := _attestations_with_tasks(_expected_required_tasks - {"buildah"}, [{
 		"name": "buildah",
 		"ref": {"name": "buildah", "kind": "Task", "bundle": "registry.io/repository/unacceptable:0.1"},
 	}])
-	expected := {
-		{
-			"code": "tasks.future_required_tasks_found",
-			"msg": "Task \"conftest-clair\" is missing and will be required on 2099-01-02T00:00:00Z",
-			"term": "conftest-clair",
-		},
-		{
-			"code": "tasks.required_untrusted_task_found",
-			"msg": "Required task \"buildah\" is required and present but not from a trusted task",
-			"term": "buildah",
-		},
-	}
+	expected := {{
+		"code": "tasks.future_required_tasks_found",
+		"msg": "Task \"conftest-clair\" is missing and will be required on 2099-01-02T00:00:00Z",
+		"term": "conftest-clair",
+	}}
+
 	lib.assert_equal_results(expected, tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+		with data.trusted_tasks as _trusted_tasks
+		with input.attestations as attestations
+}
+
+test_required_task_from_untrusted if {
+	attestations := _attestations_with_tasks(_expected_required_tasks - {"buildah"}, [{
+		"name": "buildah",
+		"status": "Succeeded",
+		"ref": {"name": "buildah", "kind": "Task", "bundle": _untrusted_bundle},
+	}])
+	expected := {{
+		"code": "tasks.required_untrusted_task_found",
+		"msg": "Required task \"buildah\" is required and present but not from a trusted task",
+		"term": "buildah",
+	}}
+	lib.assert_equal_results(expected, tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 }
@@ -810,6 +820,47 @@ test_data_errors_on_pipeline_required_tasks if {
 	lib.assert_equal_results(tasks.deny, expected) with data["pipeline-required-tasks"] as pipeline_required_tasks
 }
 
+# Direct test of _missing_tasks function behavior
+test_missing_tasks_function_behavior if {
+	# Test with all required tasks present from trusted sources
+	attestations_trusted := _attestations_with_tasks(_expected_required_tasks, [])
+	missing_trusted := tasks._missing_tasks(_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
+		with input.attestations as attestations_trusted
+	lib.assert_equal(set(), missing_trusted)
+
+	# Test with some required tasks missing entirely
+	missing_tasks := {"buildah", "git-clone"}
+	attestations_missing := _attestations_with_tasks(_expected_required_tasks - missing_tasks, [])
+	missing_result := tasks._missing_tasks(_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
+		with input.attestations as attestations_missing
+	lib.assert_equal(missing_tasks, missing_result)
+
+	# Test with required tasks present but from untrusted sources
+	attestations_untrusted := _attestations_with_tasks(_expected_required_tasks, [])
+
+	# Even though all tasks are untrusted, _missing_tasks should return empty set
+	# because all required tasks are PRESENT
+	missing_untrusted := tasks._missing_tasks(_expected_required_tasks) with data.trusted_tasks as {}
+		with input.attestations as attestations_untrusted
+	lib.assert_equal(set(), missing_untrusted)
+
+	# Test mixed scenario: some tasks missing, some present but untrusted, some trusted
+	mixed_attestations := _attestations_with_tasks({"git-clone"}, [{
+		"name": "buildah",
+		"status": "Succeeded",
+		"ref": {"name": "buildah", "kind": "Task", "bundle": _untrusted_bundle},
+	}])
+
+	# Should only report the completely missing tasks, not the untrusted ones
+	expected_missing_mixed := {
+		"label-check[POLICY_NAMESPACE=required_checks]",
+		"label-check[POLICY_NAMESPACE=optional_checks]",
+	}
+	missing_mixed := tasks._missing_tasks(_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
+		with input.attestations as mixed_attestations
+	lib.assert_equal(expected_missing_mixed, missing_mixed)
+}
+
 _attestations_with_tasks(names, add_tasks) := attestations if {
 	tasks := array.concat([t | some name in names; t := _task(name)], add_tasks)
 
@@ -980,6 +1031,9 @@ _time_based_required_tasks := [
 ]
 
 _bundle := "registry.img/spam:0.1@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
+
+# regal ignore:line-length
+_untrusted_bundle := "registry.io/repository/unacceptable:0.1@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
 
 _trusted_tasks := {"oci://registry.img/spam:0.1": [{
 	"ref": "sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb",

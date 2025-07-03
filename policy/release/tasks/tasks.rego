@@ -32,37 +32,6 @@ import data.lib.json as j
 import data.lib.tekton
 
 # METADATA
-# title: All required tasks are from trusted tasks
-# description: >-
-#   Ensure that the all required tasks are resolved from trusted tasks.
-# custom:
-#   short_name: required_untrusted_task_found
-#   failure_msg: '%s is required and present but not from a trusted task'
-#   solution: >-
-#     Make sure all required tasks in the build pipeline are resolved from
-#     trusted tasks.
-#   collections:
-#   - redhat
-#   - redhat_rpms
-#   depends_on:
-#   - tasks.pipeline_has_tasks
-#
-warn contains result if {
-	some att in lib.pipelinerun_attestations
-
-	# only tasks that are not trusted
-	some untrusted_task in tekton.untrusted_task_refs(lib.tasks_from_pipelinerun)
-	some missing_required_name in _missing_tasks(current_required_tasks.tasks)
-	some untrusted_task_name in tekton.task_names(untrusted_task)
-
-	untrusted_task_name == missing_required_name
-	result := lib.result_helper_with_term(
-		rego.metadata.chain(), [_format_missing(untrusted_task_name, false)],
-		untrusted_task_name,
-	)
-}
-
-# METADATA
 # title: Required tasks list for pipeline was provided
 # description: >-
 #   Produce a warning if the required tasks list rule data was not provided.
@@ -193,6 +162,43 @@ deny contains result if {
 }
 
 # METADATA
+# title: All required tasks are from trusted tasks
+# description: >-
+#   Ensure that the all required tasks are resolved from trusted tasks.
+# custom:
+#   short_name: required_untrusted_task_found
+#   failure_msg: '%s is required and present but not from a trusted task'
+#   solution: >-
+#     Make sure all required tasks in the build pipeline are resolved from
+#     trusted tasks.
+#   collections:
+#   - redhat
+#   - redhat_rpms
+#   depends_on:
+#   - tasks.pipeline_has_tasks
+#
+deny contains result if {
+	required_task_names := current_required_tasks.tasks # e.g. [["buildah", "buildah-remote"], "clair-scan"]
+
+	# flatten into a single array of strings
+	flattened_required_tasks := flatten_list_to_sorted_array(required_task_names)
+
+	some att in lib.pipelinerun_attestations
+	some untrusted_task in tekton.untrusted_task_refs(lib.tasks_from_pipelinerun)
+
+	# Check if any untrusted task matches a required task
+	some required_task_name in flattened_required_tasks
+	some untrusted_task_name in tekton.task_names(untrusted_task)
+
+	untrusted_task_name == required_task_name
+	result := lib.result_helper_with_term(
+		rego.metadata.chain(),
+		[_format_missing(untrusted_task_name, false)],
+		untrusted_task_name,
+	)
+}
+
+# METADATA
 # title: Required tasks list was provided
 # description: >-
 #   Confirm the `required-tasks` rule data was provided, since it's
@@ -310,15 +316,13 @@ _missing_tasks(required_tasks) := {task |
 	tasks := tekton.tasks(att)
 	count(tasks) > 0
 
-	# only tasks that are trusted, i.e. tasks that have a record in the trusted_tasks data
-	trusted := [task_name |
+	tasks_in_user_pipeline := [task_name |
 		some task in tasks
-		tekton.is_trusted_task(task)
 		some task_name in tekton.task_names(task)
 	]
 
 	some required_task in required_tasks
-	some task in _any_missing(required_task, trusted)
+	some task in _any_missing(required_task, tasks_in_user_pipeline)
 }
 
 _any_missing(required, tasks) := missing if {
@@ -497,4 +501,24 @@ _required_tasks_schema := {
 		"required": ["effective_on", "tasks"],
 	},
 	"uniqueItems": true,
+}
+
+# Helper function to flatten a nested list (containing strings and arrays of strings)
+# into a single array of strings, with elements sorted and de-duplicated.
+flatten_list_to_sorted_array(input_list) := sorted_array if {
+	flat_set := {element |
+		some element in input_list
+
+		is_string(element)
+		element != ""
+	} | {element |
+		some item in input_list
+
+		is_array(item)
+		some element in item
+		is_string(element)
+		element != ""
+	}
+
+	sorted_array := sort(flat_set)
 }
