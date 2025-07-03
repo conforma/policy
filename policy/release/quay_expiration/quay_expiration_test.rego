@@ -6,9 +6,6 @@ import data.lib
 import data.quay_expiration
 
 test_ci_pipeline if {
-	# Should not produce violations when we're in a non-release pipeline
-	lib.assert_equal(false, quay_expiration._expires_label_check_applies) with data.rule_data as _rule_data_for_ci
-
 	lib.assert_empty(quay_expiration.deny) with input.image as _image_expires_none
 		with data.rule_data as _rule_data_for_ci
 
@@ -20,9 +17,6 @@ test_ci_pipeline if {
 }
 
 test_release_pipeline if {
-	# Should produce violations when we're in a release pipeline
-	lib.assert_equal(true, quay_expiration._expires_label_check_applies) with data.rule_data as _rule_data_for_release
-
 	lib.assert_empty(quay_expiration.deny) with input.image as _image_expires_none
 		with data.rule_data as _rule_data_for_release
 

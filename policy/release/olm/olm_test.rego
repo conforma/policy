@@ -421,7 +421,8 @@ mock_ec_oci_image_descriptor("registry.io/repo/msd:latest") := `{"config": {"dig
 
 test_olm_ci_pipeline if {
 	# Make sure no violations are thrown if it isn't a release pipeline
-	lib.assert_equal(false, olm._release_restrictions_apply) with data.rule_data as {"pipeline_intention": null}
+	# regal ignore:line-length
+	lib.assert_equal(false, lib.release_restrictions_apply(rego.metadata.chain())) with data.rule_data as {"pipeline_intention": null}
 }
 
 test_mock_cafe_descriptor if {

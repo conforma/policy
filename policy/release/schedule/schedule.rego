@@ -20,6 +20,9 @@ import data.lib.json as j
 #   pipeline, as determined by the value of the `pipeline_intention` rule data.
 # custom:
 #   short_name: weekday_restriction
+#   pipeline_intention:
+#   - release
+#   - production
 #   failure_msg: '%s is a disallowed weekday: %s'
 #   solution: Try again on a different weekday.
 #   collections:
@@ -27,7 +30,7 @@ import data.lib.json as j
 #   - redhat_rpms
 #
 deny contains result if {
-	_schedule_restrictions_apply
+	lib.release_restrictions_apply(rego.metadata.chain())
 	today := lower(time.weekday(lib.time.effective_current_time_ns))
 	disallowed := {lower(w) | some w in lib.rule_data("disallowed_weekdays")}
 	count(disallowed) > 0
@@ -45,6 +48,9 @@ deny contains result if {
 #   `pipeline_intention` rule data.
 # custom:
 #   short_name: date_restriction
+#   pipeline_intention:
+#   - release
+#   - production
 #   failure_msg: '%s is a disallowed date: %s'
 #   solution: Try again on a different day.
 #   collections:
@@ -52,7 +58,7 @@ deny contains result if {
 #   - redhat_rpms
 #
 deny contains result if {
-	_schedule_restrictions_apply
+	lib.release_restrictions_apply(rego.metadata.chain())
 	today := time.format([lib.time.effective_current_time_ns, "UTC", "2006-01-02"])
 	disallowed := lib.rule_data("disallowed_dates")
 	today in disallowed
@@ -77,15 +83,6 @@ deny contains result if {
 	# (For this one let's do it always)
 	some e in _rule_data_errors
 	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
-}
-
-# We want these checks to apply only if we're doing a release. Detect that by checking
-# the `pipeline_intention` value which is set to "release" or "production" for Konflux release pipelines.
-# Notably, the value "staging" is not checked here. The disallowed dates rule doesn't apply to staging releases.
-default _schedule_restrictions_apply := false
-
-_schedule_restrictions_apply if {
-	lib.rule_data("pipeline_intention") in {"release", "production"} # But not staging
 }
 
 _rule_data_errors contains error if {

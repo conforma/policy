@@ -18,7 +18,7 @@ Check if the current date is not allowed based on the rule data value from the k
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s is a disallowed date: %s`
 * Code: `schedule.date_restriction`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/schedule/schedule.rego#L38[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/schedule/schedule.rego#L41[Source, window="_blank"]
 
 [#schedule__rule_data_provided]
 === link:#schedule__rule_data_provided[Rule data provided]
@@ -30,7 +30,7 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `schedule.rule_data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/schedule/schedule.rego#L62[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/schedule/schedule.rego#L68[Source, window="_blank"]
 
 [#schedule__weekday_restriction]
 === link:#schedule__weekday_restriction[Weekday Restriction]

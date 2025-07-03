@@ -132,6 +132,10 @@ deny contains result if {
 #   the image being pulled.
 # custom:
 #   short_name: unpinned_snapshot_references
+#   pipeline_intention:
+#   - release
+#   - production
+#   - staging
 #   failure_msg: The %q image reference is not pinned in the input snapshot.
 #   solution: >-
 #     Update the input snapshot replacing the unpinned image reference with pinned image
@@ -141,7 +145,7 @@ deny contains result if {
 #   effective_on: 2024-08-15T00:00:00Z
 #
 deny contains result if {
-	_release_restrictions_apply
+	lib.release_restrictions_apply(rego.metadata.chain())
 
 	input_image = image.parse(input.image.ref)
 	components := input.snapshot.components
@@ -160,6 +164,10 @@ deny contains result if {
 #   Ensure all related image references include a digest.
 # custom:
 #   short_name: unpinned_related_images
+#   pipeline_intention:
+#   - release
+#   - production
+#   - staging
 #   failure_msg: "%d related images are not pinned with a digest: %s."
 #   solution: >-
 #     Update the related images replacing the unpinned image reference
@@ -168,7 +176,7 @@ deny contains result if {
 #   - redhat
 #
 deny contains result if {
-	_release_restrictions_apply
+	lib.release_restrictions_apply(rego.metadata.chain())
 
 	unpinned_related_images := [related |
 		some related in _related_images_not_in_snapshot
@@ -192,6 +200,10 @@ deny contains result if {
 #   Ensure that all images are accessible.
 # custom:
 #   short_name: inaccessible_related_images
+#   pipeline_intention:
+#   - release
+#   - production
+#   - staging
 #   failure_msg: The %q related image reference is not accessible.
 #   solution: >-
 #     Ensure all related images are available. The related images are defined by
@@ -202,7 +214,7 @@ deny contains result if {
 #   effective_on: 2025-03-10T00:00:00Z
 #
 deny contains result if {
-	_release_restrictions_apply
+	lib.release_restrictions_apply(rego.metadata.chain())
 
 	some unmatched_image in _related_images_not_in_snapshot
 	unmatched_ref := _image_ref(unmatched_image)
@@ -255,6 +267,10 @@ deny contains result if {
 #   already.
 # custom:
 #   short_name: unmapped_references
+#   pipeline_intention:
+#   - release
+#   - production
+#   - staging
 #   failure_msg: The %q CSV image reference is not in the snapshot or accessible.
 #   solution: >-
 #     Add the missing image to the snapshot or check if the CSV pullspec
@@ -263,7 +279,7 @@ deny contains result if {
 #   - redhat
 #   effective_on: 2024-08-15T00:00:00Z
 deny contains result if {
-	_release_restrictions_apply
+	lib.release_restrictions_apply(rego.metadata.chain())
 
 	snapshot_components := input.snapshot.components
 	component_images_digests := [component_image.digest |
@@ -567,13 +583,6 @@ _subscriptions_errors contains error if {
 }
 
 _subscription_annotation := "operators.openshift.io/valid-subscription"
-
-# We want these checks to apply only if we're doing a release.
-default _release_restrictions_apply := false
-
-_release_restrictions_apply if {
-	lib.rule_data("pipeline_intention") in {"release", "production", "staging"}
-}
 
 # Used by allowed_registries
 _image_registry_allowed(image_repo, allowed_prefixes) if {
