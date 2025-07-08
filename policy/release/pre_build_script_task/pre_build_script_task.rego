@@ -118,12 +118,18 @@ deny contains result if {
 _pre_build_script_runner_image_param := "SCRIPT_RUNNER_IMAGE"
 
 _image_ref_permitted(image_ref) if {
-	allowed_prefixes := lib.rule_data(_rule_data_allowed_registries_key)
+	# Let's permit runner images that match the allow lists in either of these
+	allowed_prefixes := array.concat(
+		lib.rule_data(_rule_data_allowed_registries_key),
+		lib.rule_data(_rule_data_allowed_step_image_registries_key),
+	)
 	some allowed_prefix in allowed_prefixes
 	startswith(image_ref, allowed_prefix)
 }
 
 _rule_data_allowed_registries_key := "allowed_registry_prefixes"
+
+_rule_data_allowed_step_image_registries_key := "allowed_step_image_registry_prefixes"
 
 _script_runner_image_refs := [image_ref |
 	some attestation in lib.pipelinerun_attestations
