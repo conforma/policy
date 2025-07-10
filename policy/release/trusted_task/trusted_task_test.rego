@@ -115,30 +115,30 @@ test_trusted_violation if {
 	expected := {
 		{
 			"code": "trusted_task.trusted",
-			"msg": `Pipeline task "crook-p" uses an untrusted task reference, oci://registry.local/crook:1.0@sha256:digest`,
+			"msg": `PipelineTask "crook-p" uses an untrusted task reference: oci://registry.local/crook:1.0@sha256:digest`,
 			"term": "crook",
 		},
 		{
 			"code": "trusted_task.trusted",
 			# regal ignore:line-length
-			"msg": `Pipeline task "expired-honest-abe-p" uses an untrusted task reference, git+git.local/repo.git//tasks/honest-abe.yaml@26ef630394794f28142224295851a45eea5c63ae`,
+			"msg": `PipelineTask "expired-honest-abe-p" uses an untrusted task reference: git+git.local/repo.git//tasks/honest-abe.yaml@26ef630394794f28142224295851a45eea5c63ae. Please upgrade the task version to: 48df630394794f28142224295851a45eea5c63ae`,
 			"term": "honest-abe",
 		},
 		{
 			"code": "trusted_task.trusted",
 			# regal ignore:line-length
-			"msg": `Pipeline task "expired-trusty-p" uses an untrusted task reference, oci://registry.local/trusty:1.0@sha256:expired-digest`,
+			"msg": `PipelineTask "expired-trusty-p" uses an untrusted task reference: oci://registry.local/trusty:1.0@sha256:expired-digest. Please upgrade the task version to: sha256:digest`,
 			"term": "trusty",
 		},
 		{
 			# regal ignore:line-length
-			"code": "trusted_task.trusted", "msg": `Pipeline task "inlined-p" uses an untrusted task reference, <UNKNOWN>@<INLINED>`,
+			"code": "trusted_task.trusted", "msg": `PipelineTask "inlined-p" uses an untrusted task reference: <UNKNOWN>@<INLINED>`,
 			"term": "<NAMELESS>",
 		},
 		{
 			"code": "trusted_task.trusted",
 			# regal ignore:line-length
-			"msg": `Pipeline task "untrusted-lawless-p" uses an untrusted task reference, git+git.local/repo.git//tasks/lawless.yaml@37ef630394794f28142224295851a45eea5c63ae`,
+			"msg": `PipelineTask "untrusted-lawless-p" uses an untrusted task reference: git+git.local/repo.git//tasks/lawless.yaml@37ef630394794f28142224295851a45eea5c63ae`,
 			"term": "lawless",
 		},
 	}

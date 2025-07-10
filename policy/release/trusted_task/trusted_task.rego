@@ -252,19 +252,13 @@ _trust_errors contains error if {
 
 	some untrusted_task in tekton.untrusted_task_refs(chain)
 
-	error := _format_trust_error(untrusted_task, dependency_chain)
+	error := _format_trust_error_ta(untrusted_task, dependency_chain)
 }
 
 _trust_errors contains error if {
 	not _uses_trusted_artifacts
-	some task in tekton.untrusted_task_refs(lib.tasks_from_pipelinerun)
-	error := {
-		"msg": sprintf(
-			"Pipeline task %q uses an untrusted task reference, %s",
-			[tekton.pipeline_task_name(task), _task_info(task)],
-		),
-		"term": tekton.task_name(task),
-	}
+	some untrusted_task in tekton.untrusted_task_refs(lib.tasks_from_pipelinerun)
+	error := _format_trust_error(untrusted_task)
 }
 
 _artifact_chain[attestation][name] := dependencies if {
@@ -361,7 +355,7 @@ _digests_from_values(values) := {digest |
 	some digest in regex.find_n(pattern, value, -1)
 }
 
-_format_trust_error(task, dependency_chain) := error if {
+_format_trust_error_ta(task, dependency_chain) := error if {
 	latest_trusted_ref := tekton.latest_trusted_ref(task)
 	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
 	untrusted_task_name := tekton.task_name(task)
@@ -382,6 +376,34 @@ _format_trust_error(task, dependency_chain) := error if {
 		"msg": sprintf(
 			"Code tampering detected, untrusted PipelineTask %q (Task %q) was included in build chain comprised of: %s",
 			[untrusted_pipeline_task_name, untrusted_task_name, concat(", ", dependency_chain)],
+		),
+		"term": untrusted_task_name,
+	}
+}
+
+_format_trust_error(task) := error if {
+	latest_trusted_ref := tekton.latest_trusted_ref(task)
+	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
+	untrusted_task_name := tekton.task_name(task)
+	untrusted_task_info := _task_info(task)
+
+	error := {
+		"msg": sprintf(
+			# regal ignore:line-length
+			"PipelineTask %q uses an untrusted task reference: %s. Please upgrade the task version to: %s",
+			[untrusted_pipeline_task_name, untrusted_task_info, latest_trusted_ref],
+		),
+		"term": untrusted_task_name,
+	}
+} else := error if {
+	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
+	untrusted_task_name := tekton.task_name(task)
+	untrusted_task_info := _task_info(task)
+
+	error := {
+		"msg": sprintf(
+			"PipelineTask %q uses an untrusted task reference: %s",
+			[untrusted_pipeline_task_name, untrusted_task_info],
 		),
 		"term": untrusted_task_name,
 	}
