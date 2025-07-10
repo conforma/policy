@@ -510,8 +510,8 @@ github.com/codahale/rfc6979 v0.0.0-20141003034818-6a90f24967eb h1:EDmT6Q9Zs+SbUo
 github.com/codahale/rfc6979 v0.0.0-20141003034818-6a90f24967eb/go.mod h1:ZjrT6AXHbDs86ZSdt/osfBi5qfexBrKUdONk989Wnk4=
 github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be h1:J5BL2kskAlV9ckgEsNQXscjIaLiOYiZ75d4e94E6dcQ=
 github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be/go.mod h1:mk5IQ+Y0ZeO87b858TlA645sVcEcbiX6YqP98kt+7+w=
-github.com/conforma/cli v0.7.101 h1:CMvYi6QXg5FJh1i41DZGp9NCR8knlVFTb/yfPfH6SeI=
-github.com/conforma/cli v0.7.101/go.mod h1:L8uDqCxr5r0GfjxBtMm73S4GrTm+lSaLd1ChfOWbH8o=
+github.com/conforma/cli v0.7.109 h1:WmqFhiQVbS8d4+tABidUmxQTDXYNiAGYP4ZpY0t1NR0=
+github.com/conforma/cli v0.7.109/go.mod h1:7WTOW9MjZgi1y08i4MC1SzFgmIaDZXF1vYQ2WbvHQag=
 github.com/conforma/go-gather v1.0.2 h1:385cOcDpMxA7JpccMdbQOLIPsagQtDRAnSqZc1YTetI=
 github.com/conforma/go-gather v1.0.2/go.mod h1:e2yxUmy6KWE9+4mCcB0Vpk4CAHkvk21ktrq1m79BIyA=
 github.com/containerd/cgroups v1.1.0 h1:v8rEWFl6EoqHB+swVNjVoCJE8o3jX7e8nqBGPLaDFBM=
