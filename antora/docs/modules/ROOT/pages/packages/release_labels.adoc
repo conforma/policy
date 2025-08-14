@@ -66,7 +66,7 @@ The parent image config is not accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Image config of the image %q, parent of image %q is inaccessible`
 * Code: `labels.inaccessible_parent_config`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L199[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L200[Source, window="_blank"]
 
 [#labels__inaccessible_parent_manifest]
 === link:#labels__inaccessible_parent_manifest[Inaccessible parent image manifest]

@@ -192,6 +192,7 @@ deny contains result if {
 #   - redhat
 #
 deny contains result if {
+	_has_parent
 	is_null(_parent.manifest)
 	result := lib.result_helper(rego.metadata.chain(), [_parent.ref, input.image.ref])
 }
@@ -210,6 +211,7 @@ deny contains result if {
 #   - redhat
 #
 deny contains result if {
+	_has_parent
 	parent_ref := image.parse(_parent.ref)
 	is_null(_config(parent_ref.repo, _parent.manifest))
 	result := lib.result_helper(rego.metadata.chain(), [_parent.ref, input.image.ref])
@@ -235,11 +237,24 @@ _image_labels := labels if {
 	}
 }
 
+_has_parent if {
+	image_manifest := ec.oci.image_manifest(input.image.ref)
+
+	raw_name := image_manifest.annotations["org.opencontainers.image.base.name"]
+	raw_name != ""
+
+	digest := image_manifest.annotations["org.opencontainers.image.base.digest"]
+	digest != ""
+}
+
 _parent := {"ref": ref, "manifest": manifest, "config": config} if {
 	image_manifest := ec.oci.image_manifest(input.image.ref)
 
 	raw_name := image_manifest.annotations["org.opencontainers.image.base.name"]
+	raw_name != ""
+
 	digest := image_manifest.annotations["org.opencontainers.image.base.digest"]
+	digest != ""
 
 	# Sometimes the name annotation is a ref including a digest, likely the
 	# digest of the image index. Make sure that digest gets removed.

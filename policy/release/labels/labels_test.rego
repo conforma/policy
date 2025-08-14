@@ -403,7 +403,7 @@ test_parent_image_manifest_inaccessible if {
 	ref := _test_ref_patches(array.concat(
 		_add_annotations({
 			"org.opencontainers.image.base.name": "fail",
-			"org.opencontainers.image.base.digest": "",
+			"org.opencontainers.image.base.digest": "fake_digest",
 		}),
 		[_config(_add_labels({
 			"name": "test-image",
@@ -415,7 +415,7 @@ test_parent_image_manifest_inaccessible if {
 
 	expected := {{
 		"code": "labels.inaccessible_parent_manifest",
-		"msg": sprintf(`Manifest of the image "fail@", parent of image %q is inaccessible`, [ref]),
+		"msg": sprintf(`Manifest of the image "fail@fake_digest", parent of image %q is inaccessible`, [ref]),
 	}}
 
 	lib.assert_equal_results(labels.deny, expected) with input.image.ref as ref
