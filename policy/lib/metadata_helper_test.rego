@@ -8,7 +8,6 @@ test_rule_annotations_with_annotations if {
 	rule_annotations := {"custom": {
 		"short_name": "TestRule",
 		"failure_msg": "Test failure message",
-		"pipeline_intention": ["build", "test"],
 	}}
 
 	chain := [
@@ -49,100 +48,6 @@ test_rule_annotations_single_entry_chain if {
 	chain := [{"annotations": rule_annotations, "path": ["data", "single", "deny"]}]
 
 	lib.assert_equal(rule_annotations, lib._rule_annotations(chain))
-}
-
-test_pipeline_intention_match_with_matching_intention if {
-	rule_annotations := {"custom": {
-		"short_name": "TestRule",
-		"pipeline_intention": ["build", "release", "test"],
-	}}
-
-	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
-
-	# When rule_data("pipeline_intention") matches one of the pipeline_intention values
-	lib.assert_equal(true, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
-}
-
-test_pipeline_intention_match_with_non_matching_intention if {
-	rule_annotations := {"custom": {
-		"short_name": "TestRule",
-		"pipeline_intention": ["build", "test"],
-	}}
-
-	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
-
-	# When rule_data("pipeline_intention") doesn't match any of the pipeline_intention values
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
-}
-
-test_pipeline_intention_match_with_empty_pipeline_intention if {
-	rule_annotations := {"custom": {
-		"short_name": "TestRule",
-		"pipeline_intention": [],
-	}}
-
-	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
-
-	# When pipeline_intention is an empty list, should return false
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
-}
-
-test_pipeline_intention_match_without_pipeline_intention_field if {
-	rule_annotations := {"custom": {
-		"short_name": "TestRule",
-		"failure_msg": "Some failure message",
-	}}
-
-	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
-
-	# When pipeline_intention field is missing, should return false
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
-}
-
-test_pipeline_intention_match_without_custom_field if {
-	rule_annotations := {"other": {"some_field": "value"}}
-
-	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
-
-	# When custom field is missing, should return false
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
-}
-
-test_pipeline_intention_match_with_null_rule_data if {
-	rule_annotations := {"custom": {
-		"short_name": "TestRule",
-		"pipeline_intention": ["build", "release", "test"],
-	}}
-
-	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
-
-	# When rule_data("pipeline_intention") is null, should return false
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as null
-}
-
-test_pipeline_intention_match_with_multiple_matching_intentions if {
-	rule_annotations := {"custom": {
-		"short_name": "TestRule",
-		"pipeline_intention": ["build", "release", "production", "test"],
-	}}
-
-	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
-
-	# When rule_data("pipeline_intention") matches one of multiple pipeline_intention values
-	lib.assert_equal(true, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "production"
-}
-
-test_pipeline_intention_match_case_sensitivity if {
-	rule_annotations := {"custom": {
-		"short_name": "TestRule",
-		"pipeline_intention": ["Build", "Release"],
-	}}
-
-	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
-
-	# Case sensitivity should be preserved
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
-	lib.assert_equal(true, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "Release"
 }
 
 test_result_helper if {

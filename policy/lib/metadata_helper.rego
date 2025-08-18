@@ -10,10 +10,6 @@ import data.lib.time as time_lib
 # custom.short_name must be present.
 _rule_annotations(chain) := chain[0].annotations
 
-pipeline_intention_match(chain) if {
-	rule_data("pipeline_intention") in _rule_annotations(chain).custom.pipeline_intention
-} else := false
-
 result_helper(chain, failure_sprintf_params) := result if {
 	with_collections := {"collections": _rule_annotations(chain).custom.collections}
 	result := object.union(_basic_result(chain, failure_sprintf_params), with_collections)

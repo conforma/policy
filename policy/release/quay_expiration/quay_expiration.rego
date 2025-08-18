@@ -17,16 +17,14 @@ import data.lib
 # title: Expires label
 # description: >-
 #   Check the image metadata for the presence of a "quay.expires-after"
-#   label. If it's present then produce a violation. This check is enforced
-#   only for a "release", "production", or "staging" pipeline, as determined by
-#   the value of the `pipeline_intention` rule data.
+#   label. If it's present then produce a violation.
 # custom:
 #   short_name: expires_label
 #   pipeline_intention:
 #   - release
 #   - production
 #   - staging
-#   failure_msg: The label 'quay.expires-after' is not allowed in the released image
+#   failure_msg: The label 'quay.expires-after' is not allowed
 #   solution: >-
 #     Make sure the image is built without setting the "quay.expires-after" label. This
 #     label is usually set if the container image was built by an "on-pr" pipeline
@@ -35,8 +33,6 @@ import data.lib
 #   - redhat
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
-
 	# This is where we can access the image labels
 	some label_name, label_value in input.image.config.Labels
 

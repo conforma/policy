@@ -16,8 +16,7 @@ import data.lib.json as j
 # description: >-
 #   Check if the current weekday is allowed based on the rule data value from the key
 #   `disallowed_weekdays`. By default, the list is empty in which case *any* weekday is
-#   allowed. This check is enforced only for a "release" or "production"
-#   pipeline, as determined by the value of the `pipeline_intention` rule data.
+#   allowed.
 # custom:
 #   short_name: weekday_restriction
 #   pipeline_intention:
@@ -30,7 +29,6 @@ import data.lib.json as j
 #   - redhat_rpms
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
 	today := lower(time.weekday(lib.time.effective_current_time_ns))
 	disallowed := {lower(w) | some w in lib.rule_data("disallowed_weekdays")}
 	count(disallowed) > 0
@@ -43,9 +41,7 @@ deny contains result if {
 # description: >-
 #   Check if the current date is not allowed based on the rule data value
 #   from the key `disallowed_dates`. By default, the list is empty in which
-#   case *any* day is allowed. This check is enforced only for a "release" or
-#   "production" pipeline, as determined by the value of the
-#   `pipeline_intention` rule data.
+#   case *any* day is allowed.
 # custom:
 #   short_name: date_restriction
 #   pipeline_intention:
@@ -58,7 +54,6 @@ deny contains result if {
 #   - redhat_rpms
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
 	today := time.format([lib.time.effective_current_time_ns, "UTC", "2006-01-02"])
 	disallowed := lib.rule_data("disallowed_dates")
 	today in disallowed
