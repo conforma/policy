@@ -349,7 +349,6 @@ test_unpinned_snapshot_references_operator if {
 		"term": "registry.io/repo/msd:no_digest",
 	}}
 	lib.assert_equal_results(olm.deny, expected) with input.snapshot.components as [unpinned_component, component1]
-		with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with ec.oci.image_manifest as `{"config": {"digest": "sha256:goat"}}`
 		with input.image.ref as unpinned_component.containerImage
@@ -357,7 +356,6 @@ test_unpinned_snapshot_references_operator if {
 
 test_unpinned_snapshot_references_different_input if {
 	lib.assert_empty(olm.deny) with input.snapshot.components as [unpinned_component]
-		with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with ec.oci.image_manifest as `{"config": {"digest": "sha256:goat"}}`
 		with input.image.ref as pinned2
@@ -372,7 +370,7 @@ test_unmapped_references_in_operator if {
 
 	lib.assert_equal_results(olm.deny, expected) with input.snapshot.components as [component1]
 		with input.image.files as {"manifests/csv.yaml": manifest}
-		with data.rule_data as {"pipeline_intention": "release", "allowed_olm_image_registry_prefixes": ["registry.io"]}
+		with data.rule_data as {"allowed_olm_image_registry_prefixes": ["registry.io"]}
 		with ec.oci.image_manifest as _mock_image_partial
 		with ec.oci.descriptor as mock_ec_oci_image_descriptor
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
@@ -384,8 +382,7 @@ test_unpinned_related_images if {
 		"msg": "2 related images are not pinned with a digest: registry.io/repo/msd:latest, registry.io/repo/msd:latest.",
 	}}
 
-	lib.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
-		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+	lib.assert_equal_results(olm.deny, expected_deny) with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"] # regal ignore:line-length
 		with input.snapshot.components as [component0]
 		with input.attestations as _with_related_images
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
@@ -401,8 +398,7 @@ test_inaccessible_related_images if {
 		"term": "registry.io/repository/image2@sha256:tea",
 	}}
 
-	lib.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
-		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+	lib.assert_equal_results(olm.deny, expected_deny) with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"] # regal ignore:line-length
 		with input.snapshot.components as [component1]
 		with input.attestations as _with_related_images
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
@@ -419,12 +415,6 @@ mock_ec_oci_image_descriptor("registry.io/repository/image2@sha256:tea") := fals
 
 mock_ec_oci_image_descriptor("registry.io/repo/msd:latest") := `{"config": {"digest": ""}}`
 
-test_olm_ci_pipeline if {
-	# Make sure no violations are thrown if it isn't a release pipeline
-	# regal ignore:line-length
-	lib.assert_equal(false, lib.pipeline_intention_match(rego.metadata.chain())) with data.rule_data as {"pipeline_intention": null}
-}
-
 test_mock_cafe_descriptor if {
 	# Test case that uses the mock_ec_oci_image_descriptor for cafe image
 	expected := `{"config": {"digest": "sha256:cafe"}}`
@@ -440,8 +430,7 @@ test_unmapped_references_none_found if {
 
 test_allowed_registries if {
 	# This should pass since registry.io is a member of allowed_olm_image_registry_prefixes
-	lib.assert_empty(olm.deny) with data.rule_data.pipeline_intention as "release"
-		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io", "registry.redhat.io"]
+	lib.assert_empty(olm.deny) with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io", "registry.redhat.io"] # regal ignore:line-length
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with input.image.files as {"manifests/csv.yaml": manifest}
 }
@@ -455,8 +444,7 @@ test_bundle_image_index if {
 		"term": "registry.io/repository/image@sha256:cafe",
 	}}
 
-	lib.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
-		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io", "registry.redhat.io"]
+	lib.assert_equal_results(olm.deny, expected_deny) with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io", "registry.redhat.io"] # regal ignore:line-length
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with input.image.files as {"manifests/csv.yaml": manifest}
 		with input.image.ref as pinned1
@@ -480,8 +468,7 @@ test_unallowed_registries if {
 	}
 
 	# This expects failure as registry.io is not a member of allowed_olm_image_registry_prefixes
-	lib.assert_equal_results(olm.deny, expected) with data.rule_data.pipeline_intention as "release"
-		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.access.redhat.com", "registry.redhat.io"]
+	lib.assert_equal_results(olm.deny, expected) with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.access.redhat.com", "registry.redhat.io"] # regal ignore:line-length
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with input.image.files as {"manifests/csv.yaml": manifest}
 }
@@ -506,8 +493,7 @@ test_allowed_registries_related if {
 		},
 	}
 
-	lib.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
-		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.access.redhat.com", "registry.redhat.io"]
+	lib.assert_equal_results(olm.deny, expected_deny) with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.access.redhat.com", "registry.redhat.io"] # regal ignore:line-length
 		with input.snapshot.components as [component1, component2, component3]
 		with input.attestations as _with_related_images
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"

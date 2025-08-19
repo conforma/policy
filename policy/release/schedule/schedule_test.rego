@@ -81,8 +81,7 @@ test_date_restriction if {
 		with data.config.policy.when_ns as time.parse_rfc3339_ns("2024-02-03T00:00:00Z")
 }
 
-test_pipeline_intention if {
-	# With pipeline intention set to "release" we get a violation
+test_schedule_restriction if {
 	release_weekday_data := weekday_rule_data(["monday"])
 	monday_violation := {{
 		"code": "schedule.weekday_restriction",
@@ -98,23 +97,6 @@ test_pipeline_intention if {
 		"msg": "2024-05-12 is a disallowed date: 2024-05-12",
 	}}
 	lib.assert_equal_results(schedule.deny, violation) with data.rule_data as release_date_data
-		with data.config.policy.when_ns as rfc_date
-
-	# Without pipeline intention set to "release" we do not get a violation
-	build_weekday_data := object.union(release_weekday_data, {"pipeline_intention": null})
-	lib.assert_empty(schedule.deny) with data.rule_data as build_weekday_data
-		with data.config.policy.when_ns as monday
-
-	spam_weekday_data := object.union(release_weekday_data, {"pipeline_intention": "spam"})
-	lib.assert_empty(schedule.deny) with data.rule_data as spam_weekday_data
-		with data.config.policy.when_ns as monday
-
-	build_date_data := object.union(release_date_data, {"pipeline_intention": null})
-	lib.assert_empty(schedule.deny) with data.rule_data as build_date_data
-		with data.config.policy.when_ns as rfc_date
-
-	spam_date_data := object.union(release_date_data, {"pipeline_intention": "spam"})
-	lib.assert_empty(schedule.deny) with data.rule_data as spam_date_data
 		with data.config.policy.when_ns as rfc_date
 }
 
@@ -219,11 +201,8 @@ saturday := _rfc_time_helper("2023-01-07")
 
 _rfc_time_helper(date_string) := time.parse_rfc3339_ns(sprintf("%sT00:00:00Z", [date_string]))
 
-weekday_rule_data(disallowed_weekdays) := _rule_data_helper("disallowed_weekdays", disallowed_weekdays, "release")
+weekday_rule_data(disallowed_weekdays) := _rule_data_helper("disallowed_weekdays", disallowed_weekdays)
 
-date_rule_data(disallowed_dates) := _rule_data_helper("disallowed_dates", disallowed_dates, "release")
+date_rule_data(disallowed_dates) := _rule_data_helper("disallowed_dates", disallowed_dates)
 
-_rule_data_helper(disallowed_key, disallowed_values, pipeline_intention) := {
-	"pipeline_intention": pipeline_intention,
-	disallowed_key: disallowed_values,
-}
+_rule_data_helper(disallowed_key, disallowed_values) := {disallowed_key: disallowed_values}

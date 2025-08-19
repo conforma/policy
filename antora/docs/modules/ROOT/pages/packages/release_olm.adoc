@@ -43,7 +43,7 @@ Each image referenced by the OLM bundle should match an entry in the list of pre
 * FAILURE message: `The %q CSV image reference is not from an allowed registry.`
 * Code: `olm.allowed_registries`
 * Effective from: `2024-09-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L304[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L296[Source, window="_blank"]
 
 [#olm__olm_bundle_multi_arch]
 === link:#olm__olm_bundle_multi_arch[OLM bundle images are not multi-arch]
@@ -56,7 +56,7 @@ OLM bundle images should be built for a single architecture. They should not be 
 * FAILURE message: `The %q bundle image is a multi-arch reference.`
 * Code: `olm.olm_bundle_multi_arch`
 * Effective from: `2025-5-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L337[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L329[Source, window="_blank"]
 
 [#olm__allowed_registries_related]
 === link:#olm__allowed_registries_related[Related images references are from allowed registries]
@@ -69,7 +69,7 @@ Each image indicated as a related image should match an entry in the list of pre
 * FAILURE message: `The %q related image reference is not from an allowed registry.`
 * Code: `olm.allowed_registries_related`
 * Effective from: `2025-04-15T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L230[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L224[Source, window="_blank"]
 
 [#olm__required_olm_features_annotations_provided]
 === link:#olm__required_olm_features_annotations_provided[Required OLM feature annotations list provided]
@@ -105,7 +105,7 @@ Check the input image for the presence of related images. Ensure that all images
 * FAILURE message: `The %q related image reference is not accessible.`
 * Code: `olm.inaccessible_related_images`
 * Effective from: `2025-03-10T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L196[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L192[Source, window="_blank"]
 
 [#olm__unmapped_references]
 === link:#olm__unmapped_references[Unmapped images in OLM bundle]
@@ -118,7 +118,7 @@ Check the OLM bundle image for the presence of unmapped image references. Unmapp
 * FAILURE message: `The %q CSV image reference is not in the snapshot or accessible.`
 * Code: `olm.unmapped_references`
 * Effective from: `2024-08-15T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L260[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L254[Source, window="_blank"]
 
 [#olm__unpinned_references]
 === link:#olm__unpinned_references[Unpinned images in OLM bundle]
@@ -155,4 +155,4 @@ Check the input image for the presence of related images. Ensure all related ima
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%d related images are not pinned with a digest: %s.`
 * Code: `olm.unpinned_related_images`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L160[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L158[Source, window="_blank"]

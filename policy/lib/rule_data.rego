@@ -95,11 +95,6 @@ rule_data_defaults := {
 		"buildah",
 		"run-script-oci-ta",
 	],
-	# This will be set to "release" in Konflux release pipelines defined at
-	# https://github.com/konflux-ci/release-service-catalog/tree/development/pipelines
-	# Some checks are influenced by this value. Let's use null as a default instead
-	# of the usual empty list.
-	"pipeline_intention": null,
 	# The big list of trusted_tasks (from the acceptable tasks bundle) is at
 	# data.trusted_tasks but we want to allow people to add their own trusted_tasks
 	# using the ruleData key. Make this default to an empty dict so we can conveniently
