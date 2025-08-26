@@ -145,8 +145,6 @@ deny contains result if {
 #   effective_on: 2024-08-15T00:00:00Z
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
-
 	input_image = image.parse(input.image.ref)
 	components := input.snapshot.components
 	some component in components
@@ -176,8 +174,6 @@ deny contains result if {
 #   - redhat
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
-
 	unpinned_related_images := [related |
 		some related in _related_images_not_in_snapshot
 
@@ -214,8 +210,6 @@ deny contains result if {
 #   effective_on: 2025-03-10T00:00:00Z
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
-
 	some unmatched_image in _related_images_not_in_snapshot
 	unmatched_ref := _image_ref(unmatched_image)
 
@@ -279,8 +273,6 @@ deny contains result if {
 #   - redhat
 #   effective_on: 2024-08-15T00:00:00Z
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
-
 	snapshot_components := input.snapshot.components
 	component_images_digests := [component_image.digest |
 		some component in snapshot_components
