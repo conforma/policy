@@ -4,7 +4,7 @@ go 1.24.2
 
 require (
 	github.com/conforma/cli v0.7.109
-	github.com/google/addlicense v1.1.1
+	github.com/google/addlicense v1.2.0
 	github.com/open-policy-agent/conftest v0.55.0
 	github.com/styrainc/regal v0.29.2
 	github.com/tektoncd/cli v0.39.1
