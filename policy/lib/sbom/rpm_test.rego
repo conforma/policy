@@ -103,7 +103,7 @@ _spdx_package(purl, annotations) := {
 	"annotations": annotations,
 	"externalRefs": [{
 		"referenceType": "purl",
-		"referenceCategory": "PACKAGE-MANAGER",
+		"referenceCategory": "PACKAGE_MANAGER",
 		"referenceLocator": purl,
 	}],
 }

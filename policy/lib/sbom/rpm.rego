@@ -25,7 +25,7 @@ rpms_from_sbom(s) := entities if {
 		some pkg in s.packages
 		some ref in pkg.externalRefs
 		ref.referenceType == "purl"
-		ref.referenceCategory == "PACKAGE-MANAGER"
+		ref.referenceCategory in {"PACKAGE_MANAGER", "PACKAGE-MANAGER"}
 		purl := ref.referenceLocator
 		_is_rpmish(purl)
 		entity := {

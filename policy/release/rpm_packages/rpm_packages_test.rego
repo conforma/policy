@@ -120,16 +120,17 @@ _mock_blob(`"registry.local/cyclonedx-2@sha256:cyclonedx-2-digest"`) := json.mar
 _mock_blob(`"registry.local/spdx-1@sha256:spdx-1-digest"`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
-		"referenceCategory": "PACKAGE-MANAGER",
+		"referenceCategory": "PACKAGE_MANAGER",
 		"referenceLocator": "pkg:rpm/redhat/spam@1.0.0-1",
 	}]},
 	{"externalRefs": [{
 		"referenceType": "purl",
-		"referenceCategory": "PACKAGE-MANAGER",
+		"referenceCategory": "PACKAGE_MANAGER",
 		"referenceLocator": "pkg:rpm/redhat/bacon@1.0.0-2",
 	}]},
 	{"externalRefs": [{
 		"referenceType": "purl",
+		# Intentionally different since we match both PACKAGE_MANAGER and PACKAGE-MANAGER
 		"referenceCategory": "PACKAGE-MANAGER",
 		"referenceLocator": "pkg:rpm/redhat/ham@4.2.0-0",
 	}]},
@@ -138,16 +139,17 @@ _mock_blob(`"registry.local/spdx-1@sha256:spdx-1-digest"`) := json.marshal({"pac
 _mock_blob(`"registry.local/spdx-2@sha256:spdx-2-digest"`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
-		"referenceCategory": "PACKAGE-MANAGER",
+		"referenceCategory": "PACKAGE_MANAGER",
 		"referenceLocator": "pkg:rpm/redhat/spam@1.0.0-2",
 	}]},
 	{"externalRefs": [{
 		"referenceType": "purl",
-		"referenceCategory": "PACKAGE-MANAGER",
+		"referenceCategory": "PACKAGE_MANAGER",
 		"referenceLocator": "pkg:rpm/redhat/bacon@1.0.0-2",
 	}]},
 	{"externalRefs": [{
 		"referenceType": "purl",
+		# Intentionally different since we match both PACKAGE_MANAGER and PACKAGE-MANAGER
 		"referenceCategory": "PACKAGE-MANAGER",
 		"referenceLocator": "pkg:rpm/redhat/eggs@4.2.0-0",
 	}]},
