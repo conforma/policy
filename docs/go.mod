@@ -2,7 +2,7 @@ module github.com/enterprise-contract/ec-policies/docs
 
 go 1.22.7
 
-require github.com/open-policy-agent/opa v0.68.0
+require github.com/open-policy-agent/opa v1.4.0
 
 require (
 	github.com/OneOfOne/xxhash v1.2.8 // indirect
