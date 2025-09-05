@@ -11,10 +11,10 @@ Rules used to verify different properties of specific RPM packages found in the 
 [#rpm_packages__unique_version]
 === link:#rpm_packages__unique_version[Unique Version]
 
-Check if there is more than one version of the same RPM installed across different architectures. This check only applies for Image Indexes, aka multi-platform images. Use the `non_unique_rpm_names` rule data key to ignore certain RPMs.
+Check if a multi-arch build has the same RPM versions installed across each different architecture. This check only applies for Image Indexes, aka multi-platform images. Use the `non_unique_rpm_names` rule data key to ignore certain RPMs.
 
 * Rule type: [rule-type-indicator failure]#FAILURE#
-* FAILURE message: `Multiple versions of the %q RPM were found: %s`
+* FAILURE message: `Mismatched versions of the %q RPM were found across different arches. %s`
 * Code: `rpm_packages.unique_version`
 * Effective from: `2025-10-01T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_packages/rpm_packages.rego#L17[Source, window="_blank"]
