@@ -31,11 +31,6 @@ import data.lib.tekton
 deny contains result if {
 	image.is_image_index(input.image.ref)
 
-	# Arguably this is a weird edge case that should be dealt with by changing
-	# the build to not be multi-arch. But this avoids producing a confusing and
-	# not useful violation in some cases.
-	not _is_single_image_index(input.image.ref)
-
 	some name in rpm_names_with_mismatched_nvr_sets
 	not name in lib.rule_data("non_unique_rpm_names")
 
@@ -111,10 +106,3 @@ all_rpms_by_name_and_platform[rpm_name][platform] contains nvr if {
 	# RPM terms, hence this is the name-version-release, aka the nvr
 	nvr := sprintf("%s-%s", [rpm_name, rpm_version])
 }
-
-# For detecting image indexes with just a single image in them.
-# (I don't think there are any valid reasons for these to exist)
-_is_single_image_index(ref) if {
-   index := ec.oci.image_index(ref)
-   count(index.manifests) == 1
-} else := false
