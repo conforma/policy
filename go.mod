@@ -3,12 +3,12 @@ module github.com/enterprise-contract/ec-policies
 go 1.22.5
 
 require (
-	github.com/enterprise-contract/ec-cli v0.5.128
+	github.com/enterprise-contract/ec-cli v0.5.144
 	github.com/google/addlicense v1.1.1
 	github.com/open-policy-agent/conftest v0.55.0
 	github.com/styrainc/regal v0.25.0
-	github.com/tektoncd/cli v0.38.0
-	oras.land/oras v1.2.0
+	github.com/tektoncd/cli v0.38.2
+	oras.land/oras v1.2.3
 )
 
 require (
