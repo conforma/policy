@@ -3,12 +3,12 @@ module github.com/conforma/policy
 go 1.24.2
 
 require (
-	github.com/conforma/cli v0.7.109
-	github.com/google/addlicense v1.1.1
-	github.com/open-policy-agent/conftest v0.55.0
-	github.com/styrainc/regal v0.29.2
-	github.com/tektoncd/cli v0.39.1
-	oras.land/oras v1.2.3
+	github.com/conforma/cli v0.8.32
+	github.com/google/addlicense v1.2.0
+	github.com/open-policy-agent/conftest v0.62.0
+	github.com/styrainc/regal v0.36.1
+	github.com/tektoncd/cli v0.42.0
+	oras.land/oras v1.3.0
 )
 
 require (
