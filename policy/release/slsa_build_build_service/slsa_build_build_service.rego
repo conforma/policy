@@ -35,7 +35,7 @@ import data.lib.json as j
 #
 deny contains result if {
 	some att in lib.pipelinerun_attestations
-	not att.statement.predicate.builder.id
+	not _builder_id(att)
 	result := lib.result_helper(rego.metadata.chain(), [])
 }
 
@@ -61,7 +61,7 @@ deny contains result if {
 deny contains result if {
 	allowed_builder_ids := lib.rule_data(_rule_data_key)
 	some att in lib.pipelinerun_attestations
-	builder_id := att.statement.predicate.builder.id
+	builder_id := _builder_id(att)
 	not builder_id in allowed_builder_ids
 	result := lib.result_helper(rego.metadata.chain(), [builder_id])
 }
@@ -101,6 +101,12 @@ _rule_data_errors contains error if {
 		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
 		"severity": e.severity,
 	}
+}
+
+_builder_id(att) := builder_id if {
+	builder_id := att.statement.predicate.builder.id
+} else := builder_id if {
+	builder_id := att.statement.predicate.runDetails.builder.id
 }
 
 _rule_data_key := "allowed_builder_ids"
