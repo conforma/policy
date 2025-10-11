@@ -35,7 +35,7 @@
 **** xref:packages/release_external_parameters.adoc#external_parameters__pipeline_run_params_provided[PipelineRun params provided]
 **** xref:packages/release_external_parameters.adoc#external_parameters__restrict_shared_volumes[Restrict shared volumes]
 *** xref:packages/release_git_branch.adoc[Git branch checks]
-**** xref:packages/release_git_branch.adoc#git_branch__git_branch[Only allow builds from a trusted branch]
+**** xref:packages/release_git_branch.adoc#git_branch__git_branch[Builds have a trusted target branch]
 *** xref:packages/release_github_certificate.adoc[GitHub Certificate Checks]
 **** xref:packages/release_github_certificate.adoc#github_certificate__gh_workflow_extensions[GitHub Workflow Certificate Extensions]
 **** xref:packages/release_github_certificate.adoc#github_certificate__gh_workflow_name[GitHub Workflow Name]
