@@ -114,3 +114,10 @@ materials contains material if {
 	material.uri
 	material.digest.sha1
 }
+
+materials contains material if {
+	some attestation in lib.pipelinerun_attestations
+	some material in attestation.statement.predicate.buildDefinition.resolvedDependencies
+	material.uri
+	material.digest.sha1
+}
