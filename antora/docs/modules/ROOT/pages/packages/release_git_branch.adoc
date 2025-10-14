@@ -1,6 +1,6 @@
 = Git branch checks Package
 
-Check that the build was done from an expected git branch. The specific branches permitted are specified as a list of regexes in the `allowed_branch_patterns` rule data.
+Check that the build has an expected target git branch. The specific branches permitted are specified as a list of regexes in the `allowed_target_branch_patterns` rule data.
 
 == Package Name
 
@@ -9,12 +9,12 @@ Check that the build was done from an expected git branch. The specific branches
 == Rules Included
 
 [#git_branch__git_branch]
-=== link:#git_branch__git_branch[Only allow builds from a trusted branch]
+=== link:#git_branch__git_branch[Builds have a trusted target branch]
 
-Build must originate from a configured branch pattern (e.g., 'refs/heads/main')
+Build must target a configured branch pattern (e.g., 'c10s')
 
 * Rule type: [rule-type-indicator failure]#FAILURE#
-* FAILURE message: `Build is from a branch %s which is not a trusted branch`
+* FAILURE message: `Build target is %s which is not a trusted target branch`
 * Code: `git_branch.git_branch`
 * Effective from: `2025-07-01`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/git_branch/git_branch.rego#L14[Source, window="_blank"]

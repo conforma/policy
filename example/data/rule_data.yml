@@ -17,7 +17,7 @@
 
 rule_data:
   # Usage: https://conforma.dev/docs/policy/packages/release_git_branch.html#git_branch__git_branch
-  allowed_branch_patterns:
+  allowed_target_branch_patterns:
   - ^refs/heads/main$
   - ^refs/heads/release-v[\d\.]+$
 

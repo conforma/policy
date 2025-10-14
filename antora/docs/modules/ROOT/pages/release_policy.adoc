@@ -227,7 +227,7 @@ Rules included:
 * xref:packages/release_cve.adoc#cve__unpatched_cve_blockers[CVE checks: Blocking unpatched CVE check]        
 * xref:packages/release_cve.adoc#cve__cve_warnings[CVE checks: Non-blocking CVE check]        
 * xref:packages/release_cve.adoc#cve__rule_data_provided[CVE checks: Rule data provided]        
-* xref:packages/release_git_branch.adoc#git_branch__git_branch[Git branch checks: Only allow builds from a trusted branch]        
+* xref:packages/release_git_branch.adoc#git_branch__git_branch[Git branch checks: Builds have a trusted target branch]        
 * xref:packages/release_provenance_materials.adoc#provenance_materials__git_clone_source_matches_provenance[Provenance Materials: Git clone source matches materials provenance]        
 * xref:packages/release_provenance_materials.adoc#provenance_materials__git_clone_task_found[Provenance Materials: Git clone task found]        
 * xref:packages/release_rpm_pipeline.adoc#rpm_pipeline__invalid_pipeline[RPM Pipeline: Task version invalid_pipeline]        
@@ -364,7 +364,7 @@ cve_leeway:
 a| Verify the attribute .predicate.buildDefinition.externalParameters of a SLSA Provenance v1.0 matches the expectation.
 
 | xref:packages/release_git_branch.adoc[git_branch]
-a| Check that the build was done from an expected git branch. The specific branches permitted are specified as a list of regexes in the `allowed_branch_patterns` rule data.
+a| Check that the build has an expected target git branch. The specific branches permitted are specified as a list of regexes in the `allowed_target_branch_patterns` rule data.
 
 | xref:packages/release_github_certificate.adoc[github_certificate]
 a| Verify attributes on the certificate involved in the image signature when using slsa-github-generator on GitHub Actions with Sigstore Fulcio
