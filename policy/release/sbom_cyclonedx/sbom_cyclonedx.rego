@@ -154,13 +154,13 @@ deny contains result if {
 # METADATA
 # title: Allowed package sources
 # description: >-
-#   For each of the components fetched by Cachi2 which define externalReferences of type
+#   For each of the components fetched by Hermeto which define externalReferences of type
 #   distribution, verify they are allowed based on the allowed_package_sources rule data
 #   key. By default, allowed_package_sources is empty, which means no components with such
 #   references are allowed.
 # custom:
 #   short_name: allowed_package_sources
-#   failure_msg: Package %s fetched by cachi2 was sourced from %q which is not allowed
+#   failure_msg: Package %s fetched by Hermeto was sourced from %q which is not allowed
 #   solution: Update the image to not use a package from a disallowed source.
 #   collections:
 #   - redhat
@@ -175,10 +175,11 @@ deny contains result if {
 	some reference in component.externalReferences
 	reference.type == "distribution"
 
-	# only look at components fetched by cachi2
+	# only look at components fetched by Hermeto
+	# cachi2 is kept here for backwards compatibility
 	some properties in component.properties
-	properties.name == "cachi2:found_by"
-	properties.value == "cachi2"
+	properties.name in {"hermeto:found_by", "cachi2:found_by"}
+	properties.value in {"hermeto", "cachi2"}
 
 	purl := component.purl
 	parsed_purl := ec.purl.parse(purl)
