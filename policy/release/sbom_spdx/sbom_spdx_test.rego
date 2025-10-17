@@ -158,7 +158,7 @@ test_allowed_package_sources if {
 		"code": "sbom_spdx.allowed_package_sources",
 		"term": "pkg:generic/openssl@1.1.10g?download_url=https://openssl.org/source/openssl-1.1.0g.tar.gz",
 		# regal ignore:line-length
-		"msg": `Package pkg:generic/openssl@1.1.10g?download_url=https://openssl.org/source/openssl-1.1.0g.tar.gz fetched by cachi2 was sourced from "https://openssl.org/source/openssl-1.1.0g.tar.gz" which is not allowed`,
+		"msg": `Package pkg:generic/openssl@1.1.10g?download_url=https://openssl.org/source/openssl-1.1.0g.tar.gz fetched by Hermeto was sourced from "https://openssl.org/source/openssl-1.1.0g.tar.gz" which is not allowed`,
 	}}
 
 	att := json.patch(_sbom_attestation, [
@@ -175,8 +175,8 @@ test_allowed_package_sources if {
 					"referenceLocator": "pkg:generic/openssl@1.1.10g?download_url=https://openssl.org/source/openssl-1.1.0g.tar.gz",
 				}],
 				"annotations": [{
-					"annotator": "Tool: cachi2:jsonencoded",
-					"comment": "{\"name\":\"cachi2:found_by\",\"value\":\"cachi2\"}",
+					"annotator": "Tool: hermeto:jsonencoded",
+					"comment": "{\"name\":\"hermeto:found_by\",\"value\":\"hermeto\"}",
 					"annotationDate": "2024-12-09T12:00:00Z",
 					"annotationType": "OTHER",
 				}],
@@ -197,8 +197,8 @@ test_allowed_package_sources if {
 					"referenceLocator": "pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1?type=pom&download_url=https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-anim/1.9.1/batik-anim-1.9.1.pom",
 				}],
 				"annotations": [{
-					"annotator": "Tool: cachi2:jsonencoded",
-					"comment": "{\"name\":\"cachi2:found_by\",\"value\":\"cachi2\"}",
+					"annotator": "Tool: hermeto:jsonencoded",
+					"comment": "{\"name\":\"hermeto:found_by\",\"value\":\"hermeto\"}",
 					"annotationDate": "2024-12-09T12:00:00Z",
 					"annotationType": "OTHER",
 				}],
@@ -218,7 +218,7 @@ test_allowed_package_sources if {
 					"referenceLocator": "pkg:generic/unrelated?download_url=https://irrelevant.org",
 				}],
 				"annotations": [{
-					"annotator": "Tool: cachi2:jsonencoded",
+					"annotator": "Tool: hermeto:jsonencoded",
 					"comment": "{\"name\":\"irrelevant\",\"value\":\"im-irrelevant\"}",
 					"annotationDate": "2024-12-09T12:00:00Z",
 					"annotationType": "OTHER",

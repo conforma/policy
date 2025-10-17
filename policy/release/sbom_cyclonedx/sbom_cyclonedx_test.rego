@@ -193,7 +193,7 @@ test_allowed_package_sources if {
 		"code": "sbom_cyclonedx.allowed_package_sources",
 		"term": "pkg:generic/openssl@1.1.10g?download_url=https://openssl.org/source/openssl-1.1.0g.tar.gz",
 		# regal ignore:line-length
-		"msg": `Package pkg:generic/openssl@1.1.10g?download_url=https://openssl.org/source/openssl-1.1.0g.tar.gz fetched by cachi2 was sourced from "https://openssl.org/source/openssl-1.1.0g.tar.gz" which is not allowed`,
+		"msg": `Package pkg:generic/openssl@1.1.10g?download_url=https://openssl.org/source/openssl-1.1.0g.tar.gz fetched by Hermeto was sourced from "https://openssl.org/source/openssl-1.1.0g.tar.gz" which is not allowed`,
 	}}
 
 	att := json.patch(_sbom_attestation, [
@@ -205,8 +205,8 @@ test_allowed_package_sources if {
 				"name": "openssl",
 				"purl": "pkg:generic/openssl@1.1.10g?download_url=https://openssl.org/source/openssl-1.1.0g.tar.gz",
 				"properties": [{
-					"name": "cachi2:found_by",
-					"value": "cachi2",
+					"name": "hermeto:found_by",
+					"value": "hermeto",
 				}],
 				"externalReferences": [{"type": "distribution", "url": "https://openssl.org/source/openssl-1.1.0g.tar.gz"}],
 			},
@@ -219,8 +219,8 @@ test_allowed_package_sources if {
 				"name": "batik-anim",
 				"purl": "pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1?type=pom",
 				"properties": [{
-					"name": "cachi2:found_by",
-					"value": "cachi2",
+					"name": "hermeto:found_by",
+					"value": "hermeto",
 				}],
 				# regal ignore:line-length
 				"externalReferences": [{"type": "distribution", "url": "https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-anim/1.9.1/batik-anim-1.9.1.pom"}],
@@ -256,7 +256,7 @@ test_allowed_package_sources_no_rule_defined if {
 		"code": "sbom_cyclonedx.allowed_package_sources",
 		"term": "pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1?type=pom",
 		# regal ignore:line-length
-		"msg": `Package pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1?type=pom fetched by cachi2 was sourced from "https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-anim/1.9.1/batik-anim-1.9.1.pom" which is not allowed`,
+		"msg": `Package pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1?type=pom fetched by Hermeto was sourced from "https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-anim/1.9.1/batik-anim-1.9.1.pom" which is not allowed`,
 	}}
 
 	att := json.patch(_sbom_attestation, [{
@@ -267,8 +267,8 @@ test_allowed_package_sources_no_rule_defined if {
 			"name": "batik-anim",
 			"purl": "pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1?type=pom",
 			"properties": [{
-				"name": "cachi2:found_by",
-				"value": "cachi2",
+				"name": "hermeto:found_by",
+				"value": "hermeto",
 			}],
 			# regal ignore:line-length
 			"externalReferences": [{"type": "distribution", "url": "https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-anim/1.9.1/batik-anim-1.9.1.pom"}],
