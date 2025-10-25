@@ -2,7 +2,7 @@ module github.com/conforma/policy/docs
 
 go 1.24.4
 
-require github.com/open-policy-agent/opa v1.6.0
+require github.com/open-policy-agent/opa v1.9.0
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
