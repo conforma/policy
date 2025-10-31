@@ -277,129 +277,1390 @@ att_01_slsa_v0_2_pipeline_in_cluster := {
 }
 
 att_05_slsa_v1_0_tekton_build_type_pipeline_in_cluster := {
-	"_type": "https://in-toto.io/Statement/v0.1",
-	"predicateType": "https://slsa.dev/provenance/v1",
+	"_type": "https://in-toto.io/Statement/v1",
 	"subject": [{
-		"name": "quay.io/lucarval/test-policies-chains",
-		"digest": {"sha256": "29b9b7a7d9a4acc317f8fec892d072e482cbb9b03025d8d078b49872a11d2d9a"},
+		"name": "quay.io/st3penta-konflux-test-registry/user-ns2/cli",
+		"digest": {"sha256": "ec9ff4559ae099b07c24c71257bd25859b0fbdd4414a12cd461ba261ba018e31"},
 	}],
+	"predicateType": "https://slsa.dev/provenance/v1",
 	"predicate": {
 		"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
+			"buildType": "https://tekton.dev/chains/v2/slsa",
 			"externalParameters": {"runSpec": {
-				"pipelineRef": {"name": "simple-build"},
 				"params": [
 					{
-						"name": "IMAGE_DIGEST",
-						"value": "sha256:29b9b7a7d9a4acc317f8fec892d072e482cbb9b03025d8d078b49872a11d2d9a",
+						"name": "git-url",
+						"value": "https://github.com/st3penta/cli",
 					},
 					{
-						"name": "IMAGE_URL",
-						"value": "quay.io/lucarval/test-policies-chains",
+						"name": "revision",
+						"value": "82126ebeeb0d80883d5d85f4f48066821464e3d8",
 					},
 					{
-						"name": "TEST_OUTPUT",
-						"value": "missing",
+						"name": "output-image",
+						"value": "quay.io/st3penta-konflux-test-registry/user-ns2/cli:82126ebeeb0d80883d5d85f4f48066821464e3d8",
 					},
 					{
-						"name": "commit",
-						"value": "18304972d3e4a7621b899da8181b563820bb7861",
-					},
-					{
-						"name": "committer-date",
-						"value": "1704741487",
-					},
-					{
-						"name": "url",
-						"value": "gitspam.spam/spam/spam",
+						"name": "dockerfile",
+						"value": "Dockerfile",
 					},
 				],
-				"serviceAccountName": "default",
-				"timeouts": {"pipeline": "1h0m0s"},
-			}},
-			"internalParameters": {
-				"annotations": null,
-				"labels": {"tekton.dev/pipeline": "simple-build"},
-				"tekton-pipelines-feature-flags": {
-					"DisableAffinityAssistant": false,
-					"DisableCredsInit": false,
-					"RunningInEnvWithInjectedSidecars": true,
-					"RequireGitSSHSecretKnownHosts": false,
-					"EnableTektonOCIBundles": true,
-					"ScopeWhenExpressionsToTask": false,
-					"EnableAPIFields": "alpha",
-					"SendCloudEventsForRuns": false,
-					"AwaitSidecarReadiness": true,
-					"EnforceNonfalsifiability": "none",
-					"VerificationNoMatchPolicy": "ignore",
-					"EnableProvenanceInStatus": true,
-					"ResultExtractionMethod": "termination-message",
-					"MaxResultSize": 4096,
-					"SetSecurityContext": false,
-					"Coschedule": "workspaces",
+				"pipelineSpec": {
+					"description": "This pipeline is ideal for building container images from a Containerfile while maintaining trust after pipeline customization.\n\n_Uses `buildah` to create a container image leveraging [trusted artifacts](https://konflux-ci.dev/architecture/ADR/0036-trusted-artifacts.html). It also optionally creates a source image and runs some build-time tests. Information is shared between tasks using OCI artifacts instead of PVCs. EC will pass the [`trusted_task.trusted`](https://conforma.dev/docs/policy/packages/release_trusted_task.html#trusted_task__trusted) policy as long as all data used to build the artifact is generated from trusted tasks.\nThis pipeline is pushed as a Tekton bundle to [quay.io](https://quay.io/repository/konflux-ci/tekton-catalog/pipeline-docker-build-oci-ta?tab=tags)_\n",
+					"params": [
+						{
+							"description": "Source Repository URL",
+							"name": "git-url",
+							"type": "string",
+						},
+						{
+							"default": "",
+							"description": "Revision of the Source Repository",
+							"name": "revision",
+							"type": "string",
+						},
+						{
+							"description": "Fully Qualified Output Image",
+							"name": "output-image",
+							"type": "string",
+						},
+						{
+							"default": ".",
+							"description": "Path to the source code of an application's component from where to build image.",
+							"name": "path-context",
+							"type": "string",
+						},
+						{
+							"default": "Dockerfile",
+							"description": "Path to the Dockerfile inside the context specified by parameter path-context",
+							"name": "dockerfile",
+							"type": "string",
+						},
+						{
+							"default": "false",
+							"description": "Force rebuild image",
+							"name": "rebuild",
+							"type": "string",
+						},
+						{
+							"default": "false",
+							"description": "Skip checks against built image",
+							"name": "skip-checks",
+							"type": "string",
+						},
+						{
+							"default": "false",
+							"description": "Execute the build with network isolation",
+							"name": "hermetic",
+							"type": "string",
+						},
+						{
+							"default": "",
+							"description": "Build dependencies to be prefetched",
+							"name": "prefetch-input",
+							"type": "string",
+						},
+						{
+							"default": "",
+							"description": "Image tag expiration time, time values could be something like 1h, 2d, 3w for hours, days, and weeks, respectively.",
+							"name": "image-expires-after",
+							"type": "string",
+						},
+						{
+							"default": "false",
+							"description": "Build a source image.",
+							"name": "build-source-image",
+							"type": "string",
+						},
+						{
+							"default": "false",
+							"description": "Add built image into an OCI image index",
+							"name": "build-image-index",
+							"type": "string",
+						},
+						{
+							"default": "docker",
+							"description": "The format for the resulting image's mediaType. Valid values are oci or docker.",
+							"name": "buildah-format",
+							"type": "string",
+						},
+						{
+							"default": [],
+							"description": "Array of --build-arg values (\"arg=value\" strings) for buildah",
+							"name": "build-args",
+							"type": "array",
+						},
+						{
+							"default": "",
+							"description": "Path to a file with build arguments for buildah, see https://www.mankier.com/1/buildah-build#--build-arg-file",
+							"name": "build-args-file",
+							"type": "string",
+						},
+						{
+							"default": "false",
+							"description": "Whether to enable privileged mode, should be used only with remote VMs",
+							"name": "privileged-nested",
+							"type": "string",
+						},
+					],
+					"results": [
+						{
+							"description": "",
+							"name": "IMAGE_URL",
+							"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+						},
+						{
+							"description": "",
+							"name": "IMAGE_DIGEST",
+							"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+						},
+						{
+							"description": "",
+							"name": "CHAINS-GIT_URL",
+							"value": "$(tasks.clone-repository.results.url)",
+						},
+						{
+							"description": "",
+							"name": "CHAINS-GIT_COMMIT",
+							"value": "$(tasks.clone-repository.results.commit)",
+						},
+					],
+					"tasks": [
+						{
+							"name": "init",
+							"params": [
+								{
+									"name": "image-url",
+									"value": "$(params.output-image)",
+								},
+								{
+									"name": "rebuild",
+									"value": "$(params.rebuild)",
+								},
+								{
+									"name": "skip-checks",
+									"value": "$(params.skip-checks)",
+								},
+							],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "init",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-init:0.2@sha256:bbf313b09740fb39b3343bc69ee94b2a2c21d16a9304f9b7c111c305558fc346",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+						},
+						{
+							"name": "clone-repository",
+							"params": [
+								{
+									"name": "url",
+									"value": "$(params.git-url)",
+								},
+								{
+									"name": "revision",
+									"value": "$(params.revision)",
+								},
+								{
+									"name": "ociStorage",
+									"value": "$(params.output-image).git",
+								},
+								{
+									"name": "ociArtifactExpiresAfter",
+									"value": "$(params.image-expires-after)",
+								},
+							],
+							"runAfter": ["init"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "git-clone-oci-ta",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-git-clone-oci-ta:0.1@sha256:f21c34e50500edc84e4889d85fd71a80d79182b16c044adc7f5ecda021c6dfc7",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(tasks.init.results.build)",
+								"operator": "in",
+								"values": ["true"],
+							}],
+							"workspaces": [{
+								"name": "basic-auth",
+								"workspace": "git-auth",
+							}],
+						},
+						{
+							"name": "prefetch-dependencies",
+							"params": [
+								{
+									"name": "input",
+									"value": "$(params.prefetch-input)",
+								},
+								{
+									"name": "SOURCE_ARTIFACT",
+									"value": "$(tasks.clone-repository.results.SOURCE_ARTIFACT)",
+								},
+								{
+									"name": "ociStorage",
+									"value": "$(params.output-image).prefetch",
+								},
+								{
+									"name": "ociArtifactExpiresAfter",
+									"value": "$(params.image-expires-after)",
+								},
+							],
+							"runAfter": ["clone-repository"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "prefetch-dependencies-oci-ta",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies-oci-ta:0.2@sha256:dc82a7270aace9b1c26f7e96f8ccab2752e53d32980c41a45e1733baad76cde6",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"workspaces": [
+								{
+									"name": "git-basic-auth",
+									"workspace": "git-auth",
+								},
+								{
+									"name": "netrc",
+									"workspace": "netrc",
+								},
+							],
+						},
+						{
+							"name": "build-container",
+							"params": [
+								{
+									"name": "IMAGE",
+									"value": "$(params.output-image)",
+								},
+								{
+									"name": "DOCKERFILE",
+									"value": "$(params.dockerfile)",
+								},
+								{
+									"name": "CONTEXT",
+									"value": "$(params.path-context)",
+								},
+								{
+									"name": "HERMETIC",
+									"value": "$(params.hermetic)",
+								},
+								{
+									"name": "PREFETCH_INPUT",
+									"value": "$(params.prefetch-input)",
+								},
+								{
+									"name": "IMAGE_EXPIRES_AFTER",
+									"value": "$(params.image-expires-after)",
+								},
+								{
+									"name": "COMMIT_SHA",
+									"value": "$(tasks.clone-repository.results.commit)",
+								},
+								{
+									"name": "BUILD_ARGS",
+									"value": ["$(params.build-args[*])"],
+								},
+								{
+									"name": "BUILD_ARGS_FILE",
+									"value": "$(params.build-args-file)",
+								},
+								{
+									"name": "PRIVILEGED_NESTED",
+									"value": "$(params.privileged-nested)",
+								},
+								{
+									"name": "SOURCE_URL",
+									"value": "$(tasks.clone-repository.results.url)",
+								},
+								{
+									"name": "BUILDAH_FORMAT",
+									"value": "$(params.buildah-format)",
+								},
+								{
+									"name": "SOURCE_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)",
+								},
+								{
+									"name": "CACHI2_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)",
+								},
+							],
+							"runAfter": ["prefetch-dependencies"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "buildah-oci-ta",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-buildah-oci-ta:0.5@sha256:38d08ea58511a67f8754dc025feebdec8ae342fb4e25bc67a3726ec84f7cb7d1",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(tasks.init.results.build)",
+								"operator": "in",
+								"values": ["true"],
+							}],
+						},
+						{
+							"name": "build-image-index",
+							"params": [
+								{
+									"name": "IMAGE",
+									"value": "$(params.output-image)",
+								},
+								{
+									"name": "COMMIT_SHA",
+									"value": "$(tasks.clone-repository.results.commit)",
+								},
+								{
+									"name": "IMAGE_EXPIRES_AFTER",
+									"value": "$(params.image-expires-after)",
+								},
+								{
+									"name": "ALWAYS_BUILD_INDEX",
+									"value": "$(params.build-image-index)",
+								},
+								{
+									"name": "IMAGES",
+									"value": ["$(tasks.build-container.results.IMAGE_URL)@$(tasks.build-container.results.IMAGE_DIGEST)"],
+								},
+								{
+									"name": "BUILDAH_FORMAT",
+									"value": "$(params.buildah-format)",
+								},
+							],
+							"runAfter": ["build-container"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "build-image-index",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-build-image-index:0.1@sha256:79784d53749584bc5a8de32142ec4e2f01cdbf42c20d94e59280e0b927c8597d",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(tasks.init.results.build)",
+								"operator": "in",
+								"values": ["true"],
+							}],
+						},
+						{
+							"name": "build-source-image",
+							"params": [
+								{
+									"name": "BINARY_IMAGE",
+									"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+								},
+								{
+									"name": "BINARY_IMAGE_DIGEST",
+									"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+								},
+								{
+									"name": "SOURCE_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)",
+								},
+								{
+									"name": "CACHI2_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)",
+								},
+							],
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "source-build-oci-ta",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-source-build-oci-ta:0.3@sha256:36d44f2924f60da00a079a9ab7ce25ad8b2ad593c16d90509203c125ff0ccd46",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [
+								{
+									"input": "$(tasks.init.results.build)",
+									"operator": "in",
+									"values": ["true"],
+								},
+								{
+									"input": "$(params.build-source-image)",
+									"operator": "in",
+									"values": ["true"],
+								},
+							],
+						},
+						{
+							"name": "deprecated-base-image-check",
+							"params": [
+								{
+									"name": "IMAGE_URL",
+									"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+								},
+								{
+									"name": "IMAGE_DIGEST",
+									"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+								},
+							],
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "deprecated-image-check",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check:0.5@sha256:1d07d16810c26713f3d875083924d93697900147364360587ccb5a63f2c31012",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(params.skip-checks)",
+								"operator": "in",
+								"values": ["false"],
+							}],
+						},
+						{
+							"name": "clair-scan",
+							"params": [
+								{
+									"name": "image-digest",
+									"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+								},
+								{
+									"name": "image-url",
+									"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+								},
+							],
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "clair-scan",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-clair-scan:0.3@sha256:a7cc183967f89c4ac100d04ab8f81e54733beee60a0528208107c9a22d3c43af",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(params.skip-checks)",
+								"operator": "in",
+								"values": ["false"],
+							}],
+						},
+						{
+							"name": "ecosystem-cert-preflight-checks",
+							"params": [{
+								"name": "image-url",
+								"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+							}],
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "ecosystem-cert-preflight-checks",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-ecosystem-cert-preflight-checks:0.2@sha256:7db70c6cf23f39b9aad8b75285df31ed2c1213d87842cd4502ffc268808c96c6",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(params.skip-checks)",
+								"operator": "in",
+								"values": ["false"],
+							}],
+						},
+						{
+							"name": "sast-snyk-check",
+							"params": [
+								{
+									"name": "image-digest",
+									"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+								},
+								{
+									"name": "image-url",
+									"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+								},
+								{
+									"name": "SOURCE_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)",
+								},
+								{
+									"name": "CACHI2_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)",
+								},
+							],
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "sast-snyk-check-oci-ta",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-sast-snyk-check-oci-ta:0.4@sha256:181d63c126e3119a9d57b8feed4eb66a875b5208c3e90724c22758e65dca8733",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(params.skip-checks)",
+								"operator": "in",
+								"values": ["false"],
+							}],
+						},
+						{
+							"name": "clamav-scan",
+							"params": [
+								{
+									"name": "image-digest",
+									"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+								},
+								{
+									"name": "image-url",
+									"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+								},
+							],
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "clamav-scan",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-clamav-scan:0.3@sha256:b0bd59748cda4a7abf311e4f448e6c1d00c6b6d8c0ecc1c2eb33e08dc0e0b802",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(params.skip-checks)",
+								"operator": "in",
+								"values": ["false"],
+							}],
+						},
+						{
+							"name": "sast-coverity-check",
+							"params": [
+								{
+									"name": "image-digest",
+									"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+								},
+								{
+									"name": "image-url",
+									"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+								},
+								{
+									"name": "IMAGE",
+									"value": "$(params.output-image)",
+								},
+								{
+									"name": "DOCKERFILE",
+									"value": "$(params.dockerfile)",
+								},
+								{
+									"name": "CONTEXT",
+									"value": "$(params.path-context)",
+								},
+								{
+									"name": "HERMETIC",
+									"value": "$(params.hermetic)",
+								},
+								{
+									"name": "PREFETCH_INPUT",
+									"value": "$(params.prefetch-input)",
+								},
+								{
+									"name": "IMAGE_EXPIRES_AFTER",
+									"value": "$(params.image-expires-after)",
+								},
+								{
+									"name": "COMMIT_SHA",
+									"value": "$(tasks.clone-repository.results.commit)",
+								},
+								{
+									"name": "BUILD_ARGS",
+									"value": ["$(params.build-args[*])"],
+								},
+								{
+									"name": "BUILD_ARGS_FILE",
+									"value": "$(params.build-args-file)",
+								},
+								{
+									"name": "SOURCE_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)",
+								},
+								{
+									"name": "CACHI2_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)",
+								},
+							],
+							"runAfter": ["coverity-availability-check"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "sast-coverity-check-oci-ta",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-sast-coverity-check-oci-ta:0.3@sha256:cdbe1a968676e4f5519b082bf1e27a4cdcf66dd60af66dbc26b3e604f957f7e9",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [
+								{
+									"input": "$(params.skip-checks)",
+									"operator": "in",
+									"values": ["false"],
+								},
+								{
+									"input": "$(tasks.coverity-availability-check.results.STATUS)",
+									"operator": "in",
+									"values": ["success"],
+								},
+							],
+						},
+						{
+							"name": "coverity-availability-check",
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "coverity-availability-check",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-coverity-availability-check:0.2@sha256:db2b267dc15e4ed17f704ee91b8e9b38068e1a35b1018a328fdca621819d74c6",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(params.skip-checks)",
+								"operator": "in",
+								"values": ["false"],
+							}],
+						},
+						{
+							"name": "sast-shell-check",
+							"params": [
+								{
+									"name": "image-digest",
+									"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+								},
+								{
+									"name": "image-url",
+									"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+								},
+								{
+									"name": "SOURCE_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)",
+								},
+								{
+									"name": "CACHI2_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)",
+								},
+							],
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "sast-shell-check-oci-ta",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-sast-shell-check-oci-ta:0.1@sha256:bf7bdde00b7212f730c1356672290af6f38d070da2c8a316987b5c32fd49e0b9",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(params.skip-checks)",
+								"operator": "in",
+								"values": ["false"],
+							}],
+						},
+						{
+							"name": "sast-unicode-check",
+							"params": [
+								{
+									"name": "image-digest",
+									"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+								},
+								{
+									"name": "image-url",
+									"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+								},
+								{
+									"name": "SOURCE_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)",
+								},
+								{
+									"name": "CACHI2_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.CACHI2_ARTIFACT)",
+								},
+							],
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "sast-unicode-check-oci-ta",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-sast-unicode-check-oci-ta:0.3@sha256:a2bde66f6b4164620298c7d709b8f08515409404000fa1dc2260d2508b135651",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(params.skip-checks)",
+								"operator": "in",
+								"values": ["false"],
+							}],
+						},
+						{
+							"name": "apply-tags",
+							"params": [
+								{
+									"name": "IMAGE_URL",
+									"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+								},
+								{
+									"name": "IMAGE_DIGEST",
+									"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+								},
+							],
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "apply-tags",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-apply-tags:0.2@sha256:f44be1bf0262471f2f503f5e19da5f0628dcaf968c86272a2ad6b4871e708448",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+						},
+						{
+							"name": "push-dockerfile",
+							"params": [
+								{
+									"name": "IMAGE",
+									"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+								},
+								{
+									"name": "IMAGE_DIGEST",
+									"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+								},
+								{
+									"name": "DOCKERFILE",
+									"value": "$(params.dockerfile)",
+								},
+								{
+									"name": "CONTEXT",
+									"value": "$(params.path-context)",
+								},
+								{
+									"name": "SOURCE_ARTIFACT",
+									"value": "$(tasks.prefetch-dependencies.results.SOURCE_ARTIFACT)",
+								},
+							],
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "push-dockerfile-oci-ta",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/tekton-catalog/task-push-dockerfile-oci-ta:0.1@sha256:2bc5b3afc5de56da0f06eac60b65e86f6b861b16a63f48579fc0bac7d657e14c",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+						},
+						{
+							"name": "rpms-signature-scan",
+							"params": [
+								{
+									"name": "image-url",
+									"value": "$(tasks.build-image-index.results.IMAGE_URL)",
+								},
+								{
+									"name": "image-digest",
+									"value": "$(tasks.build-image-index.results.IMAGE_DIGEST)",
+								},
+							],
+							"runAfter": ["build-image-index"],
+							"taskRef": {
+								"params": [
+									{
+										"name": "name",
+										"value": "rpms-signature-scan",
+									},
+									{
+										"name": "bundle",
+										"value": "quay.io/konflux-ci/konflux-vanguard/task-rpms-signature-scan:0.2@sha256:06977232e67509e5540528ff6c3b081b23fc5bf3e40fb3e2d09a086d5c3243fc",
+									},
+									{
+										"name": "kind",
+										"value": "task",
+									},
+								],
+								"resolver": "bundles",
+							},
+							"when": [{
+								"input": "$(params.skip-checks)",
+								"operator": "in",
+								"values": ["false"],
+							}],
+						},
+					],
+					"workspaces": [
+						{
+							"name": "git-auth",
+							"optional": true,
+						},
+						{
+							"name": "netrc",
+							"optional": true,
+						},
+					],
 				},
-			},
+				"taskRunTemplate": {"serviceAccountName": "build-pipeline-cli"},
+				"timeouts": {"pipeline": "1h0m0s"},
+				"workspaces": [{
+					"name": "git-auth",
+					"secret": {"secretName": "pac-gitauth-shmbmv"},
+				}],
+			}},
+			"internalParameters": {"tekton-pipelines-feature-flags": {
+				"awaitSidecarReadiness": true,
+				"coschedule": "workspaces",
+				"enableAPIFields": "beta",
+				"enableProvenanceInStatus": true,
+				"enforceNonfalsifiability": "none",
+				"maxResultSize": 4096,
+				"resultExtractionMethod": "termination-message",
+				"runningInEnvWithInjectedSidecars": true,
+				"verificationNoMatchPolicy": "ignore",
+			}},
 			"resolvedDependencies": [
 				{
-					"uri": "git+https://github.com/conforma/hacks.git",
-					"digest": {"sha1": "4fceb2416020011e794105f113a3913ef659c8ee"},
+					"digest": {"sha256": "bbf313b09740fb39b3343bc69ee94b2a2c21d16a9304f9b7c111c305558fc346"},
 					"name": "pipelineTask",
-					"content": "eyJtZXRhZGF0YSI6eyJuYW1lIjoic2ltcGxlLWJ1aWxkLXJ1bi03MGY4ZWIxMzhhLWdpdC1jbG9uZSIsIm5hbWVzcGFjZSI6ImRlZmF1bHQiLCJ1aWQiOiI5YzQ2ZGNiNC1jZGYwLTQyNDktYjNjYy1iMzZhNGE4YjA1NjIiLCJyZXNvdXJjZVZlcnNpb24iOiI0MzcyIiwiZ2VuZXJhdGlvbiI6MSwiY3JlYXRpb25UaW1lc3RhbXAiOiIyMDI0LTAxLTA4VDE5OjE4OjA3WiIsImxhYmVscyI6eyJhcHAua3ViZXJuZXRlcy5pby9tYW5hZ2VkLWJ5IjoidGVrdG9uLXBpcGVsaW5lcyIsInRla3Rvbi5kZXYvbWVtYmVyT2YiOiJ0YXNrcyIsInRla3Rvbi5kZXYvcGlwZWxpbmUiOiJzaW1wbGUtYnVpbGQiLCJ0ZWt0b24uZGV2L3BpcGVsaW5lUnVuIjoic2ltcGxlLWJ1aWxkLXJ1bi03MGY4ZWIxMzhhIiwidGVrdG9uLmRldi9waXBlbGluZVRhc2siOiJnaXQtY2xvbmUiLCJ0ZWt0b24uZGV2L3Rhc2siOiJtb2NrLWdpdC1jbG9uZSJ9LCJhbm5vdGF0aW9ucyI6eyJjaGFpbnMudGVrdG9uLmRldi9zaWduZWQiOiJ0cnVlIiwicGlwZWxpbmUudGVrdG9uLmRldi9yZWxlYXNlIjoiZTU5ZWU0MiJ9LCJvd25lclJlZmVyZW5jZXMiOlt7ImFwaVZlcnNpb24iOiJ0ZWt0b24uZGV2L3YxIiwia2luZCI6IlBpcGVsaW5lUnVuIiwibmFtZSI6InNpbXBsZS1idWlsZC1ydW4tNzBmOGViMTM4YSIsInVpZCI6IjFiNTY2Zjg1LTJjMTMtNDcxNC1iN2JhLTE4OTM0ZmM3Y2MxYyIsImNvbnRyb2xsZXIiOnRydWUsImJsb2NrT3duZXJEZWxldGlvbiI6dHJ1ZX1dLCJmaW5hbGl6ZXJzIjpbImNoYWlucy50ZWt0b24uZGV2Il0sIm1hbmFnZWRGaWVsZHMiOlt7Im1hbmFnZXIiOiJjb250cm9sbGVyIiwib3BlcmF0aW9uIjoiVXBkYXRlIiwiYXBpVmVyc2lvbiI6InRla3Rvbi5kZXYvdjEiLCJ0aW1lIjoiMjAyNC0wMS0wOFQxOToxODowN1oiLCJmaWVsZHNUeXBlIjoiRmllbGRzVjEiLCJmaWVsZHNWMSI6eyJmOm1ldGFkYXRhIjp7ImY6YW5ub3RhdGlvbnMiOnsiLiI6e30sImY6cGlwZWxpbmUudGVrdG9uLmRldi9yZWxlYXNlIjp7fX0sImY6bGFiZWxzIjp7Ii4iOnt9LCJmOnRla3Rvbi5kZXYvbWVtYmVyT2YiOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmUiOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmVSdW4iOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmVUYXNrIjp7fSwiZjp0ZWt0b24uZGV2L3Rhc2siOnt9fSwiZjpvd25lclJlZmVyZW5jZXMiOnsiLiI6e30sIms6e1widWlkXCI6XCIxYjU2NmY4NS0yYzEzLTQ3MTQtYjdiYS0xODkzNGZjN2NjMWNcIn0iOnt9fX0sImY6c3BlYyI6eyIuIjp7fSwiZjpwYXJhbXMiOnt9LCJmOnNlcnZpY2VBY2NvdW50TmFtZSI6e30sImY6dGFza1JlZiI6eyIuIjp7fSwiZjpraW5kIjp7fSwiZjpwYXJhbXMiOnt9LCJmOnJlc29sdmVyIjp7fX19fX0seyJtYW5hZ2VyIjoiY29udHJvbGxlciIsIm9wZXJhdGlvbiI6IlVwZGF0ZSIsImFwaVZlcnNpb24iOiJ0ZWt0b24uZGV2L3YxIiwidGltZSI6IjIwMjQtMDEtMDhUMTk6MTg6MTJaIiwiZmllbGRzVHlwZSI6IkZpZWxkc1YxIiwiZmllbGRzVjEiOnsiZjpzdGF0dXMiOnsiZjpjb21wbGV0aW9uVGltZSI6e30sImY6Y29uZGl0aW9ucyI6e30sImY6cG9kTmFtZSI6e30sImY6cHJvdmVuYW5jZSI6eyIuIjp7fSwiZjpmZWF0dXJlRmxhZ3MiOnsiLiI6e30sImY6QXdhaXRTaWRlY2FyUmVhZGluZXNzIjp7fSwiZjpDb3NjaGVkdWxlIjp7fSwiZjpEaXNhYmxlQWZmaW5pdHlBc3Npc3RhbnQiOnt9LCJmOkRpc2FibGVDcmVkc0luaXQiOnt9LCJmOkVuYWJsZUFQSUZpZWxkcyI6e30sImY6RW5hYmxlQ0VMSW5XaGVuRXhwcmVzc2lvbiI6e30sImY6RW5hYmxlS2VlcFBvZE9uQ2FuY2VsIjp7fSwiZjpFbmFibGVQYXJhbUVudW0iOnt9LCJmOkVuYWJsZVByb3ZlbmFuY2VJblN0YXR1cyI6e30sImY6RW5hYmxlU3RlcEFjdGlvbnMiOnt9LCJmOkVuYWJsZVRla3Rvbk9DSUJ1bmRsZXMiOnt9LCJmOkVuZm9yY2VOb25mYWxzaWZpYWJpbGl0eSI6e30sImY6TWF4UmVzdWx0U2l6ZSI6e30sImY6UmVxdWlyZUdpdFNTSFNlY3JldEtub3duSG9zdHMiOnt9LCJmOlJlc3VsdEV4dHJhY3Rpb25NZXRob2QiOnt9LCJmOlJ1bm5pbmdJbkVudldpdGhJbmplY3RlZFNpZGVjYXJzIjp7fSwiZjpTY29wZVdoZW5FeHByZXNzaW9uc1RvVGFzayI6e30sImY6U2VuZENsb3VkRXZlbnRzRm9yUnVucyI6e30sImY6U2V0U2VjdXJpdHlDb250ZXh0Ijp7fSwiZjpWZXJpZmljYXRpb25Ob01hdGNoUG9saWN5Ijp7fX0sImY6cmVmU291cmNlIjp7Ii4iOnt9LCJmOmRpZ2VzdCI6eyIuIjp7fSwiZjpzaGExIjp7fX0sImY6ZW50cnlQb2ludCI6e30sImY6dXJpIjp7fX19LCJmOnJlc3VsdHMiOnt9LCJmOnN0YXJ0VGltZSI6e30sImY6c3RlcHMiOnt9LCJmOnRhc2tTcGVjIjp7Ii4iOnt9LCJmOmRlc2NyaXB0aW9uIjp7fSwiZjpwYXJhbXMiOnt9LCJmOnJlc3VsdHMiOnt9LCJmOnN0ZXBzIjp7fX19fSwic3VicmVzb3VyY2UiOiJzdGF0dXMifSx7Im1hbmFnZXIiOiJjb250cm9sbGVyIiwib3BlcmF0aW9uIjoiVXBkYXRlIiwiYXBpVmVyc2lvbiI6InRla3Rvbi5kZXYvdjFiZXRhMSIsInRpbWUiOiIyMDI0LTAxLTA4VDE5OjE4OjEyWiIsImZpZWxkc1R5cGUiOiJGaWVsZHNWMSIsImZpZWxkc1YxIjp7ImY6bWV0YWRhdGEiOnsiZjphbm5vdGF0aW9ucyI6eyJmOmNoYWlucy50ZWt0b24uZGV2L3NpZ25lZCI6e319LCJmOmZpbmFsaXplcnMiOnsiLiI6e30sInY6XCJjaGFpbnMudGVrdG9uLmRldlwiIjp7fX19fX1dfSwic3BlYyI6eyJwYXJhbXMiOlt7Im5hbWUiOiJjb21taXQiLCJ2YWx1ZSI6IjE4MzA0OTcyZDNlNGE3NjIxYjg5OWRhODE4MWI1NjM4MjBiYjc4NjEifSx7Im5hbWUiOiJ1cmwiLCJ2YWx1ZSI6ImdpdHNwYW0uc3BhbS9zcGFtL3NwYW0ifSx7Im5hbWUiOiJjb21taXR0ZXItZGF0ZSIsInZhbHVlIjoiMTcwNDc0MTQ4NyJ9XSwic2VydmljZUFjY291bnROYW1lIjoiZGVmYXVsdCIsInRhc2tSZWYiOnsia2luZCI6IlRhc2siLCJyZXNvbHZlciI6ImdpdCIsInBhcmFtcyI6W3sibmFtZSI6InVybCIsInZhbHVlIjoiaHR0cHM6Ly9naXRodWIuY29tL2VudGVycHJpc2UtY29udHJhY3QvaGFja3MuZ2l0In0seyJuYW1lIjoicmV2aXNpb24iLCJ2YWx1ZSI6IjRmY2ViMjQxNjAyMDAxMWU3OTQxMDVmMTEzYTM5MTNlZjY1OWM4ZWUifSx7Im5hbWUiOiJwYXRoSW5SZXBvIiwidmFsdWUiOiJwcm92ZW5hbmNlL3Rhc2svbW9jay1naXQtY2xvbmUueWFtbCJ9XX0sInRpbWVvdXQiOiIxaDBtMHMifSwic3RhdHVzIjp7ImNvbmRpdGlvbnMiOlt7InR5cGUiOiJTdWNjZWVkZWQiLCJzdGF0dXMiOiJUcnVlIiwibGFzdFRyYW5zaXRpb25UaW1lIjoiMjAyNC0wMS0wOFQxOToxODoxMloiLCJyZWFzb24iOiJTdWNjZWVkZWQiLCJtZXNzYWdlIjoiQWxsIFN0ZXBzIGhhdmUgY29tcGxldGVkIGV4ZWN1dGluZyJ9XSwicG9kTmFtZSI6InNpbXBsZS1idWlsZC1ydW4tNzBmOGViMTM4YS1naXQtY2xvbmUtcG9kIiwic3RhcnRUaW1lIjoiMjAyNC0wMS0wOFQxOToxODowN1oiLCJjb21wbGV0aW9uVGltZSI6IjIwMjQtMDEtMDhUMTk6MTg6MTJaIiwic3RlcHMiOlt7InRlcm1pbmF0ZWQiOnsiZXhpdENvZGUiOjAsInJlYXNvbiI6IkNvbXBsZXRlZCIsIm1lc3NhZ2UiOiJbe1wia2V5XCI6XCJjb21taXRcIixcInZhbHVlXCI6XCIxODMwNDk3MmQzZTRhNzYyMWI4OTlkYTgxODFiNTYzODIwYmI3ODYxXCIsXCJ0eXBlXCI6MX0se1wia2V5XCI6XCJjb21taXR0ZXItZGF0ZVwiLFwidmFsdWVcIjpcIjE3MDQ3NDE0ODdcIixcInR5cGVcIjoxfSx7XCJrZXlcIjpcInVybFwiLFwidmFsdWVcIjpcImdpdHNwYW0uc3BhbS9zcGFtL3NwYW1cIixcInR5cGVcIjoxfV0iLCJzdGFydGVkQXQiOiIyMDI0LTAxLTA4VDE5OjE4OjExWiIsImZpbmlzaGVkQXQiOiIyMDI0LTAxLTA4VDE5OjE4OjExWiIsImNvbnRhaW5lcklEIjoiY29udGFpbmVyZDovLzAwOTY5YTlhYTVmNjQ3ZjVlODg5ODFkYTQwZTkxMTJmZDUyYWE3OTJjMGFiMTdhNDA2N2Y4MDI0MWM3N2E3YjYifSwibmFtZSI6ImNsb25lIiwiY29udGFpbmVyIjoic3RlcC1jbG9uZSIsImltYWdlSUQiOiJyZWdpc3RyeS5hY2Nlc3MucmVkaGF0LmNvbS91Ymk5QHNoYTI1NjpmYzMwMGJlNmFkYmRmMmNhODEyYWQwMWVmZDBkZWUyYTNlM2Y1ZDMzOTU4YWQ2Y2Q5OTE1OWUyNWU5ZWUxMzk4In1dLCJ0YXNrUmVzdWx0cyI6W3sibmFtZSI6ImNvbW1pdCIsInR5cGUiOiJzdHJpbmciLCJ2YWx1ZSI6IjE4MzA0OTcyZDNlNGE3NjIxYjg5OWRhODE4MWI1NjM4MjBiYjc4NjEifSx7Im5hbWUiOiJjb21taXR0ZXItZGF0ZSIsInR5cGUiOiJzdHJpbmciLCJ2YWx1ZSI6IjE3MDQ3NDE0ODcifSx7Im5hbWUiOiJ1cmwiLCJ0eXBlIjoic3RyaW5nIiwidmFsdWUiOiJnaXRzcGFtLnNwYW0vc3BhbS9zcGFtIn1dLCJ0YXNrU3BlYyI6eyJwYXJhbXMiOlt7Im5hbWUiOiJjb21taXQiLCJ0eXBlIjoic3RyaW5nIiwiZGVzY3JpcHRpb24iOiJUaGUgdmFsdWUgdG8gb2YgdGhlIGNvbW1pdCByZXN1bHQuIn0seyJuYW1lIjoidXJsIiwidHlwZSI6InN0cmluZyIsImRlc2NyaXB0aW9uIjoiVGhlIHZhbHVlIG9mIHRoZSB1cmwgcmVzdWx0LiJ9LHsibmFtZSI6ImNvbW1pdHRlci1kYXRlIiwidHlwZSI6InN0cmluZyIsImRlc2NyaXB0aW9uIjoiVGhlIHZhbHVlIG9mIHRoZSBjb21taXR0ZXItZGF0ZSByZXN1bHQuIn1dLCJkZXNjcmlwdGlvbiI6IlRoaXMgaXMgYSBkdW1teSB0YXNrIHRoYXQgZW11bGF0ZXMgYSB0YXNrIHRoYXQgcGVyZm9ybXMgYSBnaXQgY2xvbmUuIEl0cyBzb2xlIHB1cnBvc2UgaXMgdG8gZmFjaWxpdGF0ZSB0ZXN0aW5nLiIsInN0ZXBzIjpbeyJuYW1lIjoiY2xvbmUiLCJpbWFnZSI6InJlZ2lzdHJ5LmFjY2Vzcy5yZWRoYXQuY29tL3ViaTk6bGF0ZXN0IiwiZW52IjpbeyJuYW1lIjoiQ09NTUlUIiwidmFsdWUiOiIxODMwNDk3MmQzZTRhNzYyMWI4OTlkYTgxODFiNTYzODIwYmI3ODYxIn0seyJuYW1lIjoiVVJMIiwidmFsdWUiOiJnaXRzcGFtLnNwYW0vc3BhbS9zcGFtIn0seyJuYW1lIjoiQ09NTUlUVEVSX0RBVEUiLCJ2YWx1ZSI6IjE3MDQ3NDE0ODcifV0sInJlc291cmNlcyI6e30sInNjcmlwdCI6IiMhL3Vzci9iaW4vZW52IHNoXG5zZXQgLWV1byBwaXBlZmFpbFxuXG5lY2hvIC1uIFwiJHtDT01NSVR9XCIgXHUwMDNlIFwiL3Rla3Rvbi9yZXN1bHRzL2NvbW1pdFwiXG5lY2hvIC1uIFwiJHtVUkx9XCIgXHUwMDNlIFwiL3Rla3Rvbi9yZXN1bHRzL3VybFwiXG5lY2hvIC1uIFwiJHtDT01NSVRURVJfREFURX1cIiBcdTAwM2UgXCIvdGVrdG9uL3Jlc3VsdHMvY29tbWl0dGVyLWRhdGVcIlxuIn1dLCJyZXN1bHRzIjpbeyJuYW1lIjoiY29tbWl0IiwidHlwZSI6InN0cmluZyIsImRlc2NyaXB0aW9uIjoiVGhlIHByZWNpc2UgY29tbWl0IFNIQSB0aGF0IHdhcyBmZXRjaGVkIGJ5IHRoaXMgVGFzay4ifSx7Im5hbWUiOiJ1cmwiLCJ0eXBlIjoic3RyaW5nIiwiZGVzY3JpcHRpb24iOiJUaGUgcHJlY2lzZSBVUkwgdGhhdCB3YXMgZmV0Y2hlZCBieSB0aGlzIFRhc2suIn0seyJuYW1lIjoiY29tbWl0dGVyLWRhdGUiLCJ0eXBlIjoic3RyaW5nIiwiZGVzY3JpcHRpb24iOiJUaGUgZXBvY2ggdGltZXN0YW1wIG9mIHRoZSBjb21taXQgdGhhdCB3YXMgZmV0Y2hlZCBieSB0aGlzIFRhc2suIn1dfSwicHJvdmVuYW5jZSI6eyJyZWZTb3VyY2UiOnsidXJpIjoiZ2l0K2h0dHBzOi8vZ2l0aHViLmNvbS9lbnRlcnByaXNlLWNvbnRyYWN0L2hhY2tzLmdpdCIsImRpZ2VzdCI6eyJzaGExIjoiNGZjZWIyNDE2MDIwMDExZTc5NDEwNWYxMTNhMzkxM2VmNjU5YzhlZSJ9LCJlbnRyeVBvaW50IjoicHJvdmVuYW5jZS90YXNrL21vY2stZ2l0LWNsb25lLnlhbWwifSwiZmVhdHVyZUZsYWdzIjp7IkRpc2FibGVBZmZpbml0eUFzc2lzdGFudCI6ZmFsc2UsIkRpc2FibGVDcmVkc0luaXQiOmZhbHNlLCJSdW5uaW5nSW5FbnZXaXRoSW5qZWN0ZWRTaWRlY2FycyI6dHJ1ZSwiUmVxdWlyZUdpdFNTSFNlY3JldEtub3duSG9zdHMiOmZhbHNlLCJFbmFibGVUZWt0b25PQ0lCdW5kbGVzIjp0cnVlLCJTY29wZVdoZW5FeHByZXNzaW9uc1RvVGFzayI6ZmFsc2UsIkVuYWJsZUFQSUZpZWxkcyI6ImFscGhhIiwiU2VuZENsb3VkRXZlbnRzRm9yUnVucyI6ZmFsc2UsIkF3YWl0U2lkZWNhclJlYWRpbmVzcyI6dHJ1ZSwiRW5mb3JjZU5vbmZhbHNpZmlhYmlsaXR5Ijoibm9uZSIsIlZlcmlmaWNhdGlvbk5vTWF0Y2hQb2xpY3kiOiJpZ25vcmUiLCJFbmFibGVQcm92ZW5hbmNlSW5TdGF0dXMiOnRydWUsIlJlc3VsdEV4dHJhY3Rpb25NZXRob2QiOiJ0ZXJtaW5hdGlvbi1tZXNzYWdlIiwiTWF4UmVzdWx0U2l6ZSI6NDA5NiwiU2V0U2VjdXJpdHlDb250ZXh0IjpmYWxzZSwiQ29zY2hlZHVsZSI6IndvcmtzcGFjZXMifX19fQ==",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-init",
 				},
 				{
-					"uri": "oci://registry.access.redhat.com/ubi9",
-					"digest": {"sha256": "fc300be6adbdf2ca812ad01efd0dee2a3e3f5d33958ad6cd99159e25e9ee1398"},
+					"digest": {"sha256": "4dd469452709b8a4ef0d279b8a13c4195150ba24875a869bd0058bca2aa719f2"},
+					"uri": "oci://registry.access.redhat.com/ubi9/skopeo",
 				},
 				{
+					"digest": {"sha256": "f21c34e50500edc84e4889d85fd71a80d79182b16c044adc7f5ecda021c6dfc7"},
 					"name": "pipelineTask",
-					"content": "eyJtZXRhZGF0YSI6eyJuYW1lIjoic2ltcGxlLWJ1aWxkLXJ1bi03MGY4ZWIxMzhhLXNjYW4iLCJuYW1lc3BhY2UiOiJkZWZhdWx0IiwidWlkIjoiMmYyOTUyZGItY2ZiOS00NWE4LTkwZjktZDhkNTNhZDc3YWViIiwicmVzb3VyY2VWZXJzaW9uIjoiNDQ2NiIsImdlbmVyYXRpb24iOjEsImNyZWF0aW9uVGltZXN0YW1wIjoiMjAyNC0wMS0wOFQxOToxODoxMloiLCJsYWJlbHMiOnsiYXBwLmt1YmVybmV0ZXMuaW8vbWFuYWdlZC1ieSI6InRla3Rvbi1waXBlbGluZXMiLCJ0ZWt0b24uZGV2L21lbWJlck9mIjoidGFza3MiLCJ0ZWt0b24uZGV2L3BpcGVsaW5lIjoic2ltcGxlLWJ1aWxkIiwidGVrdG9uLmRldi9waXBlbGluZVJ1biI6InNpbXBsZS1idWlsZC1ydW4tNzBmOGViMTM4YSIsInRla3Rvbi5kZXYvcGlwZWxpbmVUYXNrIjoic2NhbiJ9LCJhbm5vdGF0aW9ucyI6eyJjaGFpbnMudGVrdG9uLmRldi9zaWduZWQiOiJ0cnVlIiwicGlwZWxpbmUudGVrdG9uLmRldi9yZWxlYXNlIjoiZTU5ZWU0MiJ9LCJvd25lclJlZmVyZW5jZXMiOlt7ImFwaVZlcnNpb24iOiJ0ZWt0b24uZGV2L3YxIiwia2luZCI6IlBpcGVsaW5lUnVuIiwibmFtZSI6InNpbXBsZS1idWlsZC1ydW4tNzBmOGViMTM4YSIsInVpZCI6IjFiNTY2Zjg1LTJjMTMtNDcxNC1iN2JhLTE4OTM0ZmM3Y2MxYyIsImNvbnRyb2xsZXIiOnRydWUsImJsb2NrT3duZXJEZWxldGlvbiI6dHJ1ZX1dLCJmaW5hbGl6ZXJzIjpbImNoYWlucy50ZWt0b24uZGV2Il0sIm1hbmFnZWRGaWVsZHMiOlt7Im1hbmFnZXIiOiJjb250cm9sbGVyIiwib3BlcmF0aW9uIjoiVXBkYXRlIiwiYXBpVmVyc2lvbiI6InRla3Rvbi5kZXYvdjEiLCJ0aW1lIjoiMjAyNC0wMS0wOFQxOToxODoxMloiLCJmaWVsZHNUeXBlIjoiRmllbGRzVjEiLCJmaWVsZHNWMSI6eyJmOm1ldGFkYXRhIjp7ImY6YW5ub3RhdGlvbnMiOnsiLiI6e30sImY6cGlwZWxpbmUudGVrdG9uLmRldi9yZWxlYXNlIjp7fX0sImY6bGFiZWxzIjp7Ii4iOnt9LCJmOnRla3Rvbi5kZXYvbWVtYmVyT2YiOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmUiOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmVSdW4iOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmVUYXNrIjp7fX0sImY6b3duZXJSZWZlcmVuY2VzIjp7Ii4iOnt9LCJrOntcInVpZFwiOlwiMWI1NjZmODUtMmMxMy00NzE0LWI3YmEtMTg5MzRmYzdjYzFjXCJ9Ijp7fX19LCJmOnNwZWMiOnsiLiI6e30sImY6cGFyYW1zIjp7fSwiZjpzZXJ2aWNlQWNjb3VudE5hbWUiOnt9LCJmOnRhc2tTcGVjIjp7Ii4iOnt9LCJmOmRlc2NyaXB0aW9uIjp7fSwiZjpwYXJhbXMiOnt9LCJmOnJlc3VsdHMiOnt9LCJmOnN0ZXBzIjp7fX19fX0seyJtYW5hZ2VyIjoiY29udHJvbGxlciIsIm9wZXJhdGlvbiI6IlVwZGF0ZSIsImFwaVZlcnNpb24iOiJ0ZWt0b24uZGV2L3YxIiwidGltZSI6IjIwMjQtMDEtMDhUMTk6MTg6MTdaIiwiZmllbGRzVHlwZSI6IkZpZWxkc1YxIiwiZmllbGRzVjEiOnsiZjpzdGF0dXMiOnsiZjpjb21wbGV0aW9uVGltZSI6e30sImY6Y29uZGl0aW9ucyI6e30sImY6cG9kTmFtZSI6e30sImY6cHJvdmVuYW5jZSI6eyIuIjp7fSwiZjpmZWF0dXJlRmxhZ3MiOnsiLiI6e30sImY6QXdhaXRTaWRlY2FyUmVhZGluZXNzIjp7fSwiZjpDb3NjaGVkdWxlIjp7fSwiZjpEaXNhYmxlQWZmaW5pdHlBc3Npc3RhbnQiOnt9LCJmOkRpc2FibGVDcmVkc0luaXQiOnt9LCJmOkVuYWJsZUFQSUZpZWxkcyI6e30sImY6RW5hYmxlQ0VMSW5XaGVuRXhwcmVzc2lvbiI6e30sImY6RW5hYmxlS2VlcFBvZE9uQ2FuY2VsIjp7fSwiZjpFbmFibGVQYXJhbUVudW0iOnt9LCJmOkVuYWJsZVByb3ZlbmFuY2VJblN0YXR1cyI6e30sImY6RW5hYmxlU3RlcEFjdGlvbnMiOnt9LCJmOkVuYWJsZVRla3Rvbk9DSUJ1bmRsZXMiOnt9LCJmOkVuZm9yY2VOb25mYWxzaWZpYWJpbGl0eSI6e30sImY6TWF4UmVzdWx0U2l6ZSI6e30sImY6UmVxdWlyZUdpdFNTSFNlY3JldEtub3duSG9zdHMiOnt9LCJmOlJlc3VsdEV4dHJhY3Rpb25NZXRob2QiOnt9LCJmOlJ1bm5pbmdJbkVudldpdGhJbmplY3RlZFNpZGVjYXJzIjp7fSwiZjpTY29wZVdoZW5FeHByZXNzaW9uc1RvVGFzayI6e30sImY6U2VuZENsb3VkRXZlbnRzRm9yUnVucyI6e30sImY6U2V0U2VjdXJpdHlDb250ZXh0Ijp7fSwiZjpWZXJpZmljYXRpb25Ob01hdGNoUG9saWN5Ijp7fX19LCJmOnJlc3VsdHMiOnt9LCJmOnN0YXJ0VGltZSI6e30sImY6c3RlcHMiOnt9LCJmOnRhc2tTcGVjIjp7Ii4iOnt9LCJmOmRlc2NyaXB0aW9uIjp7fSwiZjpwYXJhbXMiOnt9LCJmOnJlc3VsdHMiOnt9LCJmOnN0ZXBzIjp7fX19fSwic3VicmVzb3VyY2UiOiJzdGF0dXMifSx7Im1hbmFnZXIiOiJjb250cm9sbGVyIiwib3BlcmF0aW9uIjoiVXBkYXRlIiwiYXBpVmVyc2lvbiI6InRla3Rvbi5kZXYvdjFiZXRhMSIsInRpbWUiOiIyMDI0LTAxLTA4VDE5OjE4OjE3WiIsImZpZWxkc1R5cGUiOiJGaWVsZHNWMSIsImZpZWxkc1YxIjp7ImY6bWV0YWRhdGEiOnsiZjphbm5vdGF0aW9ucyI6eyJmOmNoYWlucy50ZWt0b24uZGV2L3NpZ25lZCI6e319LCJmOmZpbmFsaXplcnMiOnsiLiI6e30sInY6XCJjaGFpbnMudGVrdG9uLmRldlwiIjp7fX19fX1dfSwic3BlYyI6eyJwYXJhbXMiOlt7Im5hbWUiOiJURVNUX09VVFBVVCIsInZhbHVlIjoibWlzc2luZyJ9XSwic2VydmljZUFjY291bnROYW1lIjoiZGVmYXVsdCIsInRhc2tTcGVjIjp7InBhcmFtcyI6W3sibmFtZSI6IlRFU1RfT1VUUFVUIiwidHlwZSI6InN0cmluZyIsImRlc2NyaXB0aW9uIjoiVGhlIHZhbHVlIHRvIG9mIHRoZSBURVNUX09VVFBVVCBjb21taXQgcmVzdWx0LiJ9XSwiZGVzY3JpcHRpb24iOiJUaGlzIGlzIGEgZHVtbXkgdGFzayB0aGF0IGVtdWxhdGVzIGEgdGFzayB0aGF0IHNjYW5zIHNvdXJjZSBjb2RlLiBJdHMgc29sZSBwdXJwb3NlIGlzIHRvIGZhY2lsaXRhdGUgdGVzdGluZy4iLCJzdGVwcyI6W3sibmFtZSI6InNjYW4iLCJpbWFnZSI6InJlZ2lzdHJ5LmFjY2Vzcy5yZWRoYXQuY29tL3ViaTk6bGF0ZXN0IiwiZW52IjpbeyJuYW1lIjoiVEVTVF9PVVRQVVQiLCJ2YWx1ZSI6Im1pc3NpbmcifV0sInJlc291cmNlcyI6e30sInNjcmlwdCI6IiMhL3Vzci9iaW4vZW52IHNoXG5zZXQgLWV1byBwaXBlZmFpbFxuXG5lY2hvIC1uIFwiJHtURVNUX09VVFBVVH1cIiBcdTAwM2UgXCIkKHJlc3VsdHMuVEVTVF9PVVRQVVQucGF0aClcIlxuIn1dLCJyZXN1bHRzIjpbeyJuYW1lIjoiVEVTVF9PVVRQVVQiLCJ0eXBlIjoic3RyaW5nIiwiZGVzY3JpcHRpb24iOiJUaGUgc3VtbWFyeSBzY2FubmVyIG91dHB1dC4ifV19LCJ0aW1lb3V0IjoiMWgwbTBzIn0sInN0YXR1cyI6eyJjb25kaXRpb25zIjpbeyJ0eXBlIjoiU3VjY2VlZGVkIiwic3RhdHVzIjoiVHJ1ZSIsImxhc3RUcmFuc2l0aW9uVGltZSI6IjIwMjQtMDEtMDhUMTk6MTg6MTdaIiwicmVhc29uIjoiU3VjY2VlZGVkIiwibWVzc2FnZSI6IkFsbCBTdGVwcyBoYXZlIGNvbXBsZXRlZCBleGVjdXRpbmcifV0sInBvZE5hbWUiOiJzaW1wbGUtYnVpbGQtcnVuLTcwZjhlYjEzOGEtc2Nhbi1wb2QiLCJzdGFydFRpbWUiOiIyMDI0LTAxLTA4VDE5OjE4OjEyWiIsImNvbXBsZXRpb25UaW1lIjoiMjAyNC0wMS0wOFQxOToxODoxN1oiLCJzdGVwcyI6W3sidGVybWluYXRlZCI6eyJleGl0Q29kZSI6MCwicmVhc29uIjoiQ29tcGxldGVkIiwibWVzc2FnZSI6Ilt7XCJrZXlcIjpcIlRFU1RfT1VUUFVUXCIsXCJ2YWx1ZVwiOlwibWlzc2luZ1wiLFwidHlwZVwiOjF9XSIsInN0YXJ0ZWRBdCI6IjIwMjQtMDEtMDhUMTk6MTg6MTZaIiwiZmluaXNoZWRBdCI6IjIwMjQtMDEtMDhUMTk6MTg6MTZaIiwiY29udGFpbmVySUQiOiJjb250YWluZXJkOi8vNGExODUxZWZkYWM5ZWM5MjYxNjQwYzQ0NzU5MzM1ZjlkODI4NmM2MGJlZGE5MzYwY2NiMDZhNzQxNDcxNTA5ZSJ9LCJuYW1lIjoic2NhbiIsImNvbnRhaW5lciI6InN0ZXAtc2NhbiIsImltYWdlSUQiOiJyZWdpc3RyeS5hY2Nlc3MucmVkaGF0LmNvbS91Ymk5QHNoYTI1NjpmYzMwMGJlNmFkYmRmMmNhODEyYWQwMWVmZDBkZWUyYTNlM2Y1ZDMzOTU4YWQ2Y2Q5OTE1OWUyNWU5ZWUxMzk4In1dLCJ0YXNrUmVzdWx0cyI6W3sibmFtZSI6IlRFU1RfT1VUUFVUIiwidHlwZSI6InN0cmluZyIsInZhbHVlIjoibWlzc2luZyJ9XSwidGFza1NwZWMiOnsicGFyYW1zIjpbeyJuYW1lIjoiVEVTVF9PVVRQVVQiLCJ0eXBlIjoic3RyaW5nIiwiZGVzY3JpcHRpb24iOiJUaGUgdmFsdWUgdG8gb2YgdGhlIFRFU1RfT1VUUFVUIGNvbW1pdCByZXN1bHQuIn1dLCJkZXNjcmlwdGlvbiI6IlRoaXMgaXMgYSBkdW1teSB0YXNrIHRoYXQgZW11bGF0ZXMgYSB0YXNrIHRoYXQgc2NhbnMgc291cmNlIGNvZGUuIEl0cyBzb2xlIHB1cnBvc2UgaXMgdG8gZmFjaWxpdGF0ZSB0ZXN0aW5nLiIsInN0ZXBzIjpbeyJuYW1lIjoic2NhbiIsImltYWdlIjoicmVnaXN0cnkuYWNjZXNzLnJlZGhhdC5jb20vdWJpOTpsYXRlc3QiLCJlbnYiOlt7Im5hbWUiOiJURVNUX09VVFBVVCIsInZhbHVlIjoibWlzc2luZyJ9XSwicmVzb3VyY2VzIjp7fSwic2NyaXB0IjoiIyEvdXNyL2Jpbi9lbnYgc2hcbnNldCAtZXVvIHBpcGVmYWlsXG5cbmVjaG8gLW4gXCIke1RFU1RfT1VUUFVUfVwiIFx1MDAzZSBcIi90ZWt0b24vcmVzdWx0cy9URVNUX09VVFBVVFwiXG4ifV0sInJlc3VsdHMiOlt7Im5hbWUiOiJURVNUX09VVFBVVCIsInR5cGUiOiJzdHJpbmciLCJkZXNjcmlwdGlvbiI6IlRoZSBzdW1tYXJ5IHNjYW5uZXIgb3V0cHV0LiJ9XX0sInByb3ZlbmFuY2UiOnsiZmVhdHVyZUZsYWdzIjp7IkRpc2FibGVBZmZpbml0eUFzc2lzdGFudCI6ZmFsc2UsIkRpc2FibGVDcmVkc0luaXQiOmZhbHNlLCJSdW5uaW5nSW5FbnZXaXRoSW5qZWN0ZWRTaWRlY2FycyI6dHJ1ZSwiUmVxdWlyZUdpdFNTSFNlY3JldEtub3duSG9zdHMiOmZhbHNlLCJFbmFibGVUZWt0b25PQ0lCdW5kbGVzIjp0cnVlLCJTY29wZVdoZW5FeHByZXNzaW9uc1RvVGFzayI6ZmFsc2UsIkVuYWJsZUFQSUZpZWxkcyI6ImFscGhhIiwiU2VuZENsb3VkRXZlbnRzRm9yUnVucyI6ZmFsc2UsIkF3YWl0U2lkZWNhclJlYWRpbmVzcyI6dHJ1ZSwiRW5mb3JjZU5vbmZhbHNpZmlhYmlsaXR5Ijoibm9uZSIsIlZlcmlmaWNhdGlvbk5vTWF0Y2hQb2xpY3kiOiJpZ25vcmUiLCJFbmFibGVQcm92ZW5hbmNlSW5TdGF0dXMiOnRydWUsIlJlc3VsdEV4dHJhY3Rpb25NZXRob2QiOiJ0ZXJtaW5hdGlvbi1tZXNzYWdlIiwiTWF4UmVzdWx0U2l6ZSI6NDA5NiwiU2V0U2VjdXJpdHlDb250ZXh0IjpmYWxzZSwiQ29zY2hlZHVsZSI6IndvcmtzcGFjZXMifX19fQ==",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-git-clone-oci-ta",
 				},
 				{
+					"digest": {"sha256": "6d95e6001e28a59f64a51c35a1ca5d383f9fe3833c6d563650bbf83643edd8d9"},
+					"uri": "oci://quay.io/konflux-ci/git-clone",
+				},
+				{
+					"digest": {"sha256": "adf22f3ec90bfa3f7e2c832a7d52febd1ea31aa9fff6db21324c965d7d622327"},
+					"uri": "oci://quay.io/konflux-ci/build-trusted-artifacts",
+				},
+				{
+					"digest": {"sha256": "dc82a7270aace9b1c26f7e96f8ccab2752e53d32980c41a45e1733baad76cde6"},
 					"name": "pipelineTask",
-					"content": "eyJtZXRhZGF0YSI6eyJuYW1lIjoic2ltcGxlLWJ1aWxkLXJ1bi03MGY4ZWIxMzhhLWF2LXNjYW4iLCJuYW1lc3BhY2UiOiJkZWZhdWx0IiwidWlkIjoiOWNjYWIwNGItYzlhMS00YzVlLTlhM2QtOTllODBhZDg2NTcyIiwicmVzb3VyY2VWZXJzaW9uIjoiNDQ1MCIsImdlbmVyYXRpb24iOjEsImNyZWF0aW9uVGltZXN0YW1wIjoiMjAyNC0wMS0wOFQxOToxODoxMloiLCJsYWJlbHMiOnsiYXBwLmt1YmVybmV0ZXMuaW8vbWFuYWdlZC1ieSI6InRla3Rvbi1waXBlbGluZXMiLCJ0ZWt0b24uZGV2L21lbWJlck9mIjoidGFza3MiLCJ0ZWt0b24uZGV2L3BpcGVsaW5lIjoic2ltcGxlLWJ1aWxkIiwidGVrdG9uLmRldi9waXBlbGluZVJ1biI6InNpbXBsZS1idWlsZC1ydW4tNzBmOGViMTM4YSIsInRla3Rvbi5kZXYvcGlwZWxpbmVUYXNrIjoiYXYtc2NhbiIsInRla3Rvbi5kZXYvdGFzayI6Im1vY2stYXYtc2Nhbm5lciJ9LCJhbm5vdGF0aW9ucyI6eyJjaGFpbnMudGVrdG9uLmRldi9zaWduZWQiOiJ0cnVlIiwicGlwZWxpbmUudGVrdG9uLmRldi9yZWxlYXNlIjoiZTU5ZWU0MiJ9LCJvd25lclJlZmVyZW5jZXMiOlt7ImFwaVZlcnNpb24iOiJ0ZWt0b24uZGV2L3YxIiwia2luZCI6IlBpcGVsaW5lUnVuIiwibmFtZSI6InNpbXBsZS1idWlsZC1ydW4tNzBmOGViMTM4YSIsInVpZCI6IjFiNTY2Zjg1LTJjMTMtNDcxNC1iN2JhLTE4OTM0ZmM3Y2MxYyIsImNvbnRyb2xsZXIiOnRydWUsImJsb2NrT3duZXJEZWxldGlvbiI6dHJ1ZX1dLCJmaW5hbGl6ZXJzIjpbImNoYWlucy50ZWt0b24uZGV2Il0sIm1hbmFnZWRGaWVsZHMiOlt7Im1hbmFnZXIiOiJjb250cm9sbGVyIiwib3BlcmF0aW9uIjoiVXBkYXRlIiwiYXBpVmVyc2lvbiI6InRla3Rvbi5kZXYvdjEiLCJ0aW1lIjoiMjAyNC0wMS0wOFQxOToxODoxMloiLCJmaWVsZHNUeXBlIjoiRmllbGRzVjEiLCJmaWVsZHNWMSI6eyJmOm1ldGFkYXRhIjp7ImY6YW5ub3RhdGlvbnMiOnsiLiI6e30sImY6cGlwZWxpbmUudGVrdG9uLmRldi9yZWxlYXNlIjp7fX0sImY6bGFiZWxzIjp7Ii4iOnt9LCJmOnRla3Rvbi5kZXYvbWVtYmVyT2YiOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmUiOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmVSdW4iOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmVUYXNrIjp7fSwiZjp0ZWt0b24uZGV2L3Rhc2siOnt9fSwiZjpvd25lclJlZmVyZW5jZXMiOnsiLiI6e30sIms6e1widWlkXCI6XCIxYjU2NmY4NS0yYzEzLTQ3MTQtYjdiYS0xODkzNGZjN2NjMWNcIn0iOnt9fX0sImY6c3BlYyI6eyIuIjp7fSwiZjpwYXJhbXMiOnt9LCJmOnNlcnZpY2VBY2NvdW50TmFtZSI6e30sImY6dGFza1JlZiI6eyIuIjp7fSwiZjpraW5kIjp7fSwiZjpuYW1lIjp7fX19fX0seyJtYW5hZ2VyIjoiY29udHJvbGxlciIsIm9wZXJhdGlvbiI6IlVwZGF0ZSIsImFwaVZlcnNpb24iOiJ0ZWt0b24uZGV2L3YxIiwidGltZSI6IjIwMjQtMDEtMDhUMTk6MTg6MTZaIiwiZmllbGRzVHlwZSI6IkZpZWxkc1YxIiwiZmllbGRzVjEiOnsiZjpzdGF0dXMiOnsiZjpjb21wbGV0aW9uVGltZSI6e30sImY6Y29uZGl0aW9ucyI6e30sImY6cG9kTmFtZSI6e30sImY6cHJvdmVuYW5jZSI6eyIuIjp7fSwiZjpmZWF0dXJlRmxhZ3MiOnsiLiI6e30sImY6QXdhaXRTaWRlY2FyUmVhZGluZXNzIjp7fSwiZjpDb3NjaGVkdWxlIjp7fSwiZjpEaXNhYmxlQWZmaW5pdHlBc3Npc3RhbnQiOnt9LCJmOkRpc2FibGVDcmVkc0luaXQiOnt9LCJmOkVuYWJsZUFQSUZpZWxkcyI6e30sImY6RW5hYmxlQ0VMSW5XaGVuRXhwcmVzc2lvbiI6e30sImY6RW5hYmxlS2VlcFBvZE9uQ2FuY2VsIjp7fSwiZjpFbmFibGVQYXJhbUVudW0iOnt9LCJmOkVuYWJsZVByb3ZlbmFuY2VJblN0YXR1cyI6e30sImY6RW5hYmxlU3RlcEFjdGlvbnMiOnt9LCJmOkVuYWJsZVRla3Rvbk9DSUJ1bmRsZXMiOnt9LCJmOkVuZm9yY2VOb25mYWxzaWZpYWJpbGl0eSI6e30sImY6TWF4UmVzdWx0U2l6ZSI6e30sImY6UmVxdWlyZUdpdFNTSFNlY3JldEtub3duSG9zdHMiOnt9LCJmOlJlc3VsdEV4dHJhY3Rpb25NZXRob2QiOnt9LCJmOlJ1bm5pbmdJbkVudldpdGhJbmplY3RlZFNpZGVjYXJzIjp7fSwiZjpTY29wZVdoZW5FeHByZXNzaW9uc1RvVGFzayI6e30sImY6U2VuZENsb3VkRXZlbnRzRm9yUnVucyI6e30sImY6U2V0U2VjdXJpdHlDb250ZXh0Ijp7fSwiZjpWZXJpZmljYXRpb25Ob01hdGNoUG9saWN5Ijp7fX19LCJmOnJlc3VsdHMiOnt9LCJmOnN0YXJ0VGltZSI6e30sImY6c3RlcHMiOnt9LCJmOnRhc2tTcGVjIjp7Ii4iOnt9LCJmOmRlc2NyaXB0aW9uIjp7fSwiZjpwYXJhbXMiOnt9LCJmOnJlc3VsdHMiOnt9LCJmOnN0ZXBzIjp7fX19fSwic3VicmVzb3VyY2UiOiJzdGF0dXMifSx7Im1hbmFnZXIiOiJjb250cm9sbGVyIiwib3BlcmF0aW9uIjoiVXBkYXRlIiwiYXBpVmVyc2lvbiI6InRla3Rvbi5kZXYvdjFiZXRhMSIsInRpbWUiOiIyMDI0LTAxLTA4VDE5OjE4OjE2WiIsImZpZWxkc1R5cGUiOiJGaWVsZHNWMSIsImZpZWxkc1YxIjp7ImY6bWV0YWRhdGEiOnsiZjphbm5vdGF0aW9ucyI6eyJmOmNoYWlucy50ZWt0b24uZGV2L3NpZ25lZCI6e319LCJmOmZpbmFsaXplcnMiOnsiLiI6e30sInY6XCJjaGFpbnMudGVrdG9uLmRldlwiIjp7fX19fX1dfSwic3BlYyI6eyJwYXJhbXMiOlt7Im5hbWUiOiJURVNUX09VVFBVVCIsInZhbHVlIjoibWlzc2luZyJ9XSwic2VydmljZUFjY291bnROYW1lIjoiZGVmYXVsdCIsInRhc2tSZWYiOnsibmFtZSI6Im1vY2stYXYtc2Nhbm5lciIsImtpbmQiOiJUYXNrIn0sInRpbWVvdXQiOiIxaDBtMHMifSwic3RhdHVzIjp7ImNvbmRpdGlvbnMiOlt7InR5cGUiOiJTdWNjZWVkZWQiLCJzdGF0dXMiOiJUcnVlIiwibGFzdFRyYW5zaXRpb25UaW1lIjoiMjAyNC0wMS0wOFQxOToxODoxNloiLCJyZWFzb24iOiJTdWNjZWVkZWQiLCJtZXNzYWdlIjoiQWxsIFN0ZXBzIGhhdmUgY29tcGxldGVkIGV4ZWN1dGluZyJ9XSwicG9kTmFtZSI6InNpbXBsZS1idWlsZC1ydW4tNzBmOGViMTM4YS1hdi1zY2FuLXBvZCIsInN0YXJ0VGltZSI6IjIwMjQtMDEtMDhUMTk6MTg6MTJaIiwiY29tcGxldGlvblRpbWUiOiIyMDI0LTAxLTA4VDE5OjE4OjE2WiIsInN0ZXBzIjpbeyJ0ZXJtaW5hdGVkIjp7ImV4aXRDb2RlIjowLCJyZWFzb24iOiJDb21wbGV0ZWQiLCJtZXNzYWdlIjoiW3tcImtleVwiOlwiVEVTVF9PVVRQVVRcIixcInZhbHVlXCI6XCJtaXNzaW5nXCIsXCJ0eXBlXCI6MX1dIiwic3RhcnRlZEF0IjoiMjAyNC0wMS0wOFQxOToxODoxNVoiLCJmaW5pc2hlZEF0IjoiMjAyNC0wMS0wOFQxOToxODoxNVoiLCJjb250YWluZXJJRCI6ImNvbnRhaW5lcmQ6Ly9mMDFlYmFhOTIwNzFiMTgyYjRlZjEzZGU4YWNiMjQ0OTkyZjcxMzM1NzY5MTI1YmQwNDJkODU5NjY3Njk0YTZmIn0sIm5hbWUiOiJzY2FuIiwiY29udGFpbmVyIjoic3RlcC1zY2FuIiwiaW1hZ2VJRCI6InJlZ2lzdHJ5LmFjY2Vzcy5yZWRoYXQuY29tL3ViaTlAc2hhMjU2OmZjMzAwYmU2YWRiZGYyY2E4MTJhZDAxZWZkMGRlZTJhM2UzZjVkMzM5NThhZDZjZDk5MTU5ZTI1ZTllZTEzOTgifV0sInRhc2tSZXN1bHRzIjpbeyJuYW1lIjoiVEVTVF9PVVRQVVQiLCJ0eXBlIjoic3RyaW5nIiwidmFsdWUiOiJtaXNzaW5nIn1dLCJ0YXNrU3BlYyI6eyJwYXJhbXMiOlt7Im5hbWUiOiJURVNUX09VVFBVVCIsInR5cGUiOiJzdHJpbmciLCJkZXNjcmlwdGlvbiI6IlRoZSB2YWx1ZSB0byBvZiB0aGUgVEVTVF9PVVRQVVQgY29tbWl0IHJlc3VsdC4ifV0sImRlc2NyaXB0aW9uIjoiVGhpcyBpcyBhIGR1bW15IHRhc2sgdGhhdCBlbXVsYXRlcyBhbiBhbnRpLXZpcnVzIHNjYW5uZXIgdGFzay4gSXRzIHNvbGUgcHVycG9zZSBpcyB0byBmYWNpbGl0YXRlIHRlc3RpbmcuIiwic3RlcHMiOlt7Im5hbWUiOiJzY2FuIiwiaW1hZ2UiOiJyZWdpc3RyeS5hY2Nlc3MucmVkaGF0LmNvbS91Ymk5OmxhdGVzdCIsImVudiI6W3sibmFtZSI6IlRFU1RfT1VUUFVUIiwidmFsdWUiOiJtaXNzaW5nIn1dLCJyZXNvdXJjZXMiOnt9LCJzY3JpcHQiOiIjIS91c3IvYmluL2VudiBzaFxuc2V0IC1ldW8gcGlwZWZhaWxcblxuZWNobyAtbiBcIiR7VEVTVF9PVVRQVVR9XCIgXHUwMDNlIFwiL3Rla3Rvbi9yZXN1bHRzL1RFU1RfT1VUUFVUXCJcbiJ9XSwicmVzdWx0cyI6W3sibmFtZSI6IlRFU1RfT1VUUFVUIiwidHlwZSI6InN0cmluZyIsImRlc2NyaXB0aW9uIjoiVGhlIHN1bW1hcnkgc2Nhbm5lciBvdXRwdXQuIn1dfSwicHJvdmVuYW5jZSI6eyJmZWF0dXJlRmxhZ3MiOnsiRGlzYWJsZUFmZmluaXR5QXNzaXN0YW50IjpmYWxzZSwiRGlzYWJsZUNyZWRzSW5pdCI6ZmFsc2UsIlJ1bm5pbmdJbkVudldpdGhJbmplY3RlZFNpZGVjYXJzIjp0cnVlLCJSZXF1aXJlR2l0U1NIU2VjcmV0S25vd25Ib3N0cyI6ZmFsc2UsIkVuYWJsZVRla3Rvbk9DSUJ1bmRsZXMiOnRydWUsIlNjb3BlV2hlbkV4cHJlc3Npb25zVG9UYXNrIjpmYWxzZSwiRW5hYmxlQVBJRmllbGRzIjoiYWxwaGEiLCJTZW5kQ2xvdWRFdmVudHNGb3JSdW5zIjpmYWxzZSwiQXdhaXRTaWRlY2FyUmVhZGluZXNzIjp0cnVlLCJFbmZvcmNlTm9uZmFsc2lmaWFiaWxpdHkiOiJub25lIiwiVmVyaWZpY2F0aW9uTm9NYXRjaFBvbGljeSI6Imlnbm9yZSIsIkVuYWJsZVByb3ZlbmFuY2VJblN0YXR1cyI6dHJ1ZSwiUmVzdWx0RXh0cmFjdGlvbk1ldGhvZCI6InRlcm1pbmF0aW9uLW1lc3NhZ2UiLCJNYXhSZXN1bHRTaXplIjo0MDk2LCJTZXRTZWN1cml0eUNvbnRleHQiOmZhbHNlLCJDb3NjaGVkdWxlIjoid29ya3NwYWNlcyJ9fX19",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-prefetch-dependencies-oci-ta",
 				},
 				{
-					"uri": "quay.io/lucarval/test-policies-chains",
-					"digest": {"sha256": "b766741b8b3e135e4e31281aa4b25899e951798b5f213cc4a5360d01eb9b6880"},
+					"digest": {"sha256": "7c5495d5fad59aaee12abc3cbbd2b283818ee1e814b00dbc7f25bf2d14fa4f0c"},
+					"uri": "oci://registry.access.redhat.com/ubi9/ubi-minimal",
+				},
+				{
+					"digest": {"sha256": "24c87766e0bd03b288e69034d629d3fbdda50cef95a661caae553cb20adf04f8"},
+					"uri": "oci://quay.io/konflux-ci/yq",
+				},
+				{
+					"digest": {"sha256": "edcbf837eb289da50a4d65f630a8bb1938ba8fa1e9ae617a224b6d349b2ae3f2"},
+					"uri": "oci://quay.io/konflux-ci/hermeto",
+				},
+				{
+					"digest": {"sha256": "38d08ea58511a67f8754dc025feebdec8ae342fb4e25bc67a3726ec84f7cb7d1"},
 					"name": "pipelineTask",
-					"content": "eyJtZXRhZGF0YSI6eyJuYW1lIjoic2ltcGxlLWJ1aWxkLXJ1bi03MGY4ZWIxMzhhLWJ1aWxkIiwibmFtZXNwYWNlIjoiZGVmYXVsdCIsInVpZCI6IjdiZThlMTljLTY1NDYtNDZjZC1hZGY5LTJjZTNiYTI5N2I5ZCIsInJlc291cmNlVmVyc2lvbiI6IjQ1MjQiLCJnZW5lcmF0aW9uIjoxLCJjcmVhdGlvblRpbWVzdGFtcCI6IjIwMjQtMDEtMDhUMTk6MTg6MTdaIiwibGFiZWxzIjp7ImFwcC5rdWJlcm5ldGVzLmlvL21hbmFnZWQtYnkiOiJ0ZWt0b24tcGlwZWxpbmVzIiwidGVrdG9uLmRldi9tZW1iZXJPZiI6InRhc2tzIiwidGVrdG9uLmRldi9waXBlbGluZSI6InNpbXBsZS1idWlsZCIsInRla3Rvbi5kZXYvcGlwZWxpbmVSdW4iOiJzaW1wbGUtYnVpbGQtcnVuLTcwZjhlYjEzOGEiLCJ0ZWt0b24uZGV2L3BpcGVsaW5lVGFzayI6ImJ1aWxkIiwidGVrdG9uLmRldi90YXNrIjoibW9jay1idWlsZCJ9LCJhbm5vdGF0aW9ucyI6eyJjaGFpbnMudGVrdG9uLmRldi9zaWduZWQiOiJ0cnVlIiwicGlwZWxpbmUudGVrdG9uLmRldi9yZWxlYXNlIjoiZTU5ZWU0MiJ9LCJvd25lclJlZmVyZW5jZXMiOlt7ImFwaVZlcnNpb24iOiJ0ZWt0b24uZGV2L3YxIiwia2luZCI6IlBpcGVsaW5lUnVuIiwibmFtZSI6InNpbXBsZS1idWlsZC1ydW4tNzBmOGViMTM4YSIsInVpZCI6IjFiNTY2Zjg1LTJjMTMtNDcxNC1iN2JhLTE4OTM0ZmM3Y2MxYyIsImNvbnRyb2xsZXIiOnRydWUsImJsb2NrT3duZXJEZWxldGlvbiI6dHJ1ZX1dLCJmaW5hbGl6ZXJzIjpbImNoYWlucy50ZWt0b24uZGV2Il0sIm1hbmFnZWRGaWVsZHMiOlt7Im1hbmFnZXIiOiJjb250cm9sbGVyIiwib3BlcmF0aW9uIjoiVXBkYXRlIiwiYXBpVmVyc2lvbiI6InRla3Rvbi5kZXYvdjEiLCJ0aW1lIjoiMjAyNC0wMS0wOFQxOToxODoxN1oiLCJmaWVsZHNUeXBlIjoiRmllbGRzVjEiLCJmaWVsZHNWMSI6eyJmOm1ldGFkYXRhIjp7ImY6YW5ub3RhdGlvbnMiOnsiLiI6e30sImY6cGlwZWxpbmUudGVrdG9uLmRldi9yZWxlYXNlIjp7fX0sImY6bGFiZWxzIjp7Ii4iOnt9LCJmOnRla3Rvbi5kZXYvbWVtYmVyT2YiOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmUiOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmVSdW4iOnt9LCJmOnRla3Rvbi5kZXYvcGlwZWxpbmVUYXNrIjp7fSwiZjp0ZWt0b24uZGV2L3Rhc2siOnt9fSwiZjpvd25lclJlZmVyZW5jZXMiOnsiLiI6e30sIms6e1widWlkXCI6XCIxYjU2NmY4NS0yYzEzLTQ3MTQtYjdiYS0xODkzNGZjN2NjMWNcIn0iOnt9fX0sImY6c3BlYyI6eyIuIjp7fSwiZjpwYXJhbXMiOnt9LCJmOnNlcnZpY2VBY2NvdW50TmFtZSI6e30sImY6dGFza1JlZiI6eyIuIjp7fSwiZjpraW5kIjp7fSwiZjpwYXJhbXMiOnt9LCJmOnJlc29sdmVyIjp7fX19fX0seyJtYW5hZ2VyIjoiY29udHJvbGxlciIsIm9wZXJhdGlvbiI6IlVwZGF0ZSIsImFwaVZlcnNpb24iOiJ0ZWt0b24uZGV2L3YxIiwidGltZSI6IjIwMjQtMDEtMDhUMTk6MTg6MjFaIiwiZmllbGRzVHlwZSI6IkZpZWxkc1YxIiwiZmllbGRzVjEiOnsiZjpzdGF0dXMiOnsiZjpjb21wbGV0aW9uVGltZSI6e30sImY6Y29uZGl0aW9ucyI6e30sImY6cG9kTmFtZSI6e30sImY6cHJvdmVuYW5jZSI6eyIuIjp7fSwiZjpmZWF0dXJlRmxhZ3MiOnsiLiI6e30sImY6QXdhaXRTaWRlY2FyUmVhZGluZXNzIjp7fSwiZjpDb3NjaGVkdWxlIjp7fSwiZjpEaXNhYmxlQWZmaW5pdHlBc3Npc3RhbnQiOnt9LCJmOkRpc2FibGVDcmVkc0luaXQiOnt9LCJmOkVuYWJsZUFQSUZpZWxkcyI6e30sImY6RW5hYmxlQ0VMSW5XaGVuRXhwcmVzc2lvbiI6e30sImY6RW5hYmxlS2VlcFBvZE9uQ2FuY2VsIjp7fSwiZjpFbmFibGVQYXJhbUVudW0iOnt9LCJmOkVuYWJsZVByb3ZlbmFuY2VJblN0YXR1cyI6e30sImY6RW5hYmxlU3RlcEFjdGlvbnMiOnt9LCJmOkVuYWJsZVRla3Rvbk9DSUJ1bmRsZXMiOnt9LCJmOkVuZm9yY2VOb25mYWxzaWZpYWJpbGl0eSI6e30sImY6TWF4UmVzdWx0U2l6ZSI6e30sImY6UmVxdWlyZUdpdFNTSFNlY3JldEtub3duSG9zdHMiOnt9LCJmOlJlc3VsdEV4dHJhY3Rpb25NZXRob2QiOnt9LCJmOlJ1bm5pbmdJbkVudldpdGhJbmplY3RlZFNpZGVjYXJzIjp7fSwiZjpTY29wZVdoZW5FeHByZXNzaW9uc1RvVGFzayI6e30sImY6U2VuZENsb3VkRXZlbnRzRm9yUnVucyI6e30sImY6U2V0U2VjdXJpdHlDb250ZXh0Ijp7fSwiZjpWZXJpZmljYXRpb25Ob01hdGNoUG9saWN5Ijp7fX0sImY6cmVmU291cmNlIjp7Ii4iOnt9LCJmOmRpZ2VzdCI6eyIuIjp7fSwiZjpzaGEyNTYiOnt9fSwiZjplbnRyeVBvaW50Ijp7fSwiZjp1cmkiOnt9fX0sImY6cmVzdWx0cyI6e30sImY6c3RhcnRUaW1lIjp7fSwiZjpzdGVwcyI6e30sImY6dGFza1NwZWMiOnsiLiI6e30sImY6ZGVzY3JpcHRpb24iOnt9LCJmOnBhcmFtcyI6e30sImY6cmVzdWx0cyI6e30sImY6c3RlcHMiOnt9fX19LCJzdWJyZXNvdXJjZSI6InN0YXR1cyJ9LHsibWFuYWdlciI6ImNvbnRyb2xsZXIiLCJvcGVyYXRpb24iOiJVcGRhdGUiLCJhcGlWZXJzaW9uIjoidGVrdG9uLmRldi92MWJldGExIiwidGltZSI6IjIwMjQtMDEtMDhUMTk6MTg6MjRaIiwiZmllbGRzVHlwZSI6IkZpZWxkc1YxIiwiZmllbGRzVjEiOnsiZjptZXRhZGF0YSI6eyJmOmFubm90YXRpb25zIjp7ImY6Y2hhaW5zLnRla3Rvbi5kZXYvc2lnbmVkIjp7fX0sImY6ZmluYWxpemVycyI6eyIuIjp7fSwidjpcImNoYWlucy50ZWt0b24uZGV2XCIiOnt9fX19fV19LCJzcGVjIjp7InBhcmFtcyI6W3sibmFtZSI6IklNQUdFX1VSTCIsInZhbHVlIjoicXVheS5pby9sdWNhcnZhbC90ZXN0LXBvbGljaWVzLWNoYWlucyJ9LHsibmFtZSI6IklNQUdFX0RJR0VTVCIsInZhbHVlIjoic2hhMjU2OjI5YjliN2E3ZDlhNGFjYzMxN2Y4ZmVjODkyZDA3MmU0ODJjYmI5YjAzMDI1ZDhkMDc4YjQ5ODcyYTExZDJkOWEifV0sInNlcnZpY2VBY2NvdW50TmFtZSI6ImRlZmF1bHQiLCJ0YXNrUmVmIjp7ImtpbmQiOiJUYXNrIiwicmVzb2x2ZXIiOiJidW5kbGVzIiwicGFyYW1zIjpbeyJuYW1lIjoiYnVuZGxlIiwidmFsdWUiOiJxdWF5LmlvL2x1Y2FydmFsL3Rlc3QtcG9saWNpZXMtY2hhaW5zQHNoYTI1NjpiNzY2NzQxYjhiM2UxMzVlNGUzMTI4MWFhNGIyNTg5OWU5NTE3OThiNWYyMTNjYzRhNTM2MGQwMWViOWI2ODgwIn0seyJuYW1lIjoibmFtZSIsInZhbHVlIjoibW9jay1idWlsZCJ9LHsibmFtZSI6ImtpbmQiLCJ2YWx1ZSI6InRhc2sifV19LCJ0aW1lb3V0IjoiMWgwbTBzIn0sInN0YXR1cyI6eyJjb25kaXRpb25zIjpbeyJ0eXBlIjoiU3VjY2VlZGVkIiwic3RhdHVzIjoiVHJ1ZSIsImxhc3RUcmFuc2l0aW9uVGltZSI6IjIwMjQtMDEtMDhUMTk6MTg6MjFaIiwicmVhc29uIjoiU3VjY2VlZGVkIiwibWVzc2FnZSI6IkFsbCBTdGVwcyBoYXZlIGNvbXBsZXRlZCBleGVjdXRpbmcifV0sInBvZE5hbWUiOiJzaW1wbGUtYnVpbGQtcnVuLTcwZjhlYjEzOGEtYnVpbGQtcG9kIiwic3RhcnRUaW1lIjoiMjAyNC0wMS0wOFQxOToxODoxN1oiLCJjb21wbGV0aW9uVGltZSI6IjIwMjQtMDEtMDhUMTk6MTg6MjFaIiwic3RlcHMiOlt7InRlcm1pbmF0ZWQiOnsiZXhpdENvZGUiOjAsInJlYXNvbiI6IkNvbXBsZXRlZCIsIm1lc3NhZ2UiOiJbe1wia2V5XCI6XCJJTUFHRV9ESUdFU1RcIixcInZhbHVlXCI6XCJzaGEyNTY6MjliOWI3YTdkOWE0YWNjMzE3ZjhmZWM4OTJkMDcyZTQ4MmNiYjliMDMwMjVkOGQwNzhiNDk4NzJhMTFkMmQ5YVwiLFwidHlwZVwiOjF9LHtcImtleVwiOlwiSU1BR0VfVVJMXCIsXCJ2YWx1ZVwiOlwicXVheS5pby9sdWNhcnZhbC90ZXN0LXBvbGljaWVzLWNoYWluc1wiLFwidHlwZVwiOjF9XSIsInN0YXJ0ZWRBdCI6IjIwMjQtMDEtMDhUMTk6MTg6MjBaIiwiZmluaXNoZWRBdCI6IjIwMjQtMDEtMDhUMTk6MTg6MjBaIiwiY29udGFpbmVySUQiOiJjb250YWluZXJkOi8vYjc5NWJiM2U4YmU2ZmFiNjIwNjNhMThkZGFlOWVkNGU0MDcxYTI1YTBlMzA3ZjYwY2UzMDAxMjQ5MTgyYzBmMiJ9LCJuYW1lIjoiYnVpbGQtYW5kLXB1c2giLCJjb250YWluZXIiOiJzdGVwLWJ1aWxkLWFuZC1wdXNoIiwiaW1hZ2VJRCI6InJlZ2lzdHJ5LmFjY2Vzcy5yZWRoYXQuY29tL3ViaTlAc2hhMjU2OmZjMzAwYmU2YWRiZGYyY2E4MTJhZDAxZWZkMGRlZTJhM2UzZjVkMzM5NThhZDZjZDk5MTU5ZTI1ZTllZTEzOTgifV0sInRhc2tSZXN1bHRzIjpbeyJuYW1lIjoiSU1BR0VfRElHRVNUIiwidHlwZSI6InN0cmluZyIsInZhbHVlIjoic2hhMjU2OjI5YjliN2E3ZDlhNGFjYzMxN2Y4ZmVjODkyZDA3MmU0ODJjYmI5YjAzMDI1ZDhkMDc4YjQ5ODcyYTExZDJkOWEifSx7Im5hbWUiOiJJTUFHRV9VUkwiLCJ0eXBlIjoic3RyaW5nIiwidmFsdWUiOiJxdWF5LmlvL2x1Y2FydmFsL3Rlc3QtcG9saWNpZXMtY2hhaW5zIn1dLCJ0YXNrU3BlYyI6eyJwYXJhbXMiOlt7Im5hbWUiOiJJTUFHRV9VUkwiLCJ0eXBlIjoic3RyaW5nIiwiZGVzY3JpcHRpb24iOiJUaGUgdmFsdWUgdG8gb2YgdGhlIElNQUdFX1VSTCBjb21taXQgcmVzdWx0LiJ9LHsibmFtZSI6IklNQUdFX0RJR0VTVCIsInR5cGUiOiJzdHJpbmciLCJkZXNjcmlwdGlvbiI6IlRoZSB2YWx1ZSBvZiB0aGUgSU1BR0VfRElHRVNUIHJlc3VsdC4ifV0sImRlc2NyaXB0aW9uIjoiVGhpcyBpcyBhIGR1bW15IHRhc2sgdGhhdCBlbXVsYXRlcyBhIHRhc2sgdGhhdCBwZXJmb3JtcyBjb250YWluZXIgYnVpbGQgYW5kIHB1c2guIEl0cyBzb2xlIHB1cnBvc2UgaXMgdG8gZmFjaWxpdGF0ZSB0ZXN0aW5nLiIsInN0ZXBzIjpbeyJuYW1lIjoiYnVpbGQtYW5kLXB1c2giLCJpbWFnZSI6InJlZ2lzdHJ5LmFjY2Vzcy5yZWRoYXQuY29tL3ViaTk6bGF0ZXN0IiwiZW52IjpbeyJuYW1lIjoiSU1BR0VfVVJMIiwidmFsdWUiOiJxdWF5LmlvL2x1Y2FydmFsL3Rlc3QtcG9saWNpZXMtY2hhaW5zIn0seyJuYW1lIjoiSU1BR0VfRElHRVNUIiwidmFsdWUiOiJzaGEyNTY6MjliOWI3YTdkOWE0YWNjMzE3ZjhmZWM4OTJkMDcyZTQ4MmNiYjliMDMwMjVkOGQwNzhiNDk4NzJhMTFkMmQ5YSJ9XSwicmVzb3VyY2VzIjp7fSwic2NyaXB0IjoiIyEvdXNyL2Jpbi9lbnYgc2hcbnNldCAtZXVvIHBpcGVmYWlsXG5cbmVjaG8gLW4gXCIke0lNQUdFX1VSTH1cIiBcdTAwM2UgXCIvdGVrdG9uL3Jlc3VsdHMvSU1BR0VfVVJMXCJcbmVjaG8gLW4gXCIke0lNQUdFX0RJR0VTVH1cIiBcdTAwM2UgXCIvdGVrdG9uL3Jlc3VsdHMvSU1BR0VfRElHRVNUXCJcbiJ9XSwicmVzdWx0cyI6W3sibmFtZSI6IklNQUdFX1VSTCIsInR5cGUiOiJzdHJpbmciLCJkZXNjcmlwdGlvbiI6IkltYWdlIHJlcG9zaXRvcnkgd2hlcmUgdGhlIGJ1aWx0IGltYWdlIHdvdWxkIGJlIHB1c2hlZCB0by4ifSx7Im5hbWUiOiJJTUFHRV9ESUdFU1QiLCJ0eXBlIjoic3RyaW5nIiwiZGVzY3JpcHRpb24iOiJEaWdlc3Qgb2YgdGhlIGltYWdlIGp1c3QgYnVpbHQuIn1dfSwicHJvdmVuYW5jZSI6eyJyZWZTb3VyY2UiOnsidXJpIjoicXVheS5pby9sdWNhcnZhbC90ZXN0LXBvbGljaWVzLWNoYWlucyIsImRpZ2VzdCI6eyJzaGEyNTYiOiJiNzY2NzQxYjhiM2UxMzVlNGUzMTI4MWFhNGIyNTg5OWU5NTE3OThiNWYyMTNjYzRhNTM2MGQwMWViOWI2ODgwIn0sImVudHJ5UG9pbnQiOiJtb2NrLWJ1aWxkIn0sImZlYXR1cmVGbGFncyI6eyJEaXNhYmxlQWZmaW5pdHlBc3Npc3RhbnQiOmZhbHNlLCJEaXNhYmxlQ3JlZHNJbml0IjpmYWxzZSwiUnVubmluZ0luRW52V2l0aEluamVjdGVkU2lkZWNhcnMiOnRydWUsIlJlcXVpcmVHaXRTU0hTZWNyZXRLbm93bkhvc3RzIjpmYWxzZSwiRW5hYmxlVGVrdG9uT0NJQnVuZGxlcyI6dHJ1ZSwiU2NvcGVXaGVuRXhwcmVzc2lvbnNUb1Rhc2siOmZhbHNlLCJFbmFibGVBUElGaWVsZHMiOiJhbHBoYSIsIlNlbmRDbG91ZEV2ZW50c0ZvclJ1bnMiOmZhbHNlLCJBd2FpdFNpZGVjYXJSZWFkaW5lc3MiOnRydWUsIkVuZm9yY2VOb25mYWxzaWZpYWJpbGl0eSI6Im5vbmUiLCJWZXJpZmljYXRpb25Ob01hdGNoUG9saWN5IjoiaWdub3JlIiwiRW5hYmxlUHJvdmVuYW5jZUluU3RhdHVzIjp0cnVlLCJSZXN1bHRFeHRyYWN0aW9uTWV0aG9kIjoidGVybWluYXRpb24tbWVzc2FnZSIsIk1heFJlc3VsdFNpemUiOjQwOTYsIlNldFNlY3VyaXR5Q29udGV4dCI6ZmFsc2UsIkNvc2NoZWR1bGUiOiJ3b3Jrc3BhY2VzIn19fX0=",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-buildah-oci-ta",
 				},
 				{
-					"uri": "git+gitspam.spam/spam/spam.git",
-					"digest": {"sha1": "18304972d3e4a7621b899da8181b563820bb7861"},
+					"digest": {"sha256": "27400eaf836985bcc35182d62d727629f061538f61603c05b85d5d99bfa7da2d"},
+					"uri": "oci://quay.io/konflux-ci/buildah-task",
+				},
+				{
+					"digest": {"sha256": "dc0da6b4448428e625271b542cc029ab03de92f75ea50d6d63b1d088d20bbd28"},
+					"uri": "oci://registry.access.redhat.com/rh-syft-tech-preview/syft-rhel9",
+				},
+				{
+					"digest": {"sha256": "41e877cac3bda4ae5b8a59bbb8241e6f56dc18750476e6ce979264de161516dc"},
+					"uri": "oci://quay.io/konflux-ci/mobster",
+				},
+				{
+					"digest": {"sha256": "90ac97b811073cb99a23232c15a08082b586c702b85da6200cf54ef505e3c50c"},
+					"uri": "oci://quay.io/konflux-ci/appstudio-utils",
+				},
+				{
+					"digest": {"sha256": "79784d53749584bc5a8de32142ec4e2f01cdbf42c20d94e59280e0b927c8597d"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-build-image-index",
+				},
+				{
+					"digest": {"sha256": "1d07d16810c26713f3d875083924d93697900147364360587ccb5a63f2c31012"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-deprecated-image-check",
+				},
+				{
+					"digest": {"sha256": "e4f22a48ed1c029a3b43f81fb216b76fabb9fc5fba516f69c09553310e1bc170"},
+					"uri": "oci://quay.io/konflux-ci/konflux-test",
+				},
+				{
+					"digest": {"sha256": "a7cc183967f89c4ac100d04ab8f81e54733beee60a0528208107c9a22d3c43af"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-clair-scan",
+				},
+				{
+					"digest": {"sha256": "4a5423e125fc28db800421422d9933290dc4b62a22401d74cd3348c03107a5d9"},
+					"uri": "oci://quay.io/konflux-ci/konflux-test",
+				},
+				{
+					"digest": {"sha256": "022a5e23a44b074d9fca28670b3a679bd842cee62961794cc96b05e34a39ebbf"},
+					"uri": "oci://quay.io/konflux-ci/clair-in-ci",
+				},
+				{
+					"digest": {"sha256": "1beeecce012c99794568f74265c065839f9703d28306a8430b667f639343a98b"},
+					"uri": "oci://quay.io/konflux-ci/oras",
+				},
+				{
+					"digest": {"sha256": "7db70c6cf23f39b9aad8b75285df31ed2c1213d87842cd4502ffc268808c96c6"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-ecosystem-cert-preflight-checks",
+				},
+				{
+					"digest": {"sha256": "4542f5a2a046ca36653749a8985e46744a5d2d36ee10ca14409be718ce15129e"},
+					"uri": "oci://quay.io/konflux-ci/oras",
+				},
+				{
+					"digest": {"sha256": "a7cae9e96663e277a3904d0c78630508ddb6cc8eebaa912a840bd20f68dcaad1"},
+					"uri": "oci://quay.io/redhat-appstudio/konflux-test",
+				},
+				{
+					"digest": {"sha256": "57f74e3d1ad72bfd11cf888eae99f8cad4d75c25515413a7c30ad9963aed2741"},
+					"uri": "oci://quay.io/opdev/preflight",
+				},
+				{
+					"digest": {"sha256": "181d63c126e3119a9d57b8feed4eb66a875b5208c3e90724c22758e65dca8733"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-sast-snyk-check-oci-ta",
+				},
+				{
+					"digest": {"sha256": "4689f88dd253bd1feebf57f1a76a5a751880f739000719cd662bbdc76990a7fd"},
+					"uri": "oci://quay.io/konflux-ci/build-trusted-artifacts",
+				},
+				{
+					"digest": {"sha256": "b0bd59748cda4a7abf311e4f448e6c1d00c6b6d8c0ecc1c2eb33e08dc0e0b802"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-clamav-scan",
+				},
+				{
+					"digest": {"sha256": "7ada6c0c25e82268700237fb92e1ea838e00e9f3c5f4b42fd14c4d80e34a9450"},
+					"uri": "oci://quay.io/konflux-ci/clamav-db",
+				},
+				{
+					"digest": {"sha256": "8d756a91aae1fa5186efafee056446bb5e77228cf5ad9a7ae0e3f8d727da50cd"},
+					"uri": "oci://quay.io/konflux-ci/oras",
+				},
+				{
+					"digest": {"sha256": "db2b267dc15e4ed17f704ee91b8e9b38068e1a35b1018a328fdca621819d74c6"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-coverity-availability-check",
+				},
+				{
+					"digest": {"sha256": "bf7bdde00b7212f730c1356672290af6f38d070da2c8a316987b5c32fd49e0b9"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-sast-shell-check-oci-ta",
+				},
+				{
+					"digest": {"sha256": "7e04a34cc9adb5fa0bfe5070d1a60321205f5e6f0cd3fb2e8a33a5ec8508fd29"},
+					"uri": "oci://quay.io/konflux-ci/konflux-test",
+				},
+				{
+					"digest": {"sha256": "a2bde66f6b4164620298c7d709b8f08515409404000fa1dc2260d2508b135651"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-sast-unicode-check-oci-ta",
+				},
+				{
+					"digest": {"sha256": "f44be1bf0262471f2f503f5e19da5f0628dcaf968c86272a2ad6b4871e708448"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-apply-tags",
+				},
+				{
+					"digest": {"sha256": "2bc5b3afc5de56da0f06eac60b65e86f6b861b16a63f48579fc0bac7d657e14c"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/tekton-catalog/task-push-dockerfile-oci-ta",
+				},
+				{
+					"digest": {"sha256": "06977232e67509e5540528ff6c3b081b23fc5bf3e40fb3e2d09a086d5c3243fc"},
+					"name": "pipelineTask",
+					"uri": "quay.io/konflux-ci/konflux-vanguard/task-rpms-signature-scan",
+				},
+				{
+					"digest": {"sha256": "21ea4a98b1784a2b8103338c46b92a5f53a47f981ba2207d8ed534b0bb0e95f0"},
+					"uri": "oci://quay.io/konflux-ci/tools",
+				},
+				{
+					"digest": {"sha256": "89cdc9d251e15d07018548137b4034669df8e9e2b171a188c8b8201d3638cb17"},
+					"uri": "oci://quay.io/konflux-ci/konflux-test",
+				},
+				{
+					"digest": {"sha1": "82126ebeeb0d80883d5d85f4f48066821464e3d8"},
 					"name": "inputs/result",
+					"uri": "git+https://github.com/st3penta/cli.git",
 				},
 			],
 		},
 		"runDetails": {
 			"builder": {"id": "https://tekton.dev/chains/v2"},
-			"metadata": {
-				"invocationID": "1b566f85-2c13-4714-b7ba-18934fc7cc1c",
-				"startedOn": "2024-01-08T19:18:07Z",
-				"finishedOn": "2024-01-08T19:18:21Z",
-			},
 			"byproducts": [
 				{
-					"name": "pipelineRunResults/IMAGE_URL",
+					"content": "Imh0dHBzOi8vZ2l0aHViLmNvbS9zdDNwZW50YS9jbGki",
 					"mediaType": "application/json",
-					"content": "InF1YXkuaW8vbHVjYXJ2YWwvdGVzdC1wb2xpY2llcy1jaGFpbnMi",
-				},
-				{
-					"name": "pipelineRunResults/IMAGE_DIGEST",
-					"mediaType": "application/json",
-					"content": "InNoYTI1NjoyOWI5YjdhN2Q5YTRhY2MzMTdmOGZlYzg5MmQwNzJlNDgyY2JiOWIwMzAyNWQ4ZDA3OGI0OTg3MmExMWQyZDlhIg==",
-				},
-				{
 					"name": "pipelineRunResults/CHAINS-GIT_URL",
-					"mediaType": "application/json",
-					"content": "ImdpdHNwYW0uc3BhbS9zcGFtL3NwYW0i",
 				},
 				{
-					"name": "pipelineRunResults/CHAINS-GIT_COMMIT",
+					"content": "IjgyMTI2ZWJlZWIwZDgwODgzZDVkODVmNGY0ODA2NjgyMTQ2NGUzZDgi",
 					"mediaType": "application/json",
-					"content": "IjE4MzA0OTcyZDNlNGE3NjIxYjg5OWRhODE4MWI1NjM4MjBiYjc4NjEi",
+					"name": "pipelineRunResults/CHAINS-GIT_COMMIT",
+				},
+				{
+					"content": "InRydWUi",
+					"mediaType": "application/json",
+					"name": "taskRunResults/build",
+				},
+				{
+					"content": "IjgyMTI2ZWJlZWIwZDgwODgzZDVkODVmNGY0ODA2NjgyMTQ2NGUzZDgi",
+					"mediaType": "application/json",
+					"name": "taskRunResults/CHAINS-GIT_COMMIT",
+				},
+				{
+					"content": "Imh0dHBzOi8vZ2l0aHViLmNvbS9zdDNwZW50YS9jbGki",
+					"mediaType": "application/json",
+					"name": "taskRunResults/CHAINS-GIT_URL",
+				},
+				{
+					"content": "IjgyMTI2ZWJlZWIwZDgwODgzZDVkODVmNGY0ODA2NjgyMTQ2NGUzZDgi",
+					"mediaType": "application/json",
+					"name": "taskRunResults/commit",
+				},
+				{
+					"content": "IjE3NTk4MzA3ODEi",
+					"mediaType": "application/json",
+					"name": "taskRunResults/commit-timestamp",
+				},
+				{
+					"content": "IjgyMTI2ZWIi",
+					"mediaType": "application/json",
+					"name": "taskRunResults/short-commit",
+				},
+				{
+					"content": "Imh0dHBzOi8vZ2l0aHViLmNvbS9zdDNwZW50YS9jbGki",
+					"mediaType": "application/json",
+					"name": "taskRunResults/url",
+				},
+				{
+					"content": "Im9jaTpxdWF5LmlvL3N0M3BlbnRhLWtvbmZsdXgtdGVzdC1yZWdpc3RyeS91c2VyLW5zMi9jbGlAc2hhMjU2OjgxMzBjYTczY2Q3NWFlNzY4MDJiNmNhZDhmYTU2YmYzOTdjYzM5MGUwYjEwZGYyNzlkYTA0ZWExMTNhYTlkMjgi",
+					"mediaType": "application/json",
+					"name": "taskRunResults/SOURCE_ARTIFACT",
+				},
+				{
+					"content": "IiI=",
+					"mediaType": "application/json",
+					"name": "taskRunResults/CACHI2_ARTIFACT",
+				},
+				{
+					"content": "Im9jaTpxdWF5LmlvL3N0M3BlbnRhLWtvbmZsdXgtdGVzdC1yZWdpc3RyeS91c2VyLW5zMi9jbGlAc2hhMjU2OjgxMzBjYTczY2Q3NWFlNzY4MDJiNmNhZDhmYTU2YmYzOTdjYzM5MGUwYjEwZGYyNzlkYTA0ZWExMTNhYTlkMjgi",
+					"mediaType": "application/json",
+					"name": "taskRunResults/SOURCE_ARTIFACT",
+				},
+				{
+					"content": "InF1YXkuaW8vc3QzcGVudGEta29uZmx1eC10ZXN0LXJlZ2lzdHJ5L3VzZXItbnMyL2NsaTo4MjEyNmViZWViMGQ4MDg4M2Q1ZDg1ZjRmNDgwNjY4MjE0NjRlM2Q4QHNoYTI1NjplYzlmZjQ1NTlhZTA5OWIwN2MyNGM3MTI1N2JkMjU4NTliMGZiZGQ0NDE0YTEyY2Q0NjFiYTI2MWJhMDE4ZTMxIg==",
+					"mediaType": "application/json",
+					"name": "taskRunResults/IMAGE_REF",
+				},
+				{
+					"content": "InF1YXkuaW8vc3QzcGVudGEta29uZmx1eC10ZXN0LXJlZ2lzdHJ5L3VzZXItbnMyL2NsaUBzaGEyNTY6MjgzZTU5ZTFlMGQ1NWJmNWRkYmFjMmNmNDNhYWQyMzRkYWE5MTgyY2E1YmEyNTIyZTYzMWVmYTMzY2Y3MTFhZSI=",
+					"mediaType": "application/json",
+					"name": "taskRunResults/SBOM_BLOB_URL",
+				},
+				{
+					"content": "IntcImltYWdlXCI6IHtcInB1bGxzcGVjXCI6IFwicXVheS5pby9zdDNwZW50YS1rb25mbHV4LXRlc3QtcmVnaXN0cnkvdXNlci1uczIvY2xpOjgyMTI2ZWJlZWIwZDgwODgzZDVkODVmNGY0ODA2NjgyMTQ2NGUzZDhcIiwgXCJkaWdlc3RzXCI6IFtcInNoYTI1NjplYzlmZjQ1NTlhZTA5OWIwN2MyNGM3MTI1N2JkMjU4NTliMGZiZGQ0NDE0YTEyY2Q0NjFiYTI2MWJhMDE4ZTMxXCJdfX1cbiI=",
+					"mediaType": "application/json",
+					"name": "taskRunResults/IMAGES_PROCESSED",
+				},
+				{
+					"content": "IntcInJlc3VsdFwiOlwiV0FSTklOR1wiLFwidGltZXN0YW1wXCI6XCIyMDI1LTEwLTA3VDEwOjAwOjMxKzAwOjAwXCIsXCJub3RlXCI6XCJUYXNrIGRlcHJlY2F0ZWQtaW1hZ2UtY2hlY2sgY29tcGxldGVkOiBDaGVjayByZXN1bHQgZm9yIHRhc2sgcmVzdWx0LlwiLFwibmFtZXNwYWNlXCI6XCJyZXF1aXJlZF9jaGVja3NcIixcInN1Y2Nlc3Nlc1wiOjEsXCJmYWlsdXJlc1wiOjAsXCJ3YXJuaW5nc1wiOjF9XG4i",
+					"mediaType": "application/json",
+					"name": "taskRunResults/TEST_OUTPUT",
+				},
+				{
+					"content": "IntcImltYWdlXCI6IHtcInB1bGxzcGVjXCI6IFwicXVheS5pby9zdDNwZW50YS1rb25mbHV4LXRlc3QtcmVnaXN0cnkvdXNlci1uczIvY2xpOjgyMTI2ZWJlZWIwZDgwODgzZDVkODVmNGY0ODA2NjgyMTQ2NGUzZDhcIiwgXCJkaWdlc3RzXCI6IFtcInNoYTI1NjplYzlmZjQ1NTlhZTA5OWIwN2MyNGM3MTI1N2JkMjU4NTliMGZiZGQ0NDE0YTEyY2Q0NjFiYTI2MWJhMDE4ZTMxXCJdfX1cbiI=",
+					"mediaType": "application/json",
+					"name": "taskRunResults/IMAGES_PROCESSED",
+				},
+				{
+					"content": "IntcInNoYTI1NjplYzlmZjQ1NTlhZTA5OWIwN2MyNGM3MTI1N2JkMjU4NTliMGZiZGQ0NDE0YTEyY2Q0NjFiYTI2MWJhMDE4ZTMxXCI6XCJzaGEyNTY6NDM1NzI3MDMzZDcyY2Q5ZmM5NDY2NGI0Zjk0ZWQyMDM1YjZmOWQyOTcxNTA4MTQzYzNmODEzMjJhOTllOTIxYlwifVxuIg==",
+					"mediaType": "application/json",
+					"name": "taskRunResults/REPORTS",
+				},
+				{
+					"content": "IntcInZ1bG5lcmFiaWxpdGllc1wiOntcImNyaXRpY2FsXCI6MCxcImhpZ2hcIjowLFwibWVkaXVtXCI6MCxcImxvd1wiOjAsXCJ1bmtub3duXCI6MH0sXCJ1bnBhdGNoZWRfdnVsbmVyYWJpbGl0aWVzXCI6e1wiY3JpdGljYWxcIjowLFwiaGlnaFwiOjAsXCJtZWRpdW1cIjoxMSxcImxvd1wiOjMzLFwidW5rbm93blwiOjl9fVxuIg==",
+					"mediaType": "application/json",
+					"name": "taskRunResults/SCAN_OUTPUT",
+				},
+				{
+					"content": "IntcInJlc3VsdFwiOlwiU1VDQ0VTU1wiLFwidGltZXN0YW1wXCI6XCIyMDI1LTEwLTA3VDEwOjAyOjAxKzAwOjAwXCIsXCJub3RlXCI6XCJUYXNrIGNsYWlyLXNjYW4gY29tcGxldGVkOiBSZWZlciB0byBUZWt0b24gdGFzayByZXN1bHQgU0NBTl9PVVRQVVQgZm9yIHZ1bG5lcmFiaWxpdGllcyBzY2FubmVkIGJ5IENsYWlyLlwiLFwibmFtZXNwYWNlXCI6XCJkZWZhdWx0XCIsXCJzdWNjZXNzZXNcIjowLFwiZmFpbHVyZXNcIjowLFwid2FybmluZ3NcIjowfVxuIg==",
+					"mediaType": "application/json",
+					"name": "taskRunResults/TEST_OUTPUT",
+				},
+				{
+					"content": "ImFwcGxpY2F0aW9uIg==",
+					"mediaType": "application/json",
+					"name": "taskRunResults/ARTIFACT_TYPE",
+				},
+				{
+					"content": "ImludHJvc3BlY3Rpb24i",
+					"mediaType": "application/json",
+					"name": "taskRunResults/ARTIFACT_TYPE_SET_BY",
+				},
+				{
+					"content": "IntcImltYWdlXCI6IHtcInB1bGxzcGVjXCI6IFwicXVheS5pby9zdDNwZW50YS1rb25mbHV4LXRlc3QtcmVnaXN0cnkvdXNlci1uczIvY2xpOjgyMTI2ZWJlZWIwZDgwODgzZDVkODVmNGY0ODA2NjgyMTQ2NGUzZDhcIiwgXCJkaWdlc3RzXCI6IFtcInNoYTI1NjplYzlmZjQ1NTlhZTA5OWIwN2MyNGM3MTI1N2JkMjU4NTliMGZiZGQ0NDE0YTEyY2Q0NjFiYTI2MWJhMDE4ZTMxXCJdfX0i",
+					"mediaType": "application/json",
+					"name": "taskRunResults/IMAGES_PROCESSED",
+				},
+				{
+					"content": "IntcInJlc3VsdFwiOlwiU1VDQ0VTU1wiLFwidGltZXN0YW1wXCI6XCIxNzU5ODMxMzI4XCIsXCJub3RlXCI6XCJUYXNrIHByZWZsaWdodCBpcyBhIFNVQ0NFU1M6IFJlZmVyIHRvIFRla3RvbiB0YXNrIGxvZ3MgZm9yIG1vcmUgaW5mb3JtYXRpb25cIixcInN1Y2Nlc3Nlc1wiOjgsXCJmYWlsdXJlc1wiOjAsXCJ3YXJuaW5nc1wiOjB9Ig==",
+					"mediaType": "application/json",
+					"name": "taskRunResults/TEST_OUTPUT",
+				},
+				{
+					"content": "ImFwcGxpY2F0aW9uIg==",
+					"mediaType": "application/json",
+					"name": "stepResults/artifact-type",
+				},
+				{
+					"content": "ImludHJvc3BlY3Rpb24i",
+					"mediaType": "application/json",
+					"name": "stepResults/artifact-type-set-by",
+				},
+				{
+					"content": "Ii9hdXRoL2F1dGguanNvbiI=",
+					"mediaType": "application/json",
+					"name": "stepResults/auth-json-path",
+				},
+				{
+					"content": "IntcImltYWdlXCI6IHtcInB1bGxzcGVjXCI6IFwicXVheS5pby9zdDNwZW50YS1rb25mbHV4LXRlc3QtcmVnaXN0cnkvdXNlci1uczIvY2xpOjgyMTI2ZWJlZWIwZDgwODgzZDVkODVmNGY0ODA2NjgyMTQ2NGUzZDhcIiwgXCJkaWdlc3RzXCI6IFtcInNoYTI1NjplYzlmZjQ1NTlhZTA5OWIwN2MyNGM3MTI1N2JkMjU4NTliMGZiZGQ0NDE0YTEyY2Q0NjFiYTI2MWJhMDE4ZTMxXCJdfX0i",
+					"mediaType": "application/json",
+					"name": "stepResults/images-processed",
+				},
+				{
+					"content": "IntcInJlc3VsdFwiOlwiU1VDQ0VTU1wiLFwidGltZXN0YW1wXCI6XCIxNzU5ODMxMzI4XCIsXCJub3RlXCI6XCJUYXNrIHByZWZsaWdodCBpcyBhIFNVQ0NFU1M6IFJlZmVyIHRvIFRla3RvbiB0YXNrIGxvZ3MgZm9yIG1vcmUgaW5mb3JtYXRpb25cIixcInN1Y2Nlc3Nlc1wiOjgsXCJmYWlsdXJlc1wiOjAsXCJ3YXJuaW5nc1wiOjB9Ig==",
+					"mediaType": "application/json",
+					"name": "stepResults/test-output",
+				},
+				{
+					"content": "IntcInJlc3VsdFwiOlwiU1VDQ0VTU1wiLFwidGltZXN0YW1wXCI6XCIxNzU5ODMxMzI4XCIsXCJub3RlXCI6XCJUYXNrIHByZWZsaWdodCBpcyBhIFNVQ0NFU1M6IFJlZmVyIHRvIFRla3RvbiB0YXNrIGxvZ3MgZm9yIG1vcmUgaW5mb3JtYXRpb25cIixcInN1Y2Nlc3Nlc1wiOjgsXCJmYWlsdXJlc1wiOjAsXCJ3YXJuaW5nc1wiOjB9Ig==",
+					"mediaType": "application/json",
+					"name": "stepResults/test-output",
+				},
+				{
+					"content": "IntcInJlc3VsdFwiOlwiU0tJUFBFRFwiLFwidGltZXN0YW1wXCI6XCIyMDI1LTEwLTA3VDEwOjAwOjI4KzAwOjAwXCIsXCJub3RlXCI6XCJUYXNrIHNhc3Qtc255ay1jaGVjay1vY2ktdGEgc2tpcHBlZDogSWYgeW91IHdpc2ggdG8gdXNlIHRoZSBTbnlrIGNvZGUgU0FTVCB0YXNrLCBwbGVhc2UgY3JlYXRlIGEgc2VjcmV0IG5hbWUgc255ay1zZWNyZXQgd2l0aCB0aGUga2V5ICdzbnlrX3Rva2VuJyBjb250YWluaW5nIHRoZSBTbnlrIHRva2VuIGJ5IGZvbGxvd2luZyB0aGUgc3RlcHMgZ2l2ZW4gW2hlcmVdKGh0dHBzOi8va29uZmx1eC1jaS5kZXYvZG9jcy90ZXN0aW5nL2J1aWxkL3NueWsvKVwiLFwibmFtZXNwYWNlXCI6XCJkZWZhdWx0XCIsXCJzdWNjZXNzZXNcIjowLFwiZmFpbHVyZXNcIjowLFwid2FybmluZ3NcIjowfVxuIg==",
+					"mediaType": "application/json",
+					"name": "taskRunResults/TEST_OUTPUT",
+				},
+				{
+					"content": "IntcImltYWdlXCI6IHtcInB1bGxzcGVjXCI6IFwicXVheS5pby9zdDNwZW50YS1rb25mbHV4LXRlc3QtcmVnaXN0cnkvdXNlci1uczIvY2xpOjgyMTI2ZWJlZWIwZDgwODgzZDVkODVmNGY0ODA2NjgyMTQ2NGUzZDhcIiwgXCJkaWdlc3RzXCI6IFtcInNoYTI1NjplYzlmZjQ1NTlhZTA5OWIwN2MyNGM3MTI1N2JkMjU4NTliMGZiZGQ0NDE0YTEyY2Q0NjFiYTI2MWJhMDE4ZTMxXCJdfX1cbiI=",
+					"mediaType": "application/json",
+					"name": "taskRunResults/IMAGES_PROCESSED",
+				},
+				{
+					"content": "IntcInRpbWVzdGFtcFwiOlwiMTc1OTgzMTMzNFwiLFwibmFtZXNwYWNlXCI6XCJyZXF1aXJlZF9jaGVja3NcIixcInN1Y2Nlc3Nlc1wiOjIsXCJmYWlsdXJlc1wiOjAsXCJ3YXJuaW5nc1wiOjAsXCJyZXN1bHRcIjpcIlNVQ0NFU1NcIixcIm5vdGVcIjpcIkFsbCBjaGVja3MgcGFzc2VkIHN1Y2Nlc3NmdWxseVwifVxuIg==",
+					"mediaType": "application/json",
+					"name": "taskRunResults/TEST_OUTPUT",
+				},
+				{
+					"content": "ImZhaWxlZCI=",
+					"mediaType": "application/json",
+					"name": "taskRunResults/STATUS",
+				},
+				{
+					"content": "IntcInJlc3VsdFwiOlwiRkFJTFVSRVwiLFwidGltZXN0YW1wXCI6XCIyMDI1LTEwLTA3VDEwOjAwOjIzKzAwOjAwXCIsXCJub3RlXCI6XCJUYXNrIGNvdmVyaXR5LWF2YWlsYWJpbGl0eS1jaGVjayBmYWlsZWQ6IE5vIGxpY2Vuc2UgZmlsZSBmb3IgQ292ZXJpdHkgd2FzIGRldGVjdGVkLiBQbGVhc2UsIGNyZWF0ZSBhIHNlY3JldCBjYWxsZWQgJ2Nvdi1saWNlbnNlJyB3aXRoIGEga2V5IGNhbGxlZCAnY292LWxpY2Vuc2UnIGFuZCB0aGUgdmFsdWUgY29udGFpbmluZyB0aGUgQ292ZXJpdHkgbGljZW5zZVwiLFwibmFtZXNwYWNlXCI6XCJkZWZhdWx0XCIsXCJzdWNjZXNzZXNcIjowLFwiZmFpbHVyZXNcIjoxLFwid2FybmluZ3NcIjowfVxuIg==",
+					"mediaType": "application/json",
+					"name": "taskRunResults/TEST_OUTPUT",
+				},
+				{
+					"content": "IntcInJlc3VsdFwiOlwiU1VDQ0VTU1wiLFwidGltZXN0YW1wXCI6XCIyMDI1LTEwLTA3VDEwOjAwOjMyKzAwOjAwXCIsXCJub3RlXCI6XCJUYXNrIHNhc3Qtc2hlbGwtY2hlY2stb2NpLXRhIGNvbXBsZXRlZCBzdWNjZXNzZnVsbHkuXCIsXCJuYW1lc3BhY2VcIjpcImRlZmF1bHRcIixcInN1Y2Nlc3Nlc1wiOjAsXCJmYWlsdXJlc1wiOjAsXCJ3YXJuaW5nc1wiOjB9XG4i",
+					"mediaType": "application/json",
+					"name": "taskRunResults/TEST_OUTPUT",
+				},
+				{
+					"content": "IntcInJlc3VsdFwiOlwiU1VDQ0VTU1wiLFwidGltZXN0YW1wXCI6XCIyMDI1LTEwLTA3VDEwOjAwOjMzKzAwOjAwXCIsXCJub3RlXCI6XCJUYXNrIHNhc3QtdW5pY29kZS1jaGVjay1vY2ktdGEgc3VjY2VzczogTm8gZmluZGluZyB3YXMgZGV0ZWN0ZWRcIixcIm5hbWVzcGFjZVwiOlwiZGVmYXVsdFwiLFwic3VjY2Vzc2VzXCI6MCxcImZhaWx1cmVzXCI6MCxcIndhcm5pbmdzXCI6MH1cbiI=",
+					"mediaType": "application/json",
+					"name": "taskRunResults/TEST_OUTPUT",
+				},
+				{
+					"content": "InF1YXkuaW8vc3QzcGVudGEta29uZmx1eC10ZXN0LXJlZ2lzdHJ5L3VzZXItbnMyL2NsaUBzaGEyNTY6ZDgwYjI2YTE2MmU3NTllMTkxNDEyM2M3NWRiMDM0MzUwNTRhYzQyZTg0NDhjMDAwNWEyMzJiMTMyN2IxZTg3OCI=",
+					"mediaType": "application/json",
+					"name": "taskRunResults/IMAGE_REF",
+				},
+				{
+					"content": "IntcImltYWdlXCI6IHtcInB1bGxzcGVjXCI6IFwicXVheS5pby9zdDNwZW50YS1rb25mbHV4LXRlc3QtcmVnaXN0cnkvdXNlci1uczIvY2xpOjgyMTI2ZWJlZWIwZDgwODgzZDVkODVmNGY0ODA2NjgyMTQ2NGUzZDhcIiwgXCJkaWdlc3RzXCI6IFtcInNoYTI1NjplYzlmZjQ1NTlhZTA5OWIwN2MyNGM3MTI1N2JkMjU4NTliMGZiZGQ0NDE0YTEyY2Q0NjFiYTI2MWJhMDE4ZTMxXCJdfX1cbiI=",
+					"mediaType": "application/json",
+					"name": "taskRunResults/IMAGES_PROCESSED",
+				},
+				{
+					"content": "IntcImtleXNcIjoge1wiMTk5ZTJmOTFmZDQzMWQ1MVwiOiAxMDksIFwidW5zaWduZWRcIjogMH19XG4i",
+					"mediaType": "application/json",
+					"name": "taskRunResults/RPMS_DATA",
+				},
+				{
+					"content": "IntcInJlc3VsdFwiOlwiU1VDQ0VTU1wiLFwidGltZXN0YW1wXCI6XCIyMDI1LTEwLTA3VDEwOjAxOjU0KzAwOjAwXCIsXCJub3RlXCI6XCJUYXNrIHJwbXMtc2lnbmF0dXJlLXNjYW4gY29tcGxldGVkIHN1Y2Nlc3NmdWxseVwiLFwibmFtZXNwYWNlXCI6XCJkZWZhdWx0XCIsXCJzdWNjZXNzZXNcIjowLFwiZmFpbHVyZXNcIjowLFwid2FybmluZ3NcIjowfVxuIg==",
+					"mediaType": "application/json",
+					"name": "taskRunResults/TEST_OUTPUT",
 				},
 			],
+			"metadata": {
+				"finishedOn": "2025-10-07T10:02:19Z",
+				"invocationId": "50b012fb-e8e1-462f-bacf-7e672c5fb491",
+				"startedOn": "2025-10-07T09:53:09Z",
+			},
 		},
 	},
 }

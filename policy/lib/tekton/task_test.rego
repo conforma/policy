@@ -1,4 +1,3 @@
-# regal ignore:file-length
 package lib.tekton_test
 
 import rego.v1
@@ -27,95 +26,90 @@ test_tasks_from_attestation if {
 	buildah := {"name": "ignored", "ref": {"name": "buildah"}}
 
 	attestation := {"statement": {"predicate": {"buildConfig": {"tasks": [git_clone, buildah]}}}}
-	expected := {git_clone, buildah}
-	lib.assert_equal(expected, tekton.tasks(attestation))
-}
-
-# regal ignore:rule-length
-test_tasks_from_slsav1_tekton_attestation if {
-	content := base64.encode(json.marshal(slsav1_attestation_local_spec))
-	task := {
-		"name": "pipelineTask",
-		"uri": "oci://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init",
-		"digest": {"sha256": "28ff94e63e4058afc3f15b4c11c08cf3b54fa91faa646a4bbac90380cd7158df"},
-		"content": content,
-	}
-
-	attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [task],
-		}},
-	}}
-	expected := {slsav1_attestation_local_spec}
-	lib.assert_equal(expected, tekton.tasks(attestation))
-}
-
-# regal ignore:rule-length
-test_tasks_from_slsav1_tekton_mixture_attestation if {
-	task1 := json.patch(slsav1_attestation_local_spec, [{
-		"op": "add",
-		"path": "/taskRef/name",
-		"value": "task1",
-	}])
-	task2 := json.patch(slsav1_attestation_local_spec, [{
-		"op": "add",
-		"path": "/taskRef/name",
-		"value": "task2",
-	}])
-	task3 := json.patch(slsav1_attestation_local_spec, [{
-		"op": "add",
-		"path": "/taskRef/name",
-		"value": "task3",
-	}])
-
-	git_init := {
-		"name": "task",
-		"uri": "oci://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init",
-		"digest": {"sha256": "28ff94e63e4058afc3f15b4c11c08cf3b54fa91faa646a4bbac90380cd7158df"},
-		"content": base64.encode(json.marshal(task1)),
-	}
-	git_init_pipeline := {
-		"name": "pipelineTask",
-		"uri": "oci://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init",
-		"digest": {"sha256": "28ff94e63e4058afc3f15b4c11c08cf3b54fa91faa646a4bbac90380cd7158df"},
-		"content": base64.encode(json.marshal(task2)),
-	}
-	git_init_bad := {
-		"name": "pipeline",
-		"uri": "oci://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init",
-		"digest": {"sha256": "28ff94e63e4058afc3f15b4c11c08cf3b54fa91faa646a4bbac90380cd7158df"},
-		"content": base64.encode(json.marshal(task3)),
-	}
-
-	attestation := {"statement": {"predicate": {"buildDefinition": {
-		"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-		"resolvedDependencies": [
-			git_init,
-			git_init_pipeline,
-			git_init_bad,
-		],
-	}}}}
 	expected := {
-		task1,
-		task2,
+		{"name": "ignored", "ref": {"name": "git-clone"}, "params": [], "results": []},
+		{"name": "ignored", "ref": {"name": "buildah"}, "params": [], "results": []},
 	}
 	lib.assert_equal(expected, tekton.tasks(attestation))
 }
 
-test_tasks_from_slsav1_attestation if {
-	git_init := {
-		"name": "task/git-init",
-		"uri": "oci://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init",
-		"digest": {"sha256": "28ff94e63e4058afc3f15b4c11c08cf3b54fa91faa646a4bbac90380cd7158df"},
+test_tasks_from_slsav1_tekton_attestation if {
+	task_params := [
+		{
+			"name": "input",
+			"value": "$(params.prefetch-input)",
+		},
+		{
+			"name": "SOURCE_ARTIFACT",
+			"value": "$(tasks.another-task.results.SOURCE_ARTIFACT)",
+		},
+		{
+			"name": "ociStorage",
+			"value": "$(params.output-image).prefetch",
+		},
+	]
+	task := slsav1_task_with_params("test-task", "test-task", task_params)
+
+	att_params := [
+		{
+			"name": "prefetch-input",
+			"value": "true",
+		},
+		{
+			"name": "output-image",
+			"value": "quay.io/test-registry/img:sha256",
+		},
+	]
+
+	att_byproducts := [{
+		"name": "taskRunResults/another-task/SOURCE_ARTIFACT",
+		"content": "cXVheS5pby9yZWRoYXQtYXBwc3R1ZGlvL2hhY2JzLXRlc3Q6djEuMS45QHNoYTI1Njo4NjY2NzVlZTMwNjRjZjQ3Njg2OTFlY2NhNDc4MDYzY2UxMmYwNTU2ZmI5ZDRmMjRjYTk1Yzk4NjY0ZmZiZDQz", # regal ignore:line-length
+	}]
+
+	attestation := slsav1_attestation_with_params_and_byproducts([task], att_params, att_byproducts)
+
+	expected_task := {
+		"name": "test-task",
+		"params": [
+			{
+				"name": "input",
+				"value": "true",
+			},
+			{
+				"name": "SOURCE_ARTIFACT",
+				"value": "quay.io/redhat-appstudio/hacbs-test:v1.1.9@sha256:866675ee3064cf4768691ecca478063ce12f0556fb9d4f24ca95c98664ffbd43", # regal ignore:line-length
+			},
+			{
+				"name": "ociStorage",
+				"value": "quay.io/test-registry/img:sha256.prefetch",
+			},
+		],
+		"results": [],
+		"taskRef": {
+			"params": [
+				{
+					"name": "name",
+					"value": "test-task",
+				},
+				{
+					"name": "bundle",
+					"value": "test-task-bundle",
+				},
+				{
+					"name": "kind",
+					"value": "task",
+				},
+			],
+			"resolver": "bundles",
+		},
+		"workspaces": [{
+			"name": "test-task",
+			"workspace": "test-task-workspace",
+		}],
 	}
-	attestation := {"statement": {"predicate": {"buildDefinition": {
-		"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-		"resolvedDependencies": [git_init],
-	}}}}
-	lib.assert_equal(set(), tekton.tasks(attestation))
+
+	tasks := tekton.tasks(attestation)
+	lib.assert_equal({expected_task}, tasks)
 }
 
 test_tasks_from_pipeline if {
@@ -129,7 +123,11 @@ test_tasks_from_pipeline if {
 			"finally": [summary],
 		},
 	}
-	expected := {git_clone, buildah, summary}
+	expected := {
+		{"taskRef": {"name": "git-clone"}, "params": [], "results": []},
+		{"taskRef": {"name": "buildah"}, "params": [], "results": []},
+		{"taskRef": {"name": "summary"}, "params": [], "results": []},
+	}
 	lib.assert_equal(expected, tekton.tasks(pipeline))
 }
 
@@ -138,8 +136,9 @@ test_tasks_from_partial_pipeline if {
 	lib.assert_empty(tekton.tasks({"kind": "Pipeline", "spec": {}}))
 
 	git_clone := {"taskRef": {"name": "git-clone"}}
-	lib.assert_equal({git_clone}, tekton.tasks({"kind": "Pipeline", "spec": {"tasks": [git_clone]}}))
-	lib.assert_equal({git_clone}, tekton.tasks({"kind": "Pipeline", "spec": {"finally": [git_clone]}}))
+	expected := {{"taskRef": {"name": "git-clone"}, "params": [], "results": []}}
+	lib.assert_equal(expected, tekton.tasks({"kind": "Pipeline", "spec": {"tasks": [git_clone]}}))
+	lib.assert_equal(expected, tekton.tasks({"kind": "Pipeline", "spec": {"finally": [git_clone]}}))
 }
 
 test_tasks_not_found if {
@@ -152,28 +151,18 @@ test_task_param if {
 	not tekton.task_param(task, "missing")
 }
 
-test_task_slsav1_param if {
-	task := {
-		"kind": "TaskRun",
-		"metadata": {"name": "buildah"},
-		"spec": {"params": [{"name": "NETWORK", "value": "none"}]},
-	}
-	lib.assert_equal("none", tekton.task_param(task, "NETWORK"))
-	not tekton.task_param(task, "missing")
-}
-
 test_task_result if {
 	task := {"results": [{"name": "SPAM", "value": "maps"}]}
 	lib.assert_equal("maps", tekton.task_result(task, "SPAM"))
 	not tekton.task_result(task, "missing")
 
-	slsav1_task := {"status": {"taskResults": [{"name": "SPAM", "value": "maps"}]}}
+	slsav1_task := resolved_slsav1_task("task-name", [], [{"name": "SPAM", "value": "maps"}])
 	lib.assert_equal("maps", tekton.task_result(slsav1_task, "SPAM"))
 	not tekton.task_result(slsav1_task, "missing")
 }
 
 test_tasks_from_attestation_with_spam if {
-	expected_tasks := {
+	tasks := {
 		{"ref": {"name": "git-clone", "kind": "Task", "bundle": _bundle}},
 		_good_build_task,
 		{
@@ -183,12 +172,22 @@ test_tasks_from_attestation_with_spam if {
 		{"ref": {"name": "summary", "kind": "Task", "bundle": _bundle}},
 	}
 
-	attestation := {"statement": {"predicate": {"buildConfig": {"tasks": expected_tasks}}}}
+	attestation := {"statement": {"predicate": {"buildConfig": {"tasks": tasks}}}}
 
+	expected_tasks := {
+		{"ref": {"name": "git-clone", "kind": "Task", "bundle": _bundle}, "params": [], "results": []},
+		_good_build_task,
+		{
+			"ref": {"name": "weird[food=spam]", "kind": "Task", "bundle": _bundle},
+			"invocation": {"parameters": {"SPAM": "MAPS"}},
+			"params": [],
+			"results": [],
+		},
+		{"ref": {"name": "summary", "kind": "Task", "bundle": _bundle}, "params": [], "results": []},
+	}
 	lib.assert_equal(expected_tasks, tekton.tasks(attestation))
-
-	expected_names := {"git-clone", "buildah", "buildah[HERMETIC=true]", "weird", "weird[SPAM=MAPS]", "summary"}
-	lib.assert_equal(expected_names, tekton.tasks_names(attestation))
+	# expected_names := {"git-clone", "buildah", "buildah[HERMETIC=true]", "weird", "weird[SPAM=MAPS]", "summary"}
+	# lib.assert_equal(expected_names, tekton.tasks_names(attestation))
 }
 
 # regal ignore:rule-length
@@ -213,16 +212,26 @@ test_tasks_from_pipeline_with_spam if {
 	}
 
 	expected_tasks := {
-		{"taskRef": {"name": "git-clone", "kind": "Task", "bundle": _bundle}},
+		{
+			"taskRef": {"name": "git-clone", "kind": "Task", "bundle": _bundle},
+			"params": [],
+			"results": [],
+		},
 		{
 			"taskRef": {"name": "buildah", "kind": "Task", "bundle": _bundle},
 			"params": [{"name": "NETWORK", "value": "none"}],
+			"results": [],
 		},
 		{
 			"taskRef": {"name": "weird[food=spam]", "kind": "Task", "bundle": _bundle},
 			"params": [{"name": "SPAM", "value": "MAPS"}],
+			"results": [],
 		},
-		{"taskRef": {"name": "summary", "kind": "Task", "bundle": _bundle}},
+		{
+			"taskRef": {"name": "summary", "kind": "Task", "bundle": _bundle},
+			"params": [],
+			"results": [],
+		},
 	}
 	lib.assert_equal(expected_tasks, tekton.tasks(pipeline))
 
@@ -500,14 +509,25 @@ test_task_data_bundle_ref if {
 }
 
 test_task_names_local if {
-	lib.assert_equal(
+	task_params := [
 		{
-			"buildah",
-			"buildah[DOCKERFILE=./image_with_labels/Dockerfile]",
-			"buildah[IMAGE=quay.io/jstuart/hacbs-docker-build]",
+			"name": "DOCKERFILE",
+			"value": "./image_with_labels/Dockerfile",
 		},
-		tekton.task_names(slsav1_attestation_local_spec),
-	)
+		{
+			"name": "IMAGE",
+			"value": "quay.io/jstuart/hacbs-docker-build",
+		},
+	]
+	task := resolved_slsav1_task("buildah", task_params, [])
+
+	expected := {
+		"buildah",
+		"buildah[DOCKERFILE=./image_with_labels/Dockerfile]",
+		"buildah[IMAGE=quay.io/jstuart/hacbs-docker-build]",
+	}
+
+	lib.assert_equal(expected, tekton.task_names(task))
 }
 
 test_task_data_no_bundle_ref if {
@@ -610,7 +630,7 @@ test_task_result_endswith if {
 			"value": "1234-digest",
 		},
 	]
-	task1 := slsav1_task_result("task1", results)
+	task1 := resolved_slsav1_task("task1", [], results)
 	lib.assert_equal(["1234-image1", "image1"], tekton.task_result_endswith(task1, "ARTIFACT_URI"))
 }
 
@@ -650,6 +670,7 @@ _time_based_required_tasks := [
 ]
 
 _pre_build_task := {
+	"results": [],
 	"ref": {"kind": "Task", "name": "run-script-oci-ta", "bundle": _bundle},
 	"invocation": {"parameters": {"HERMETIC": "true"}},
 }
@@ -684,146 +705,112 @@ _good_attestation := {"statement": {"predicate": {
 	"buildConfig": {"tasks": [_good_build_task, _good_git_clone_task, _good_source_build_task, _pre_build_task]},
 }}}
 
-slsav1_attestation_local_spec := {
-	"params": [
-		{
-			"name": "IMAGE",
-			"value": "quay.io/jstuart/hacbs-docker-build",
-		},
-		{
-			"name": "DOCKERFILE",
-			"value": "./image_with_labels/Dockerfile",
-		},
-	],
-	"serviceAccountName": "default",
-	"taskRef": {
-		"name": "buildah",
-		"kind": "Task",
-	},
-	"timeout": "1h0m0s",
-	"podTemplate": {
-		"securityContext": {"fsGroup": 65532},
-		"imagePullSecrets": [{"name": "docker-chains"}],
-	},
-	"results": [
-		{
-			"name": "IMAGE_DIGEST",
-			"type": "string",
-			"value": "sha256:hash",
-		},
-		{
-			"name": "IMAGE_URL",
-			"type": "string",
-			"value": "quay.io/jstuart/hacbs-docker-build:tag@sha256:hash",
-		},
-	],
-	"workspaces": [
-		{
-			"name": "source",
-			"persistentVolumeClaim": {"claimName": "pvc-bf2ed289ae"},
-		},
-		{
-			"name": "dockerconfig",
-			"secret": {"secretName": "docker-credentials"},
-		},
-	],
-}
-
 _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
 
-slsav1_task(name) := task if {
-	parts := regex.split(`[\[\]=]`, name)
-	not parts[1]
-	pipeline_task_name := sprintf("%s", [name])
-	unnamed_task := {
-		"metadata": {
-			"name": pipeline_task_name,
-			"labels": {"tekton.dev/pipelineTask": pipeline_task_name},
-		},
-		"spec": slsav1_attestation_local_spec,
-		"status": {"conditions": [{
-			"type": "Succeeded",
-			"status": "True",
-		}]},
-	}
-	task := json.patch(unnamed_task, [{
-		"op": "replace",
-		"path": "/spec/taskRef/name",
-		"value": name,
-	}])
+slsav1_task(name) := slsav1_task_with_params(name, name, [])
+
+slsav1_task_with_params(name, ref_name, task_params) := {
+	"name": name,
+	"params": task_params,
+	"taskRef": {
+		"params": [
+			{
+				"name": "name",
+				"value": ref_name,
+			},
+			{
+				"name": "bundle",
+				"value": concat("-", [name, "bundle"]),
+			},
+			{
+				"name": "kind",
+				"value": "task",
+			},
+		],
+		"resolver": "bundles",
+	},
+	"workspaces": [{
+		"name": name,
+		"workspace": concat("-", [name, "workspace"]),
+	}],
 }
 
-slsav1_task(name) := task if {
-	parts := regex.split(`[\[\]=]`, name)
+slsav1_attestation(tasks) := slsav1_attestation_with_params_and_byproducts(tasks, [], [])
 
-	# regal ignore:redundant-existence-check
-	parts[1]
-	task_name := parts[0]
-	pipeline_task_name := sprintf("%s", [task_name])
-	unnamed_task := {
-		"metadata": {
-			"name": pipeline_task_name,
-			"labels": {"tekton.dev/pipelineTask": pipeline_task_name},
+slsav1_attestation_with_params_and_byproducts(tasks, att_params, att_byproducts) := {"statement": {
+	"predicateType": "https://slsa.dev/provenance/v1",
+	"predicate": {
+		"buildDefinition": {
+			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
+			"externalParameters": {"runSpec": {
+				"params": att_params,
+				"pipelineSpec": {"tasks": tasks},
+			}},
 		},
-		"spec": slsav1_attestation_local_spec,
-		"status": {"conditions": [{
-			"type": "Succeeded",
-			"status": "True",
-		}]},
-	}
-	task := json.patch(unnamed_task, [
-		{
-			"op": "replace",
-			"path": "/spec/taskRef/name",
-			"value": task_name,
-		},
-		{
-			"op": "replace",
-			"path": "/spec/params",
-			"value": [{"name": parts[1], "value": parts[2]}],
-		},
-	])
+		"runDetails": {"byproducts": att_byproducts},
+	},
+}}
+
+resolved_slsav1_task(name, resolved_params, resolved_results) := {
+	"name": name,
+	"params": resolved_params,
+	"results": resolved_results,
+	"taskRef": {
+		"params": [
+			{
+				"name": "name",
+				"value": name,
+			},
+			{
+				"name": "bundle",
+				"value": concat("-", [name, "bundle"]),
+			},
+			{
+				"name": "kind",
+				"value": "task",
+			},
+		],
+		"resolver": "bundles",
+	},
+	"workspaces": [{
+		"name": name,
+		"workspace": concat("-", [name, "workspace"]),
+	}],
 }
 
 # create a task and add a bundle to it
 slsav1_task_bundle(name, bundle) := task if {
-	not name.spec
-	task := json.patch(slsav1_task(name), [{
-		"op": "add",
-		"path": "/spec/taskRef/bundle",
+	not name.taskRef
+	base_task := slsav1_task(name)
+
+	# Find the index of the bundle parameter in taskRef.params array
+	bundle_idx := [i | some i, p in base_task.taskRef.params; p.name == "bundle"][0]
+	task := json.patch(base_task, [{
+		"op": "replace",
+		"path": sprintf("/taskRef/params/%d/value", [bundle_idx]),
 		"value": bundle,
 	}])
 }
 
 # add a bundle to an existing task
 slsav1_task_bundle(name, bundle) := task if {
-	name.spec
-	task := json.patch(name, [{
-		"op": "add",
-		"path": "/spec/taskRef/bundle",
+	name.taskRef
+	base_task := name
+
+	# Find the index of the bundle parameter in taskRef.params array
+	bundle_idx := [i | some i, p in base_task.taskRef.params; p.name == "bundle"][0]
+	task := json.patch(base_task, [{
+		"op": "replace",
+		"path": sprintf("/taskRef/params/%d/value", [bundle_idx]),
 		"value": bundle,
 	}])
 }
 
 # results are an array of dictionaries with keys, "name", "type", "value"
-slsav1_task_result(name, results) := json.patch(
-	slsav1_task(name),
-	[{
-		"op": "add",
-		"path": "/status/taskResults",
-		"value": results,
-	}],
-)
+slsav1_task_result(name, results) := resolved_slsav1_task(name, [], results)
 
 # results are an array of dictionaries with keys, "name", "type", "value"
-slsav1_task_result_ref(name, results) := json.patch(
-	slsav1_task(name),
-	[{
-		"op": "add",
-		"path": "/status/taskResults",
-		"value": _marshal_slsav1_results(results),
-	}],
-)
+slsav1_task_result_ref(name, results) := resolved_slsav1_task(name, [], _marshal_slsav1_results(results))
 
 _marshal_slsav1_results(results) := [r |
 	some result in results

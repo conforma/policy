@@ -7,24 +7,26 @@ import data.lib.tekton
 
 test_pipeline_label_selector_build_task_slsa_v1_0 if {
 	task := json.patch(
-		slsav1_task_result_ref(
-			"build-container",
-			[
-				{"name": "IMAGE_URL", "type": "string", "value": "localhost:5000/repo:latest"},
-				{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc"},
-			],
-		),
-		[{"op": "add", "path": "/metadata/labels", "value": {tekton.task_label: "generic"}}],
+		slsav1_task("build-container"),
+		[
+			{"op": "add", "path": "/metadata/labels", "value": {tekton.task_label: "generic"}},
+			{"op": "add", "path": "/metadata/labels/tekton.dev/pipelineTask", "value": "build-container"},
+		],
 	)
 
-	attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"resolvedDependencies": resolved_dependencies([task]),
-			"internalParameters": {"labels": {tekton.pipeline_label: "ignored"}},
-		}},
-	}}
+	byproducts := [
+		{"name": "taskRunResults/build-container/IMAGE_URL", "content": base64.encode("localhost:5000/repo:latest")},
+		{"name": "taskRunResults/build-container/IMAGE_DIGEST", "content": base64.encode("sha256:abc")},
+	]
+
+	attestation := json.patch(
+		slsav1_attestation_with_params_and_byproducts([task], [], byproducts),
+		[{
+			"op": "add",
+			"path": "/statement/predicate/buildDefinition/internalParameters",
+			"value": {"labels": {tekton.pipeline_label: "ignored"}},
+		}],
+	)
 
 	lib.assert_equal(tekton.pipeline_label_selector(attestation), "generic")
 }
@@ -51,19 +53,14 @@ test_pipeline_label_selector_build_task_slsa_v0_2 if {
 }
 
 test_pipeline_label_selector_pipeline_run_slsa_v1_0 if {
-	task := slsav1_task_result_ref("build-container", [
-		{"name": "IMAGE_URL", "type": "string", "value": "localhost:5000/repo:latest"},
-		{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc"},
-	])
-
-	attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"resolvedDependencies": resolved_dependencies([task]),
-			"internalParameters": {"labels": {tekton.pipeline_label: "generic"}},
-		}},
-	}}
+	attestation := json.patch(
+		slsav1_attestation([]),
+		[{
+			"op": "add",
+			"path": "/statement/predicate/buildDefinition/internalParameters",
+			"value": {"labels": {tekton.pipeline_label: "generic"}},
+		}],
+	)
 
 	lib.assert_equal(tekton.pipeline_label_selector(attestation), "generic")
 }

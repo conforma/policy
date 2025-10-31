@@ -3,11 +3,10 @@ package source_image_test
 import rego.v1
 
 import data.lib
+import data.lib.tekton_test
 import data.source_image
 
 test_success if {
-	_mock_digest_nl := sprintf("%s\n", [_mock_digest])
-
 	slsa_v02_attestation := {"statement": {"predicate": {
 		"buildType": lib.tekton_pipeline_run,
 		"buildConfig": {"tasks": [
@@ -30,41 +29,27 @@ test_success if {
 		]},
 	}}}
 
-	slsa_v1_attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [
-				{
-					"name": "pipelineTask",
-					"content": base64.encode(json.marshal({
-						"spec": {"taskRef": {
-							"name": "source-build",
-							"kind": "Task",
-						}},
-						"status": {"taskResults": [
-							{"name": "SOURCE_IMAGE_URL", "value": "registry.local/repo:v1.0"},
-							{"name": "SOURCE_IMAGE_DIGEST", "value": _mock_digest},
-						]},
-					})),
-				},
-				{
-					"name": "pipelineTask",
-					"content": base64.encode(json.marshal({
-						"spec": {"taskRef": {
-							"name": "source-build",
-							"kind": "Task",
-						}},
-						"status": {"taskResults": [
-							{"name": "SOURCE_IMAGE_URL", "value": "registry.local/repo:v1.0.newline\n"},
-							{"name": "SOURCE_IMAGE_DIGEST", "value": _mock_digest_nl},
-						]},
-					})),
-				},
-			],
-		}},
-	}}
+	slsa_v1_task1 := tekton_test.slsav1_task("source-build-1")
+	slsa_v1_task2 := tekton_test.slsav1_task("source-build-2")
+	att_byproducts := [
+		{
+			"name": "taskRunResults/source-build-1/SOURCE_IMAGE_URL",
+			"content": "cmVnaXN0cnkubG9jYWwvcmVwbzp2MS4w",
+		},
+		{
+			"name": "taskRunResults/source-build-1/SOURCE_IMAGE_DIGEST",
+			"content": _mock_digest_b64,
+		},
+		{
+			"name": "taskRunResults/source-build-2/SOURCE_IMAGE_URL",
+			"content": "cmVnaXN0cnkubG9jYWwvcmVwbzp2MS4w",
+		},
+		{
+			"name": "taskRunResults/source-build-2/SOURCE_IMAGE_DIGEST",
+			"content": _mock_digest_nl_b64,
+		},
+	]
+	slsa_v1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts([slsa_v1_task1, slsa_v1_task2], [], att_byproducts) # regal ignore:line-length
 
 	attestations := [slsa_v02_attestation, slsa_v1_attestation]
 
@@ -87,23 +72,14 @@ test_missing_source_image_references if {
 	}}}]
 
 	# SLSA v1.0
-	lib.assert_equal_results(expected, source_image.deny) with input.attestations as [{"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [{
-				"name": "pipelineTask",
-				"content": base64.encode(json.marshal({
-					"spec": {"taskRef": {
-						"name": "source-build",
-						"kind": "Task",
-					}},
-					"status": {"taskResults": [{"name": "SPAM", "value": "spam"}]},
-				})),
-			}],
-		}},
-	}}]
+	slsa_v1_task := tekton_test.slsav1_task("source-build")
+	att_byproducts := [{
+		"name": "taskRunResults/source-build/SPAM",
+		"content": "c3BhbQ==",
+	}]
+	slsa_v1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts([slsa_v1_task], [], att_byproducts) # regal ignore:line-length
+
+	lib.assert_equal_results(expected, source_image.deny) with input.attestations as slsa_v1_attestation
 }
 
 test_inaccessible_source_image_references if {
@@ -119,26 +95,19 @@ test_inaccessible_source_image_references if {
 		}]},
 	}}}
 
-	slsa_v1_attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [{
-				"name": "pipelineTask",
-				"content": base64.encode(json.marshal({
-					"spec": {"taskRef": {
-						"name": "source-build",
-						"kind": "Task",
-					}},
-					"status": {"taskResults": [
-						{"name": "SOURCE_IMAGE_URL", "value": "registry.local/repo:v1.0"},
-						{"name": "SOURCE_IMAGE_DIGEST", "value": _mock_digest},
-					]},
-				})),
-			}],
-		}},
-	}}
+	# SLSA v1.0
+	slsa_v1_task := tekton_test.slsav1_task("source-build-p")
+	att_byproducts := [
+		{
+			"name": "taskRunResults/source-build-p/SOURCE_IMAGE_URL",
+			"content": base64.encode("registry.local/repo:v1.0"),
+		},
+		{
+			"name": "taskRunResults/source-build-p/SOURCE_IMAGE_DIGEST",
+			"content": _mock_digest_b64,
+		},
+	]
+	slsa_v1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts([slsa_v1_task], [], att_byproducts) # regal ignore:line-length
 
 	attestations := [slsa_v02_attestation, slsa_v1_attestation]
 
@@ -171,26 +140,19 @@ test_empty_source_image if {
 		}]},
 	}}}
 
-	slsa_v1_attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [{
-				"name": "pipelineTask",
-				"content": base64.encode(json.marshal({
-					"spec": {"taskRef": {
-						"name": "source-build",
-						"kind": "Task",
-					}},
-					"status": {"taskResults": [
-						{"name": "SOURCE_IMAGE_URL", "value": "registry.local/repo:v1.0"},
-						{"name": "SOURCE_IMAGE_DIGEST", "value": _mock_digest},
-					]},
-				})),
-			}],
-		}},
-	}}
+	# SLSA v1.0
+	slsa_v1_task := tekton_test.slsav1_task("source-build")
+	att_byproducts := [
+		{
+			"name": "taskRunResults/source-build/SOURCE_IMAGE_URL",
+			"content": base64.encode("registry.local/repo:v1.0"),
+		},
+		{
+			"name": "taskRunResults/source-build/SOURCE_IMAGE_DIGEST",
+			"content": _mock_digest_b64,
+		},
+	]
+	slsa_v1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts([slsa_v1_task], [], att_byproducts) # regal ignore:line-length
 
 	attestations := [slsa_v02_attestation, slsa_v1_attestation]
 
@@ -223,26 +185,19 @@ test_missing_signature if {
 		}]},
 	}}}
 
-	slsa_v1_attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [{
-				"name": "pipelineTask",
-				"content": base64.encode(json.marshal({
-					"spec": {"taskRef": {
-						"name": "source-build",
-						"kind": "Task",
-					}},
-					"status": {"taskResults": [
-						{"name": "SOURCE_IMAGE_URL", "value": "registry.local/repo:v1.0"},
-						{"name": "SOURCE_IMAGE_DIGEST", "value": _mock_digest},
-					]},
-				})),
-			}],
-		}},
-	}}
+	# SLSA v1.0
+	slsa_v1_task := tekton_test.slsav1_task("source-build")
+	att_byproducts := [
+		{
+			"name": "taskRunResults/source-build/SOURCE_IMAGE_URL",
+			"content": base64.encode("registry.local/repo:v1.0"),
+		},
+		{
+			"name": "taskRunResults/source-build/SOURCE_IMAGE_DIGEST",
+			"content": _mock_digest_b64,
+		},
+	]
+	slsa_v1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts([slsa_v1_task], [], att_byproducts) # regal ignore:line-length
 
 	attestations := [slsa_v02_attestation, slsa_v1_attestation]
 
@@ -275,5 +230,8 @@ mock_ec_oci_image_manifest(img) := manifest if {
 }
 
 _mock_digest := "sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
+_mock_digest_b64 := "c2hhMjU2OjRlMzg4YWIzMmIxMGRjOGRiYzdlMjgxNDRmNTUyODMwYWRjNzQ3ODdjMWUyYzA4MjQwMzIwNzhhNzlmMjI3ZmI="
+_mock_digest_nl := "sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb\n"
+_mock_digest_nl_b64 := "c2hhMjU2OjRlMzg4YWIzMmIxMGRjOGRiYzdlMjgxNDRmNTUyODMwYWRjNzQ3ODdjMWUyYzA4MjQwMzIwNzhhNzlmMjI3ZmIK" # regal ignore:line-length
 
 _mock_verify_image(_, _) := {"errors": []}
