@@ -3,7 +3,7 @@ module github.com/conforma/policy
 go 1.24.4
 
 require (
-	github.com/conforma/cli v0.8.43
+	github.com/conforma/cli v0.8.48
 	github.com/google/addlicense v1.1.1
 	github.com/open-policy-agent/conftest v0.62.0
 	github.com/styrainc/regal v0.29.2
