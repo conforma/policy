@@ -106,28 +106,16 @@ att_mock_task_helper(task) := [{"statement": {"predicate": {
 	"buildType": lib.tekton_pipeline_run,
 }}}]
 
-# make working with tasks and resolvedDeps easier
-mock_slsav1_attestation_with_tasks(tasks) := {"statement": {
-	"predicateType": "https://slsa.dev/provenance/v1",
-	"predicate": {"buildDefinition": {
-		"buildType": lib.tekton_slsav1_pipeline_run,
-		"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-		"resolvedDependencies": tekton_test.resolved_dependencies(tasks),
-	}},
-}}
-
 test_tasks_from_pipelinerun if {
 	slsa1_task := tekton_test.slsav1_task("buildah")
-	slsa1_att := [json.patch(valid_slsav1_att, [{
-		"op": "replace",
-		"path": "/statement/predicate/buildDefinition/resolvedDependencies",
-		"value": tekton_test.resolved_dependencies([slsa1_task]),
-	}])]
-	lib.assert_equal([slsa1_task], lib.tasks_from_pipelinerun) with input.attestations as slsa1_att
+	slsa1_att := tekton_test.slsav1_attestation([slsa1_task])
+	resolved_task := tekton_test.resolved_slsav1_task("buildah", [], [])
+	lib.assert_equal([resolved_task], lib.tasks_from_pipelinerun) with input.attestations as [slsa1_att]
 
 	slsa02_task := {"name": "my-task", "ref": {"kind": "task"}}
 	slsa02_att := att_mock_task_helper(slsa02_task)
-	lib.assert_equal([slsa02_task], lib.tasks_from_pipelinerun) with input.attestations as slsa02_att
+	resolved_slsa02_task := {"name": "my-task", "ref": {"kind": "task"}, "params": [], "results": []}
+	lib.assert_equal([resolved_slsa02_task], lib.tasks_from_pipelinerun) with input.attestations as slsa02_att
 }
 
 test_slsa_provenance_attestations if {
@@ -296,13 +284,13 @@ test_results_from_tests if {
 	)
 	lib.assert_equal([expected], lib.results_from_tests) with input.attestations as [att2]
 
-	att3 := mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_bundle(
-		tekton_test.slsav1_task_result(
+	att3 := tekton_test.slsav1_attestation([tekton_test.slsav1_task_bundle(
+		tekton_test.resolved_slsav1_task(
 			"mytask",
+			[],
 			[{
 				"name": lib.task_test_result_name,
-				"type": "string",
-				"value": json.marshal({"result": "SUCCESS", "foo": "bar"}),
+				"value": {"result": "SUCCESS", "foo": "bar"},
 			}],
 		),
 		trusted_bundle_ref,

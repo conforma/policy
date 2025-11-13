@@ -13,7 +13,7 @@ test_needs_non_empty_data if {
 	slsav1_task := tekton_test.slsav1_task_result_ref("task2", [{"name": "NOT_TEST_OUTPUT", "type": "string", "value": {}}])
 	attestations := [
 		lib_test.att_mock_helper_ref("NOT_TEST_OUTPUT", {}, "task1", _bundle),
-		lib_test.mock_slsav1_attestation_with_tasks([slsav1_task]),
+		tekton_test.slsav1_attestation([slsav1_task]),
 	]
 	lib.assert_equal_results(test.deny, {{
 		"code": "test.test_data_found",
@@ -33,7 +33,7 @@ test_needs_tests_with_results if {
 			lib.task_test_result_name, {"rezult": "SUCCESS"},
 			"task1", _bundle,
 		),
-		lib_test.mock_slsav1_attestation_with_tasks([slsav1_task]),
+		tekton_test.slsav1_attestation([slsav1_task]),
 	]
 	lib.assert_equal_results(test.deny, {{
 		"code": "test.test_results_found",
@@ -56,7 +56,7 @@ test_needs_tests_with_results_mixed if {
 	attestations := [
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SUCCESS"}, "task1", _bundle),
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"rezult": "SUCCESS"}, "task2", _bundle),
-		lib_test.mock_slsav1_attestation_with_tasks([slsav1_good_task, slsav1_bad_task]),
+		tekton_test.slsav1_attestation([slsav1_good_task, slsav1_bad_task]),
 	]
 	lib.assert_equal_results(test.deny, {{
 		"code": "test.test_results_found",
@@ -72,7 +72,7 @@ test_success_data if {
 	}])
 	attestations := [
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SUCCESS"}, "task1", _bundle),
-		lib_test.mock_slsav1_attestation_with_tasks([slsav1_good_task]),
+		tekton_test.slsav1_attestation([slsav1_good_task]),
 	]
 	lib.assert_empty(test.deny) with input.attestations as attestations
 }
@@ -93,7 +93,7 @@ test_failure_data if {
 			lib.task_test_result_name,
 			{"result": "FAILURE"}, "failed_1", _bundle,
 		),
-		lib_test.mock_slsav1_attestation_with_tasks([slsav1_task]),
+		tekton_test.slsav1_attestation([slsav1_task]),
 	]
 
 	lib.assert_empty(test.warn) with input.attestations as attestations
@@ -144,7 +144,7 @@ test_error_data if {
 			lib.task_test_result_name,
 			{"result": "ERROR"}, "errored_1", _bundle,
 		),
-		lib_test.mock_slsav1_attestation_with_tasks([slsav1_task]),
+		tekton_test.slsav1_attestation([slsav1_task]),
 	]
 	lib.assert_equal_results(test.deny, {
 		{
@@ -174,8 +174,8 @@ test_mix_data if {
 	attestations := [
 		mock_a_failing_test,
 		mock_an_errored_test,
-		lib_test.mock_slsav1_attestation_with_tasks([slsav1_failed_task]),
-		lib_test.mock_slsav1_attestation_with_tasks([slsav1_errored_task]),
+		tekton_test.slsav1_attestation([slsav1_failed_task]),
+		tekton_test.slsav1_attestation([slsav1_errored_task]),
 	]
 	lib.assert_equal_results(test.deny, {
 		{
@@ -207,7 +207,7 @@ test_skipped_is_not_warning if {
 			lib.task_test_result_name,
 			{"result": "SKIPPED"}, "skipped_1", _bundle,
 		),
-		lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_result_ref("skipped_2", [{
+		tekton_test.slsav1_attestation([tekton_test.slsav1_task_result_ref("skipped_2", [{
 			"name": lib.task_test_result_name,
 			"type": "string",
 			"value": {"result": "SKIPPED"},
@@ -222,7 +222,7 @@ test_skipped_is_deny if {
 			lib.task_test_result_name,
 			{"result": "SKIPPED"}, "skipped_1", _bundle,
 		),
-		lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_result_ref("skipped_2", [{
+		tekton_test.slsav1_attestation([tekton_test.slsav1_task_result_ref("skipped_2", [{
 			"name": lib.task_test_result_name,
 			"type": "string",
 			"value": {"result": "SKIPPED"},
@@ -248,7 +248,7 @@ test_warning_is_warning if {
 			lib.task_test_result_name,
 			{"result": "WARNING"}, "warning_1", _bundle,
 		),
-		lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_result_ref("warning_2", [{
+		tekton_test.slsav1_attestation([tekton_test.slsav1_task_result_ref("warning_2", [{
 			"name": lib.task_test_result_name,
 			"type": "string",
 			"value": {"result": "WARNING"},
@@ -280,27 +280,27 @@ test_mixed_statuses if {
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "WARNING"}, "warning_1", _bundle),
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "ERROR"}, "error_2", _bundle),
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "WARNING"}, "warning_2", _bundle),
-		lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_result_ref("success_20", [{
+		tekton_test.slsav1_attestation([tekton_test.slsav1_task_result_ref("success_20", [{
 			"name": lib.task_test_result_name,
 			"type": "string",
 			"value": {"result": "SUCCESS"},
 		}])]),
-		lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_result_ref("failure_20", [{
+		tekton_test.slsav1_attestation([tekton_test.slsav1_task_result_ref("failure_20", [{
 			"name": lib.task_test_result_name,
 			"type": "string",
 			"value": {"result": "FAILURE"},
 		}])]),
-		lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_result_ref("error_20", [{
+		tekton_test.slsav1_attestation([tekton_test.slsav1_task_result_ref("error_20", [{
 			"name": lib.task_test_result_name,
 			"type": "string",
 			"value": {"result": "ERROR"},
 		}])]),
-		lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_result_ref("warning_20", [{
+		tekton_test.slsav1_attestation([tekton_test.slsav1_task_result_ref("warning_20", [{
 			"name": lib.task_test_result_name,
 			"type": "string",
 			"value": {"result": "WARNING"},
 		}])]),
-		lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_result_ref("skipped_20", [{
+		tekton_test.slsav1_attestation([tekton_test.slsav1_task_result_ref("skipped_20", [{
 			"name": lib.task_test_result_name,
 			"type": "string",
 			"value": {"result": "SKIPPED"},
@@ -380,7 +380,7 @@ test_unsupported_test_result if {
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SUCESS"}, "success_1", _bundle),
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "FAIL"}, "failure_1", _bundle),
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SKIPED"}, "skipped_1", _bundle),
-		lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_result_ref("skipped_20", [{
+		tekton_test.slsav1_attestation([tekton_test.slsav1_task_result_ref("skipped_20", [{
 			"name": lib.task_test_result_name,
 			"type": "string",
 			"value": {"result": "SKIPED"},
@@ -422,7 +422,7 @@ test_missing_wrong_attestation_type if {
 	tr_result := {"name": lib.task_test_result_name, "type": "string", "value": {"result": "SKIPED"}}
 
 	# regal ignore:line-length
-	pr_slsav1 := lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_result_ref("skipped_20", [tr_result])])
+	pr_slsav1 := tekton_test.slsav1_attestation([tekton_test.slsav1_task_result_ref("skipped_20", [tr_result])])
 	tr_slsav1 := object.union(
 		pr_slsav1,
 		{"statement": {"predicate": {"buildDefinition": {"buildType": lib.tekton_task_run}}}},
@@ -437,7 +437,7 @@ test_wrong_attestation_type if {
 	tr_result := {"name": lib.task_test_result_name, "type": "string", "value": {"result": "ERROR"}}
 
 	# regal ignore:line-length
-	pr_slsav1 := lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_result_ref("skipped_20", [tr_result])])
+	pr_slsav1 := tekton_test.slsav1_attestation([tekton_test.slsav1_task_result_ref("skipped_20", [tr_result])])
 	tr_slsav1 := object.union(
 		pr_slsav1,
 		{"statement": {"predicate": {"buildDefinition": {"buildType": lib.tekton_task_run}}}},
@@ -584,7 +584,7 @@ test_results_and_counts if {
 		"type": "string",
 		"value": {"result": "SUCCESS", "failures": 0, "warnings": 2, "successes": 3},
 	}])
-	attestations := [lib_test.mock_slsav1_attestation_with_tasks([task1, task2, task3])]
+	attestations := [tekton_test.slsav1_attestation([task1, task2, task3])]
 	lib.assert_equal_results(test.deny, {
 		{
 			"code": "test.no_erred_tests",

@@ -4,7 +4,6 @@ import rego.v1
 
 import data.lib
 import data.lib.tekton_test
-import data.lib_test
 import data.rpm_packages
 
 test_success_cyclonedx if {
@@ -128,19 +127,19 @@ test_failure_with_platform_grouping if {
 		with ec.oci.blob as _mock_blob
 }
 
-_mock_blob(`"registry.local/cyclonedx-1@sha256:cyclonedx-1-digest"`) := json.marshal({"components": [
+_mock_blob(`registry.local/cyclonedx-1@sha256:cyclonedx-1-digest`) := json.marshal({"components": [
 	{"purl": "pkg:rpm/redhat/spam@1.0.0-1"},
 	{"purl": "pkg:rpm/redhat/bacon@1.0.0-2"},
 	{"purl": "pkg:rpm/redhat/ham@4.2.0-0"},
 ]})
 
-_mock_blob(`"registry.local/cyclonedx-2@sha256:cyclonedx-2-digest"`) := json.marshal({"components": [
+_mock_blob(`registry.local/cyclonedx-2@sha256:cyclonedx-2-digest`) := json.marshal({"components": [
 	{"purl": "pkg:rpm/redhat/spam@1.0.0-2"},
 	{"purl": "pkg:rpm/redhat/bacon@1.0.0-2"},
 	{"purl": "pkg:rpm/redhat/eggs@4.2.0-0"},
 ]})
 
-_mock_blob(`"registry.local/spdx-1@sha256:spdx-1-digest"`) := json.marshal({"packages": [
+_mock_blob(`registry.local/spdx-1@sha256:spdx-1-digest`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
 		"referenceCategory": "PACKAGE_MANAGER",
@@ -159,7 +158,7 @@ _mock_blob(`"registry.local/spdx-1@sha256:spdx-1-digest"`) := json.marshal({"pac
 	}]},
 ]})
 
-_mock_blob(`"registry.local/spdx-2@sha256:spdx-2-digest"`) := json.marshal({"packages": [
+_mock_blob(`registry.local/spdx-2@sha256:spdx-2-digest`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
 		"referenceCategory": "PACKAGE_MANAGER",
@@ -179,7 +178,7 @@ _mock_blob(`"registry.local/spdx-2@sha256:spdx-2-digest"`) := json.marshal({"pac
 ]})
 
 # Mock blob with multiple versions of spam (both 1.0.0-1 and 1.0.0-2)
-_mock_blob(`"registry.local/multi-spam@sha256:multi-spam-digest"`) := json.marshal({"packages": [
+_mock_blob(`registry.local/multi-spam@sha256:multi-spam-digest`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
 		"referenceCategory": "PACKAGE_MANAGER",
@@ -198,7 +197,7 @@ _mock_blob(`"registry.local/multi-spam@sha256:multi-spam-digest"`) := json.marsh
 ]})
 
 # Mock blob with only one version of spam (1.0.0-1) - for mismatch testing
-_mock_blob(`"registry.local/single-spam@sha256:single-spam-digest"`) := json.marshal({"packages": [
+_mock_blob(`registry.local/single-spam@sha256:single-spam-digest`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
 		"referenceCategory": "PACKAGE_MANAGER",
@@ -212,7 +211,7 @@ _mock_blob(`"registry.local/single-spam@sha256:single-spam-digest"`) := json.mar
 ]})
 
 # Mock blob with spam version 1.0.0-3 - for grouping test
-_mock_blob(`"registry.local/spam-v3@sha256:spam-v3-digest"`) := json.marshal({"packages": [
+_mock_blob(`registry.local/spam-v3@sha256:spam-v3-digest`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
 		"referenceCategory": "PACKAGE_MANAGER",
@@ -244,33 +243,27 @@ _attestation_with_sboms(sbom_urls) := attestation if {
 	tasks := [task |
 		some i, url in sbom_urls
 		platform := platforms[i % count(platforms)]
-		task_with_result := tekton_test.slsav1_task_result_ref(
+		task := tekton_test.resolved_slsav1_task(
 			sprintf("some-build-%d", [i]),
+			[{
+				"name": "PLATFORM",
+				"value": platform,
+			}],
 			[
 				{
 					"name": "SBOM_BLOB_URL",
-					"type": "string",
 					"value": url,
 				},
 				{
 					"name": "IMAGES",
-					"type": "string",
 					"value": "registry.local/image@sha256:abc",
 				},
 			],
 		)
-		task_with_bundle := tekton_test.slsav1_task_bundle(task_with_result, _bundle)
-		task := json.patch(task_with_bundle, [{
-			"op": "add",
-			"path": "/spec/params/-",
-			"value": {
-				"name": "PLATFORM",
-				"value": platform,
-			},
-		}])
+		task_with_bundle := tekton_test.slsav1_task_bundle(task, _bundle)
 	]
 
-	attestation := lib_test.mock_slsav1_attestation_with_tasks(tasks)
+	attestation := tekton_test.slsav1_attestation(tasks)
 }
 
 _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
