@@ -1,4 +1,4 @@
-# policy
+# policy rules
 
 [Rego][rego] policies related to the Conforma.
 
