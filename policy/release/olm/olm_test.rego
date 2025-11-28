@@ -597,8 +597,9 @@ _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e
 _with_related_images := _attestations_with_attachment("sha256:related_digest")
 
 _attestations_with_attachment(attachment) := attestations if {
-	slsav1_task_with_result := tekton_test.slsav1_task_result_ref(
+	slsav1_task_with_result := tekton_test.resolved_slsav1_task(
 		"validate-fbc",
+		[],
 		[{
 			"name": olm._related_images_result_name,
 			"type": "string",
@@ -613,7 +614,7 @@ _attestations_with_attachment(attachment) := attestations if {
 			"validate-fbc",
 			_bundle,
 		),
-		lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_bundle(slsav1_task_with_result, _bundle)]),
+		tekton_test.slsav1_attestation([tekton_test.slsav1_task_bundle(slsav1_task_with_result, _bundle)]),
 	]
 }
 

@@ -98,24 +98,21 @@ _attestation_v0_2(result_value) := lib_test.att_mock_helper_ref(
 	_bundle,
 )
 
-_attestation_v1_0(result_value) := attestation if {
-	results := [{"name": rpm_signature._rpms_data_result_name, "value": result_value}]
-	content := base64.encode(json.marshal(json.patch(tekton_test.slsav1_task("spam_v1_0"), [{
-		"op": "add",
-		"path": "/status/taskResults",
-		"value": results,
-	}])))
-	attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
+_attestation_v1_0(result_value) := {"statement": {
+	"predicateType": "https://slsa.dev/provenance/v1",
+	"predicate": {
+		"buildDefinition": {
 			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [{
-				"name": "pipelineTask",
-				"content": content,
-			}],
-		}},
-	}}
-}
+			"externalParameters": {"runSpec": {
+				"params": [],
+				"pipelineSpec": {"tasks": []},
+			}},
+		},
+		"runDetails": {"byproducts": [{
+			"name": concat("-", ["taskRunResults/spam_v1", rpm_signature._rpms_data_result_name]),
+			"value": result_value,
+		}]},
+	},
+}}
 
 _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"

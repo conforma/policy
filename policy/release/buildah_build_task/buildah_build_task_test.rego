@@ -9,55 +9,27 @@ import data.lib.tekton_test
 test_good_dockerfile_param if {
 	attestation := _attestation("buildah", {"parameters": {"DOCKERFILE": "./Dockerfile"}}, _results)
 	lib.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
-	slsav1_attestation := _slsav1_attestation("buildah", [{"name": "DOCKERFILE", "value": "./Dockerfile"}], _results)
+
+	slsav1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts("buildah", [{"name": "DOCKERFILE", "value": "./Dockerfile"}], _slsav1_byproducts) # regal ignore:line-length
 	lib.assert_empty(buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
 
 # regal ignore:rule-length
 test_buildah_tasks if {
-	tasks := [
-		{
-			"name": "pipelineTask",
-			"content": base64.encode(json.marshal(tekton_test.slsav1_attestation_local_spec)),
-		},
-		{
-			"name": "pipelineTask",
-			"content": base64.encode(json.marshal(tekton_test.slsav1_attestation_local_spec)),
-		},
-	]
-	slsav1_attestation := json.patch(
-		_slsav1_attestation(
-			"buildah", [{
-				"name": "DOCKERFILE",
-				"value": "./Dockerfile",
-			}],
-			_results,
-		),
-		[{
-			"op": "add",
-			"path": "/statement/predicate/buildDefinition/resolvedDependencies",
-			"value": tasks,
-		}],
-	)
+	slsav1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts([_slsav1_local_task], [], _slsav1_byproducts) # regal ignore:line-length
 
 	expected := {{
+		"name": "buildah",
 		"params": [
 			{"name": "IMAGE", "value": "quay.io/jstuart/hacbs-docker-build"},
 			{"name": "DOCKERFILE", "value": "./image_with_labels/Dockerfile"},
 		],
-		"podTemplate": {
-			"imagePullSecrets": [{"name": "docker-chains"}],
-			"securityContext": {"fsGroup": 65532},
-		},
 		"results": _results,
-		"serviceAccountName": "default", "taskRef": {
-			"kind": "Task",
-			"name": "buildah",
+		"taskRef": {
+			"params": [{"name": "name", "value": "buildah"}, {"name": "bundle", "value": "buildah-bundle"}, {"name": "kind", "value": "task"}], # regal ignore:line-length
+			"resolver": "bundles",
 		},
-		"timeout": "1h0m0s", "workspaces": [
-			{"name": "source", "persistentVolumeClaim": {"claimName": "pvc-bf2ed289ae"}},
-			{"name": "dockerconfig", "secret": {"secretName": "docker-credentials"}},
-		],
+		"workspaces": [{"name": "buildah", "workspace": "buildah-workspace"}],
 	}}
 	lib.assert_equal(expected, buildah_build_task._buildah_tasks) with input.attestations as [slsav1_attestation]
 }
@@ -68,10 +40,24 @@ test_dockerfile_param_https_source if {
 		"msg": "DOCKERFILE param value (https://Dockerfile) is an external source",
 	}}
 
-	# attestation := _attestation("buildah", {"parameters": {"DOCKERFILE": "https://Dockerfile"}}, _results)
-	# lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
+	attestation := _attestation("buildah", {"parameters": {"DOCKERFILE": "https://Dockerfile"}}, _results)
+	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
 
-	slsav1_attestation := _slsav1_attestation("buildah", [{"name": "DOCKERFILE", "value": "https://Dockerfile"}], _results)
+	ext_source_task := tekton_test.slsav1_task_with_params(
+		"buildah",
+		"buildah",
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "https://Dockerfile",
+			},
+		],
+	)
+	slsav1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts([ext_source_task], [], _slsav1_byproducts) # regal ignore:line-length
 	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
 
@@ -83,7 +69,21 @@ test_dockerfile_param_http_source if {
 	attestation := _attestation("buildah", {"parameters": {"DOCKERFILE": "http://Dockerfile"}}, _results)
 	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
 
-	slsav1_attestation := _slsav1_attestation("buildah", [{"name": "DOCKERFILE", "value": "http://Dockerfile"}], _results)
+	ext_source_task := tekton_test.slsav1_task_with_params(
+		"buildah",
+		"buildah",
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "http://Dockerfile",
+			},
+		],
+	)
+	slsav1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts([ext_source_task], [], _slsav1_byproducts) # regal ignore:line-length
 	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
 
@@ -91,7 +91,7 @@ test_missing_pipeline_run_attestations if {
 	attestation := {"statement": {"predicate": {"buildType": "something/else"}}}
 	lib.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
 
-	slsav1_attestation := {"statement": {"predicate": {"buildDefinition": {"buildType": "something/else"}}}}
+	slsav1_attestation := tekton_test.slsav1_attestation([])
 	lib.assert_empty(buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
 
@@ -115,36 +115,13 @@ test_multiple_buildah_tasks if {
 	lib.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
 
 	tasks := [
-		{
-			"name": "task",
-			"content": base64.encode(json.marshal(json.patch(tekton_test.slsav1_attestation_local_spec, [{
-				"op": "add",
-				"path": "/taskRef/name",
-				"value": "task1",
-			}]))),
-		},
-		{
-			"name": "pipelineTask",
-			"content": base64.encode(json.marshal(json.patch(tekton_test.slsav1_attestation_local_spec, [{
-				"op": "add",
-				"path": "/taskRef/name",
-				"value": "task1",
-			}]))),
-		},
-		{
-			"name": "pipeline",
-			"content": base64.encode(json.marshal(json.patch(tekton_test.slsav1_attestation_local_spec, [{
-				"op": "add",
-				"path": "/taskRef/name",
-				"value": "task1",
-			}]))),
-		},
+		_slsav1_local_task,
+		_slsav1_local_task_with_refname("task1"),
+		_slsav1_local_task_with_refname("task2"),
+		_slsav1_local_task_with_refname("task3"),
 	]
-	slsav1_attestation := json.patch(_slsav1_attestation("buildah", [{}], _results), [{
-		"op": "add",
-		"path": "/statement/predicate/buildDefinition/resolvedDependencies",
-		"value": tasks,
-	}])
+
+	slsav1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts(tasks, [], _slsav1_byproducts)
 	lib.assert_empty(buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
 
@@ -174,28 +151,27 @@ test_multiple_buildah_tasks_one_with_external_dockerfile if {
 	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
 
 	tasks := [
-		{
-			"name": "task",
-			"content": base64.encode(json.marshal(json.patch(tekton_test.slsav1_attestation_local_spec, [{
-				"op": "add",
-				"path": "params",
-				"value": [{"name": "DOCKERFILE", "value": "Dockerfile"}],
-			}]))),
-		},
-		{
-			"name": "pipelineTask",
-			"content": base64.encode(json.marshal(json.patch(tekton_test.slsav1_attestation_local_spec, [{
-				"op": "add",
-				"path": "/params",
-				"value": [{"name": "DOCKERFILE", "value": "http://Dockerfile"}],
-			}]))),
-		},
+		_slsav1_local_task,
+		_slsav1_local_task_with_refname("task1"),
+		_slsav1_local_task_with_refname("task2"),
+		_slsav1_local_task_with_refname("task3"),
+		tekton_test.slsav1_task_with_params(
+			"buildah",
+			"buildah",
+			[
+				{
+					"name": "IMAGE",
+					"value": "quay.io/jstuart/hacbs-docker-build",
+				},
+				{
+					"name": "DOCKERFILE",
+					"value": "http://Dockerfile",
+				},
+			],
+		),
 	]
-	slsav1_attestation := json.patch(_slsav1_attestation("buildah", {}, _results), [{
-		"op": "add",
-		"path": "/statement/predicate/buildDefinition/resolvedDependencies",
-		"value": tasks,
-	}])
+
+	slsav1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts(tasks, [], _slsav1_byproducts)
 
 	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
@@ -206,10 +182,46 @@ test_add_capabilities_param if {
 		"msg": "ADD_CAPABILITIES parameter is not allowed",
 	}}
 
-	attestation := _slsav1_attestation("buildah", [{"name": "ADD_CAPABILITIES", "value": "spam"}], _results)
+	task1 := tekton_test.slsav1_task_with_params(
+		"buildah",
+		"buildah",
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "ADD_CAPABILITIES",
+				"value": "spam",
+			},
+		],
+	)
+	attestation := tekton_test.slsav1_attestation_with_params_and_byproducts([task1], [], _slsav1_byproducts) # regal ignore:line-length
 	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
 
-	attestation_spaces := _slsav1_attestation("buildah", [{"name": "ADD_CAPABILITIES", "value": "   "}], _results)
+	task2 := tekton_test.slsav1_task_with_params(
+		"buildah",
+		"buildah",
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "ADD_CAPABILITIES",
+				"value": "   ",
+			},
+		],
+	)
+	attestation_spaces := tekton_test.slsav1_attestation_with_params_and_byproducts([task2], [], _slsav1_byproducts) # regal ignore:line-length
 	lib.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_spaces]
 }
 
@@ -219,9 +231,46 @@ test_platform_param if {
 		"msg": "PLATFORM parameter value \"linux-root/arm64\" is disallowed by regex \".*root.*\"",
 	}}
 
+	task1 := tekton_test.slsav1_task_with_params(
+		"buildah",
+		"buildah",
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "PLATFORM",
+				"value": "linux-root/arm64",
+			},
+		],
+	)
+	task2 := tekton_test.slsav1_task_with_params(
+		"buildah",
+		"buildah",
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "PLATFORM",
+				"value": "linux/arm64",
+			},
+		],
+	)
+
 	attestations := [
-		_slsav1_attestation("buildah", [{"name": "PLATFORM", "value": "linux-root/arm64"}], _results),
-		_slsav1_attestation("buildah", [{"name": "PLATFORM", "value": "linux/arm64"}], _results),
+		tekton_test.slsav1_attestation_with_params_and_byproducts([task1], [], _slsav1_byproducts), # regal ignore:line-length
+		tekton_test.slsav1_attestation_with_params_and_byproducts([task2], [], _slsav1_byproducts), # regal ignore:line-length
 	]
 
 	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as attestations
@@ -272,13 +321,67 @@ test_privileged_nested_param if {
 		"msg": "setting PRIVILEGED_NESTED parameter to true is not allowed",
 	}}
 
-	attestation := _slsav1_attestation("buildah", [{"name": "PRIVILEGED_NESTED", "value": "true"}], _results)
+	task := tekton_test.slsav1_task_with_params(
+		"buildah",
+		"buildah",
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "PRIVILEGED_NESTED",
+				"value": "true",
+			},
+		],
+	)
+	attestation := tekton_test.slsav1_attestation_with_params_and_byproducts([task], [], _slsav1_byproducts)
 	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
 
-	attestation_empty := _slsav1_attestation("buildah", [{"name": "PRIVILEGED_NESTED", "value": ""}], _results)
+	task_empty := tekton_test.slsav1_task_with_params(
+		"buildah",
+		"buildah",
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "PRIVILEGED_NESTED",
+				"value": "",
+			},
+		],
+	)
+	attestation_empty := tekton_test.slsav1_attestation_with_params_and_byproducts([task_empty], [], _slsav1_byproducts)
 	lib.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_empty]
 
-	attestation_false := _slsav1_attestation("buildah", [{"name": "PRIVILEGED_NESTED", "value": "false"}], _results)
+	task_false := tekton_test.slsav1_task_with_params(
+		"buildah",
+		"buildah",
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "PRIVILEGED_NESTED",
+				"value": "false",
+			},
+		],
+	)
+	attestation_false := tekton_test.slsav1_attestation_with_params_and_byproducts([task_false], [], _slsav1_byproducts)
 	lib.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_false]
 }
 
@@ -292,43 +395,43 @@ _attestation(task_name, params, results) := {"statement": {"predicate": {
 	}]},
 }}}
 
-_slsav1_attestation(task_name, params, results) := attestation if {
-	content := base64.encode(json.marshal(json.patch(tekton_test.slsav1_task(task_name), [
+_slsav1_local_task_with_refname(ref_name) := tekton_test.slsav1_task_with_params(
+	"buildah",
+	ref_name,
+	[
 		{
-			"op": "replace",
-			"path": "/spec/params",
-			"value": params,
+			"name": "IMAGE",
+			"value": "quay.io/jstuart/hacbs-docker-build",
 		},
 		{
-			"op": "add",
-			"path": "/status/taskResults",
-			"value": results,
+			"name": "DOCKERFILE",
+			"value": "./image_with_labels/Dockerfile",
 		},
-	])))
-	attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [{
-				"name": "pipelineTask",
-				"content": content,
-			}],
-		}},
-	}}
-}
+	],
+)
 
 _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
 
 _results := [
 	{
 		"name": "IMAGE_DIGEST",
-		"type": "string",
 		"value": "sha256:hash",
 	},
 	{
 		"name": "IMAGE_URL",
-		"type": "string",
 		"value": "quay.io/jstuart/hacbs-docker-build:tag@sha256:hash",
+	},
+]
+
+_slsav1_local_task := _slsav1_local_task_with_refname("buildah")
+
+_slsav1_byproducts := [
+	{
+		"name": "taskRunResults/buildah/IMAGE_DIGEST",
+		"content": base64.encode("sha256:hash"),
+	},
+	{
+		"name": "taskRunResults/buildah/IMAGE_URL",
+		"content": base64.encode("quay.io/jstuart/hacbs-docker-build:tag@sha256:hash"),
 	},
 ]

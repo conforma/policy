@@ -24,8 +24,8 @@ test_image_result if {
 			"value": "4321\n",
 		},
 	]
-	lib.assert_equal(["image1", "image2"], tekton.task_result_artifact_url(slsav1_task_result("task1", results)))
-	lib.assert_equal(["1234", "4321"], tekton.task_result_artifact_digest(slsav1_task_result("task1", results)))
+	lib.assert_equal(["image1", "image2"], tekton.task_result_artifact_url(resolved_slsav1_task("task1", [], results)))
+	lib.assert_equal(["1234", "4321"], tekton.task_result_artifact_digest(resolved_slsav1_task("task1", [], results)))
 }
 
 test_artifact_result if {
@@ -47,8 +47,8 @@ test_artifact_result if {
 			"value": "4321\n",
 		},
 	]
-	lib.assert_equal(["image1", "image2"], tekton.task_result_artifact_url(slsav1_task_result("task1", results)))
-	lib.assert_equal(["1234", "4321"], tekton.task_result_artifact_digest(slsav1_task_result("task1", results)))
+	lib.assert_equal(["image1", "image2"], tekton.task_result_artifact_url(resolved_slsav1_task("task1", [], results)))
+	lib.assert_equal(["1234", "4321"], tekton.task_result_artifact_digest(resolved_slsav1_task("task1", [], results)))
 }
 
 test_images_result if {
@@ -56,10 +56,10 @@ test_images_result if {
 		"name": "IMAGES",
 		"value": "img1@sha256:digest1, img2@sha256:digest2\n",
 	}]
-	lib.assert_equal(["img1", "img2"], tekton.task_result_artifact_url(slsav1_task_result("task1", results)))
+	lib.assert_equal(["img1", "img2"], tekton.task_result_artifact_url(resolved_slsav1_task("task1", [], results)))
 	lib.assert_equal(
 		["sha256:digest1", "sha256:digest2"],
-		tekton.task_result_artifact_digest(slsav1_task_result("task1", results)),
+		tekton.task_result_artifact_digest(resolved_slsav1_task("task1", [], results)),
 	)
 }
 
@@ -74,8 +74,8 @@ test_artifact_outputs_result if {
 			"value": {"uri": "img2\n", "digest": "4321\n"},
 		},
 	]
-	lib.assert_equal(["img1", "img2"], tekton.task_result_artifact_url(slsav1_task_result("task1", results)))
-	lib.assert_equal(["1234", "4321"], tekton.task_result_artifact_digest(slsav1_task_result("task1", results)))
+	lib.assert_equal(["img1", "img2"], tekton.task_result_artifact_url(resolved_slsav1_task("task1", [], results)))
+	lib.assert_equal(["1234", "4321"], tekton.task_result_artifact_digest(resolved_slsav1_task("task1", [], results)))
 }
 
 test_invalid_result_name if {
@@ -83,8 +83,8 @@ test_invalid_result_name if {
 		"name": "INVALID_OUTPUTS",
 		"value": {"uri": "img1", "digest": "1234"},
 	}]
-	lib.assert_empty(tekton.task_result_artifact_url(slsav1_task_result("task1", results)))
-	lib.assert_empty(tekton.task_result_artifact_digest(slsav1_task_result("task1", results)))
+	lib.assert_empty(tekton.task_result_artifact_url(resolved_slsav1_task("task1", [], results)))
+	lib.assert_empty(tekton.task_result_artifact_digest(resolved_slsav1_task("task1", [], results)))
 }
 
 test_images_with_digests if {
@@ -121,15 +121,15 @@ test_images_with_digests if {
 		},
 	]
 	tasks_artifacts := [
-		slsav1_task_result("task1", results_artifact_outputs),
-		slsav1_task_result("task2", results_artifact_outputs),
+		resolved_slsav1_task("task1", [], results_artifact_outputs),
+		resolved_slsav1_task("task2", [], results_artifact_outputs),
 	]
 	lib.assert_equal(["img1@1234", "img1@1234"], tekton.images_with_digests(tasks_artifacts))
 
-	tasks_images := [slsav1_task_result("task1", results_images), slsav1_task_result("task2", results_images)]
+	tasks_images := [resolved_slsav1_task("task1", [], results_images), resolved_slsav1_task("task2", [], results_images)]
 	lib.assert_equal(["img1@1234", "img1@1234"], tekton.images_with_digests(tasks_images))
 
-	tasks_ordered := [slsav1_task_result("task1", results_images_unordered)]
+	tasks_ordered := [resolved_slsav1_task("task1", [], results_images_unordered)]
 	lib.assert_equal(["img1@1234", "img2@5678"], tekton.images_with_digests(tasks_ordered))
 }
 
@@ -192,9 +192,9 @@ test_mixed_results if {
 		"artifact-outputs-img2@sha256:9801",
 	]
 
-	lib.assert_equal(expected, tekton.images_with_digests([slsav1_task_result("task1", results)]))
+	lib.assert_equal(expected, tekton.images_with_digests([resolved_slsav1_task("task1", [], results)]))
 }
 
 test_no_results if {
-	lib.assert_empty(tekton.images_with_digests([slsav1_task_result("task1", [])]))
+	lib.assert_empty(tekton.images_with_digests([resolved_slsav1_task("task1", [], [])]))
 }

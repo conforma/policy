@@ -3,6 +3,7 @@ package rpm_ostree_task_test
 import rego.v1
 
 import data.lib
+import data.lib.tekton_test
 import data.rpm_ostree_task
 
 test_success if {
@@ -15,26 +16,13 @@ test_success if {
 		}]},
 	}}}
 
-	slsa_v1_attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [{
-				"name": "pipelineTask",
-				"content": base64.encode(json.marshal({"spec": {
-					"taskRef": {
-						"name": "rpm-ostree",
-						"kind": "Task",
-					},
-					"params": [{
-						"name": "BUILDER_IMAGE",
-						"value": "registry.local/builder:v1.0@sha256:bcd",
-					}],
-				}})),
-			}],
-		}},
-	}}
+	# SLSA v1.0
+	slsa_v1_task := tekton_test.slsav1_task("rpm-ostree")
+	att_byproducts := [{
+		"name": "taskRunResults/rpm-ostree/BUILDER_IMAGE",
+		"content": base64.encode("registry.local/builder:v1.0@sha256:bcd"),
+	}]
+	slsa_v1_attestation := tekton_test.slsav1_attestation_with_params_and_byproducts([slsa_v1_task], [], att_byproducts) # regal ignore:line-length
 
 	attestations := [slsa_v02_attestation, slsa_v1_attestation]
 
@@ -59,41 +47,26 @@ test_builder_image_param_failures if {
 		]},
 	}}}
 
-	slsa_v1_attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [
-				{
-					"name": "pipelineTask",
-					"content": base64.encode(json.marshal({"spec": {
-						"taskRef": {
-							"name": "rpm-ostree",
-							"kind": "Task",
-						},
-						"params": [{
-							"name": "BUILDER_IMAGE",
-							"value": "registry.local/spam:v1.0",
-						}],
-					}})),
-				},
-				{
-					"name": "pipelineTask",
-					"content": base64.encode(json.marshal({"spec": {
-						"taskRef": {
-							"name": "rpm-ostree",
-							"kind": "Task",
-						},
-						"params": [{
-							"name": "BUILDER_IMAGE",
-							"value": "registry.local/deprecated:v1.0@sha256:bcd",
-						}],
-					}})),
-				},
-			],
-		}},
-	}}
+	# SLSA v1.0
+	slsa_v1_task_1 := tekton_test.slsav1_task_with_params(
+		"rpm-ostree-1",
+		"rpm-ostree",
+		[{
+			"name": "BUILDER_IMAGE",
+			"value": "registry.local/spam:v1.0",
+		}],
+	)
+
+	slsa_v1_task_2 := tekton_test.slsav1_task_with_params(
+		"rpm-ostree-2",
+		"rpm-ostree",
+		[{
+			"name": "BUILDER_IMAGE",
+			"value": "registry.local/deprecated:v1.0@sha256:bcd",
+		}],
+	)
+
+	slsa_v1_attestation := tekton_test.slsav1_attestation([slsa_v1_task_1, slsa_v1_task_2]) # regal ignore:line-length
 
 	attestations := [slsa_v02_attestation, slsa_v1_attestation]
 
