@@ -1,0 +1,19 @@
+= Tekton StepAction kind checks Package
+
+Policies to verify that a Tekton StepAction definition has the expected value for kind.
+
+== Package Name
+
+* `stepaction_kind`
+
+== Rules Included
+
+[#stepaction_kind__valid]
+=== link:#stepaction_kind__valid[StepAction definition has expected kind]
+
+Confirm the StepAction definition has the kind "StepAction".
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Unexpected kind %q for StepAction definition`
+* Code: `stepaction_kind.valid`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/stepaction/stepaction_kind/stepaction_kind.rego#L14[Source, window="_blank"]

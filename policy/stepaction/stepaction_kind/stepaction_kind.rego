@@ -5,7 +5,7 @@
 #   Policies to verify that a Tekton StepAction definition has the expected
 #   value for kind.
 #
-package stepaction.kind
+package stepaction_kind
 
 import rego.v1
 

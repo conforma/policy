@@ -5,7 +5,7 @@
 #   This package ensures that a StepAction definition contains a valid and allowed value for the
 #   image reference.
 #
-package stepaction.image
+package stepaction_image
 
 import rego.v1
 

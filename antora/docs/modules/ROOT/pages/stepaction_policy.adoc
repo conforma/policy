@@ -11,10 +11,10 @@ These rules are applied to Tekton StepAction definitions.
 |*Package Name*
 |*Description*
 
-| xref:packages/stepaction_image.adoc[image]
+| xref:packages/stepaction_stepaction_image.adoc[stepaction_image]
 a| This package ensures that a StepAction definition contains a valid and allowed value for the image reference.
 
-| xref:packages/stepaction_kind.adoc[kind]
+| xref:packages/stepaction_stepaction_kind.adoc[stepaction_kind]
 a| Policies to verify that a Tekton StepAction definition has the expected value for kind.
 
 |===

@@ -1,0 +1,45 @@
+= Tekton StepAction images policies Package
+
+This package ensures that a StepAction definition contains a valid and allowed value for the image reference.
+
+== Package Name
+
+* `stepaction_image`
+
+== Rules Included
+
+[#stepaction_image__permitted]
+=== link:#stepaction_image__permitted[Image comes from permitted registry]
+
+Confirm the StepAction uses a container image with a URL that matches one of the prefixes in the provided list of allowed step image registry prefixes. The list is customizeable via the `allowed_step_image_registry_prefixes` rule data key.
+
+*Solution*: Make sure the container image used comes from an approved registry.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Image ref %q is disallowed`
+* Code: `stepaction_image.permitted`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/stepaction/stepaction_image/stepaction_image.rego#L38[Source, window="_blank"]
+
+[#stepaction_image__accessible]
+=== link:#stepaction_image__accessible[Image is accessible]
+
+Confirm the container image used in the StepTemplate is accessible.
+
+*Solution*: Make sure the container image used in the StepTemplate is pushed to the registry and that it can be fetched.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Image ref %q is inaccessible`
+* Code: `stepaction_image.accessible`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/stepaction/stepaction_image/stepaction_image.rego#L16[Source, window="_blank"]
+
+[#stepaction_image__rule_data]
+=== link:#stepaction_image__rule_data[Rule data provided]
+
+Confirm the `allowed_step_image_registry_prefixes` rule data is provided.
+
+*Solution*: Make sure the xref:cli:ROOT:configuration.adoc#_data_sources[data sources] contains a key 'allowed_step_image_registry_prefixes' that contains a list of approved registries.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `stepaction_image.rule_data`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/stepaction/stepaction_image/stepaction_image.rego#L62[Source, window="_blank"]

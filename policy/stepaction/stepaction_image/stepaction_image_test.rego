@@ -1,9 +1,9 @@
-package policy.stepaction.image_test
+package stepaction_image_test
 
 import rego.v1
 
 import data.lib
-import data.stepaction.image
+import data.stepaction_image as image
 
 test_image_accessible if {
 	stepaction := {
@@ -23,7 +23,7 @@ test_image_not_accessible if {
 	}
 
 	expected := {{
-		"code": "stepaction.image.accessible",
+		"code": "stepaction_image.accessible",
 		"msg": `Image ref "registry.io/repository/not_ok:1" is inaccessible`,
 		"term": "registry.io/repository/not_ok:1",
 	}}
@@ -42,7 +42,7 @@ test_image_not_permitted if {
 	rule_data := {"allowed_step_image_registry_prefixes": ["dope.registry.io/"]}
 
 	expected := {{
-		"code": "stepaction.image.permitted",
+		"code": "stepaction_image.permitted",
 		"msg": `Image ref "registry.io/repository/ok:1" is disallowed`,
 		"term": "noname/noversion",
 	}}
@@ -54,7 +54,7 @@ test_image_not_permitted if {
 
 test_rule_data_list_empty if {
 	expected := {{
-		"code": "stepaction.image.rule_data",
+		"code": "stepaction_image.rule_data",
 		# regal ignore:line-length
 		"msg": "Rule data allowed_step_image_registry_prefixes has unexpected format: (Root): Array must have at least 1 items",
 		"severity": "failure",
@@ -74,13 +74,13 @@ test_rule_data_list_format if {
 
 	expected := {
 		{
-			"code": "stepaction.image.rule_data",
+			"code": "stepaction_image.rule_data",
 			# regal ignore:line-length
 			"msg": "Rule data allowed_step_image_registry_prefixes has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
 		{
-			"code": "stepaction.image.rule_data",
+			"code": "stepaction_image.rule_data",
 			# regal ignore:line-length
 			"msg": "Rule data allowed_step_image_registry_prefixes has unexpected format: (Root): array items[1,2] must be unique",
 			"severity": "failure",
