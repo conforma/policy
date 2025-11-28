@@ -231,6 +231,7 @@ Rules included:
 * xref:packages/release_git_branch.adoc#git_branch__git_branch[Git branch checks: Builds have a trusted target branch]        
 * xref:packages/release_provenance_materials.adoc#provenance_materials__git_clone_source_matches_provenance[Provenance Materials: Git clone source matches materials provenance]        
 * xref:packages/release_provenance_materials.adoc#provenance_materials__git_clone_task_found[Provenance Materials: Git clone task found]        
+* xref:packages/release_rpm_build_deps.adoc#rpm_build_deps__download_location_valid[RPM Build Dependencies: Builds have valid download locations]        
 * xref:packages/release_rpm_pipeline.adoc#rpm_pipeline__invalid_pipeline[RPM Pipeline: Task version invalid_pipeline]        
 * xref:packages/release_rpm_repos.adoc#rpm_repos__ids_known[RPM Repos: All rpms have known repo ids]        
 * xref:packages/release_rpm_repos.adoc#rpm_repos__rule_data_provided[RPM Repos: Known repo id list provided]        
@@ -393,6 +394,9 @@ a| Policies to prevent releasing an image to quay that has a quay expiration dat
 
 | xref:packages/release_rhtap_multi_ci.adoc[rhtap_multi_ci]
 a| Checks for images built using an RHTAP build pipeline in either Jenkins, GitLab or GitHub. RHTAP pipelines are defined under https://github.com/redhat-appstudio/tssc-sample-templates/tree/main/skeleton/ci
+
+| xref:packages/release_rpm_build_deps.adoc[rpm_build_deps]
+a| Checks different properties of the CycloneDX SBOMs associated with the image being validated.
 
 | xref:packages/release_rpm_packages.adoc[rpm_packages]
 a| Rules used to verify different properties of specific RPM packages found in the SBOM of the image being validated.
