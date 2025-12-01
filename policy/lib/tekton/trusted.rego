@@ -87,14 +87,16 @@ trusted_task_records(ref_key) := records if {
 
 latest_trusted_ref(task) := trusted_task_ref if {
 	ref := task_ref(task)
-	trusted_task_ref = _trusted_tasks[ref.key][0].ref
+	records := trusted_task_records(ref.key)
+	count(records) > 0
+	trusted_task_ref = records[0].ref
 }
 
 # Returns the date in epoch nanoseconds when the task expires, or nothing if it
 # hasn't expired yet.
 _task_expires_on(task) := expires if {
 	ref := task_ref(task)
-	records := _trusted_tasks[ref.key]
+	records := trusted_task_records(ref.key)
 
 	matching_records := [r |
 		some r in records
