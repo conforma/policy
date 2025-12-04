@@ -41,15 +41,6 @@ task_expiry_warnings_after := grace if {
 	)
 }
 
-# Returns the epoch time in nanoseconds of the time when the Task expires, or
-# nothing if Task is not set to expire currently.
-expiry_of(task) := expires if {
-	expires := _task_expires_on(task)
-
-	# only report if the task is expiring within task_expiry_warning_days days
-	expires > task_expiry_warnings_after
-}
-
 # Returns a subset of tasks that do not use a trusted Task reference.
 untrusted_task_refs(tasks) := {task |
 	some task in tasks

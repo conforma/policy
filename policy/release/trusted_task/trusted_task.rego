@@ -73,35 +73,6 @@ warn contains result if {
 }
 
 # METADATA
-# title: Tasks using the latest versions
-# description: >-
-#   Check if all Tekton Tasks use the latest known Task reference. When warnings
-#   will be reported can be configured using the `task_expiry_warning_days` rule
-#   data setting. It holds the number of days before the task is to expire within
-#   which the warnings will be reported.
-# custom:
-#   short_name: current
-#   failure_msg: >-
-#     A newer version of task %q exists. Please update before %s.
-#     The current bundle is %q and the latest bundle ref is %q
-#   solution: >-
-#     Update the Task reference to a newer version.
-#   collections:
-#   - redhat
-#   - redhat_rpms
-#   effective_on: 2024-05-07T00:00:00Z
-#
-warn contains result if {
-	some task in lib.tasks_from_pipelinerun
-	expiry := tekton.expiry_of(task)
-	result := lib.result_helper_with_term(
-		rego.metadata.chain(),
-		[tekton.pipeline_task_name(task), time.format(expiry), _task_info(task), tekton.latest_trusted_ref(task)],
-		tekton.task_name(task),
-	)
-}
-
-# METADATA
 # title: Tasks are trusted
 # description: >-
 #   Check the trust of the Tekton Tasks used in the build Pipeline. There are two modes in which

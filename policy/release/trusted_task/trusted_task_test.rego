@@ -65,36 +65,6 @@ test_tagged_warning if {
 		with data.trusted_tasks as trusted_tasks_data
 }
 
-test_outdated_warning if {
-	att := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [
-			trusted_bundle_pipeline_task,
-			outdated_bundle_pipeline_task,
-			trusted_git_pipeline_task,
-			outdated_git_pipeline_task,
-		]},
-	}}}
-
-	expected := {
-		{
-			"code": "trusted_task.current",
-			# regal ignore:line-length
-			"msg": `A newer version of task "outdated-honest-abe-p" exists. Please update before 2099-01-01T00:00:00Z. The current bundle is "git+git.local/repo.git//tasks/honest-abe.yaml@37ef630394794f28142224295851a45eea5c63ae" and the latest bundle ref is "48df630394794f28142224295851a45eea5c63ae"`,
-			"term": "honest-abe",
-		},
-		{
-			"code": "trusted_task.current",
-			# regal ignore:line-length
-			"msg": `A newer version of task "outdated-trusty-p" exists. Please update before 2099-01-01T00:00:00Z. The current bundle is "oci://registry.local/trusty:1.0@sha256:outdated-digest" and the latest bundle ref is "sha256:digest"`,
-			"term": "trusty",
-		},
-	}
-
-	lib.assert_equal_results(trusted_task.warn, expected) with input.attestations as [att]
-		with data.trusted_tasks as trusted_tasks_data
-}
-
 test_trusted_violation if {
 	att := {"statement": {"predicate": {
 		"buildType": lib.tekton_pipeline_run,

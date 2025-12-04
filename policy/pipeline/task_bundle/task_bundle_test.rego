@@ -73,23 +73,6 @@ test_trusted_bundle_up_to_date_maintained_version if {
 		with data.trusted_tasks as trusted_tasks
 }
 
-# Warn about out of date bundles that are still trusted.
-test_trusted_bundle_out_of_date_past if {
-	tasks := [{"name": "my-task-1", "taskRef": {"bundle": "reg.com/repo:v2@sha256:bcd"}}]
-
-	lib.assert_equal_results(task_bundle.warn, {{
-		"code": "task_bundle.out_of_date_task_bundle",
-		# regal ignore:line-length
-		"msg": "Pipeline task 'my-task-1' uses an out of date task bundle 'reg.com/repo:v2@sha256:bcd', new version of the Task must be used before 2022-04-11T00:00:00Z",
-	}}) with input.spec.tasks as tasks
-		with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2022-03-12T00:00:00Z")
-
-	lib.assert_empty(task_bundle.deny) with input.spec.tasks as tasks
-		with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2022-03-12T00:00:00Z")
-}
-
 # Deny bundles that are no longer active.
 test_trusted_bundle_expired if {
 	tasks := [{"name": "my-task", "taskRef": {"bundle": "reg.com/repo@sha256:def"}}]

@@ -32,24 +32,6 @@ warn contains result if {
 }
 
 # METADATA
-# title: Task bundle is out of date
-# description: >-
-#   For each Task in the Pipeline definition, check if the Tekton Bundle used is
-#   the most recent.
-# custom:
-#   short_name: out_of_date_task_bundle
-#   failure_msg: >-
-#     Pipeline task '%s' uses an out of date task bundle '%s', new version of the
-#     Task must be used before %s
-#
-warn contains result if {
-	some task in input.spec.tasks
-	expiry := tekton.expiry_of(task)
-	bundle := tekton.bundle(task)
-	result := lib.result_helper(rego.metadata.chain(), [task.name, bundle, time.format(expiry)])
-}
-
-# METADATA
 # title: Task bundle was not used or is not defined
 # description: >-
 #   Check for the existence of a task bundle. This rule will
