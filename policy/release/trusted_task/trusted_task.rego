@@ -355,7 +355,34 @@ _digests_from_values(values) := {digest |
 	some digest in regex.find_n(pattern, value, -1)
 }
 
+# Format a denial reason object into a human-readable string
+# Returns the type as the message, followed by a bullet list of patterns (if any)
+_format_denial_reason(reason) := msg if {
+	count(reason.pattern) > 0
+	# Create bullet list of patterns, one per line
+	pattern_lines := [sprintf("  - %s", [pattern]) | some pattern in reason.pattern]
+	msg := sprintf("%s\n%s", [reason.type, concat("\n", pattern_lines)])
+} else := reason.type
+
 _format_trust_error_ta(task, dependency_chain) := error if {
+	# if the task is denied from trusted_task_rules
+	reason := tekton.denial_reason(task)
+	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
+	untrusted_task_name := tekton.task_name(task)
+	
+	# Format the denial reason message
+	reason_msg := _format_denial_reason(reason)
+	
+	error := {
+		"msg": sprintf(
+			# regal ignore:line-length
+			"Untrusted version of PipelineTask %q (Task %q) was included in build chain comprised of: %s. The denial reason is: %s",
+			[untrusted_pipeline_task_name, untrusted_task_name, concat(", ", dependency_chain), reason_msg],
+		),
+		"term": untrusted_task_name,
+	}
+} else := error if {
+	# if the task is denied from trusted_tasks
 	latest_trusted_ref := tekton.latest_trusted_ref(task)
 	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
 	untrusted_task_name := tekton.task_name(task)
