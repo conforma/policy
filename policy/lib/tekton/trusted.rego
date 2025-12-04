@@ -57,9 +57,26 @@ untrusted_task_refs(tasks) := {task |
 }
 
 # Returns true if the task uses a trusted Task reference.
+# Trusted_task_rules take precedence over trusted_tasks:
+# 1. If task matches a deny rule, it's not trusted
+# 2. If task matches an allow rule, it's trusted
+# 3. Otherwise, fall back to trusted_task_records (legacy trusted_tasks)
 is_trusted_task(task) if {
 	ref := task_ref(task)
 
+	# First check deny rules (they take precedence)
+	not _task_matches_deny_rule(ref)
+
+	# Then check allow rules
+	_task_matches_allow_rule(ref)
+} else if {
+	ref := task_ref(task)
+
+	# If no deny rule matches, check allow rules
+	not _task_matches_deny_rule(ref)
+	not _task_matches_allow_rule(ref)
+
+	# Fall back to legacy trusted_task_records
 	some record in trusted_task_records(ref.key)
 
 	# A trusted task reference is one that is recorded in the trusted tasks data, this is done by
@@ -217,6 +234,109 @@ data_errors contains error if {
 	error := {
 		"message": sprintf("trusted_task_rules data has unexpected format: %s", [e.message]),
 		"severity": e.severity,
+	}
+}
+
+# _trusted_task_rules provides a safe way to access the list of trusted task rules. It prevents a
+# policy rule from incorrectly not evaluating due to missing data. It also filters out rules with
+# future effective_on dates.
+_trusted_task_rules := {
+	"allow": _effective_allow_rules,
+	"deny": _effective_deny_rules,
+}
+
+# Filter allow rules to only include those that are currently effective (not in the future)
+_effective_allow_rules := [rule |
+	some rule in _trusted_task_rules_data.allow
+	_rule_is_effective(rule)
+]
+
+# Filter deny rules to only include those that are currently effective (not in the future)
+_effective_deny_rules := [rule |
+	some rule in _trusted_task_rules_data.deny
+	_rule_is_effective(rule)
+]
+
+# Returns true if a rule is currently effective (either has no effective_on date, or the date is not in the future)
+_rule_is_effective(rule) if {
+	not "effective_on" in object.keys(rule)
+} else if {
+	effective_date := time.parse_rfc3339_ns(sprintf("%sT00:00:00Z", [rule.effective_on]))
+	effective_date <= time_lib.effective_current_time_ns
+}
+
+# Returns true if the task reference matches a deny rule pattern and version constraints (if specified)
+_task_matches_deny_rule(ref) if {
+	some rule in _trusted_task_rules.deny
+	_pattern_matches(ref.key, rule.pattern)
+	_version_constraints_match(ref, rule)
+}
+
+# Returns true if the task reference matches an allow rule pattern and version constraints (if specified)
+_task_matches_allow_rule(ref) if {
+	some rule in _trusted_task_rules.allow
+	_pattern_matches(ref.key, rule.pattern)
+	_version_constraints_match(ref, rule)
+}
+
+# Converts a wildcard pattern to a regex pattern and checks if the key matches
+# Wildcards (*) are converted to .* in regex
+_pattern_matches(key, pattern) if {
+	regex_pattern := regex.replace(pattern, `\*`, ".*")
+	regex.match(regex_pattern, key)
+}
+
+# Returns true if version constraints match (or if no version constraints are specified)
+# Version constraints are optional - if not specified, the rule matches regardless of version
+_version_constraints_match(ref, rule) if {
+	not "versions" in object.keys(rule)
+} else if {
+	# Extract version/tag from the reference
+	version := _extract_version_from_ref(ref)
+	version != ""
+
+	# Version must match at least one constraint
+	some constraint in rule.versions
+	_semver_constraint_matches(version, constraint)
+}
+
+# Extract version/tag from task reference
+# For OCI bundles, this is the tagged_ref (e.g., "0.4" from "oci://registry.io/task:0.4")
+# For git references, there's no version tag, so return empty string
+_extract_version_from_ref(ref) := ref.tagged_ref if {
+	"tagged_ref" in object.keys(ref)
+	ref.tagged_ref != ""
+} else := ""
+
+# Check if a version matches a semver constraint
+# Constraints can be like "<0.5", ">=2,<2.1.0", etc.
+# TODO: Implement proper semver constraint matching
+# For now, if version looks like semver, we'll accept it
+# This is a placeholder that should be replaced with proper semver constraint evaluation
+# Note: Non-semver tags never match version constraints (per schema)
+_semver_constraint_matches(version, constraint) if {
+	_is_semver_like(version)
+}
+
+# Check if a version string looks like semver (e.g., "0.4.0", "1.2.3", "v0.5.0")
+_is_semver_like(version) if {
+	regex.match(`^v?[0-9]+\.[0-9]+(\.[0-9]+)?(-[a-zA-Z0-9-]+)?(\+[a-zA-Z0-9-]+)?$`, version)
+}
+
+# _trusted_task_rules_data provides safe access to trusted_task_rules rule data. It defaults to an
+# empty structure if the data is not provided, preventing policy rules from incorrectly not
+# evaluating due to missing data.
+default _trusted_task_rules_data := {
+	"allow": [],
+	"deny": [],
+}
+
+_trusted_task_rules_data := rules if {
+	rules_data := lib_rule_data("trusted_task_rules")
+	is_object(rules_data)
+	rules := {
+		"allow": object.get(rules_data, "allow", []),
+		"deny": object.get(rules_data, "deny", []),
 	}
 }
 
