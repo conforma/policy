@@ -272,6 +272,45 @@ _task_matches_deny_rule(ref) if {
 	_version_constraints_match(ref, rule)
 }
 
+# Returns a list of patterns from deny rules that match the task, or an empty list if no deny rules match.
+# This only applies to trusted_task_rules (not legacy trusted_tasks).
+denying_pattern(task) := patterns if {
+	ref := task_ref(task)
+	# Get all matching deny rule patterns
+	patterns := [rule.pattern |
+		some rule in _trusted_task_rules.deny
+		_pattern_matches(ref.key, rule.pattern)
+		_version_constraints_match(ref, rule)
+	]
+} else := []
+
+# Returns the reason why a task reference was denied, or nothing if the task is trusted.
+# There are two ways a task can be denied:
+# 1. It matches a deny rule pattern (type: "deny_rule", pattern: list of matching deny patterns)
+# 2. It doesn't match any allow rule pattern (type: "not_allowed", pattern: empty list)
+# This only applies to trusted_task_rules (not legacy trusted_tasks).
+# Note: If there are no allow rules defined, this function returns nothing (we don't check legacy).
+denial_reason(task) := reason if {
+	patterns := denying_pattern(task)
+	count(patterns) > 0
+	reason := {
+		"type": "deny_rule",
+		"pattern": patterns
+	}
+} else := reason if {
+	# Case 2: Doesn't match any allow rule
+	# Only applies if there are allow rules defined
+	ref := task_ref(task)
+	count(_trusted_task_rules.allow) > 0
+	not _task_matches_allow_rule(ref)
+	not _task_matches_deny_rule(ref)
+
+	reason := {
+		"type": "not_allowed",
+		"pattern": []
+	}
+}
+
 # Returns true if the task reference matches an allow rule pattern and version constraints (if specified)
 _task_matches_allow_rule(ref) if {
 	some rule in _trusted_task_rules.allow

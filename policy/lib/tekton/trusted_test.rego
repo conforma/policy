@@ -238,6 +238,169 @@ test_task_expiry_warning_days_data if {
 	lib.assert_empty(tekton.data_errors) with data.rule_data.task_expiry_warning_days as 14
 }
 
+test_denying_pattern if {
+	# Test that denying_pattern returns the pattern that denied a task
+	trusted_task_rules := {
+		"allow": [],
+		"deny": [{
+			"name": "Deny old buildah",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+		}],
+	}
+
+	# Create a task that matches the deny rule
+	denied_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.3@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+
+	# Should return a list with the pattern that denied it
+	patterns := tekton.denying_pattern(denied_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+	lib.assert_equal(["oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"], patterns)
+
+	# Task that doesn't match any deny rule should return empty list
+	non_matching_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:digest"},
+		{"name": "name", "value": "trusty"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	patterns_empty := tekton.denying_pattern(non_matching_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+	lib.assert_equal([], patterns_empty)
+}
+
+test_denying_pattern_version_constraints if {
+	# Test with version constraints
+	# Note: _semver_constraint_matches is currently a placeholder that matches any semver-like version
+	# So both 0.4 and 0.6 will match the constraint "<0.5" with the current implementation
+	version_constrained_rules := {
+		"allow": [],
+		"deny": [{
+			"name": "Deny old versions",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			"versions": ["<0.5"],
+		}],
+	}
+
+	# Version 0.4 should match and return pattern (semver-like, so placeholder matches it)
+	version_task_04 := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	patterns_v04 := tekton.denying_pattern(version_task_04) with data.rule_data.trusted_task_rules as version_constrained_rules
+	lib.assert_equal(["oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"], patterns_v04)
+
+	# Version 0.6 - with placeholder semver matching, this will also match (both are semver-like)
+	# Once proper semver constraint matching is implemented, this should NOT match "<0.5"
+	version_task_06 := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.6@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	# With placeholder implementation, 0.6 will match (it's semver-like)
+	patterns_v06 := tekton.denying_pattern(version_task_06) with data.rule_data.trusted_task_rules as version_constrained_rules
+	lib.assert_equal(["oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"], patterns_v06)
+}
+
+test_denying_pattern_multiple_rules if {
+	# Test with multiple deny rules - should return one of the matching patterns
+	multiple_deny_rules := {
+		"allow": [],
+		"deny": [
+			{
+				"name": "Deny all konflux",
+				"pattern": "oci://quay.io/konflux-ci/*",
+			},
+			{
+				"name": "Deny buildah specifically",
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			},
+		],
+	}
+
+	# Should match both patterns (both rules match this task)
+	buildah_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	patterns_multi := tekton.denying_pattern(buildah_task) with data.rule_data.trusted_task_rules as multiple_deny_rules
+	# Should contain both patterns (order may vary)
+	expected_patterns := {"oci://quay.io/konflux-ci/*", "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"}
+	lib.assert_equal(2, count(patterns_multi))
+	every pattern in patterns_multi {
+		pattern in expected_patterns
+	}
+}
+
+test_denial_reason if {
+	# Test denial_reason returns the correct reason for denied tasks
+	trusted_task_rules := {
+		"allow": [{
+			"name": "Allow konflux tasks",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}],
+		"deny": [{
+			"name": "Deny old buildah",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			"message": "This version is deprecated",
+		}],
+	}
+
+	# Case 1: Matches a deny rule (even though it also matches allow)
+	denied_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.3@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	reason_deny := tekton.denial_reason(denied_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+	lib.assert_equal("deny_rule", reason_deny.type)
+	lib.assert_equal(["oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"], reason_deny.pattern)
+
+	# Case 2: Doesn't match any allow rule and isn't in legacy
+	not_allowed_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "registry.local/untrusted:1.0@sha256:digest"},
+		{"name": "name", "value": "untrusted"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	reason_not_allowed := tekton.denial_reason(not_allowed_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+	lib.assert_equal("not_allowed", reason_not_allowed.type)
+	lib.assert_equal([], reason_not_allowed.pattern)
+
+	# Task that matches allow rule should return nothing (it's trusted)
+	allowed_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-something:0.4@sha256:digest"},
+		{"name": "name", "value": "task-something"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	not tekton.denial_reason(allowed_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+
+	# Task in legacy trusted_tasks but doesn't match allow rules should return "not_allowed"
+	# (denial_reason only works with trusted_task_rules, not legacy)
+	reason_legacy := tekton.denial_reason(trusted_bundle_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.trusted_tasks as trusted_tasks
+	lib.assert_equal("not_allowed", reason_legacy.type)
+	lib.assert_equal([], reason_legacy.pattern)
+}
+
+test_denial_reason_no_allow_rules if {
+	# If there are no allow rules, we fall back to legacy, so "not_allowed" shouldn't apply
+	rules_no_allow := {
+		"allow": [],
+		"deny": [],
+	}
+
+	# Task not in legacy should return nothing (we fall back to legacy, which is empty, but denial_reason
+	# only applies when allow rules exist)
+	untrusted_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "registry.local/untrusted:1.0@sha256:digest"},
+		{"name": "name", "value": "untrusted"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	not tekton.denial_reason(untrusted_task) with data.rule_data.trusted_task_rules as rules_no_allow
+}
+
 test_trusted_task_rules_data_errors if {
 	# When trusted_task_rules is not provided (defaults to []), validation should be skipped
 	lib.assert_empty(tekton.data_errors)
