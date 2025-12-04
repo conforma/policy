@@ -30,6 +30,10 @@ missing_trusted_tasks_data if {
 	count(_trusted_tasks) == 0
 }
 
+missing_trusted_tasks_data if {
+	count(_trusted_task_rules) == 0
+}
+
 default task_expiry_warnings_after := 0
 
 task_expiry_warnings_after := grace if {
