@@ -92,6 +92,10 @@ warn contains result if {
 #   effective_on: 2024-05-07T00:00:00Z
 #
 warn contains result if {
+	# only run if trusted_task_rules are empty
+	# this can either go away when trusted_task_rules are fully implemented or we can take
+	# a loook at it when versioning is implemented.
+	tekton.missing_trusted_task_rules_data
 	some task in lib.tasks_from_pipelinerun
 	expiry := tekton.expiry_of(task)
 	result := lib.result_helper_with_term(
@@ -181,7 +185,7 @@ deny contains result if {
 #   effective_on: 2024-05-07T00:00:00Z
 #
 deny contains result if {
-	tekton.missing_trusted_tasks_data
+	tekton.missing_all_trusted_tasks_data
 	result := lib.result_helper(rego.metadata.chain(), [])
 }
 
@@ -355,7 +359,47 @@ _digests_from_values(values) := {digest |
 	some digest in regex.find_n(pattern, value, -1)
 }
 
+# Format a denial reason object into a human-readable string
+# Returns the type as the message, followed by a bullet list of patterns and any deny messages
+_format_denial_reason(reason) := msg if {
+	count(reason.pattern) > 0
+
+	# Create bullet list of patterns, one per line
+	pattern_lines := [sprintf("  - %s", [pattern]) | some pattern in reason.pattern]
+	patterns_msg := sprintf("%s\n%s", [reason.type, concat("\n", pattern_lines)])
+
+	# Add deny messages if any
+	messages := object.get(reason, "messages", [])
+	count(messages) > 0
+	message_lines := [sprintf("  - %s", [m]) | some m in messages]
+	msg := sprintf("%s\nMessages:\n%s", [patterns_msg, concat("\n", message_lines)])
+} else := msg if {
+	count(reason.pattern) > 0
+
+	# Create bullet list of patterns, one per line (no messages)
+	pattern_lines := [sprintf("  - %s", [pattern]) | some pattern in reason.pattern]
+	msg := sprintf("%s\n%s", [reason.type, concat("\n", pattern_lines)])
+} else := reason.type
+
 _format_trust_error_ta(task, dependency_chain) := error if {
+	# if the task is denied from trusted_task_rules
+	reason := tekton.denial_reason(task)
+	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
+	untrusted_task_name := tekton.task_name(task)
+
+	# Format the denial reason message
+	reason_msg := _format_denial_reason(reason)
+
+	error := {
+		"msg": sprintf(
+			# regal ignore:line-length
+			"Untrusted version of PipelineTask %q (Task %q) was included in build chain comprised of: %s. The denial reason is: %s",
+			[untrusted_pipeline_task_name, untrusted_task_name, concat(", ", dependency_chain), reason_msg],
+		),
+		"term": untrusted_task_name,
+	}
+} else := error if {
+	# if the task is denied from trusted_tasks
 	latest_trusted_ref := tekton.latest_trusted_ref(task)
 	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
 	untrusted_task_name := tekton.task_name(task)
@@ -382,6 +426,24 @@ _format_trust_error_ta(task, dependency_chain) := error if {
 }
 
 _format_trust_error(task) := error if {
+	# if the task is denied from trusted_task_rules
+	reason := tekton.denial_reason(task)
+	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
+	untrusted_task_name := tekton.task_name(task)
+	untrusted_task_info := _task_info(task)
+
+	# Format the denial reason message
+	reason_msg := _format_denial_reason(reason)
+
+	error := {
+		"msg": sprintf(
+			# regal ignore:line-length
+			"PipelineTask %q uses an untrusted task reference: %s. The denial reason is: %s",
+			[untrusted_pipeline_task_name, untrusted_task_info, reason_msg],
+		),
+		"term": untrusted_task_name,
+	}
+} else := error if {
 	latest_trusted_ref := tekton.latest_trusted_ref(task)
 	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
 	untrusted_task_name := tekton.task_name(task)

@@ -43,6 +43,10 @@ warn contains result if {
 #     Task must be used before %s
 #
 warn contains result if {
+	# only run if trusted_task_rules are empty
+	# this can either go away when trusted_task_rules are fully implemented or we can take
+	# a loook at it when versioning is implemented.
+	tekton.missing_trusted_task_rules_data
 	some task in input.spec.tasks
 	expiry := tekton.expiry_of(task)
 	bundle := tekton.bundle(task)
@@ -100,6 +104,6 @@ deny contains result if {
 #   short_name: missing_required_data
 #   failure_msg: Missing required trusted_tasks data
 deny contains result if {
-	tekton.missing_trusted_tasks_data
+	tekton.missing_all_trusted_tasks_data
 	result := lib.result_helper(rego.metadata.chain(), [])
 }

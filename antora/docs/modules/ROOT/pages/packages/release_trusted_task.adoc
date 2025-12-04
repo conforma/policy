@@ -18,7 +18,7 @@ Confirm the expected `trusted_tasks` data keys have been provided in the expecte
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `trusted_task.data_format`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L219[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L223[Source, window="_blank"]
 
 [#trusted_task__pinned]
 === link:#trusted_task__pinned[Task references are pinned]
@@ -57,7 +57,7 @@ Confirm the `trusted_tasks` rule data was provided, since it's required by the p
 * FAILURE message: `Missing required trusted_tasks data`
 * Code: `trusted_task.data`
 * Effective from: `2024-05-07T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L168[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L172[Source, window="_blank"]
 
 [#trusted_task__trusted]
 === link:#trusted_task__trusted[Tasks are trusted]
@@ -70,7 +70,7 @@ Check the trust of the Tekton Tasks used in the build Pipeline. There are two mo
 * FAILURE message: `%s`
 * Code: `trusted_task.trusted`
 * Effective from: `2024-05-07T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L104[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L108[Source, window="_blank"]
 
 [#trusted_task__current]
 === link:#trusted_task__current[Tasks using the latest versions]
@@ -95,7 +95,7 @@ All input trusted artifacts must be produced on the pipeline. If they are not th
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Code tampering detected, input %q for task %q was not produced by the pipeline as attested.`
 * Code: `trusted_task.valid_trusted_artifact_inputs`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L130[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L134[Source, window="_blank"]
 
 [#trusted_task__trusted_parameters]
 === link:#trusted_task__trusted_parameters[Trusted parameters]
@@ -108,4 +108,4 @@ Confirm certain parameters provided to each builder Task have come from trusted 
 * FAILURE message: `The %q parameter of the %q PipelineTask includes an untrusted digest: %s`
 * Code: `trusted_task.trusted_parameters`
 * Effective from: `2021-07-04T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L188[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L192[Source, window="_blank"]

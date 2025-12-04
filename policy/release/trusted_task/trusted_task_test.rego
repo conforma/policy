@@ -199,6 +199,38 @@ test_trusted_artifact_outdated if {
 		with input.attestations as [attestation_with_outdated_task]
 }
 
+# Test trusted artifacts with deny rules - covers _format_trust_error_ta function
+test_trusted_artifact_denied_by_rules if {
+	# Deny all trusty tasks via trusted_task_rules
+	task_rules := {
+		"allow": [{
+			"name": "Allow all trusty tasks",
+			"pattern": "oci://registry.local/trusty*",
+		}],
+		"deny": [{
+			"name": "Deny trusty 1.0",
+			"pattern": "oci://registry.local/trusty:1.0",
+			"message": "Version 1.0 is deprecated",
+		}],
+	}
+
+	# All tasks use the same bundle, so all should be denied
+	results := trusted_task.deny with data.trusted_tasks as trusted_tasks_data
+		with data.rule_data.trusted_task_rules as task_rules
+		with input.attestations as [attestation_ta]
+
+	# Verify we got trusted task violations with the deny message
+	trusted_violations := [r | some r in results; r.code == "trusted_task.trusted"]
+	count(trusted_violations) > 0
+
+	# Verify the message format includes the deny reason and message
+	# This exercises _format_trust_error_ta and _format_denial_reason
+	some violation in trusted_violations
+	contains(violation.msg, "deny_rule")
+	contains(violation.msg, "oci://registry.local/trusty:1.0")
+	contains(violation.msg, "Version 1.0 is deprecated")
+}
+
 test_trusted_artifact_test_tasks if {
 	lib.assert_empty(trusted_task.deny) with data.trusted_tasks as trusted_tasks_data
 		with input.attestations as [attestation_ta]
@@ -668,4 +700,531 @@ trusted_tasks_data := {
 			"expires_on": "2024-01-01T00:00:00Z",
 		},
 	],
+}
+
+#####################################################
+# Functional tests for trusted_task_rules
+# Based on test cases defined in https://github.com/konflux-ci/architecture/blob/main/ADR/0053-trusted-task-model.md
+#
+# Note: Version-based tests (E1, E2, E3, I1) are skipped as versioning is not yet implemented.
+# Git reference test (J1) is marked as TODO/TBD.
+#####################################################
+
+#####################################################
+# 1. Coexistence With trusted_tasks (A1-A3)
+#####################################################
+
+# A1 — On trusted_tasks, no rules → trusted
+# Task is in trusted_tasks, trusted_task_rules is empty → should be trusted via legacy fallback
+test_on_trusted_tasks_no_rules_trusted if {
+	rules_trusted_tasks_data := {"oci://quay.io/konflux-ci/tekton-catalog/task-buildah:0.4": [{"ref": "sha256:abc123"}]}
+
+	trusted_task_rules_data := {
+		"allow": [],
+		"deny": [],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# Should NOT produce any deny results (task is trusted via legacy)
+	lib.assert_empty(trusted_task.deny) with input.attestations as [att]
+		with data.trusted_tasks as rules_trusted_tasks_data
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+}
+
+# A2 — On trusted_tasks, but expired → untrusted
+# Task is in trusted_tasks with expired date → should produce deny
+test_on_trusted_tasks_expired_untrusted if {
+	rules_trusted_tasks_data := {"oci://quay.io/konflux-ci/tekton-catalog/task-buildah:0.4": [{
+		"ref": "sha256:abc123",
+		"expires_on": "2024-12-31T00:00:00Z",
+	}]}
+
+	trusted_task_rules_data := {
+		"allow": [],
+		"deny": [],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# Should produce deny result (task expired in trusted_tasks)
+	results := trusted_task.deny with input.attestations as [att]
+		with data.trusted_tasks as rules_trusted_tasks_data
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-10T00:00:00Z")
+
+	# Verify we got a trusted task violation
+	count([r | some r in results; r.code == "trusted_task.trusted"]) > 0
+}
+
+# A3 — Not on trusted_tasks, no rules → untrusted
+# Task is not in trusted_tasks, no rules → should produce deny
+test_not_on_trusted_tasks_no_rules_untrusted if {
+	rules_trusted_tasks_data := {}
+
+	trusted_task_rules_data := {
+		"allow": [],
+		"deny": [],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"other-task",
+		"quay.io/myorg/other/task:1.0@sha256:abc123",
+		"other-task",
+	)])
+
+	# Should produce deny result (task not trusted)
+	results := trusted_task.deny with input.attestations as [att]
+		with data.trusted_tasks as rules_trusted_tasks_data
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+
+	# Verify we got a trusted task violation
+	count([r | some r in results; r.code == "trusted_task.trusted"]) > 0
+}
+
+#####################################################
+# 2. Basic Allow Rules (B1-B2)
+#####################################################
+
+# B1 — Allow by location
+# Task matches allow pattern → should NOT produce deny
+test_allow_by_location if {
+	trusted_task_rules_data := {
+		"allow": [{
+			"name": "Trust all tekton-catalog",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}],
+		"deny": [],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# Should NOT produce any deny results (task allowed by rules)
+	lib.assert_empty(trusted_task.deny) with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+}
+
+# B2 — Outside pattern → not trusted
+# Task does NOT match allow pattern → should produce deny
+test_outside_pattern_not_trusted if {
+	trusted_task_rules_data := {
+		"allow": [{
+			"name": "Trust all tekton-catalog",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}],
+		"deny": [],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"other-task",
+		"quay.io/myorg/other/task:1.0@sha256:abc123",
+		"other-task",
+	)])
+
+	# Should produce deny result (task outside allow pattern)
+	results := trusted_task.deny with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+
+	# Verify we got a trusted task violation
+	count([r | some r in results; r.code == "trusted_task.trusted"]) > 0
+}
+
+#####################################################
+# 3. Deny Precedence (C1-C2)
+#####################################################
+
+# Deny rules take precedence over allow rules
+# Task matches allow pattern but also matches deny → should produce deny with message
+test_deny_takes_precedence_over_allow if {
+	task_rules := {
+		"allow": [{
+			"name": "Allow tekton catalog",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}],
+		"deny": [{
+			"name": "Block buildah 0.4",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			"message": "task-buildah:0.4 is deprecated",
+			"effective_on": "2025-01-01",
+		}],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# Should produce deny result (deny rule takes precedence over allow)
+	results := trusted_task.deny with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as task_rules
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-10T00:00:00Z")
+
+	# Verify we got a trusted task violation with the deny message
+	trusted_violations := [r | some r in results; r.code == "trusted_task.trusted"]
+	count(trusted_violations) > 0
+
+	# Verify the message includes the deny message
+	some violation in trusted_violations
+	contains(violation.msg, "task-buildah:0.4 is deprecated")
+}
+
+#####################################################
+# 4. Time-Based Allow Rules (D1)
+#####################################################
+
+# D1 — Allow rule not yet effective → not trusted
+test_allow_rule_not_yet_effective if {
+	trusted_task_rules_data := {
+		"allow": [{
+			"name": "Trust tekton starting Feb",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+			"effective_on": "2025-02-01",
+		}],
+		"deny": [],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# Before effective date - should produce deny (rule not yet effective)
+	results := trusted_task.deny with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-15T00:00:00Z")
+
+	# Verify we got a trusted task violation
+	count([r | some r in results; r.code == "trusted_task.trusted"]) > 0
+}
+
+# D1 — Allow rule becomes effective → trusted
+test_allow_rule_effective_trusted if {
+	trusted_task_rules_data := {
+		"allow": [{
+			"name": "Trust tekton starting Feb",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+			"effective_on": "2025-02-01",
+		}],
+		"deny": [],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# After effective date - should NOT produce deny (rule is now effective)
+	lib.assert_empty(trusted_task.deny) with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-02-10T00:00:00Z")
+}
+
+# Time-based deny rule - not yet effective
+test_deny_rule_not_yet_effective if {
+	trusted_task_rules_data := {
+		"allow": [{
+			"name": "Allow tekton catalog",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}],
+		"deny": [{
+			"name": "Expire buildah",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			"effective_on": "2025-03-01",
+		}],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# Before deny effective date - should NOT produce deny (deny not yet effective)
+	lib.assert_empty(trusted_task.deny) with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-02-15T00:00:00Z")
+}
+
+# Time-based deny rule - becomes effective
+test_deny_rule_becomes_effective if {
+	trusted_task_rules_data := {
+		"allow": [{
+			"name": "Allow tekton catalog",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}],
+		"deny": [{
+			"name": "Expire buildah",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			"effective_on": "2025-03-01",
+		}],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# After deny effective date - should produce deny
+	results := trusted_task.deny with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-03-15T00:00:00Z")
+
+	# Verify we got a trusted task violation
+	count([r | some r in results; r.code == "trusted_task.trusted"]) > 0
+}
+
+#####################################################
+# 6. Overlapping Allow Rules (F1)
+#####################################################
+
+# Multiple allow rules with same pattern - task matching any effective rule is trusted
+test_multiple_allow_rules if {
+	trusted_task_rules_data := {
+		"allow": [
+			{
+				"name": "Base allow by location",
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+			},
+			{
+				"name": "Additional allow rule with different scope",
+				"pattern": "oci://quay.io/konflux-ci/*",
+			},
+		],
+		"deny": [],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# Task matches both allow rules - should be trusted
+	lib.assert_empty(trusted_task.deny) with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+}
+
+#####################################################
+# 7. Deprecation Deny Rule With Message (G1)
+#####################################################
+
+# G1 — Deny with user-visible message
+test_deny_with_message if {
+	task_rules := {
+		"allow": [{
+			"name": "Allow tekton",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}],
+		"deny": [{
+			"name": "Deprecate manifest",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-build-image-manifest*",
+			"message": "This task was renamed to build-image-index.",
+			"effective_on": "2025-10-26",
+		}],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"manifest-task",
+		"quay.io/konflux-ci/tekton-catalog/task-build-image-manifest:1.0@sha256:abc123",
+		"task-build-image-manifest",
+	)])
+
+	# Should produce deny result with message
+	results := trusted_task.deny with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as task_rules
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-11-01T00:00:00Z")
+
+	# Verify we got a trusted task violation
+	trusted_violations := [r | some r in results; r.code == "trusted_task.trusted"]
+	count(trusted_violations) > 0
+
+	# Verify the message is included in the output
+	some violation in trusted_violations
+	contains(violation.msg, "This task was renamed to build-image-index.")
+}
+
+#####################################################
+# 8. Rules Take Precedence Over trusted_tasks (H1)
+#####################################################
+
+# H1 — Rules allow, trusted_tasks expiry is ignored
+# When allow rules ARE defined and match, the task is trusted via rules
+# regardless of legacy expiry
+test_rules_allow_trusted_tasks_expiry_ignored if {
+	rules_trusted_tasks_data := {"oci://quay.io/konflux-ci/tekton-catalog/task-buildah:0.4": [{
+		"ref": "sha256:abc123",
+		"expires_on": "2025-01-01T00:00:00Z",
+	}]}
+
+	trusted_task_rules_data := {
+		"allow": [{
+			"name": "Allow tekton catalog",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}],
+		"deny": [],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# Should NOT produce deny (allow rule matches, trusted_tasks expiry is ignored)
+	lib.assert_empty(trusted_task.deny) with input.attestations as [att]
+		with data.trusted_tasks as rules_trusted_tasks_data
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-02-01T00:00:00Z")
+}
+
+#####################################################
+# 11. Unknown Fields Ignored (K1)
+#####################################################
+
+# K1 — Unknown fields ignored
+test_unknown_fields_ignored if {
+	trusted_task_rules_data := {
+		"allow": [{
+			"name": "Allow tekton",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+			"foo": "bar", # unknown field - should be ignored
+		}],
+		"deny": [],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# Should NOT produce any deny results (unknown field is ignored)
+	# Should NOT produce any deny results (including data_format errors)
+	# Unknown fields should be ignored per the JSON schema's additionalProperties: true
+	lib.assert_empty(trusted_task.deny) with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+}
+
+#####################################################
+# Additional edge case tests
+#####################################################
+
+# Test multiple tasks - some trusted, some not
+test_mixed_trusted_and_untrusted_tasks if {
+	trusted_task_rules_data := {
+		"allow": [{
+			"name": "Allow tekton catalog",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}],
+		"deny": [],
+	}
+
+	att := _rules_make_attestation([
+		_rules_make_task(
+			"trusted-task",
+			"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+			"task-buildah",
+		),
+		_rules_make_task(
+			"untrusted-task",
+			"quay.io/evil/malicious-task:1.0@sha256:evil123",
+			"malicious-task",
+		),
+	])
+
+	# Should produce deny for the untrusted task only
+	results := trusted_task.deny with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+
+	# Verify we got exactly one trusted task violation (for the untrusted task)
+	trusted_violations := [r | some r in results; r.code == "trusted_task.trusted"]
+	count(trusted_violations) == 1
+
+	# Verify it's for the untrusted task
+	some violation in trusted_violations
+	contains(violation.msg, "untrusted-task")
+}
+
+# Test deny rule with multiple patterns matching
+test_multiple_deny_patterns_matching if {
+	trusted_task_rules_data := {
+		"allow": [{
+			"name": "Allow all",
+			"pattern": "oci://quay.io/*",
+		}],
+		"deny": [
+			{
+				"name": "Deny konflux",
+				"pattern": "oci://quay.io/konflux-ci/*",
+			},
+			{
+				"name": "Deny buildah specifically",
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+				"message": "Use a different build task",
+			},
+		],
+	}
+
+	att := _rules_make_attestation([_rules_make_task(
+		"buildah-task",
+		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc123",
+		"task-buildah",
+	)])
+
+	# Should produce deny (both deny rules match)
+	results := trusted_task.deny with input.attestations as [att]
+		with data.trusted_tasks as {}
+		with data.rule_data.trusted_task_rules as trusted_task_rules_data
+
+	# Verify we got a trusted task violation
+	trusted_violations := [r | some r in results; r.code == "trusted_task.trusted"]
+	count(trusted_violations) > 0
+}
+
+#####################################################
+# Helper Functions for trusted_task_rules tests
+#####################################################
+
+# Create a simple attestation structure for testing
+_rules_make_attestation(tasks) := {"statement": {"predicate": {
+	"buildType": lib.tekton_pipeline_run,
+	"buildConfig": {"tasks": tasks},
+}}}
+
+# Create a bundle task reference for testing
+# Uses the SLSA v0.2 format that lib.tasks_from_pipelinerun expects
+_rules_make_task(pipeline_task_name, bundle, task_name) := {
+	"name": pipeline_task_name,
+	"ref": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": bundle},
+		{"name": "name", "value": task_name},
+		{"name": "kind", "value": "task"},
+	]},
 }
