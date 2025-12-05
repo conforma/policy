@@ -330,6 +330,7 @@ _digests_from_values(values) := {digest |
 # Returns the type as the message, followed by a bullet list of patterns (if any)
 _format_denial_reason(reason) := msg if {
 	count(reason.pattern) > 0
+
 	# Create bullet list of patterns, one per line
 	pattern_lines := [sprintf("  - %s", [pattern]) | some pattern in reason.pattern]
 	msg := sprintf("%s\n%s", [reason.type, concat("\n", pattern_lines)])
@@ -340,10 +341,10 @@ _format_trust_error_ta(task, dependency_chain) := error if {
 	reason := tekton.denial_reason(task)
 	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
 	untrusted_task_name := tekton.task_name(task)
-	
+
 	# Format the denial reason message
 	reason_msg := _format_denial_reason(reason)
-	
+
 	error := {
 		"msg": sprintf(
 			# regal ignore:line-length

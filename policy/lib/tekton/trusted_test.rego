@@ -228,6 +228,7 @@ test_denying_pattern_version_constraints if {
 		{"name": "name", "value": "task-buildah"},
 		{"name": "kind", "value": "task"},
 	]}}}
+
 	# With placeholder implementation, 0.6 will match (it's semver-like)
 	patterns_v06 := tekton.denying_pattern(version_task_06) with data.rule_data.trusted_task_rules as version_constrained_rules
 	lib.assert_equal(["oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"], patterns_v06)
@@ -256,6 +257,7 @@ test_denying_pattern_multiple_rules if {
 		{"name": "kind", "value": "task"},
 	]}}}
 	patterns_multi := tekton.denying_pattern(buildah_task) with data.rule_data.trusted_task_rules as multiple_deny_rules
+
 	# Should contain both patterns (order may vary)
 	expected_patterns := {"oci://quay.io/konflux-ci/*", "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"}
 	lib.assert_equal(2, count(patterns_multi))

@@ -27,11 +27,9 @@ unpinned_task_references(tasks) := {task |
 default missing_trusted_tasks_data := false
 
 missing_trusted_tasks_data if {
+	# Check if both legacy trusted_tasks and trusted_task_rules are empty
+	count(_trusted_task_rules_data.allow) + count(_trusted_task_rules_data.deny) == 0
 	count(_trusted_tasks) == 0
-}
-
-missing_trusted_tasks_data if {
-	count(_trusted_task_rules) == 0
 }
 
 default task_expiry_warnings_after := 0
@@ -148,6 +146,49 @@ _trusted_tasks[key] := pruned_records if {
 # Merging in the trusted_tasks rule data makes it easier for users to customize their trusted tasks
 _trusted_tasks_data := object.union(data.trusted_tasks, lib_rule_data("trusted_tasks"))
 
+# Merging in the trusted_task_rules rule data makes it easier for users to customize their trusted task rules
+# Note: We need to merge arrays, not use object.union which would overwrite them
+_trusted_task_rules_data := {
+	"allow": array.concat(
+		_data_allow_array,
+		_rule_data_allow_array,
+	),
+	"deny": array.concat(
+		_data_deny_array,
+		_rule_data_deny_array,
+	),
+}
+
+# Safely extract allow from data.trusted_task_rules
+default _data_allow_array := []
+
+_data_allow_array := data.trusted_task_rules.allow if {
+	data.trusted_task_rules
+}
+
+# Safely extract deny from data.trusted_task_rules
+default _data_deny_array := []
+
+_data_deny_array := data.trusted_task_rules.deny if {
+	data.trusted_task_rules
+}
+
+# Safely extract allow from rule_data
+default _rule_data_allow_array := []
+
+_rule_data_allow_array := _rule_data_obj.allow if {
+	_rule_data_obj := lib_rule_data("trusted_task_rules")
+	is_object(_rule_data_obj)
+}
+
+# Safely extract deny from rule_data
+default _rule_data_deny_array := []
+
+_rule_data_deny_array := _rule_data_obj.deny if {
+	_rule_data_obj := lib_rule_data("trusted_task_rules")
+	is_object(_rule_data_obj)
+}
+
 data_errors contains error if {
 	some e in j.validate_schema(
 		_trusted_tasks_data,
@@ -223,21 +264,14 @@ data_errors contains error if {
 # lib_rule_data returns [] when a key is not found, so we only validate when
 # the value is actually an object (the expected type).
 data_errors contains error if {
-	trusted_task_rules_data := lib_rule_data("trusted_task_rules")
-	is_object(trusted_task_rules_data) # Only validate if it's an object (skip null and [])
-	some e in j.validate_schema(trusted_task_rules_data, _trusted_task_rules_schema)
+	# Only validate if rule_data contains an object (skip when it's [] or not provided)
+	rule_data_rules := lib_rule_data("trusted_task_rules")
+	is_object(rule_data_rules)
+	some e in j.validate_schema(rule_data_rules, _trusted_task_rules_schema)
 	error := {
 		"message": sprintf("trusted_task_rules data has unexpected format: %s", [e.message]),
 		"severity": e.severity,
 	}
-}
-
-# _trusted_task_rules provides a safe way to access the list of trusted task rules. It prevents a
-# policy rule from incorrectly not evaluating due to missing data. It also filters out rules with
-# future effective_on dates.
-_trusted_task_rules := {
-	"allow": _effective_allow_rules,
-	"deny": _effective_deny_rules,
 }
 
 # Filter allow rules to only include those that are currently effective (not in the future)
@@ -262,7 +296,7 @@ _rule_is_effective(rule) if {
 
 # Returns true if the task reference matches a deny rule pattern and version constraints (if specified)
 _task_matches_deny_rule(ref) if {
-	some rule in _trusted_task_rules.deny
+	some rule in _trusted_task_rules_data.deny
 	_pattern_matches(ref.key, rule.pattern)
 	_version_constraints_match(ref, rule)
 }
@@ -271,9 +305,10 @@ _task_matches_deny_rule(ref) if {
 # This only applies to trusted_task_rules (not legacy trusted_tasks).
 denying_pattern(task) := patterns if {
 	ref := task_ref(task)
+
 	# Get all matching deny rule patterns
 	patterns := [rule.pattern |
-		some rule in _trusted_task_rules.deny
+		some rule in _trusted_task_rules_data.deny
 		_pattern_matches(ref.key, rule.pattern)
 		_version_constraints_match(ref, rule)
 	]
@@ -290,25 +325,25 @@ denial_reason(task) := reason if {
 	count(patterns) > 0
 	reason := {
 		"type": "deny_rule",
-		"pattern": patterns
+		"pattern": patterns,
 	}
 } else := reason if {
 	# Case 2: Doesn't match any allow rule
 	# Only applies if there are allow rules defined
 	ref := task_ref(task)
-	count(_trusted_task_rules.allow) > 0
+	count(_trusted_task_rules_data.allow) > 0
 	not _task_matches_allow_rule(ref)
 	not _task_matches_deny_rule(ref)
 
 	reason := {
 		"type": "not_allowed",
-		"pattern": []
+		"pattern": [],
 	}
 }
 
 # Returns true if the task reference matches an allow rule pattern and version constraints (if specified)
 _task_matches_allow_rule(ref) if {
-	some rule in _trusted_task_rules.allow
+	some rule in _trusted_task_rules_data.allow
 	_pattern_matches(ref.key, rule.pattern)
 	_version_constraints_match(ref, rule)
 }
@@ -360,19 +395,6 @@ _is_semver_like(version) if {
 # _trusted_task_rules_data provides safe access to trusted_task_rules rule data. It defaults to an
 # empty structure if the data is not provided, preventing policy rules from incorrectly not
 # evaluating due to missing data.
-default _trusted_task_rules_data := {
-	"allow": [],
-	"deny": [],
-}
-
-_trusted_task_rules_data := rules if {
-	rules_data := lib_rule_data("trusted_task_rules")
-	is_object(rules_data)
-	rules := {
-		"allow": object.get(rules_data, "allow", []),
-		"deny": object.get(rules_data, "deny", []),
-	}
-}
 
 # Schema for trusted_task_rules as defined in trusted_tasks/trusted_task_rules.schema.json
 # This schema validates the rule-based trusted tasks configuration (ADR 53)
