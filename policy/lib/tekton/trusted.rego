@@ -102,24 +102,6 @@ latest_trusted_ref(task) := trusted_task_ref if {
 	trusted_task_ref = records[0].ref
 }
 
-# Returns the date in epoch nanoseconds when the task expires, or nothing if it
-# hasn't expired yet.
-_task_expires_on(task) := expires if {
-	ref := task_ref(task)
-	records := trusted_task_records(ref.key)
-
-	matching_records := [r |
-		some r in records
-		r.ref == ref.pinned_ref
-	]
-
-	# Avoid an "eval_conflict_error: functions must not produce multiple
-	# outputs..." error if the data has duplicate records for this ref
-	record := matching_records[0]
-
-	expires = time.parse_rfc3339_ns(record.expires_on)
-}
-
 _unexpired_records(records) := all_unexpired if {
 	never_expires := [record |
 		some record in records
