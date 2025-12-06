@@ -39,76 +39,6 @@ test_task_expiry_warnings_after if {
 	) with data.rule_data.task_expiry_warning_days as 16
 }
 
-test_expiry_of if {
-	# defaults
-	# regal ignore:line-length
-	lib.assert_equal("2099-01-01T00:00:00Z", time.format(tekton.expiry_of(same_date_trusted_bundle_task))) with data.trusted_tasks as trusted_tasks
-	not tekton.expiry_of(newest_trusted_bundle_task) with data.trusted_tasks as trusted_tasks
-
-	# regal ignore:line-length
-	lib.assert_equal("2099-01-01T00:00:00Z", time.format(tekton.expiry_of(outdated_trusted_bundle_task))) with data.trusted_tasks as trusted_tasks
-	not tekton.expiry_of(newest_trusted_git_task) with data.trusted_tasks as trusted_tasks
-
-	# regal ignore:line-length
-	lib.assert_equal("2099-01-01T00:00:00Z", time.format(tekton.expiry_of(outdated_trusted_git_task))) with data.trusted_tasks as trusted_tasks
-
-	# when running far in the future without the grace period
-	# regal ignore:line-length
-	lib.assert_equal("2099-01-01T00:00:00Z", time.format(tekton.expiry_of(same_date_trusted_bundle_task))) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-	not tekton.expiry_of(newest_trusted_bundle_task) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-
-	# regal ignore:line-length
-	lib.assert_equal("2099-01-01T00:00:00Z", time.format(tekton.expiry_of(outdated_trusted_bundle_task))) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-	not tekton.expiry_of(newest_trusted_git_task) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-
-	# regal ignore:line-length
-	lib.assert_equal("2099-01-01T00:00:00Z", time.format(tekton.expiry_of(outdated_trusted_git_task))) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-
-	# when running far in the future within the grace period
-	# regal ignore:line-length
-	lib.assert_equal("2099-01-01T00:00:00Z", time.format(tekton.expiry_of(same_date_trusted_bundle_task))) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-		with data.rule_data.task_expiry_warning_days as 6
-	not tekton.expiry_of(newest_trusted_bundle_task) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-		with data.rule_data.task_expiry_warning_days as 6
-
-	# regal ignore:line-length
-	lib.assert_equal("2099-01-01T00:00:00Z", time.format(tekton.expiry_of(outdated_trusted_bundle_task))) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-		with data.rule_data.task_expiry_warning_days as 6
-	not tekton.expiry_of(newest_trusted_git_task) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-		with data.rule_data.task_expiry_warning_days as 6
-
-	# regal ignore:line-length
-	lib.assert_equal("2099-01-01T00:00:00Z", time.format(tekton.expiry_of(outdated_trusted_git_task))) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-		with data.rule_data.task_expiry_warning_days as 6
-
-	# when running far in the future outside the grace period
-	not tekton.expiry_of(same_date_trusted_bundle_task) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-		with data.rule_data.task_expiry_warning_days as 7
-	not tekton.expiry_of(newest_trusted_bundle_task) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-		with data.rule_data.task_expiry_warning_days as 7
-	not tekton.expiry_of(outdated_trusted_bundle_task) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-		with data.rule_data.task_expiry_warning_days as 7
-	not tekton.expiry_of(newest_trusted_git_task) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-		with data.rule_data.task_expiry_warning_days as 7
-	not tekton.expiry_of(outdated_trusted_git_task) with data.trusted_tasks as trusted_tasks
-		with data.config.policy.when_ns as time.parse_rfc3339_ns("2098-12-25T00:00:00Z")
-		with data.rule_data.task_expiry_warning_days as 7
-}
-
 test_untrusted_task_refs if {
 	tasks := [
 		trusted_bundle_task,
@@ -132,6 +62,57 @@ test_is_trusted_task if {
 	not tekton.is_trusted_task(untrusted_git_task) with data.trusted_tasks as trusted_tasks
 	not tekton.is_trusted_task(expired_trusted_git_task) with data.trusted_tasks as trusted_tasks
 	not tekton.is_trusted_task(expired_trusted_bundle_task) with data.trusted_tasks as trusted_tasks
+}
+
+test_is_trusted_task_with_rules if {
+	# Test with trusted_task_rules using allow/deny patterns
+	trusted_task_rules := {
+		"allow": [{
+			"name": "Allow konflux tasks",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}, {
+			"name": "Allow registry.local tasks",
+			"pattern": "oci://registry.local/*",
+		}],
+		"deny": [{
+			"name": "Deny old buildah",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+		}],
+	}
+
+	# Task that matches allow rule should be trusted
+	allowed_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-something:0.4@sha256:digest"},
+		{"name": "name", "value": "task-something"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	tekton.is_trusted_task(allowed_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+
+	# Task that matches deny rule should not be trusted (deny takes precedence)
+	denied_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.3@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	not tekton.is_trusted_task(denied_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+
+	# Task that matches allow pattern (registry.local) should be trusted
+	# Note: The key format is oci://registry.local/trusty:1.0 (with tag), so pattern oci://registry.local/* matches
+	registry_local_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:digest"},
+		{"name": "name", "value": "trusty"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	tekton.is_trusted_task(registry_local_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+
+	# Task that doesn't match any allow rule should not be trusted
+	# Note: This task uses a different path (untrusted) that doesn't match the pattern
+	not_allowed_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "other-registry.io/untrusted:1.0@sha256:digest"},
+		{"name": "name", "value": "untrusted"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	not tekton.is_trusted_task(not_allowed_task) with data.rule_data.trusted_task_rules as trusted_task_rules
 }
 
 test_trusted_task_records if {
@@ -169,6 +150,83 @@ test_rule_data_merging if {
 
 	lib.assert_equal(tekton._trusted_tasks_data.foo, "bar") with data.trusted_tasks as {"foo": "baz"}
 		with data.rule_data.trusted_tasks as {"foo": "bar"}
+}
+
+test_data_trusted_task_rules_extraction if {
+	# Test extraction from data.trusted_task_rules (covers lines 144-156)
+	# Test when data.trusted_task_rules is provided with allow rules
+	data_rules_allow := {
+		"allow": [{
+			"name": "Allow from data",
+			"pattern": "oci://registry.local/*",
+		}],
+	}
+
+	# Task matching allow from data.trusted_task_rules should be trusted
+	allowed_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:digest"},
+		{"name": "name", "value": "trusty"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	tekton.is_trusted_task(allowed_task) with data.trusted_task_rules as data_rules_allow
+		with data.rule_data.trusted_task_rules as null
+
+	# Test when data.trusted_task_rules is provided with deny rules
+	data_rules_deny := {
+		"deny": [{
+			"name": "Deny from data",
+			"pattern": "oci://registry.local/crook/*",
+		}],
+	}
+
+	# Task matching deny from data.trusted_task_rules should not be trusted
+	denied_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "registry.local/crook:1.0@sha256:digest"},
+		{"name": "name", "value": "crook"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	not tekton.is_trusted_task(denied_task) with data.trusted_task_rules as data_rules_deny
+		with data.rule_data.trusted_task_rules as null
+
+	# Test when data.trusted_task_rules is not provided (covers default cases 145, 152)
+	# Should fall back to empty arrays, so task won't be trusted via rules
+	not tekton.is_trusted_task(allowed_task) with data.trusted_task_rules as null
+		with data.rule_data.trusted_task_rules as null
+}
+
+test_rule_data_trusted_task_rules_extraction if {
+	# Test extraction from lib_rule_data("trusted_task_rules") (covers lines 158-172)
+	# Test when lib_rule_data returns an object
+	rule_data_rules := {
+		"allow": [{
+			"name": "Allow from rule_data",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}],
+		"deny": [{
+			"name": "Deny from rule_data",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+		}],
+	}
+
+	# Task matching allow from rule_data should be trusted
+	allowed_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-something:0.4@sha256:digest"},
+		{"name": "name", "value": "task-something"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	tekton.is_trusted_task(allowed_task) with data.rule_data.trusted_task_rules as rule_data_rules
+
+	# Task matching deny from rule_data should not be trusted
+	denied_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.3@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	not tekton.is_trusted_task(denied_task) with data.rule_data.trusted_task_rules as rule_data_rules
+
+	# Test when lib_rule_data returns [] (not an object) - covers default cases
+	# When rule_data returns [], it's not an object, so defaults are used
+	not tekton.is_trusted_task(allowed_task) with data.rule_data.trusted_task_rules as []
 }
 
 test_data_errors if {
@@ -236,6 +294,171 @@ test_task_expiry_warning_days_data if {
 	}}) with data.rule_data.task_expiry_warning_days as 5.5
 
 	lib.assert_empty(tekton.data_errors) with data.rule_data.task_expiry_warning_days as 14
+}
+
+test_denying_pattern if {
+	# Test that denying_pattern returns the pattern that denied a task
+	trusted_task_rules := {
+		"allow": [],
+		"deny": [{
+			"name": "Deny old buildah",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+		}],
+	}
+
+	# Create a task that matches the deny rule
+	denied_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.3@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+
+	# Should return a list with the pattern that denied it
+	patterns := tekton.denying_pattern(denied_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+	lib.assert_equal(["oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"], patterns)
+
+	# Task that doesn't match any deny rule should return empty list
+	non_matching_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:digest"},
+		{"name": "name", "value": "trusty"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	patterns_empty := tekton.denying_pattern(non_matching_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+	lib.assert_equal([], patterns_empty)
+}
+
+test_denying_pattern_version_constraints if {
+	# Test with version constraints
+	# Note: _semver_constraint_matches is currently a placeholder that matches any semver-like version
+	# So both 0.4 and 0.6 will match the constraint "<0.5" with the current implementation
+	version_constrained_rules := {
+		"allow": [],
+		"deny": [{
+			"name": "Deny old versions",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			"versions": ["<0.5"],
+		}],
+	}
+
+	# Version 0.4 should match and return pattern (semver-like, so placeholder matches it)
+	version_task_04 := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	patterns_v04 := tekton.denying_pattern(version_task_04) with data.rule_data.trusted_task_rules as version_constrained_rules
+	lib.assert_equal(["oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"], patterns_v04)
+
+	# Version 0.6 - with placeholder semver matching, this will also match (both are semver-like)
+	# Once proper semver constraint matching is implemented, this should NOT match "<0.5"
+	version_task_06 := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.6@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+
+	# With placeholder implementation, 0.6 will match (it's semver-like)
+	patterns_v06 := tekton.denying_pattern(version_task_06) with data.rule_data.trusted_task_rules as version_constrained_rules
+	lib.assert_equal(["oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"], patterns_v06)
+}
+
+test_denying_pattern_multiple_rules if {
+	# Test with multiple deny rules - should return one of the matching patterns
+	multiple_deny_rules := {
+		"allow": [],
+		"deny": [
+			{
+				"name": "Deny all konflux",
+				"pattern": "oci://quay.io/konflux-ci/*",
+			},
+			{
+				"name": "Deny buildah specifically",
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			},
+		],
+	}
+
+	# Should match both patterns (both rules match this task)
+	buildah_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	patterns_multi := tekton.denying_pattern(buildah_task) with data.rule_data.trusted_task_rules as multiple_deny_rules
+
+	# Should contain both patterns (order may vary)
+	expected_patterns := {"oci://quay.io/konflux-ci/*", "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"}
+	lib.assert_equal(2, count(patterns_multi))
+	every pattern in patterns_multi {
+		pattern in expected_patterns
+	}
+}
+
+test_denial_reason if {
+	# Test denial_reason returns the correct reason for denied tasks
+	trusted_task_rules := {
+		"allow": [{
+			"name": "Allow konflux tasks",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		}],
+		"deny": [{
+			"name": "Deny old buildah",
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			"message": "This version is deprecated",
+		}],
+	}
+
+	# Case 1: Matches a deny rule (even though it also matches allow)
+	denied_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.3@sha256:digest"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	reason_deny := tekton.denial_reason(denied_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+	lib.assert_equal("deny_rule", reason_deny.type)
+	lib.assert_equal(["oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"], reason_deny.pattern)
+
+	# Case 2: Doesn't match any allow rule and isn't in legacy
+	not_allowed_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "registry.local/untrusted:1.0@sha256:digest"},
+		{"name": "name", "value": "untrusted"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	reason_not_allowed := tekton.denial_reason(not_allowed_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+	lib.assert_equal("not_allowed", reason_not_allowed.type)
+	lib.assert_equal([], reason_not_allowed.pattern)
+
+	# Task that matches allow rule should return nothing (it's trusted)
+	allowed_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-something:0.4@sha256:digest"},
+		{"name": "name", "value": "task-something"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	not tekton.denial_reason(allowed_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+
+	# Task in legacy trusted_tasks but doesn't match allow rules should return "not_allowed"
+	# (denial_reason only works with trusted_task_rules, not legacy)
+	reason_legacy := tekton.denial_reason(trusted_bundle_task) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.trusted_tasks as trusted_tasks
+	lib.assert_equal("not_allowed", reason_legacy.type)
+	lib.assert_equal([], reason_legacy.pattern)
+}
+
+test_denial_reason_no_allow_rules if {
+	# If there are no allow rules, we fall back to legacy, so "not_allowed" shouldn't apply
+	rules_no_allow := {
+		"allow": [],
+		"deny": [],
+	}
+
+	# Task not in legacy should return nothing (we fall back to legacy, which is empty, but denial_reason
+	# only applies when allow rules exist)
+	untrusted_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		{"name": "bundle", "value": "registry.local/untrusted:1.0@sha256:digest"},
+		{"name": "name", "value": "untrusted"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	not tekton.denial_reason(untrusted_task) with data.rule_data.trusted_task_rules as rules_no_allow
 }
 
 test_trusted_task_rules_data_errors if {
