@@ -6,25 +6,21 @@ import data.lib
 import data.lib.tekton
 
 test_pipeline_label_selector_build_task_slsa_v1_0 if {
-	task := json.patch(
-		slsav1_task_result_ref(
-			"build-container",
-			[
-				{"name": "IMAGE_URL", "type": "string", "value": "localhost:5000/repo:latest"},
-				{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc"},
-			],
-		),
-		[{"op": "add", "path": "/metadata/labels", "value": {tekton.task_label: "generic"}}],
+	task_base := slsav1_task("build-container")
+	task_w_labels = with_labels(task_base, {tekton.task_label: "generic"})
+	task_full = with_results(
+		task_w_labels,
+		[
+			{"name": "IMAGE_URL", "value": "localhost:5000/repo:latest"},
+			{"name": "IMAGE_DIGEST", "value": "sha256:abc"},
+		],
 	)
 
-	attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"resolvedDependencies": resolved_dependencies([task]),
-			"internalParameters": {"labels": {tekton.pipeline_label: "ignored"}},
-		}},
-	}}
+	attestation := slsav1_attestation_full(
+		[task_full],
+		{tekton.pipeline_label: "ignored"},
+		{},
+	)
 
 	lib.assert_equal(tekton.pipeline_label_selector(attestation), "generic")
 }
@@ -51,19 +47,14 @@ test_pipeline_label_selector_build_task_slsa_v0_2 if {
 }
 
 test_pipeline_label_selector_pipeline_run_slsa_v1_0 if {
-	task := slsav1_task_result_ref("build-container", [
-		{"name": "IMAGE_URL", "type": "string", "value": "localhost:5000/repo:latest"},
-		{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc"},
-	])
-
-	attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"resolvedDependencies": resolved_dependencies([task]),
-			"internalParameters": {"labels": {tekton.pipeline_label: "generic"}},
-		}},
-	}}
+	attestation := json.patch(
+		slsav1_attestation([]),
+		[{
+			"op": "add",
+			"path": "/statement/predicate/buildDefinition/internalParameters",
+			"value": {"labels": {tekton.pipeline_label: "generic"}},
+		}],
+	)
 
 	lib.assert_equal(tekton.pipeline_label_selector(attestation), "generic")
 }

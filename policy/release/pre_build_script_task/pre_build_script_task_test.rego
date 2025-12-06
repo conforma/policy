@@ -164,29 +164,32 @@ test_pre_build_image_reference_is_not_valid if {
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}
 }
 
-_good_attestation := {"statement": {"predicate": {
-	"buildType": lib.tekton_pipeline_run,
-	"buildConfig": {"tasks": [
-		{
-			"name": "run-script-oci-ta-1",
-			"ref": {"kind": "Task", "name": "run-script-oci-ta", "bundle": "reg.img/spam@sha256:abc"},
-			"invocation": {"parameters": {
-				"SCRIPT": "/some-script.sh",
-				"SCRIPT_RUNNER_IMAGE": "registry.redhat.io/ubi7@sha256:bcd",
-			}},
-			"results": [{"name": "SCRIPT_RUNNER_IMAGE_REFERENCE", "value": "registry.redhat.io/ubi7@sha256:bcd"}],
-		},
-		{
-			"name": "run-script-oci-ta-2",
-			"ref": {"kind": "Task", "name": "run-script-oci-ta", "bundle": "reg.img/spam@sha256:abc"},
-			"invocation": {"parameters": {
-				"SCRIPT": "/some-other-script.sh",
-				"SCRIPT_RUNNER_IMAGE": "quay.io/konflux-ci/bazel6-ubi9@sha256:def",
-			}},
-			"results": [{"name": "SCRIPT_RUNNER_IMAGE_REFERENCE", "value": "quay.io/konflux-ci/bazel6-ubi9@sha256:def"}],
-		},
-	]},
-}}}
+_good_attestation := {"statement": {
+	"predicateType": "https://slsa.dev/provenance/v0.2",
+	"predicate": {
+		"buildType": lib.tekton_pipeline_run,
+		"buildConfig": {"tasks": [
+			{
+				"name": "run-script-oci-ta-1",
+				"ref": {"kind": "Task", "name": "run-script-oci-ta", "bundle": "reg.img/spam@sha256:abc"},
+				"invocation": {"parameters": {
+					"SCRIPT": "/some-script.sh",
+					"SCRIPT_RUNNER_IMAGE": "registry.redhat.io/ubi7@sha256:bcd",
+				}},
+				"results": [{"name": "SCRIPT_RUNNER_IMAGE_REFERENCE", "value": "registry.redhat.io/ubi7@sha256:bcd"}],
+			},
+			{
+				"name": "run-script-oci-ta-2",
+				"ref": {"kind": "Task", "name": "run-script-oci-ta", "bundle": "reg.img/spam@sha256:abc"},
+				"invocation": {"parameters": {
+					"SCRIPT": "/some-other-script.sh",
+					"SCRIPT_RUNNER_IMAGE": "quay.io/konflux-ci/bazel6-ubi9@sha256:def",
+				}},
+				"results": [{"name": "SCRIPT_RUNNER_IMAGE_REFERENCE", "value": "quay.io/konflux-ci/bazel6-ubi9@sha256:def"}],
+			},
+		]},
+	},
+}}
 
 _allowed_registries := ["registry.redhat.io/", "quay.io/konflux-ci/bazel6-ubi9"]
 

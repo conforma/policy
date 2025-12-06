@@ -38,15 +38,6 @@ garbage_att := {"statement": {
 	"predicate": {"buildType": "garbage"},
 }}
 
-valid_slsav1_att := {"statement": {
-	"predicateType": "https://slsa.dev/provenance/v1",
-	"predicate": {"buildDefinition": {
-		"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-		"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-		"resolvedDependencies": [],
-	}},
-}}
-
 trusted_bundle_ref := "registry.img/acceptable@sha256:digest"
 
 # This is used through the tests to generate an attestation of a PipelineRun
@@ -74,16 +65,19 @@ _task_ref(_, bundle_ref) := r if {
 #
 # NOTE: In most cases, a task produces a result that is JSON encoded. When mocking results
 # from such tasks, prefer the att_mock_helper_ref function instead.
-att_mock_helper_ref_plain_result(name, result, task_name, bundle_ref) := {"statement": {"predicate": {
-	"buildType": lib.tekton_pipeline_run,
-	"buildConfig": {"tasks": [object.union(
-		{"name": task_name, "results": [{
-			"name": name,
-			"value": result,
-		}]},
-		_task_ref(task_name, bundle_ref),
-	)]},
-}}}
+att_mock_helper_ref_plain_result(name, result, task_name, bundle_ref) := {"statement": {
+	"predicateType": "https://slsa.dev/provenance/v0.2",
+	"predicate": {
+		"buildType": lib.tekton_pipeline_run,
+		"buildConfig": {"tasks": [object.union(
+			{"name": task_name, "results": [{
+				"name": name,
+				"value": result,
+			}]},
+			_task_ref(task_name, bundle_ref),
+		)]},
+	},
+}}
 
 # This is used through the tests to generate an attestation of a PipelineRun
 # with an Task definition loaded from a Tekton Bundle image provided via
@@ -101,33 +95,25 @@ att_mock_helper_ref(name, result, task_name, bundle_ref) := att_mock_helper_ref_
 	bundle_ref,
 )
 
-att_mock_task_helper(task) := [{"statement": {"predicate": {
-	"buildConfig": {"tasks": [task]},
-	"buildType": lib.tekton_pipeline_run,
-}}}]
-
-# make working with tasks and resolvedDeps easier
-mock_slsav1_attestation_with_tasks(tasks) := {"statement": {
-	"predicateType": "https://slsa.dev/provenance/v1",
-	"predicate": {"buildDefinition": {
-		"buildType": lib.tekton_slsav1_pipeline_run,
-		"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-		"resolvedDependencies": tekton_test.resolved_dependencies(tasks),
-	}},
-}}
+att_mock_task_helper(task) := [{"statement": {
+	"predicateType": "https://slsa.dev/provenance/v0.2",
+	"predicate": {
+		"buildConfig": {"tasks": [task]},
+		"buildType": lib.tekton_pipeline_run,
+	},
+}}]
 
 test_tasks_from_pipelinerun if {
 	slsa1_task := tekton_test.slsav1_task("buildah")
-	slsa1_att := [json.patch(valid_slsav1_att, [{
-		"op": "replace",
-		"path": "/statement/predicate/buildDefinition/resolvedDependencies",
-		"value": tekton_test.resolved_dependencies([slsa1_task]),
-	}])]
-	lib.assert_equal([slsa1_task], lib.tasks_from_pipelinerun) with input.attestations as slsa1_att
+	slsa1_att := tekton_test.slsav1_attestation([slsa1_task])
+	_resolved_task_base := tekton_test.resolved_slsav1_task("buildah", [], [])
+	resolved_task := json.remove(_resolved_task_base, ["/params"])
+	lib.assert_equal([resolved_task], lib.tasks_from_pipelinerun) with input.attestations as [slsa1_att]
 
 	slsa02_task := {"name": "my-task", "ref": {"kind": "task"}}
 	slsa02_att := att_mock_task_helper(slsa02_task)
-	lib.assert_equal([slsa02_task], lib.tasks_from_pipelinerun) with input.attestations as slsa02_att
+	resolved_slsa02_task := {"name": "my-task", "ref": {"kind": "task"}}
+	lib.assert_equal([resolved_slsa02_task], lib.tasks_from_pipelinerun) with input.attestations as slsa02_att
 }
 
 test_slsa_provenance_attestations if {
@@ -262,33 +248,39 @@ test_tr_attestations if {
 }
 
 test_att_mock_helper if {
-	expected := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [{"name": "mytask", "results": [{
-			"name": "result-name",
-			"value": "{\"foo\":\"bar\"}",
-		}]}]},
-	}}}
+	expected := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [{"name": "mytask", "results": [{
+				"name": "result-name",
+				"value": "{\"foo\":\"bar\"}",
+			}]}]},
+		},
+	}}
 
 	lib.assert_equal(expected, att_mock_helper("result-name", {"foo": "bar"}, "mytask"))
 }
 
 test_att_mock_helper_ref if {
-	expected := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [{
-			"name": "mytask",
-			"ref": {
+	expected := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [{
 				"name": "mytask",
-				"kind": "Task",
-				"bundle": "registry.img/name:tag@sha256:digest",
-			},
-			"results": [{
-				"name": "result-name",
-				"value": "{\"foo\":\"bar\"}",
-			}],
-		}]},
-	}}}
+				"ref": {
+					"name": "mytask",
+					"kind": "Task",
+					"bundle": "registry.img/name:tag@sha256:digest",
+				},
+				"results": [{
+					"name": "result-name",
+					"value": "{\"foo\":\"bar\"}",
+				}],
+			}]},
+		},
+	}}
 
 	lib.assert_equal(expected, att_mock_helper_ref(
 		"result-name",
@@ -326,17 +318,17 @@ test_results_from_tests if {
 	)
 	lib.assert_equal([expected], lib.results_from_tests) with input.attestations as [att2]
 
-	att3 := mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_bundle(
-		tekton_test.slsav1_task_result(
-			"mytask",
-			[{
-				"name": lib.task_test_result_name,
-				"type": "string",
-				"value": json.marshal({"result": "SUCCESS", "foo": "bar"}),
-			}],
-		),
-		trusted_bundle_ref,
-	)])
+	task3_base := tekton_test.resolved_slsav1_task(
+		"mytask",
+		[],
+		[{
+			"name": lib.task_test_result_name,
+			"value": {"result": "SUCCESS", "foo": "bar"},
+		}],
+	)
+	task3 = tekton_test.with_bundle(task3_base, trusted_bundle_ref)
+
+	att3 := tekton_test.slsav1_attestation([task3])
 	lib.assert_equal([expected], lib.results_from_tests) with input.attestations as [att3]
 }
 
@@ -519,16 +511,15 @@ test_pipelinerun_attestations_multiple_v02_missing_timestamp if {
 
 test_pipelinerun_attestations_multiple_v1_missing_timestamp if {
 	# Multiple v1.0 attestations where at least one doesn't have a timestamp - should return empty
-	v1_task := tekton_test.slsav1_task_bundle(
-		tekton_test.slsav1_task_result(
-			"buildah",
-			[
-				{"name": "IMAGE_URL", "type": "string", "value": "quay.io/test/image:tag"},
-				{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc123"},
-			],
-		),
-		trusted_bundle_ref,
+	_task_base := tekton_test.slsav1_task("buildah")
+	_task_w_results := tekton_test.with_results(
+		_task_base,
+		[
+			{"name": "IMAGE_URL", "type": "string", "value": "quay.io/test/image:tag"},
+			{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc123"},
+		],
 	)
+	v1_task := tekton_test.with_bundle(_task_w_results, trusted_bundle_ref)
 	att_with_metadata := _attestation_v1_with_metadata("2025-01-20T15:45:00Z", [v1_task])
 	att_without_metadata := json.patch(
 		_attestation_v1_with_metadata("2025-01-25T20:00:00Z", [v1_task]),
@@ -542,14 +533,16 @@ test_pipelinerun_attestations_multiple_v1_missing_timestamp if {
 test_pipelinerun_attestations_mixed_formats if {
 	# Test with both v0.2 and v1.0 attestations - should return both (one per type)
 	v02_task := _build_task
-	v1_task := tekton_test.slsav1_task_bundle(
-		tekton_test.slsav1_task_result(
-			"buildah",
-			[
-				{"name": "IMAGE_URL", "type": "string", "value": "quay.io/test/image:tag"},
-				{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc123"},
-			],
-		),
+	_task_base := tekton_test.slsav1_task("buildah")
+	_task_w_results := tekton_test.with_results(
+		_task_base,
+		[
+			{"name": "IMAGE_URL", "type": "string", "value": "quay.io/test/image:tag"},
+			{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc123"},
+		],
+	)
+	v1_task := tekton_test.with_bundle(
+		_task_w_results,
 		trusted_bundle_ref,
 	)
 	att_v02 := _attestation_v02_with_metadata("2025-01-15T10:30:00Z", [v02_task])
@@ -596,16 +589,15 @@ test_pipelinerun_attestations_v1_multiple if {
 
 test_pipelinerun_attestations_v1_single_no_timestamp if {
 	# Test single v1.0 attestation without timestamp - should still return it
-	v1_task := tekton_test.slsav1_task_bundle(
-		tekton_test.slsav1_task_result(
-			"buildah",
-			[
-				{"name": "IMAGE_URL", "type": "string", "value": "quay.io/test/image:tag"},
-				{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc123"},
-			],
-		),
-		trusted_bundle_ref,
+	_task_base := tekton_test.slsav1_task("buildah")
+	_task_w_results := tekton_test.with_results(
+		_task_base,
+		[
+			{"name": "IMAGE_URL", "type": "string", "value": "quay.io/test/image:tag"},
+			{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc123"},
+		],
 	)
+	v1_task := tekton_test.with_bundle(_task_w_results, trusted_bundle_ref)
 
 	# Create v1.0 attestation without runDetails.metadata.buildFinishedOn
 	v1_att := {"statement": {

@@ -4,6 +4,7 @@ package tasks_test
 import rego.v1
 
 import data.lib
+import data.lib.tekton
 import data.lib.tekton_test
 import data.tasks
 
@@ -18,7 +19,7 @@ test_no_tasks_present if {
 		"buildConfig": {"tasks": []},
 	}}}]
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as _slsav1_attestations_with_tasks([], [])
+	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [tekton_test.slsav1_attestation([])]
 }
 
 # regal ignore:rule-length
@@ -46,87 +47,84 @@ test_failed_tasks if {
 		json.remove(_task("cve-scanner"), ["/status"]),
 	]
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [{"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": given_tasks},
-	}}}]
+	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [{"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": given_tasks},
+		},
+	}}]
 
 	slsav1_tasks := [
-		json.patch(tekton_test.slsav1_task("buildah"), [{
-			"op": "add",
-			"path": "/spec/taskRef/bundle",
-			"value": _bundle,
-		}]),
-		json.patch(tekton_test.slsav1_task("av-scanner"), [
-			{
-				"op": "replace",
-				"path": "/status/conditions",
-				"value": [{"type": "Succeeded", "status": "False"}],
-			},
-			{
-				"op": "add",
-				"path": "/spec/taskRef/bundle",
-				"value": _bundle,
-			},
-		]),
-		json.patch(tekton_test.slsav1_task("cve-scanner"), [
-			{
-				"op": "replace",
-				"path": "/status/conditions",
-				"value": [],
-			},
-			{
-				"op": "add",
-				"path": "/spec/taskRef/bundle",
-				"value": _bundle,
-			},
-		]),
+		tekton_test.with_bundle(tekton_test.slsav1_task("buildah"), _bundle),
+		tekton_test.with_bundle(
+			tekton_test.with_conditions(
+				tekton_test.slsav1_task("av-scanner"),
+				[{"type": "Succeeded", "status": "False"}],
+			),
+			_bundle,
+		),
+		tekton_test.with_bundle(
+			tekton_test.with_conditions(
+				tekton_test.slsav1_task("cve-scanner"),
+				[],
+			),
+			_bundle,
+		),
 	]
 
 	lib.assert_equal_results(
 		tasks.deny,
 		expected,
-	) with input.attestations as _slsav1_attestations_with_tasks([], slsav1_tasks)
+	) with input.attestations as [tekton_test.slsav1_attestation_full(
+		slsav1_tasks,
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 }
 
 test_required_tasks_met if {
-	attestations := _attestations_with_tasks(_expected_required_tasks, [])
+	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
-	slsav1_attestations := _slsav1_attestations_with_tasks(_expected_required_tasks, [])
+	slsav1_attestations := [tekton_test.slsav1_attestation(_slsav1_expected_required_tasks)]
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
 }
 
 test_required_tasks_met_no_label if {
-	attestations := _attestations_with_tasks(_expected_required_tasks, [])
+	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
 	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data["pipeline-required-tasks"] as {}
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
-	attestations_no_label := _attestations_with_tasks_no_label(_expected_required_tasks, [])
+	attestations_no_label := _attestations_with_tasks_no_label(_slsav02_expected_required_tasks, [])
 	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations_no_label
 
-	slsav1_attestations := _slsav1_attestations_with_tasks(_expected_required_tasks, [])
+	slsav1_attestations := [tekton_test.slsav1_attestation_full(
+		_slsav1_expected_required_tasks,
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data["pipeline-required-tasks"] as {}
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
 
-	slsav1_attestations_no_label := _slsav1_attestations_with_tasks_no_label(_expected_required_tasks, [])
+	slsav1_attestations_no_label := [tekton_test.slsav1_attestation(_slsav1_expected_required_tasks)]
 	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations_no_label
 }
 
 test_required_tasks_warning_no_label if {
-	attestations := _attestations_with_tasks_no_label(_expected_required_tasks, [])
+	attestations := _attestations_with_tasks_no_label(_slsav02_expected_required_tasks, [])
 	expected := {{
 		"code": "tasks.pipeline_required_tasks_list_provided",
 		"msg": "Required tasks do not exist for pipeline",
@@ -137,7 +135,7 @@ test_required_tasks_warning_no_label if {
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with input.attestations as attestations
 
-	slsav1_attestations := _slsav1_attestations_with_tasks_no_label(_expected_required_tasks, [])
+	slsav1_attestations := [tekton_test.slsav1_attestation(_slsav1_expected_required_tasks)]
 	lib.assert_equal_results(
 		expected,
 		tasks.warn,
@@ -147,7 +145,7 @@ test_required_tasks_warning_no_label if {
 
 test_required_tasks_not_met if {
 	missing_tasks := {"buildah"}
-	attestations := _attestations_with_tasks(_expected_required_tasks - missing_tasks, [])
+	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks - missing_tasks, [])
 
 	expected := _missing_tasks_violation(missing_tasks)
 	lib.assert_equal_results(
@@ -157,7 +155,16 @@ test_required_tasks_not_met if {
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
-	slsav1_attestations := _slsav1_attestations_with_tasks(_expected_required_tasks - missing_tasks, [])
+	slsav1_filtered_tasks := [task |
+		some task in _slsav1_expected_required_tasks
+		task_name := tekton.task_name(task)
+		not missing_tasks[task_name]
+	]
+	slsav1_attestations := [tekton_test.slsav1_attestation_full(
+		slsav1_filtered_tasks,
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 	lib.assert_equal_results(
 		expected,
 		tasks.deny,
@@ -167,12 +174,16 @@ test_required_tasks_not_met if {
 }
 
 test_future_required_tasks_met if {
-	attestations := _attestations_with_tasks(_expected_future_required_tasks, [])
+	attestations := _attestations_with_tasks(_slsav02_expected_future_required_tasks, [])
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
-	slsav1_attestations := _slsav1_attestations_with_tasks(_expected_future_required_tasks, [])
+	slsav1_attestations := [tekton_test.slsav1_attestation_full(
+		_slsav1_expected_future_required_tasks,
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
@@ -180,7 +191,7 @@ test_future_required_tasks_met if {
 
 test_future_required_tasks_not_met if {
 	missing_tasks := {"conftest-clair"}
-	attestations := _attestations_with_tasks(_expected_future_required_tasks - missing_tasks, [])
+	attestations := _attestations_with_tasks(_slsav02_expected_future_required_tasks - missing_tasks, [])
 
 	expected := _missing_tasks_warning(missing_tasks)
 	lib.assert_equal_results(
@@ -190,7 +201,16 @@ test_future_required_tasks_not_met if {
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
-	slsav1_attestations := _slsav1_attestations_with_tasks(_expected_future_required_tasks - missing_tasks, [])
+	slsav1_filtered_tasks := [task |
+		some task in _slsav1_expected_future_required_tasks
+		task_name := tekton.task_name(task)
+		not missing_tasks[task_name]
+	]
+	slsav1_attestations := [tekton_test.slsav1_attestation_full(
+		slsav1_filtered_tasks,
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 	lib.assert_equal_results(
 		expected,
 		tasks.warn,
@@ -200,7 +220,7 @@ test_future_required_tasks_not_met if {
 }
 
 test_extra_tasks_ignored if {
-	attestations := _attestations_with_tasks(_expected_future_required_tasks | {"spam"}, [])
+	attestations := _attestations_with_tasks(_slsav02_expected_future_required_tasks | {"spam"}, [])
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
@@ -208,7 +228,16 @@ test_extra_tasks_ignored if {
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
-	slsav1_attestations := _slsav1_attestations_with_tasks(_expected_future_required_tasks | {"spam"}, [])
+	slsav1_attestations := [tekton_test.slsav1_attestation_full(
+		array.concat(
+			_slsav1_expected_future_required_tasks,
+			[tekton_test.with_bundle(tekton_test.slsav1_task("spam"), _bundle)],
+		),
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
+
+	# regal ignore:line-length
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
@@ -222,7 +251,7 @@ test_current_equal_latest if {
 		"effective_on": "2021-01-01T00:00:00Z",
 		"tasks": _required_pipeline_tasks.generic[0].tasks,
 	}]}
-	attestations := _attestations_with_tasks(_expected_future_required_tasks, [])
+	attestations := _attestations_with_tasks(_slsav02_expected_future_required_tasks, [])
 
 	lib.assert_empty(tasks.deny | tasks.warn) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
@@ -234,18 +263,22 @@ test_current_equal_latest_also if {
 		"effective_on": "2021-01-01T00:00:00Z",
 		"tasks": _required_pipeline_tasks.generic[0].tasks,
 	}]}
-	attestations := _attestations_with_tasks(_expected_required_tasks, [])
+	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
 
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
-	expected_denies := _missing_tasks_violation(_expected_future_required_tasks - _expected_required_tasks)
+	expected_denies := _missing_tasks_violation(_slsav02_expected_future_required_tasks - _slsav02_expected_required_tasks)
 	lib.assert_equal_results(expected_denies, tasks.deny) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
-	slsav1_attestations := _slsav1_attestations_with_tasks(_expected_required_tasks, [])
+	slsav1_attestations := [tekton_test.slsav1_attestation_full(
+		_slsav1_expected_required_tasks,
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
@@ -287,19 +320,30 @@ test_parameterized if {
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
-	slsav1_no_param := tekton_test.slsav1_task_bundle("label-check", _bundle)
-	slsav1_task1 := json.patch(slsav1_no_param, [{
-		"op": "replace",
-		"path": "/spec/params",
-		"value": [{"name": "POLICY_NAMESPACE", "value": "something-else"}],
-	}])
-	slsav1_task2 := json.patch(slsav1_no_param, [{
-		"op": "replace",
-		"path": "/spec/params",
-		"value": [{"name": "POLICY_NAMESPACE", "value": "optional_checks"}],
-	}])
+	_slsav1_task1_base := tekton_test.slsav1_task("label-check")
+	_slsav1_task1_w_bundle = tekton_test.with_bundle(_slsav1_task1_base, _bundle)
+	slsav1_task1 = tekton_test.with_params(
+		_slsav1_task1_w_bundle,
+		[{"name": "POLICY_NAMESPACE", "value": "something-else"}],
+	)
 
-	slsav1_attestations := _slsav1_attestations_with_tasks({"git-clone", "buildah"}, [slsav1_task1, slsav1_task2])
+	_slsav1_task2_base := tekton_test.slsav1_task("label-check")
+	_slsav1_task2_w_bundle = tekton_test.with_bundle(_slsav1_task2_base, _bundle)
+	slsav1_task2 = tekton_test.with_params(
+		_slsav1_task2_w_bundle,
+		[{"name": "POLICY_NAMESPACE", "value": "optional_checks"}],
+	)
+
+	slsav1_attestations := [tekton_test.slsav1_attestation_full(
+		[
+			tekton_test.with_bundle(tekton_test.slsav1_task("git-clone"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("buildah"), _bundle),
+			slsav1_task1,
+			slsav1_task2,
+		],
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 	lib.assert_equal_results(
 		tasks.deny,
 		expected,
@@ -309,7 +353,7 @@ test_parameterized if {
 }
 
 test_required_tasks_founds_data if {
-	attestations := _attestations_with_tasks(_expected_required_tasks, [])
+	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
 	expected := {{
 		"code": "tasks.required_tasks_list_provided",
 		"msg": "Missing required required-tasks data",
@@ -318,22 +362,32 @@ test_required_tasks_founds_data if {
 		with input.attestations as attestations
 		with data["pipeline-required-tasks"] as {}
 
-	slsav1_attestations := _slsav1_attestations_with_tasks(_expected_required_tasks, [])
+	slsav1_attestations := [tekton_test.slsav1_attestation_full(
+		_slsav1_expected_required_tasks,
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 	lib.assert_equal_results(expected, tasks.deny) with data["required-tasks"] as []
 		with input.attestations as slsav1_attestations with data["pipeline-required-tasks"] as {}
 }
 
 test_missing_required_pipeline_data if {
-	attestations := _attestations_with_tasks(_expected_required_tasks, [])
+	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
 	expected := {{
 		"code": "tasks.pipeline_required_tasks_list_provided",
 		"msg": "Required tasks do not exist for pipeline",
 	}}
-	lib.assert_equal_results(expected, tasks.warn) with data["required-tasks"] as _expected_required_tasks
+	lib.assert_equal_results(expected, tasks.warn) with data["required-tasks"] as _slsav02_expected_required_tasks
 		with input.attestations as attestations
 
-	slsav1_attestations := _slsav1_attestations_with_tasks(_expected_required_tasks, [])
-	lib.assert_equal_results(expected, tasks.warn) with data["required-tasks"] as _expected_required_tasks
+	slsav1_attestations := [tekton_test.slsav1_attestation_full(
+		_slsav1_expected_required_tasks,
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
+
+	# we use _slsav02_expected_required_tasks as rule data because it fits the rule data format
+	lib.assert_equal_results(expected, tasks.warn) with data["required-tasks"] as _slsav02_expected_required_tasks
 		with input.attestations as slsav1_attestations
 }
 
@@ -349,22 +403,14 @@ test_multiple_conditions_in_status if {
 		},
 		{"type": "invalid"},
 	]
-	slsav1_task := json.patch(tekton_test.slsav1_task("buildah"), [{
-		"op": "replace",
-		"path": "/status/conditions",
-		"value": conditions,
-	}])
+	slsav1_task := tekton_test.with_conditions(tekton_test.slsav1_task("buildah"), conditions)
 
 	lib.assert_equal(["Succeeded", "Failed"], tasks._status(slsav1_task))
 }
 
 test_invalid_status_conditions if {
 	conditions := []
-	slsav1_task1 := json.patch(tekton_test.slsav1_task("buildah"), [{
-		"op": "replace",
-		"path": "/status/conditions",
-		"value": conditions,
-	}])
+	slsav1_task1 := tekton_test.with_conditions(tekton_test.slsav1_task("buildah"), conditions)
 	lib.assert_equal(["MISSING"], tasks._status(slsav1_task1))
 
 	given_task := json.remove(_task("buildah"), ["/status"])
@@ -381,7 +427,18 @@ test_one_of_required_tasks if {
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestation_v02
 
-	attestation_v1 := _slsav1_attestations_with_tasks(["a", "b", "c1", "d2", "e", "f"], [])
+	attestation_v1 := [tekton_test.slsav1_attestation_full(
+		[
+			tekton_test.with_bundle(tekton_test.slsav1_task("a"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("b"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("c1"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("d2"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("e"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("f"), _bundle),
+		],
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestation_v1
@@ -412,10 +469,20 @@ test_one_of_required_tasks_missing if {
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestation_v02
 
-	attestation_v1 := _slsav1_attestations_with_tasks(["a", "b", "d2", "e", "f"], [])
+	attestation_v1 := tekton_test.slsav1_attestation_full(
+		[
+			tekton_test.with_bundle(tekton_test.slsav1_task("a"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("b"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("d2"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("e"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("f"), _bundle),
+		],
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)
 	lib.assert_equal_results(expected, tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
-		with input.attestations as attestation_v1
+		with input.attestations as [attestation_v1]
 }
 
 test_future_one_of_required_tasks if {
@@ -428,7 +495,18 @@ test_future_one_of_required_tasks if {
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestation_v02
 
-	attestation_v1 := _slsav1_attestations_with_tasks(["a", "b", "c1", "d2", "e", "f"], [])
+	attestation_v1 := [tekton_test.slsav1_attestation_full(
+		[
+			tekton_test.with_bundle(tekton_test.slsav1_task("a"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("b"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("c1"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("d2"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("e"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("f"), _bundle),
+		],
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestation_v1
@@ -461,7 +539,17 @@ test_future_one_of_required_tasks_missing if {
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestation_v02
 
-	attestation_v1 := _slsav1_attestations_with_tasks(["a", "b", "d2", "e", "f"], [])
+	attestation_v1 := [tekton_test.slsav1_attestation_full(
+		[
+			tekton_test.with_bundle(tekton_test.slsav1_task("a"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("b"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("d2"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("e"), _bundle),
+			tekton_test.with_bundle(tekton_test.slsav1_task("f"), _bundle),
+		],
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 	lib.assert_equal_results(
 		expected,
 		tasks.warn,
@@ -471,7 +559,7 @@ test_future_one_of_required_tasks_missing if {
 }
 
 test_future_required_tasks if {
-	attestations := _attestations_with_tasks(_expected_required_tasks - {"buildah"}, [{
+	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks - {"buildah"}, [{
 		"name": "buildah",
 		"ref": {"name": "buildah", "kind": "Task", "bundle": "registry.io/repository/unacceptable:0.1"},
 	}])
@@ -487,7 +575,7 @@ test_future_required_tasks if {
 }
 
 test_required_task_from_untrusted if {
-	attestations := _attestations_with_tasks(_expected_required_tasks - {"buildah"}, [{
+	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks - {"buildah"}, [{
 		"name": "buildah",
 		"status": "Succeeded",
 		"ref": {"name": "buildah", "kind": "Task", "bundle": _untrusted_bundle},
@@ -503,33 +591,36 @@ test_required_task_from_untrusted if {
 }
 
 test_pinned_task_refs_slsa_v0_2 if {
-	att := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [
-			# Unpinned
-			{
-				"name": "pipeline-task-01",
-				"status": "Succeeded",
-				"ref": {
-					"kind": "Task",
-					"resolver": "git",
-					"params": [{"name": "revision", "value": "main"}],
+	att := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [
+				# Unpinned
+				{
+					"name": "pipeline-task-01",
+					"status": "Succeeded",
+					"ref": {
+						"kind": "Task",
+						"resolver": "git",
+						"params": [{"name": "revision", "value": "main"}],
+					},
+					"invocation": {"environment": {"labels": {"tekton.dev/task": "task-01"}}},
 				},
-				"invocation": {"environment": {"labels": {"tekton.dev/task": "task-01"}}},
-			},
-			# Pinned
-			{
-				"name": "pipeline-task-02",
-				"status": "Succeeded",
-				"ref": {
-					"kind": "Task",
-					"resolver": "git",
-					"params": [{"name": "revision", "value": "48df630394794f28142224295851a45eea5c63ae"}],
+				# Pinned
+				{
+					"name": "pipeline-task-02",
+					"status": "Succeeded",
+					"ref": {
+						"kind": "Task",
+						"resolver": "git",
+						"params": [{"name": "revision", "value": "48df630394794f28142224295851a45eea5c63ae"}],
+					},
+					"invocation": {"environment": {"labels": {"tekton.dev/task": "task-02"}}},
 				},
-				"invocation": {"environment": {"labels": {"tekton.dev/task": "task-02"}}},
-			},
-		]},
-	}}}
+			]},
+		},
+	}}
 
 	expected := {{
 		"code": "tasks.pinned_task_refs",
@@ -541,53 +632,60 @@ test_pinned_task_refs_slsa_v0_2 if {
 }
 
 test_pinned_task_refs_slsa_v1 if {
-	att := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": lib.tekton_slsav1_pipeline_run,
-			"externalParameters": {"runSpec": {"pipelineRef": {"name": "pipeline1"}}},
-			"resolvedDependencies": [
-				{
-					"name": "pipelineTask", # Unpinned
-					"content": base64.encode(json.marshal({
-						"metadata": {"labels": {
-							"tekton.dev/task": "task-01",
-							"tekton.dev/pipelineTask": "pipeline-task-01",
-						}},
-						"spec": {"taskRef": {
-							"kind": "Task",
-							"resolver": "git",
-							"params": [{"name": "revision", "value": "main"}],
-						}},
-						"status": {"conditions": [{"type": "Succeeded", "status": "True"}]},
-					})),
-				},
-				{
-					"name": "pipelineTask", # Pinned
-					"content": base64.encode(json.marshal({
-						"metadata": {"labels": {
-							"tekton.dev/task": "task-02",
-							"tekton.dev/pipelineTask": "pipeline-task-02",
-						}},
-						"spec": {"taskRef": {
-							"kind": "Task",
-							"resolver": "git",
-							"params": [{"name": "revision", "value": "48df630394794f28142224295851a45eea5c63ae"}],
-						}},
-						"status": {"conditions": [{"type": "Succeeded", "status": "True"}]},
-					})),
-				},
-			],
-		}},
-	}}
+	_task_base := tekton_test.resolved_slsav1_task("pipeline-task", [], [])
+
+	task_pinned_ref := json.patch(_task_base, [
+		{
+			"op": "replace",
+			"path": "/metadata/labels/tekton.dev~1task",
+			"value": "task-01",
+		},
+		{
+			"op": "replace",
+			"path": "/spec/taskRef",
+			"value": {
+				"resolver": "git",
+				"params": [
+					{"name": "name", "value": "task-01"},
+					{"name": "revision", "value": "main"},
+					{"name": "kind", "value": "task"},
+				],
+			},
+		},
+	])
+	task_unpinned_ref := json.patch(_task_base, [
+		{
+			"op": "replace",
+			"path": "/metadata/labels/tekton.dev~1task",
+			"value": "task-02",
+		},
+		{
+			"op": "replace",
+			"path": "/spec/taskRef",
+			"value": {
+				"resolver": "git",
+				"params": [
+					{"name": "name", "value": "task-02"},
+					{"name": "revision", "value": "48df630394794f28142224295851a45eea5c63ae"},
+					{"name": "kind", "value": "task"},
+				],
+			},
+		},
+	])
+
+	att1 := tekton_test.slsav1_attestation_full(
+		[task_pinned_ref, task_unpinned_ref],
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)
 
 	expected := {{
 		"code": "tasks.pinned_task_refs",
-		"msg": "Task task-01 is used by pipeline task pipeline-task-01 via an unpinned reference.",
+		"msg": "Task task-01 is used by pipeline task pipeline-task via an unpinned reference.",
 		"term": "task-01",
 	}}
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [att]
+	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [att1]
 }
 
 test_deprecated_slsa_v0_2 if {
@@ -625,10 +723,15 @@ test_expired_slsa_v0_2 if {
 }
 
 test_deprecated_slsa_v1 if {
-	attestation := _slsav1_attestations_with_tasks({}, [object.union(
-		_task("task"),
-		{"invocation": {"environment": {"annotations": {tasks._expires_on_annotation: "2200-01-01T00:00:00Z"}}}},
-	)])
+	task_with_annotation := tekton_test.with_annotations(
+		tekton_test.with_bundle(tekton_test.slsav1_task("task"), _bundle),
+		{tasks._expires_on_annotation: "2200-01-01T00:00:00Z"},
+	)
+	attestation := [tekton_test.slsav1_attestation_full(
+		[task_with_annotation],
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 
 	expected := {{
 		"code": "tasks.unsupported",
@@ -642,10 +745,15 @@ test_deprecated_slsa_v1 if {
 }
 
 test_expired_slsa_v1 if {
-	attestation := _slsav1_attestations_with_tasks({}, [object.union(
-		_task("task"),
-		{"invocation": {"environment": {"annotations": {tasks._expires_on_annotation: "2000-01-01T00:00:00Z"}}}},
-	)])
+	task_with_annotation := tekton_test.with_annotations(
+		tekton_test.with_bundle(tekton_test.slsav1_task("task"), _bundle),
+		{tasks._expires_on_annotation: "2000-01-01T00:00:00Z"},
+	)
+	attestation := [tekton_test.slsav1_attestation_full(
+		[task_with_annotation],
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 
 	expected := {{
 		"code": "tasks.unsupported",
@@ -659,13 +767,18 @@ test_expired_slsa_v1 if {
 }
 
 test_expired_with_custom_message if {
-	attestation := _slsav1_attestations_with_tasks({}, [object.union(
-		_task("task"),
-		{"invocation": {"environment": {"annotations": {
+	task_with_annotations := tekton_test.with_annotations(
+		tekton_test.with_bundle(tekton_test.slsav1_task("task"), _bundle),
+		{
 			tasks._expires_on_annotation: "2000-01-01T00:00:00Z",
 			tasks._expiry_msg_annotation: "The Task has been discontinued.",
-		}}}},
-	)])
+		},
+	)
+	attestation := [tekton_test.slsav1_attestation_full(
+		[task_with_annotations],
+		{"pipelines.openshift.io/runtime": "generic"},
+		{},
+	)]
 
 	expected := {{
 		"code": "tasks.unsupported",
@@ -823,24 +936,24 @@ test_data_errors_on_pipeline_required_tasks if {
 # Direct test of _missing_tasks function behavior
 test_missing_tasks_function_behavior if {
 	# Test with all required tasks present from trusted sources
-	attestations_trusted := _attestations_with_tasks(_expected_required_tasks, [])
-	missing_trusted := tasks._missing_tasks(_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
+	attestations_trusted := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
+	missing_trusted := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations_trusted
 	lib.assert_equal(set(), missing_trusted)
 
 	# Test with some required tasks missing entirely
 	missing_tasks := {"buildah", "git-clone"}
-	attestations_missing := _attestations_with_tasks(_expected_required_tasks - missing_tasks, [])
-	missing_result := tasks._missing_tasks(_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
+	attestations_missing := _attestations_with_tasks(_slsav02_expected_required_tasks - missing_tasks, [])
+	missing_result := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations_missing
 	lib.assert_equal(missing_tasks, missing_result)
 
 	# Test with required tasks present but from untrusted sources
-	attestations_untrusted := _attestations_with_tasks(_expected_required_tasks, [])
+	attestations_untrusted := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
 
 	# Even though all tasks are untrusted, _missing_tasks should return empty set
 	# because all required tasks are PRESENT
-	missing_untrusted := tasks._missing_tasks(_expected_required_tasks) with data.trusted_tasks as {}
+	missing_untrusted := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as {}
 		with input.attestations as attestations_untrusted
 	lib.assert_equal(set(), missing_untrusted)
 
@@ -856,7 +969,7 @@ test_missing_tasks_function_behavior if {
 		"label-check[POLICY_NAMESPACE=required_checks]",
 		"label-check[POLICY_NAMESPACE=optional_checks]",
 	}
-	missing_mixed := tasks._missing_tasks(_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
+	missing_mixed := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
 		with input.attestations as mixed_attestations
 	lib.assert_equal(expected_missing_mixed, missing_mixed)
 }
@@ -864,47 +977,25 @@ test_missing_tasks_function_behavior if {
 _attestations_with_tasks(names, add_tasks) := attestations if {
 	tasks := array.concat([t | some name in names; t := _task(name)], add_tasks)
 
-	attestations := [{"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": tasks},
-		"invocation": {"environment": {"labels": {"pipelines.openshift.io/runtime": "generic"}}},
-	}}}]
-}
-
-_slsav1_attestations_with_tasks(names, add_tasks) := attestations if {
-	slsav1_tasks := array.concat([t | some name in names; t := tekton_test.slsav1_task_bundle(name, _bundle)], add_tasks)
-
 	attestations := [{"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": lib.tekton_slsav1_pipeline_run,
-			"externalParameters": {"runSpec": {"pipelineRef": {"name": "pipeline1"}}},
-			"resolvedDependencies": tekton_test.resolved_dependencies(slsav1_tasks),
-			"internalParameters": {"labels": {"pipelines.openshift.io/runtime": "generic"}},
-		}},
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": tasks},
+			"invocation": {"environment": {"labels": {"pipelines.openshift.io/runtime": "generic"}}},
+		},
 	}}]
 }
 
 _attestations_with_tasks_no_label(names, add_tasks) := attestations if {
 	tasks := array.concat([t | some name in names; t := _task(name)], add_tasks)
 
-	attestations := [{"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": tasks},
-	}}}]
-}
-
-_slsav1_attestations_with_tasks_no_label(names, add_tasks) := attestations if {
-	slsav1_tasks := array.concat([t | some name in names; t := tekton_test.slsav1_task_bundle(name, _bundle)], add_tasks)
-
 	attestations := [{"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": lib.tekton_slsav1_pipeline_run,
-			"externalParameters": {"runSpec": {"pipelineRef": {"name": "pipeline1"}}},
-			"resolvedDependencies": tekton_test.resolved_dependencies(slsav1_tasks),
-			"internalParameters": {},
-		}},
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": tasks},
+		},
 	}}]
 }
 
@@ -953,20 +1044,83 @@ _missing_tasks_warning(tasks) := {warning |
 	}
 }
 
-_expected_required_tasks := {
+_slsav02_expected_required_tasks := {
 	"git-clone",
 	"buildah",
 	"label-check[POLICY_NAMESPACE=required_checks]",
 	"label-check[POLICY_NAMESPACE=optional_checks]",
 }
 
-_expected_future_required_tasks := {
+_slsav1_expected_required_tasks := [
+	tekton_test.with_bundle(tekton_test.slsav1_task("git-clone"), _bundle),
+	tekton_test.with_bundle(tekton_test.slsav1_task("buildah"), _bundle),
+	tekton_test.with_bundle(
+		tekton_test.with_params(
+			tekton_test.slsav1_task("label-check"),
+			[{
+				"name": "POLICY_NAMESPACE",
+				"value": "required_checks",
+			}],
+		),
+		_bundle,
+	),
+	tekton_test.with_bundle(
+		tekton_test.with_params(
+			tekton_test.slsav1_task("label-check"),
+			[{
+				"name": "POLICY_NAMESPACE",
+				"value": "optional_checks",
+			}],
+		),
+		_bundle,
+	),
+]
+
+_slsav02_expected_future_required_tasks := {
 	"git-clone",
 	"buildah",
 	"conftest-clair",
 	"label-check[POLICY_NAMESPACE=required_checks]",
 	"label-check[POLICY_NAMESPACE=optional_checks]",
 }
+
+_slsav1_expected_future_required_tasks := [
+	tekton_test.with_bundle(
+		tekton_test.slsav1_task("git-clone"),
+		_bundle,
+	),
+	tekton_test.with_results(
+		tekton_test.with_bundle(
+			tekton_test.slsav1_task("buildah"),
+			_bundle,
+		),
+		[],
+	),
+	tekton_test.with_bundle(
+		tekton_test.slsav1_task("conftest-clair"),
+		_bundle,
+	),
+	tekton_test.with_bundle(
+		tekton_test.with_params(
+			tekton_test.slsav1_task("label-check"),
+			[{
+				"name": "POLICY_NAMESPACE",
+				"value": "required_checks",
+			}],
+		),
+		_bundle,
+	),
+	tekton_test.with_bundle(
+		tekton_test.with_params(
+			tekton_test.slsav1_task("label-check"),
+			[{
+				"name": "POLICY_NAMESPACE",
+				"value": "optional_checks",
+			}],
+		),
+		_bundle,
+	),
+]
 
 _required_pipeline_tasks := {"generic": [
 	{

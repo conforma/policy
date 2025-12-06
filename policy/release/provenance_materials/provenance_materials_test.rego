@@ -213,12 +213,15 @@ _mock_attestation(original_tasks) := d if {
 		task := object.union(default_task, original_task)
 	]
 
-	d := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": tasks},
-		"materials": [{
-			"uri": sprintf("git+%s.git", [_git_url]),
-			"digest": {"sha1": _git_commit},
-		}],
-	}}}
+	d := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": tasks},
+			"materials": [{
+				"uri": sprintf("git+%s.git", [_git_url]),
+				"digest": {"sha1": _git_commit},
+			}],
+		},
+	}}
 }
