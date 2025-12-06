@@ -84,6 +84,8 @@
 *** xref:packages/release_rhtap_multi_ci.adoc[RHTAP Multi-CI]
 **** xref:packages/release_rhtap_multi_ci.adoc#rhtap_multi_ci__attestation_format[SLSA Provenance Attestation Format]
 **** xref:packages/release_rhtap_multi_ci.adoc#rhtap_multi_ci__attestation_found[SLSA Provenance Attestation Found]
+*** xref:packages/release_rpm_build_deps.adoc[RPM Build Dependencies]
+**** xref:packages/release_rpm_build_deps.adoc#rpm_build_deps__download_location_valid[Builds have valid download locations]
 *** xref:packages/release_rpm_packages.adoc[RPM Packages]
 **** xref:packages/release_rpm_packages.adoc#rpm_packages__unique_version[Unique Version]
 *** xref:packages/release_rpm_pipeline.adoc[RPM Pipeline]
