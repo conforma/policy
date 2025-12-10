@@ -493,22 +493,20 @@ _no_vuln_attestations := _attestations_with_reports({"sha256:image_digest": "sha
 _with_vuln_attestations := _attestations_with_reports({"sha256:image_digest": "sha256:report_digest"})
 
 _attestations_with_reports(reports) := attestations if {
-	slsav1_task_with_result := tekton_test.slsav1_task_result_ref(
+	slsav1_task_with_result := tekton_test.resolved_slsav1_task("clair-scan", [], [{
+		"name": cve._reports_result_name,
+		"type": "string",
+		"value": reports,
+	}])
+
+	att1 := lib_test.att_mock_helper_ref(
+		cve._reports_result_name,
+		reports,
 		"clair-scan",
-		[{
-			"name": cve._reports_result_name,
-			"type": "string",
-			"value": reports,
-		}],
+		_bundle,
 	)
 
-	attestations := [
-		lib_test.att_mock_helper_ref(
-			cve._reports_result_name,
-			reports,
-			"clair-scan",
-			_bundle,
-		),
-		lib_test.mock_slsav1_attestation_with_tasks([tekton_test.slsav1_task_bundle(slsav1_task_with_result, _bundle)]),
-	]
+	task_with_bundle := tekton_test.with_bundle(slsav1_task_with_result, _bundle)
+	att2 := tekton_test.slsav1_attestation([task_with_bundle])
+	attestations := [att1, att2]
 }

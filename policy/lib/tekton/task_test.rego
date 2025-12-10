@@ -1,4 +1,3 @@
-# regal ignore:file-length
 package lib.tekton_test
 
 import rego.v1
@@ -26,96 +25,44 @@ test_tasks_from_attestation if {
 	git_clone := {"name": "ignored", "ref": {"name": "git-clone"}}
 	buildah := {"name": "ignored", "ref": {"name": "buildah"}}
 
-	attestation := {"statement": {"predicate": {"buildConfig": {"tasks": [git_clone, buildah]}}}}
-	expected := {git_clone, buildah}
-	lib.assert_equal(expected, tekton.tasks(attestation))
-}
-
-# regal ignore:rule-length
-test_tasks_from_slsav1_tekton_attestation if {
-	content := base64.encode(json.marshal(slsav1_attestation_local_spec))
-	task := {
-		"name": "pipelineTask",
-		"uri": "oci://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init",
-		"digest": {"sha256": "28ff94e63e4058afc3f15b4c11c08cf3b54fa91faa646a4bbac90380cd7158df"},
-		"content": content,
-	}
-
 	attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [task],
-		}},
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {"buildConfig": {"tasks": [git_clone, buildah]}},
 	}}
-	expected := {slsav1_attestation_local_spec}
-	lib.assert_equal(expected, tekton.tasks(attestation))
-}
-
-# regal ignore:rule-length
-test_tasks_from_slsav1_tekton_mixture_attestation if {
-	task1 := json.patch(slsav1_attestation_local_spec, [{
-		"op": "add",
-		"path": "/taskRef/name",
-		"value": "task1",
-	}])
-	task2 := json.patch(slsav1_attestation_local_spec, [{
-		"op": "add",
-		"path": "/taskRef/name",
-		"value": "task2",
-	}])
-	task3 := json.patch(slsav1_attestation_local_spec, [{
-		"op": "add",
-		"path": "/taskRef/name",
-		"value": "task3",
-	}])
-
-	git_init := {
-		"name": "task",
-		"uri": "oci://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init",
-		"digest": {"sha256": "28ff94e63e4058afc3f15b4c11c08cf3b54fa91faa646a4bbac90380cd7158df"},
-		"content": base64.encode(json.marshal(task1)),
-	}
-	git_init_pipeline := {
-		"name": "pipelineTask",
-		"uri": "oci://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init",
-		"digest": {"sha256": "28ff94e63e4058afc3f15b4c11c08cf3b54fa91faa646a4bbac90380cd7158df"},
-		"content": base64.encode(json.marshal(task2)),
-	}
-	git_init_bad := {
-		"name": "pipeline",
-		"uri": "oci://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init",
-		"digest": {"sha256": "28ff94e63e4058afc3f15b4c11c08cf3b54fa91faa646a4bbac90380cd7158df"},
-		"content": base64.encode(json.marshal(task3)),
-	}
-
-	attestation := {"statement": {"predicate": {"buildDefinition": {
-		"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-		"resolvedDependencies": [
-			git_init,
-			git_init_pipeline,
-			git_init_bad,
-		],
-	}}}}
 	expected := {
-		task1,
-		task2,
+		{"name": "ignored", "ref": {"name": "git-clone"}},
+		{"name": "ignored", "ref": {"name": "buildah"}},
 	}
 	lib.assert_equal(expected, tekton.tasks(attestation))
 }
 
-test_tasks_from_slsav1_attestation if {
-	git_init := {
-		"name": "task/git-init",
-		"uri": "oci://gcr.io/tekton-releases/github.com/tektoncd/pipeline/cmd/git-init",
-		"digest": {"sha256": "28ff94e63e4058afc3f15b4c11c08cf3b54fa91faa646a4bbac90380cd7158df"},
-	}
-	attestation := {"statement": {"predicate": {"buildDefinition": {
-		"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-		"resolvedDependencies": [git_init],
-	}}}}
-	lib.assert_equal(set(), tekton.tasks(attestation))
+test_tasks_from_slsav1_tekton_attestation if {
+	params := [
+		{
+			"name": "input",
+			"value": "true",
+		},
+		{
+			"name": "SOURCE_ARTIFACT",
+			"value": "quay.io/redhat-appstudio/hacbs-test:v1.1.9@sha256:866675ee3064cf4768691ecca478063ce12f0556fb9d4f24ca95c98664ffbd43", # regal ignore:line-length
+		},
+		{
+			"name": "ociStorage",
+			"value": "quay.io/test-registry/img:sha256.prefetch",
+		},
+	]
+	task_base := slsav1_task("test-task")
+	task_w_params = with_params(
+		task_base,
+		params,
+	)
+
+	expected_task := resolved_slsav1_task("test-task", params, [])
+
+	attestation := slsav1_attestation([task_w_params])
+
+	tasks := tekton.tasks(attestation)
+	lib.assert_equal({expected_task}, tasks)
 }
 
 test_tasks_from_pipeline if {
@@ -129,7 +76,11 @@ test_tasks_from_pipeline if {
 			"finally": [summary],
 		},
 	}
-	expected := {git_clone, buildah, summary}
+	expected := {
+		{"taskRef": {"name": "git-clone"}},
+		{"taskRef": {"name": "buildah"}},
+		{"taskRef": {"name": "summary"}},
+	}
 	lib.assert_equal(expected, tekton.tasks(pipeline))
 }
 
@@ -138,8 +89,9 @@ test_tasks_from_partial_pipeline if {
 	lib.assert_empty(tekton.tasks({"kind": "Pipeline", "spec": {}}))
 
 	git_clone := {"taskRef": {"name": "git-clone"}}
-	lib.assert_equal({git_clone}, tekton.tasks({"kind": "Pipeline", "spec": {"tasks": [git_clone]}}))
-	lib.assert_equal({git_clone}, tekton.tasks({"kind": "Pipeline", "spec": {"finally": [git_clone]}}))
+	expected := {{"taskRef": {"name": "git-clone"}}}
+	lib.assert_equal(expected, tekton.tasks({"kind": "Pipeline", "spec": {"tasks": [git_clone]}}))
+	lib.assert_equal(expected, tekton.tasks({"kind": "Pipeline", "spec": {"finally": [git_clone]}}))
 }
 
 test_tasks_not_found if {
@@ -152,28 +104,18 @@ test_task_param if {
 	not tekton.task_param(task, "missing")
 }
 
-test_task_slsav1_param if {
-	task := {
-		"kind": "TaskRun",
-		"metadata": {"name": "buildah"},
-		"spec": {"params": [{"name": "NETWORK", "value": "none"}]},
-	}
-	lib.assert_equal("none", tekton.task_param(task, "NETWORK"))
-	not tekton.task_param(task, "missing")
-}
-
 test_task_result if {
 	task := {"results": [{"name": "SPAM", "value": "maps"}]}
 	lib.assert_equal("maps", tekton.task_result(task, "SPAM"))
 	not tekton.task_result(task, "missing")
 
-	slsav1_task := {"status": {"taskResults": [{"name": "SPAM", "value": "maps"}]}}
+	slsav1_task := resolved_slsav1_task("task-name", [], [{"name": "SPAM", "value": "maps"}])
 	lib.assert_equal("maps", tekton.task_result(slsav1_task, "SPAM"))
 	not tekton.task_result(slsav1_task, "missing")
 }
 
 test_tasks_from_attestation_with_spam if {
-	expected_tasks := {
+	tasks := {
 		{"ref": {"name": "git-clone", "kind": "Task", "bundle": _bundle}},
 		_good_build_task,
 		{
@@ -183,10 +125,21 @@ test_tasks_from_attestation_with_spam if {
 		{"ref": {"name": "summary", "kind": "Task", "bundle": _bundle}},
 	}
 
-	attestation := {"statement": {"predicate": {"buildConfig": {"tasks": expected_tasks}}}}
+	attestation := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {"buildConfig": {"tasks": tasks}},
+	}}
 
+	expected_tasks := {
+		{"ref": {"name": "git-clone", "kind": "Task", "bundle": _bundle}},
+		_good_build_task,
+		{
+			"ref": {"name": "weird[food=spam]", "kind": "Task", "bundle": _bundle},
+			"invocation": {"parameters": {"SPAM": "MAPS"}},
+		},
+		{"ref": {"name": "summary", "kind": "Task", "bundle": _bundle}},
+	}
 	lib.assert_equal(expected_tasks, tekton.tasks(attestation))
-
 	expected_names := {"git-clone", "buildah", "buildah[HERMETIC=true]", "weird", "weird[SPAM=MAPS]", "summary"}
 	lib.assert_equal(expected_names, tekton.tasks_names(attestation))
 }
@@ -351,17 +304,23 @@ test_multiple_build_tasks if {
 		"value": "buildah-3",
 	}])
 
-	attestation3 := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [task1, task2, task3]},
-	}}}
+	attestation3 := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [task1, task2, task3]},
+		},
+	}}
 
 	count(tekton.build_tasks(attestation3)) == 3
 
-	attestation2 := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [task1, _good_git_clone_task, task3]},
-	}}}
+	attestation2 := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [task1, _good_git_clone_task, task3]},
+		},
+	}}
 
 	count(tekton.build_tasks(attestation2)) == 2
 }
@@ -409,17 +368,23 @@ test_multiple_git_clone_tasks if {
 		"value": "git-clone-3",
 	}])
 
-	attestation3 := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [task1, task2, task3]},
-	}}}
+	attestation3 := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [task1, task2, task3]},
+		},
+	}}
 
 	count(tekton.git_clone_tasks(attestation3)) == 3
 
-	attestation2 := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [task1, _good_build_task, task3]},
-	}}}
+	attestation2 := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [task1, _good_build_task, task3]},
+		},
+	}}
 
 	count(tekton.git_clone_tasks(attestation2)) == 2
 }
@@ -467,17 +432,23 @@ test_multiple_source_build_tasks if {
 		"value": "source-build-3",
 	}])
 
-	attestation_with_3 := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [task1, task2, task3]},
-	}}}
+	attestation_with_3 := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [task1, task2, task3]},
+		},
+	}}
 
 	count(tekton.source_build_tasks(attestation_with_3)) == 3
 
-	attestation_with_2 := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [task1, _good_build_task, task3]},
-	}}}
+	attestation_with_2 := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [task1, _good_build_task, task3]},
+		},
+	}}
 
 	count(tekton.source_build_tasks(attestation_with_2)) == 2
 }
@@ -500,14 +471,25 @@ test_task_data_bundle_ref if {
 }
 
 test_task_names_local if {
-	lib.assert_equal(
+	task_params := [
 		{
-			"buildah",
-			"buildah[DOCKERFILE=./image_with_labels/Dockerfile]",
-			"buildah[IMAGE=quay.io/jstuart/hacbs-docker-build]",
+			"name": "DOCKERFILE",
+			"value": "./image_with_labels/Dockerfile",
 		},
-		tekton.task_names(slsav1_attestation_local_spec),
-	)
+		{
+			"name": "IMAGE",
+			"value": "quay.io/jstuart/hacbs-docker-build",
+		},
+	]
+	task := resolved_slsav1_task("buildah", task_params, [])
+
+	expected := {
+		"buildah",
+		"buildah[DOCKERFILE=./image_with_labels/Dockerfile]",
+		"buildah[IMAGE=quay.io/jstuart/hacbs-docker-build]",
+	}
+
+	lib.assert_equal(expected, tekton.task_names(task))
 }
 
 test_task_data_no_bundle_ref if {
@@ -610,7 +592,7 @@ test_task_result_endswith if {
 			"value": "1234-digest",
 		},
 	]
-	task1 := slsav1_task_result("task1", results)
+	task1 := resolved_slsav1_task("task1", [], results)
 	lib.assert_equal(["1234-image1", "image1"], tekton.task_result_endswith(task1, "ARTIFACT_URI"))
 }
 
@@ -650,6 +632,7 @@ _time_based_required_tasks := [
 ]
 
 _pre_build_task := {
+	"results": [],
 	"ref": {"kind": "Task", "name": "run-script-oci-ta", "bundle": _bundle},
 	"invocation": {"parameters": {"HERMETIC": "true"}},
 }
@@ -679,156 +662,159 @@ _good_source_build_task := {
 	"ref": {"kind": "Task", "name": "source-build", "bundle": _bundle},
 }
 
-_good_attestation := {"statement": {"predicate": {
-	"buildType": lib.tekton_pipeline_run,
-	"buildConfig": {"tasks": [_good_build_task, _good_git_clone_task, _good_source_build_task, _pre_build_task]},
-}}}
-
-slsav1_attestation_local_spec := {
-	"params": [
-		{
-			"name": "IMAGE",
-			"value": "quay.io/jstuart/hacbs-docker-build",
-		},
-		{
-			"name": "DOCKERFILE",
-			"value": "./image_with_labels/Dockerfile",
-		},
-	],
-	"serviceAccountName": "default",
-	"taskRef": {
-		"name": "buildah",
-		"kind": "Task",
+_good_attestation := {"statement": {
+	"predicateType": "https://slsa.dev/provenance/v0.2",
+	"predicate": {
+		"buildType": lib.tekton_pipeline_run,
+		"buildConfig": {"tasks": [_good_build_task, _good_git_clone_task, _good_source_build_task, _pre_build_task]},
 	},
-	"timeout": "1h0m0s",
-	"podTemplate": {
-		"securityContext": {"fsGroup": 65532},
-		"imagePullSecrets": [{"name": "docker-chains"}],
-	},
-	"results": [
-		{
-			"name": "IMAGE_DIGEST",
-			"type": "string",
-			"value": "sha256:hash",
-		},
-		{
-			"name": "IMAGE_URL",
-			"type": "string",
-			"value": "quay.io/jstuart/hacbs-docker-build:tag@sha256:hash",
-		},
-	],
-	"workspaces": [
-		{
-			"name": "source",
-			"persistentVolumeClaim": {"claimName": "pvc-bf2ed289ae"},
-		},
-		{
-			"name": "dockerconfig",
-			"secret": {"secretName": "docker-credentials"},
-		},
-	],
-}
+}}
 
 _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
 
-slsav1_task(name) := task if {
-	parts := regex.split(`[\[\]=]`, name)
-	not parts[1]
-	pipeline_task_name := sprintf("%s", [name])
-	unnamed_task := {
-		"metadata": {
-			"name": pipeline_task_name,
-			"labels": {"tekton.dev/pipelineTask": pipeline_task_name},
+# Creates a SLSA v1.0 task (as decoded from resolvedDependencies.content)
+# This represents the actual TaskRun structure embedded in the attestation
+slsav1_task(name) := {
+	"metadata": {
+		"name": sprintf("%s-taskrun", [name]), # TaskRun name (not pipeline task name)
+		"labels": {
+			"tekton.dev/task": name,
+			"tekton.dev/pipelineTask": name, # This is the actual pipeline task name
 		},
-		"spec": slsav1_attestation_local_spec,
-		"status": {"conditions": [{
+		"annotations": {},
+	},
+	"spec": {
+		"params": [],
+		"taskRef": {
+			"resolver": "bundles",
+			"params": [
+				{
+					"name": "name",
+					"value": name,
+				},
+				{
+					"name": "bundle",
+					"value": concat("-", [name, "bundle"]),
+				},
+				{
+					"name": "kind",
+					"value": "task",
+				},
+			],
+		},
+	},
+	"status": {
+		"conditions": [{
 			"type": "Succeeded",
 			"status": "True",
-		}]},
-	}
-	task := json.patch(unnamed_task, [{
+			"reason": "Succeeded",
+			"message": "All Steps have completed executing",
+		}],
+		"results": [],
+		"steps": [],
+	},
+}
+
+# Helper to set the task reference name on an existing task
+# Usage: with_ref_name(slsav1_task("build"), "buildah")
+with_ref_name(task, ref_name) := json.patch(
+	task,
+	[
+		{"op": "replace", "path": "/metadata/labels/tekton.dev~1task", "value": ref_name},
+		{"op": "replace", "path": "/spec/taskRef/params/0/value", "value": ref_name},
+	],
+)
+
+# Helper to set task params on an existing task
+# Usage: with_task_params(slsav1_task("build"), [{"name": "IMAGE", "value": "quay.io/img"}])
+with_params(task, task_params) := json.patch(
+	task,
+	[{"op": "replace", "path": "/spec/params", "value": task_params}],
+)
+
+# Helper to set results on an existing task
+# Usage: with_results(slsav1_task("build"), [{"name": "IMAGE_DIGEST", "value": "sha256:abc"}])
+with_results(task, task_results) := json.patch(
+	task,
+	[{"op": "replace", "path": "/status/results", "value": task_results}],
+)
+
+# Helper to set conditions on an existing task
+# Usage: with_conditions(slsav1_task("build"), [{"type": "Succeeded", "status": "False", ...}])
+with_conditions(task, conditions) := json.patch(
+	task,
+	[{"op": "replace", "path": "/status/conditions", "value": conditions}],
+)
+
+# Helper to add labels to an existing task
+# Usage: with_labels(slsav1_task("build"), {"custom-label": "value"})
+with_labels(task, extra_labels) := json.patch(
+	task,
+	[{"op": "replace", "path": "/metadata/labels", "value": object.union(
+		task.metadata.labels,
+		extra_labels,
+	)}],
+)
+
+# Helper to set annotations on an existing task
+# Usage: with_annotations(slsav1_task("build"), {"custom-annotation": "value"})
+with_annotations(task, annotations) := json.patch(
+	task,
+	[{"op": "replace", "path": "/metadata/annotations", "value": annotations}],
+)
+
+# Helper to set the bundle reference on an existing task
+# Usage: with_bundle(slsav1_task("build"), "quay.io/konflux/task-buildah:0.1@sha256:abc")
+with_bundle(task, bundle) := json.patch(
+	task,
+	[{
 		"op": "replace",
-		"path": "/spec/taskRef/name",
-		"value": name,
-	}])
-}
-
-slsav1_task(name) := task if {
-	parts := regex.split(`[\[\]=]`, name)
-
-	# regal ignore:redundant-existence-check
-	parts[1]
-	task_name := parts[0]
-	pipeline_task_name := sprintf("%s", [task_name])
-	unnamed_task := {
-		"metadata": {
-			"name": pipeline_task_name,
-			"labels": {"tekton.dev/pipelineTask": pipeline_task_name},
-		},
-		"spec": slsav1_attestation_local_spec,
-		"status": {"conditions": [{
-			"type": "Succeeded",
-			"status": "True",
-		}]},
-	}
-	task := json.patch(unnamed_task, [
-		{
-			"op": "replace",
-			"path": "/spec/taskRef/name",
-			"value": task_name,
-		},
-		{
-			"op": "replace",
-			"path": "/spec/params",
-			"value": [{"name": parts[1], "value": parts[2]}],
-		},
-	])
-}
-
-# create a task and add a bundle to it
-slsav1_task_bundle(name, bundle) := task if {
-	not name.spec
-	task := json.patch(slsav1_task(name), [{
-		"op": "add",
-		"path": "/spec/taskRef/bundle",
+		"path": sprintf("/spec/taskRef/params/%d/value", [_bundle_param_index(task)]),
 		"value": bundle,
-	}])
-}
-
-# add a bundle to an existing task
-slsav1_task_bundle(name, bundle) := task if {
-	name.spec
-	task := json.patch(name, [{
-		"op": "add",
-		"path": "/spec/taskRef/bundle",
-		"value": bundle,
-	}])
-}
-
-# results are an array of dictionaries with keys, "name", "type", "value"
-slsav1_task_result(name, results) := json.patch(
-	slsav1_task(name),
-	[{
-		"op": "add",
-		"path": "/status/taskResults",
-		"value": results,
 	}],
 )
 
-# results are an array of dictionaries with keys, "name", "type", "value"
-slsav1_task_result_ref(name, results) := json.patch(
-	slsav1_task(name),
-	[{
-		"op": "add",
-		"path": "/status/taskResults",
-		"value": _marshal_slsav1_results(results),
-	}],
-)
+_bundle_param_index(task) := i if {
+	some i, p in task.spec.taskRef.params
+	p.name == "bundle"
+}
 
-_marshal_slsav1_results(results) := [r |
-	some result in results
-	r := {"name": result.name, "type": result.type, "value": json.marshal(result.value)}
-]
+# Creates a SLSA v1.0 attestation with tasks encoded in resolvedDependencies
+# This reflects the actual SLSA v1.0 attestation structure produced by Tekton Chains
+slsav1_attestation(tasks) := slsav1_attestation_full(tasks, {}, {})
+
+# Creates a SLSA v1.0 attestation with custom labels and annotations in internalParameters
+# Usage: slsav1_attestation_full(tasks, {"pipeline-label": "value"}, {"pipeline-annotation": "value"})
+slsav1_attestation_full(tasks, labels, annotations) := {"statement": {
+	"predicateType": "https://slsa.dev/provenance/v1",
+	"predicate": {"buildDefinition": {
+		"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
+		"internalParameters": {
+			"labels": labels,
+			"annotations": annotations,
+		},
+		"externalParameters": {"runSpec": {"pipelineSpec": {}}},
+		"resolvedDependencies": resolved_dependencies(tasks),
+	}},
+}}
+
+# Creates a resolved SLSA v1.0 task (after _slsa_task() processing)
+# This represents what _slsa_task() produces:
+# - Full task structure with params in spec.params and results in status.results
+# - Top-level "params" and "results"
+resolved_slsav1_task(task_name, resolved_params, resolved_results) := task if {
+	_task_base := slsav1_task(task_name)
+	_task_w_params = with_params(_task_base, resolved_params)
+	_task_full = with_results(_task_w_params, resolved_results)
+
+	task := object.union(
+		_task_full,
+		{
+			"params": resolved_params,
+			"results": resolved_results,
+		},
+	)
+}
 
 resolved_dependencies(tasks) := [r |
 	some task in tasks

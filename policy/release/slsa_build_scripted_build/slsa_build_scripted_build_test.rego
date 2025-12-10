@@ -287,6 +287,7 @@ test_subject_with_tag_and_digest_is_good if {
 			"name": "registry.io/repository/image",
 			"digest": {"sha256": "digest"},
 		}],
+		"predicateType": "https://slsa.dev/provenance/v0.2",
 		"predicate": {
 			"buildType": lib.tekton_pipeline_run,
 			"buildConfig": {"tasks": tasks},
@@ -309,6 +310,7 @@ test_subject_with_tag_and_digest_mismatch_tag_is_good if {
 			"name": "registry.io/repository/image:different",
 			"digest": {"sha256": "digest"},
 		}],
+		"predicateType": "https://slsa.dev/provenance/v0.2",
 		"predicate": {
 			"buildType": lib.tekton_pipeline_run,
 			"buildConfig": {"tasks": tasks},
@@ -337,6 +339,7 @@ test_subject_with_tag_and_digest_mismatch_digest_fails if {
 			"name": "registry.io/repository/image",
 			"digest": {"sha256": "unexpected"},
 		}],
+		"predicateType": "https://slsa.dev/provenance/v0.2",
 		"predicate": {
 			"buildType": lib.tekton_pipeline_run,
 			"buildConfig": {"tasks": tasks},
@@ -470,6 +473,7 @@ _mock_attestation(original_tasks) := d if {
 
 	d := {"statement": {
 		"subject": generate_subjects(original_tasks),
+		"predicateType": "https://slsa.dev/provenance/v0.2",
 		"predicate": {
 			"buildType": lib.tekton_pipeline_run,
 			"buildConfig": {"tasks": tasks},

@@ -65,7 +65,8 @@ deny contains result if {
 #
 deny contains result if {
 	some attestation in lib.pipelinerun_attestations
-	count(tekton.build_tasks(attestation)) == 0
+	builds := tekton.build_tasks(attestation)
+	count(builds) == 0
 	result := lib.result_helper(rego.metadata.chain(), [])
 }
 

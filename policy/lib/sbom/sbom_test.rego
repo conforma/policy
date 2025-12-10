@@ -22,26 +22,29 @@ test_cyclonedx_sboms if {
 			"predicateType": "https://example.org/boom",
 			"predicate": "not an sbom",
 		}},
-		{"statement": {"predicate": {
-			"buildType": lib.tekton_pipeline_run,
-			"buildConfig": {"tasks": [{"results": [
-				{
-					"name": "IMAGE_DIGEST",
-					"type": "string",
-					"value": "sha256:284e3029",
-				},
-				{
-					"name": "IMAGE_URL",
-					"type": "string",
-					"value": "registry.io/repository/image:latest",
-				},
-				{
-					"name": "SBOM_BLOB_URL",
-					"type": "string",
-					"value": "registry.io/repository/image@sha256:f0cacc1a",
-				},
-			]}]},
-		}}},
+		{"statement": {
+			"predicateType": "https://slsa.dev/provenance/v0.2",
+			"predicate": {
+				"buildType": lib.tekton_pipeline_run,
+				"buildConfig": {"tasks": [{"results": [
+					{
+						"name": "IMAGE_DIGEST",
+						"type": "string",
+						"value": "sha256:284e3029",
+					},
+					{
+						"name": "IMAGE_URL",
+						"type": "string",
+						"value": "registry.io/repository/image:latest",
+					},
+					{
+						"name": "SBOM_BLOB_URL",
+						"type": "string",
+						"value": "registry.io/repository/image@sha256:f0cacc1a",
+					},
+				]}]},
+			},
+		}},
 	]
 	expected := ["sbom from attestation", {"sbom": "from oci blob", "bomFormat": "CycloneDX"}]
 	lib.assert_equal(sbom.cyclonedx_sboms, expected) with input.attestations as attestations
@@ -61,26 +64,29 @@ test_spdx_sboms if {
 			"predicateType": "https://example.org/boom",
 			"predicate": "not an sbom",
 		}},
-		{"statement": {"predicate": {
-			"buildType": lib.tekton_pipeline_run,
-			"buildConfig": {"tasks": [{"results": [
-				{
-					"name": "IMAGE_DIGEST",
-					"type": "string",
-					"value": "sha256:284e3029",
-				},
-				{
-					"name": "IMAGE_URL",
-					"type": "string",
-					"value": "registry.io/repository/image:latest",
-				},
-				{
-					"name": "SBOM_BLOB_URL",
-					"type": "string",
-					"value": "registry.io/repository/image@sha256:f0cacc1a",
-				},
-			]}]},
-		}}},
+		{"statement": {
+			"predicateType": "https://slsa.dev/provenance/v0.2",
+			"predicate": {
+				"buildType": lib.tekton_pipeline_run,
+				"buildConfig": {"tasks": [{"results": [
+					{
+						"name": "IMAGE_DIGEST",
+						"type": "string",
+						"value": "sha256:284e3029",
+					},
+					{
+						"name": "IMAGE_URL",
+						"type": "string",
+						"value": "registry.io/repository/image:latest",
+					},
+					{
+						"name": "SBOM_BLOB_URL",
+						"type": "string",
+						"value": "registry.io/repository/image@sha256:f0cacc1a",
+					},
+				]}]},
+			},
+		}},
 	]
 	expected := ["sbom from attestation", {"sbom": "from oci blob", "SPDXID": "SPDXRef-DOCUMENT"}]
 	lib.assert_equal(sbom.spdx_sboms, expected) with input.attestations as attestations

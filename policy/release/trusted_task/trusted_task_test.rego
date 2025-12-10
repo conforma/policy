@@ -6,28 +6,34 @@ import data.lib
 import data.trusted_task
 
 test_success if {
-	att_no_ta := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [
-			newest_bundle_pipeline_task,
-			newest_git_pipeline_task,
-		]},
-	}}}
+	att_no_ta := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [
+				newest_bundle_pipeline_task,
+				newest_git_pipeline_task,
+			]},
+		},
+	}}
 
 	lib.assert_empty(trusted_task.warn | trusted_task.deny, expected) with data.trusted_tasks as trusted_tasks_data
 		with input.attestations as [att_no_ta, attestation_ta]
 }
 
 test_pinned_warning if {
-	att := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [
-			trusted_bundle_pipeline_task,
-			unpinned_bundle_pipeline_task,
-			trusted_git_pipeline_task,
-			unpinned_git_pipeline_task,
-		]},
-	}}}
+	att := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [
+				trusted_bundle_pipeline_task,
+				unpinned_bundle_pipeline_task,
+				trusted_git_pipeline_task,
+				unpinned_git_pipeline_task,
+			]},
+		},
+	}}
 
 	expected := {
 		{
@@ -47,13 +53,16 @@ test_pinned_warning if {
 }
 
 test_tagged_warning if {
-	att := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [
-			trusted_bundle_pipeline_task,
-			untagged_bundle_pipeline_task,
-		]},
-	}}}
+	att := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [
+				trusted_bundle_pipeline_task,
+				untagged_bundle_pipeline_task,
+			]},
+		},
+	}}
 
 	expected := {{
 		"code": "trusted_task.tagged",
@@ -66,15 +75,18 @@ test_tagged_warning if {
 }
 
 test_outdated_warning if {
-	att := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [
-			trusted_bundle_pipeline_task,
-			outdated_bundle_pipeline_task,
-			trusted_git_pipeline_task,
-			outdated_git_pipeline_task,
-		]},
-	}}}
+	att := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [
+				trusted_bundle_pipeline_task,
+				outdated_bundle_pipeline_task,
+				trusted_git_pipeline_task,
+				outdated_git_pipeline_task,
+			]},
+		},
+	}}
 
 	expected := {
 		{
@@ -96,21 +108,24 @@ test_outdated_warning if {
 }
 
 test_trusted_violation if {
-	att := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [
-			trusted_bundle_pipeline_task,
-			untagged_bundle_pipeline_task,
-			outdated_bundle_pipeline_task,
-			unknown_bundle_pipeline_task,
-			expired_bundle_pipeline_task,
-			trusted_git_pipeline_task,
-			outdated_git_pipeline_task,
-			unknown_git_pipeline_task,
-			expired_git_pipeline_task,
-			inlined_pipeline_task,
-		]},
-	}}}
+	att := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [
+				trusted_bundle_pipeline_task,
+				untagged_bundle_pipeline_task,
+				outdated_bundle_pipeline_task,
+				unknown_bundle_pipeline_task,
+				expired_bundle_pipeline_task,
+				trusted_git_pipeline_task,
+				outdated_git_pipeline_task,
+				unknown_git_pipeline_task,
+				expired_git_pipeline_task,
+				inlined_pipeline_task,
+			]},
+		},
+	}}
 
 	expected := {
 		{
@@ -335,10 +350,13 @@ _mock_run_script_result := {
 	"type": "string",
 }
 
-_mock_att_with_task(task) := {"statement": {"predicate": {
-	"buildType": lib.tekton_pipeline_run,
-	"buildConfig": {"tasks": [task]},
-}}}
+_mock_att_with_task(task) := {"statement": {
+	"predicateType": "https://slsa.dev/provenance/v0.2",
+	"predicate": {
+		"buildType": lib.tekton_pipeline_run,
+		"buildConfig": {"tasks": [task]},
+	},
+}}
 
 test_trusted_build_digests_from_run_script_result if {
 	# A digest from the SCRIPT_RUNNER_IMAGE_REFERENCE task result in the run-script-oci-ta
@@ -626,10 +644,13 @@ task_test_a := {
 	"ref": {"name": "TaskTestA", "kind": "Task", "bundle": trusted_bundle},
 }
 
-attestation_ta := {"statement": {"predicate": {
-	"buildType": lib.tekton_pipeline_run,
-	"buildConfig": {"tasks": [task_a, task_b, task_c, task_image_index, task_test_a]},
-}}}
+attestation_ta := {"statement": {
+	"predicateType": "https://slsa.dev/provenance/v0.2",
+	"predicate": {
+		"buildType": lib.tekton_pipeline_run,
+		"buildConfig": {"tasks": [task_a, task_b, task_c, task_image_index, task_test_a]},
+	},
+}}
 
 ######################
 # Trusted Tasks data #

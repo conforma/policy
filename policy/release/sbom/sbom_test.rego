@@ -12,26 +12,29 @@ test_not_found if {
 }
 
 test_not_found_image_index if {
-	att := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [{"results": [
-			{
-				"name": "IMAGES",
-				"type": "string",
-				"value": "registry.local/spam@sha256:abc, registry.local/bacon@sha256:bcd",
-			},
-			{
-				"name": "IMAGE_URL",
-				"type": "string",
-				"value": "registry.local/eggs:latest",
-			},
-			{
-				"name": "IMAGE_DIGEST",
-				"type": "string",
-				"value": "sha256:fff",
-			},
-		]}]},
-	}}}
+	att := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [{"results": [
+				{
+					"name": "IMAGES",
+					"type": "string",
+					"value": "registry.local/spam@sha256:abc, registry.local/bacon@sha256:bcd",
+				},
+				{
+					"name": "IMAGE_URL",
+					"type": "string",
+					"value": "registry.local/eggs:latest",
+				},
+				{
+					"name": "IMAGE_DIGEST",
+					"type": "string",
+					"value": "sha256:fff",
+				},
+			]}]},
+		},
+	}}
 
 	lib.assert_empty(sbom.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/ham@sha256:fff"

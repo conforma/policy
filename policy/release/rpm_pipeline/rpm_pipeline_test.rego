@@ -6,10 +6,13 @@ import data.lib
 import data.rpm_pipeline
 
 test_invalid_pipeline if {
-	attestations := [{"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [_valid_pipeline_task, _invalid_pipeline_task]},
-	}}}]
+	attestations := [{"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [_valid_pipeline_task, _invalid_pipeline_task]},
+		},
+	}}]
 
 	expected := {{
 		"code": "rpm_pipeline.invalid_pipeline",
@@ -20,10 +23,13 @@ test_invalid_pipeline if {
 }
 
 test_valid_pipelines_met if {
-	attestations := [{"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [_valid_pipeline_task, _valid_pipeline_task_2]},
-	}}}]
+	attestations := [{"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [_valid_pipeline_task, _valid_pipeline_task_2]},
+		},
+	}}]
 
 	lib.assert_empty(rpm_pipeline.deny) with data.rule_data.allowed_rpm_build_pipelines as ["foobar", "baz"]
 		with input.attestations as attestations

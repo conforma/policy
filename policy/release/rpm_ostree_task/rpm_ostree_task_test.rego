@@ -3,38 +3,33 @@ package rpm_ostree_task_test
 import rego.v1
 
 import data.lib
+import data.lib.tekton_test
 import data.rpm_ostree_task
 
 test_success if {
-	slsa_v02_attestation := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [{
-			"name": "rpm-ostree-p",
-			"ref": {"kind": "Task", "name": "rpm-ostree"},
-			"invocation": {"parameters": {"BUILDER_IMAGE": "registry.local/builder:v0.2@sha256:abc"}},
-		}]},
-	}}}
-
-	slsa_v1_attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [{
-				"name": "pipelineTask",
-				"content": base64.encode(json.marshal({"spec": {
-					"taskRef": {
-						"name": "rpm-ostree",
-						"kind": "Task",
-					},
-					"params": [{
-						"name": "BUILDER_IMAGE",
-						"value": "registry.local/builder:v1.0@sha256:bcd",
-					}],
-				}})),
-			}],
-		}},
+	slsa_v02_attestation := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [{
+				"name": "rpm-ostree-p",
+				"ref": {"kind": "Task", "name": "rpm-ostree"},
+				"invocation": {"parameters": {"BUILDER_IMAGE": "registry.local/builder:v0.2@sha256:abc"}},
+			}]},
+		},
 	}}
+
+	# SLSA v1.0
+	_base_task := tekton_test.slsav1_task("rpm-ostree")
+	slsa_v1_task = tekton_test.with_results(
+		_base_task,
+		[{
+			"name": "BUILDER_IMAGE",
+			"value": "registry.local/builder:v1.0@sha256:bcd",
+		}],
+	)
+
+	slsa_v1_attestation := tekton_test.slsav1_attestation([slsa_v1_task])
 
 	attestations := [slsa_v02_attestation, slsa_v1_attestation]
 
@@ -43,57 +38,47 @@ test_success if {
 }
 
 test_builder_image_param_failures if {
-	slsa_v02_attestation := {"statement": {"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [
-			{
-				"name": "rpm-ostree-1",
-				"ref": {"kind": "Task", "name": "rpm-ostree"},
-				"invocation": {"parameters": {"BUILDER_IMAGE": "registry.local/spam:v0.2"}},
-			},
-			{
-				"name": "rpm-ostree-2",
-				"ref": {"kind": "Task", "name": "rpm-ostree"},
-				"invocation": {"parameters": {"BUILDER_IMAGE": "registry.local/deprecated:v0.2@sha256:abc"}},
-			},
-		]},
-	}}}
-
-	slsa_v1_attestation := {"statement": {
-		"predicateType": "https://slsa.dev/provenance/v1",
-		"predicate": {"buildDefinition": {
-			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
-			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
-			"resolvedDependencies": [
+	slsa_v02_attestation := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [
 				{
-					"name": "pipelineTask",
-					"content": base64.encode(json.marshal({"spec": {
-						"taskRef": {
-							"name": "rpm-ostree",
-							"kind": "Task",
-						},
-						"params": [{
-							"name": "BUILDER_IMAGE",
-							"value": "registry.local/spam:v1.0",
-						}],
-					}})),
+					"name": "rpm-ostree-1",
+					"ref": {"kind": "Task", "name": "rpm-ostree"},
+					"invocation": {"parameters": {"BUILDER_IMAGE": "registry.local/spam:v0.2"}},
 				},
 				{
-					"name": "pipelineTask",
-					"content": base64.encode(json.marshal({"spec": {
-						"taskRef": {
-							"name": "rpm-ostree",
-							"kind": "Task",
-						},
-						"params": [{
-							"name": "BUILDER_IMAGE",
-							"value": "registry.local/deprecated:v1.0@sha256:bcd",
-						}],
-					}})),
+					"name": "rpm-ostree-2",
+					"ref": {"kind": "Task", "name": "rpm-ostree"},
+					"invocation": {"parameters": {"BUILDER_IMAGE": "registry.local/deprecated:v0.2@sha256:abc"}},
 				},
-			],
-		}},
+			]},
+		},
 	}}
+
+	# SLSA v1.0
+	_slsa_v1_task_1_base := tekton_test.slsav1_task("rpm-ostree-1")
+	_slsa_v1_task_1_w_name = tekton_test.with_ref_name(_slsa_v1_task_1_base, "rpm-ostree")
+	slsa_v1_task_1 = tekton_test.with_params(
+		_slsa_v1_task_1_w_name,
+		[{
+			"name": "BUILDER_IMAGE",
+			"value": "registry.local/spam:v1.0",
+		}],
+	)
+
+	_slsa_v1_task_2_base := tekton_test.slsav1_task("rpm-ostree-2")
+	_slsa_v1_task_2_w_name = tekton_test.with_ref_name(_slsa_v1_task_2_base, "rpm-ostree")
+	slsa_v1_task_2 = tekton_test.with_params(
+		_slsa_v1_task_2_w_name,
+		[{
+			"name": "BUILDER_IMAGE",
+			"value": "registry.local/deprecated:v1.0@sha256:bcd",
+		}],
+	)
+
+	slsa_v1_attestation := tekton_test.slsav1_attestation([slsa_v1_task_1, slsa_v1_task_2])
 
 	attestations := [slsa_v02_attestation, slsa_v1_attestation]
 
