@@ -18,6 +18,9 @@ import data.lib
 import data.lib.image
 import data.lib.tekton
 
+# Batch fetch all manifests for tasks in the pipelineRun attestation
+_manifests := ec.oci.image_manifests(lib.pipelinerun_bundle_refs)
+
 _supported_ta_uris_reg := {"oci:.*@sha256:[0-9a-f]{64}"}
 
 _digest_patterns := {`sha256:[0-9a-f]{64}`}
@@ -123,7 +126,7 @@ warn contains result if {
 warn contains result if {
 	not tekton.missing_trusted_task_rules_data
 	some task in lib.tasks_from_pipelinerun
-	some rule in tekton.future_deny_rules_for_task(task)
+	some rule in tekton.future_deny_rules_for_task(task, _manifests)
 	result := lib.result_helper_with_term(
 		rego.metadata.chain(),
 		[tekton.pipeline_task_name(task), rule.pattern, rule.effective_on],
@@ -369,7 +372,7 @@ _task_info(task) := info if {
 _trusted_build_digests contains digest if {
 	some attestation in lib.pipelinerun_attestations
 	some build_task in tekton.build_tasks(attestation)
-	tekton.is_trusted_task(build_task)
+	tekton.is_trusted_task(build_task, _manifests)
 	some result in tekton.task_results(build_task)
 	some digest in _digests_from_values(lib.result_values(result))
 }
@@ -386,7 +389,7 @@ _trusted_build_digests contains digest if {
 _trusted_build_digests contains digest if {
 	some attestation in lib.pipelinerun_attestations
 	some task in tekton.pre_build_tasks(attestation)
-	tekton.is_trusted_task(task)
+	tekton.is_trusted_task(task, _manifests)
 	runner_image_result_value := tekton.task_result(task, _pre_build_run_script_runner_image_result)
 	some digest in _digests_from_values({runner_image_result_value})
 }
@@ -423,7 +426,7 @@ _trust_errors_rules contains error if {
 		link == tekton.pipeline_task_name(task)
 	]
 
-	some untrusted_task in tekton.untrusted_task_refs_rules(chain)
+	some untrusted_task in tekton.untrusted_task_refs_rules(chain, _manifests)
 
 	error := _format_trust_error_rules_ta(untrusted_task, dependency_chain)
 }
@@ -431,7 +434,7 @@ _trust_errors_rules contains error if {
 # Collects trust errors using trusted_task_rules (without Trusted Artifacts)
 _trust_errors_rules contains error if {
 	not _uses_trusted_artifacts
-	some untrusted_task in tekton.untrusted_task_refs_rules(lib.tasks_from_pipelinerun)
+	some untrusted_task in tekton.untrusted_task_refs_rules(lib.tasks_from_pipelinerun, _manifests)
 	error := _format_trust_error_rules(untrusted_task)
 }
 
@@ -455,7 +458,7 @@ _format_denial_reason(reason) := msg if {
 
 # Format error for rules system with Trusted Artifacts
 _format_trust_error_rules_ta(task, dependency_chain) := error if {
-	reason := tekton.denial_reason(task)
+	reason := tekton.denial_reason(task, _manifests)
 	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
 	untrusted_task_name := tekton.task_name(task)
 
@@ -473,7 +476,7 @@ _format_trust_error_rules_ta(task, dependency_chain) := error if {
 
 # Format error for rules system without Trusted Artifacts
 _format_trust_error_rules(task) := error if {
-	reason := tekton.denial_reason(task)
+	reason := tekton.denial_reason(task, _manifests)
 	untrusted_pipeline_task_name := tekton.pipeline_task_name(task)
 	untrusted_task_name := tekton.task_name(task)
 	untrusted_task_info := _task_info(task)
