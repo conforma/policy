@@ -135,6 +135,14 @@ tasks_from_pipelinerun := [task |
 	some task in tekton.tasks(att)
 ]
 
+# Collect all unique bundle references from tasks in the pipelineRun attestation.
+# Returns a set of bundle refs that can be passed to ec.oci.image_manifests.
+pipelinerun_bundle_refs contains ref if {
+	some task in tasks_from_pipelinerun
+	ref := tekton.task_ref(task).bundle
+	ref != ""
+}
+
 # All results from the attested PipelineRun with the provided name. Results are
 # expected to contain a JSON value. The return object contains the following
 # keys:

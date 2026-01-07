@@ -20,7 +20,7 @@ Verify that the predicate.buildConfig.tasks.steps attribute for the task respons
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Build task %q does not contain any steps`
 * Code: `slsa_build_scripted_build.build_script_used`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_scripted_build/slsa_build_scripted_build.rego#L21[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_scripted_build/slsa_build_scripted_build.rego#L24[Source, window="_blank"]
 
 [#slsa_build_scripted_build__build_task_image_results_found]
 === link:#slsa_build_scripted_build__build_task_image_results_found[Build task set image digest and url task results]
@@ -32,7 +32,7 @@ Confirm that a build task exists and it has the expected IMAGE_DIGEST and IMAGE_
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Build task not found`
 * Code: `slsa_build_scripted_build.build_task_image_results_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_scripted_build/slsa_build_scripted_build.rego#L48[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_scripted_build/slsa_build_scripted_build.rego#L51[Source, window="_blank"]
 
 [#slsa_build_scripted_build__image_built_by_trusted_task]
 === link:#slsa_build_scripted_build__image_built_by_trusted_task[Image built by trusted Task]
@@ -44,7 +44,7 @@ Verify the digest of the image being validated is reported by a trusted Task in 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Image %q not built by a trusted task: %s`
 * Code: `slsa_build_scripted_build.image_built_by_trusted_task`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_scripted_build/slsa_build_scripted_build.rego#L107[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_scripted_build/slsa_build_scripted_build.rego#L110[Source, window="_blank"]
 
 [#slsa_build_scripted_build__subject_build_task_matches]
 === link:#slsa_build_scripted_build__subject_build_task_matches[Provenance subject matches build task image result]
@@ -56,4 +56,4 @@ Verify the subject of the attestations matches the IMAGE_DIGEST and IMAGE_URL va
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The attestation subject, %q, does not match any of the images built`
 * Code: `slsa_build_scripted_build.subject_build_task_matches`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_scripted_build/slsa_build_scripted_build.rego#L73[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_scripted_build/slsa_build_scripted_build.rego#L76[Source, window="_blank"]

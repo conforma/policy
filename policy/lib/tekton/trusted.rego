@@ -84,12 +84,13 @@ missing_all_trusted_tasks_data if {
 
 # Returns true if the task uses a trusted Task reference.
 # Routes to the appropriate system based on data presence.
-is_trusted_task(task) if {
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+is_trusted_task(task, manifests) if {
 	not missing_trusted_task_rules_data
-	is_trusted_task_rules(task)
+	is_trusted_task_rules(task, manifests)
 }
 
-is_trusted_task(task) if {
+is_trusted_task(task, _) if {
 	missing_trusted_task_rules_data
 	not missing_trusted_tasks_data
 	is_trusted_task_legacy(task)
@@ -97,9 +98,10 @@ is_trusted_task(task) if {
 
 # Returns a subset of tasks that do not use a trusted Task reference.
 # Routes to the appropriate system based on data presence.
-untrusted_task_refs(tasks) := result if {
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+untrusted_task_refs(tasks, manifests) := result if {
 	not missing_trusted_task_rules_data
-	result := untrusted_task_refs_rules(tasks)
+	result := untrusted_task_refs_rules(tasks, manifests)
 } else := result if {
 	result := untrusted_task_refs_legacy(tasks)
 }
@@ -111,19 +113,21 @@ untrusted_task_refs(tasks) := result if {
 # =============================================================================
 
 # Returns a subset of tasks that are untrusted according to trusted_task_rules.
-untrusted_task_refs_rules(tasks) := {task |
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+untrusted_task_refs_rules(tasks, manifests) := {task |
 	some task in tasks
-	not is_trusted_task_rules(task)
+	not is_trusted_task_rules(task, manifests)
 }
 
 # Returns true if the task uses a trusted Task reference according to trusted_task_rules.
 # 1. If task matches a deny rule, it's not trusted
 # 2. If task matches an allow rule, it's trusted
 # 3. Otherwise, it's not trusted
-is_trusted_task_rules(task) if {
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+is_trusted_task_rules(task, manifests) if {
 	ref := task_ref(task)
-	not _task_matches_deny_rule(ref)
-	_task_matches_allow_rule(ref)
+	not _task_matches_deny_rule(ref, manifests)
+	_task_matches_allow_rule(ref, manifests)
 }
 
 # Merging in the trusted_task_rules rule data
@@ -279,12 +283,13 @@ _rule_is_future(rule) if {
 }
 
 # Returns future deny rules that would match the given task
-future_deny_rules_for_task(task) := matching_rules if {
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+future_deny_rules_for_task(task, manifests) := matching_rules if {
 	ref := task_ref(task)
 	matching_rules := [rule |
 		some rule in future_deny_rules
 		_pattern_matches(ref.key, rule.pattern)
-		_version_satisfies_any_rule_constraints(ref, rule)
+		_version_satisfies_any_rule_constraints(ref, rule, manifests)
 	]
 }
 
@@ -297,19 +302,21 @@ _rule_is_effective(rule) if {
 }
 
 # Returns true if the task reference matches a deny rule pattern and version constraints (if specified)
-_task_matches_deny_rule(ref) if {
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+_task_matches_deny_rule(ref, manifests) if {
 	some rule in _effective_deny_rules
 	_pattern_matches(ref.key, rule.pattern)
-	_version_satisfies_any_rule_constraints(ref, rule)
+	_version_satisfies_any_rule_constraints(ref, rule, manifests)
 }
 
 # Returns a list of patterns from deny rules that match the task, or an empty list if no deny rules match.
 # This only applies to trusted_task_rules (not legacy trusted_tasks).
-denying_pattern(task) := [rule.pattern |
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+denying_pattern(task, manifests) := [rule.pattern |
 	ref := task_ref(task)
 	some rule in _effective_deny_rules
 	_pattern_matches(ref.key, rule.pattern)
-	_version_satisfies_any_rule_constraints(ref, rule)
+	_version_satisfies_any_rule_constraints(ref, rule, manifests)
 ]
 
 # Returns the reason why a task reference was denied, or nothing if the task is trusted.
@@ -319,8 +326,9 @@ denying_pattern(task) := [rule.pattern |
 # 2. It doesn't match any allow rule pattern (type: "not_allowed", pattern: empty list)
 # 3. No effective allow rules exist but raw rules are defined (type: "no_effective_rules")
 # This only applies to trusted_task_rules (not legacy trusted_tasks).
-denial_reason(task) := reason if {
-	deny_info := _denying_rules_info(task)
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+denial_reason(task, manifests) := reason if {
+	deny_info := _denying_rules_info(task, manifests)
 	count(deny_info.patterns) > 0
 	reason := {
 		"type": "deny_rule",
@@ -332,8 +340,8 @@ denial_reason(task) := reason if {
 	# Only applies if there are effective allow rules defined
 	ref := task_ref(task)
 	count(_effective_allow_rules) > 0
-	not _task_matches_allow_rule(ref)
-	not _task_matches_deny_rule(ref)
+	not _task_matches_allow_rule(ref, manifests)
+	not _task_matches_deny_rule(ref, manifests)
 
 	reason := {
 		"type": "not_allowed",
@@ -354,14 +362,15 @@ denial_reason(task) := reason if {
 }
 
 # Returns patterns and messages from deny rules that match the task
-_denying_rules_info(task) := {"patterns": patterns, "messages": messages} if {
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+_denying_rules_info(task, manifests) := {"patterns": patterns, "messages": messages} if {
 	ref := task_ref(task)
 
 	# Get all matching deny rules
 	matching_rules := [rule |
 		some rule in _effective_deny_rules
 		_pattern_matches(ref.key, rule.pattern)
-		_version_satisfies_any_rule_constraints(ref, rule)
+		_version_satisfies_any_rule_constraints(ref, rule, manifests)
 	]
 
 	patterns := [rule.pattern | some rule in matching_rules]
@@ -369,10 +378,11 @@ _denying_rules_info(task) := {"patterns": patterns, "messages": messages} if {
 }
 
 # Returns true if the task reference matches an allow rule pattern and version constraints (if specified)
-_task_matches_allow_rule(ref) if {
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+_task_matches_allow_rule(ref, manifests) if {
 	some rule in _effective_allow_rules
 	_pattern_matches(ref.key, rule.pattern)
-	_version_satisfies_all_rule_constraints(ref, rule)
+	_version_satisfies_all_rule_constraints(ref, rule, manifests)
 }
 
 # Converts a wildcard pattern to a regex pattern and checks if the key matches
@@ -478,11 +488,12 @@ _trusted_task_rules_schema := {
 # Returns false if versions field exists but no manifest version is found (don't allow by default for security)
 # Returns true if task version satisfies all constraints
 # Returns false otherwise
-_version_satisfies_all_rule_constraints(ref, rule) if {
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+_version_satisfies_all_rule_constraints(ref, rule, manifests) if {
 	not "versions" in object.keys(rule)
 } else if {
 	# If versions field exists, manifest version must be found
-	manifest_version := _get_manifest_version_annotation(ref)
+	manifest_version := _get_manifest_version_annotation(ref, manifests)
 	version := _normalize_version(manifest_version)
 	semver.is_valid(version)
 
@@ -505,18 +516,19 @@ _version_satisfies_all_rule_constraints(ref, rule) if {
 # Returns true if versions field exists but no manifest version is found (deny by default for security)
 # Returns true if task version satisfies at least one constraint
 # Returns false otherwise
-_version_satisfies_any_rule_constraints(ref, rule) if {
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+_version_satisfies_any_rule_constraints(ref, rule, manifests) if {
 	not "versions" in object.keys(rule)
 } else if {
 	# If versions field exists but no manifest version found, deny the task (return true)
 	"versions" in object.keys(rule)
-	not _get_manifest_version_annotation(ref)
+	not _get_manifest_version_annotation(ref, manifests)
 } else if {
-	manifest_version := _get_manifest_version_annotation(ref)
+	manifest_version := _get_manifest_version_annotation(ref, manifests)
 	version := _normalize_version(manifest_version)
 	not semver.is_valid(version)
 } else if {
-	manifest_version := _get_manifest_version_annotation(ref)
+	manifest_version := _get_manifest_version_annotation(ref, manifests)
 	version := _normalize_version(manifest_version)
 	semver.is_valid(version)
 
@@ -572,11 +584,10 @@ _result_satisfies_operator(result, constraint) if {
 	result < 0
 } else := false
 
-_get_manifest_version_annotation(ref) := version if {
-	# Only attempt to fetch manifest for bundle references
-	bundle_ref := object.get(ref, "bundle", "")
-	bundle_ref != ""
-	task_manifest := ec.oci.image_manifest(bundle_ref)
+# Returns the version annotation from the manifest for a bundle reference.
+# manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
+_get_manifest_version_annotation(ref, manifests) := version if {
+	task_manifest := manifests[ref.bundle]
 	annotations := object.get(task_manifest, "annotations", {})
 	version := annotations["org.opencontainers.image.version"]
 	version != null
