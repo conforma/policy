@@ -3,8 +3,8 @@ module github.com/enterprise-contract/ec-policies/acceptance
 go 1.22.7
 
 require (
-	github.com/cucumber/godog v0.13.0
-	github.com/enterprise-contract/ec-cli v0.6.202
+	github.com/cucumber/godog v0.15.1
+	github.com/enterprise-contract/ec-cli v0.8.80
 )
 
 require (

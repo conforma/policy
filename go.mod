@@ -5,12 +5,12 @@ go 1.24.2
 toolchain go1.24.11
 
 require (
-	github.com/enterprise-contract/ec-cli v0.6.202
-	github.com/google/addlicense v1.1.1
-	github.com/open-policy-agent/conftest v0.55.0
-	github.com/styrainc/regal v0.29.2
-	github.com/tektoncd/cli v0.39.1
-	oras.land/oras v1.2.3
+	github.com/enterprise-contract/ec-cli v0.8.80
+	github.com/google/addlicense v1.2.0
+	github.com/open-policy-agent/conftest v0.66.0
+	github.com/styrainc/regal v0.38.1
+	github.com/tektoncd/cli v0.42.0
+	oras.land/oras v1.3.0
 )
 
 require (
