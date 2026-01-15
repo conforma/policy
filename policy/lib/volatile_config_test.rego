@@ -14,13 +14,12 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-package lib.volatile_config_test
+package lib_test
 
 import rego.v1
 
 import data.lib
 import data.lib.time as time_lib
-import data.lib.volatile_config as vc
 
 # Use a fixed "now" time for deterministic tests: 2024-06-15T12:00:00Z
 _now_ns := 1718452800000000000
@@ -30,11 +29,12 @@ _now_ns := 1718452800000000000
 # =============================================================================
 
 test_warning_threshold_days_default if {
-	lib.assert_equal(vc.warning_threshold_days, 30)
+	lib.assert_equal(lib.warning_threshold_days, 30)
 }
 
 test_warning_threshold_days_custom if {
-	lib.assert_equal(vc.warning_threshold_days, 14) with data.rule_data__configuration__.volatile_config_warning_threshold_days as 14
+	# regal ignore:line-length
+	lib.assert_equal(lib.warning_threshold_days, 14) with data.rule_data__configuration__.volatile_config_warning_threshold_days as 14
 }
 
 # =============================================================================
@@ -44,34 +44,34 @@ test_warning_threshold_days_custom if {
 test_days_until_expiration_positive if {
 	# 10 days in the future
 	rule := {"effectiveUntil": "2024-06-25T12:00:00Z"}
-	lib.assert_equal(vc.days_until_expiration(rule), 10) with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.days_until_expiration(rule), 10) with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_days_until_expiration_negative if {
 	# 5 days in the past
 	rule := {"effectiveUntil": "2024-06-10T12:00:00Z"}
-	lib.assert_equal(vc.days_until_expiration(rule), -5) with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.days_until_expiration(rule), -5) with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_days_until_expiration_zero if {
 	# Same day (less than 24 hours)
 	rule := {"effectiveUntil": "2024-06-15T23:59:59Z"}
-	lib.assert_equal(vc.days_until_expiration(rule), 0) with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.days_until_expiration(rule), 0) with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_days_until_expiration_no_date if {
 	rule := {"value": "some.rule"}
-	not vc.days_until_expiration(rule)
+	not lib.days_until_expiration(rule)
 }
 
 test_days_until_expiration_empty_date if {
 	rule := {"effectiveUntil": ""}
-	not vc.days_until_expiration(rule)
+	not lib.days_until_expiration(rule)
 }
 
 test_days_until_expiration_invalid_date if {
 	rule := {"effectiveUntil": "not-a-date"}
-	not vc.days_until_expiration(rule)
+	not lib.days_until_expiration(rule)
 }
 
 # =============================================================================
@@ -80,7 +80,12 @@ test_days_until_expiration_invalid_date if {
 
 test_is_rule_applicable_global if {
 	rule := {"value": "some.rule"}
-	vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:abc123", "sha256:abc123", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:abc123",
+		"imageDigest": "sha256:abc123",
+		"componentName": "my-component",
+	}
+	lib.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_global_explicit_empty if {
@@ -91,7 +96,12 @@ test_is_rule_applicable_global_explicit_empty if {
 		"imageDigest": "",
 		"componentNames": [],
 	}
-	vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:abc123", "sha256:abc123", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:abc123",
+		"imageDigest": "sha256:abc123",
+		"componentName": "my-component",
+	}
+	lib.is_rule_applicable(rule, context)
 }
 
 # =============================================================================
@@ -100,12 +110,22 @@ test_is_rule_applicable_global_explicit_empty if {
 
 test_is_rule_applicable_image_digest_match if {
 	rule := {"value": "some.rule", "imageDigest": "sha256:abc123def456"}
-	vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:abc123def456", "sha256:abc123def456", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:abc123def456",
+		"imageDigest": "sha256:abc123def456",
+		"componentName": "my-component",
+	}
+	lib.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_image_digest_no_match if {
 	rule := {"value": "some.rule", "imageDigest": "sha256:abc123def456"}
-	not vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:different", "sha256:different", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:different",
+		"imageDigest": "sha256:different",
+		"componentName": "my-component",
+	}
+	not lib.is_rule_applicable(rule, context)
 }
 
 # =============================================================================
@@ -114,12 +134,22 @@ test_is_rule_applicable_image_digest_no_match if {
 
 test_is_rule_applicable_image_ref_match if {
 	rule := {"value": "some.rule", "imageRef": "sha256:abc123def456"}
-	vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:abc123def456", "sha256:abc123def456", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:abc123def456",
+		"imageDigest": "sha256:abc123def456",
+		"componentName": "my-component",
+	}
+	lib.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_image_ref_no_match if {
 	rule := {"value": "some.rule", "imageRef": "sha256:abc123def456"}
-	not vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:different", "sha256:different", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:different",
+		"imageDigest": "sha256:different",
+		"componentName": "my-component",
+	}
+	not lib.is_rule_applicable(rule, context)
 }
 
 # =============================================================================
@@ -128,22 +158,42 @@ test_is_rule_applicable_image_ref_no_match if {
 
 test_is_rule_applicable_image_url_exact_match if {
 	rule := {"value": "some.rule", "imageUrl": "quay.io/repo/image"}
-	vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:abc123", "sha256:abc123", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:abc123",
+		"imageDigest": "sha256:abc123",
+		"componentName": "my-component",
+	}
+	lib.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_image_url_prefix_match if {
 	rule := {"value": "some.rule", "imageUrl": "quay.io/repo"}
-	vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:abc123", "sha256:abc123", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:abc123",
+		"imageDigest": "sha256:abc123",
+		"componentName": "my-component",
+	}
+	lib.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_image_url_no_match if {
 	rule := {"value": "some.rule", "imageUrl": "quay.io/other"}
-	not vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:abc123", "sha256:abc123", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:abc123",
+		"imageDigest": "sha256:abc123",
+		"componentName": "my-component",
+	}
+	not lib.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_image_url_with_tag_only if {
 	rule := {"value": "some.rule", "imageUrl": "quay.io/repo/image"}
-	vc.is_rule_applicable(rule, "quay.io/repo/image:v1", "", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1",
+		"imageDigest": "",
+		"componentName": "my-component",
+	}
+	lib.is_rule_applicable(rule, context)
 }
 
 # =============================================================================
@@ -152,18 +202,33 @@ test_is_rule_applicable_image_url_with_tag_only if {
 
 test_is_rule_applicable_component_name_match if {
 	rule := {"value": "some.rule", "componentNames": ["my-component", "other-component"]}
-	vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:abc123", "sha256:abc123", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:abc123",
+		"imageDigest": "sha256:abc123",
+		"componentName": "my-component",
+	}
+	lib.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_component_name_no_match if {
 	rule := {"value": "some.rule", "componentNames": ["other-component"]}
-	not vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:abc123", "sha256:abc123", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:abc123",
+		"imageDigest": "sha256:abc123",
+		"componentName": "my-component",
+	}
+	not lib.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_component_name_empty_list if {
 	# Empty componentNames should NOT match (it's a global rule then, handled separately)
 	rule := {"value": "some.rule", "componentNames": [], "imageUrl": "quay.io/other"}
-	not vc.is_rule_applicable(rule, "quay.io/repo/image:v1@sha256:abc123", "sha256:abc123", "my-component")
+	context := {
+		"imageRef": "quay.io/repo/image:v1@sha256:abc123",
+		"imageDigest": "sha256:abc123",
+		"componentName": "my-component",
+	}
+	not lib.is_rule_applicable(rule, context)
 }
 
 # =============================================================================
@@ -172,12 +237,12 @@ test_is_rule_applicable_component_name_empty_list if {
 
 test_warning_category_invalid_effective_on if {
 	rule := {"value": "some.rule", "effectiveOn": "not-a-date"}
-	lib.assert_equal(vc.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_invalid_effective_until if {
 	rule := {"value": "some.rule", "effectiveUntil": "also-not-a-date"}
-	lib.assert_equal(vc.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
 }
 
 # =============================================================================
@@ -187,7 +252,7 @@ test_warning_category_invalid_effective_until if {
 test_warning_category_pending if {
 	# effectiveOn is 30 days in the future
 	rule := {"value": "some.rule", "effectiveOn": "2024-07-15T12:00:00Z"}
-	lib.assert_equal(vc.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_not_pending_when_active if {
@@ -195,7 +260,7 @@ test_warning_category_not_pending_when_active if {
 	rule := {"value": "some.rule", "effectiveOn": "2024-06-01T12:00:00Z"}
 
 	# Should not be "pending" - it should be "no_expiration" since no effectiveUntil
-	lib.assert_equal(vc.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
 }
 
 # =============================================================================
@@ -205,7 +270,7 @@ test_warning_category_not_pending_when_active if {
 test_warning_category_expired if {
 	# effectiveUntil is 10 days in the past
 	rule := {"value": "some.rule", "effectiveUntil": "2024-06-05T12:00:00Z"}
-	lib.assert_equal(vc.warning_category(rule), "expired") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "expired") with time_lib.effective_current_time_ns as _now_ns
 }
 
 # =============================================================================
@@ -215,13 +280,13 @@ test_warning_category_expired if {
 test_warning_category_expiring_within_threshold if {
 	# effectiveUntil is 15 days in the future (within 30-day threshold)
 	rule := {"value": "some.rule", "effectiveUntil": "2024-06-30T12:00:00Z"}
-	lib.assert_equal(vc.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_expiring_at_threshold if {
 	# effectiveUntil is exactly 30 days in the future
 	rule := {"value": "some.rule", "effectiveUntil": "2024-07-15T12:00:00Z"}
-	lib.assert_equal(vc.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_not_expiring_beyond_threshold if {
@@ -229,7 +294,7 @@ test_warning_category_not_expiring_beyond_threshold if {
 	rule := {"value": "some.rule", "effectiveUntil": "2024-08-14T12:00:00Z"}
 
 	# Should not produce a category (no warning needed)
-	not vc.warning_category(rule) with time_lib.effective_current_time_ns as _now_ns
+	not lib.warning_category(rule) with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_expiring_custom_threshold if {
@@ -237,7 +302,7 @@ test_warning_category_expiring_custom_threshold if {
 	rule := {"value": "some.rule", "effectiveUntil": "2024-06-25T12:00:00Z"}
 
 	# 10 days > 7 day threshold, so no warning
-	not vc.warning_category(rule) with time_lib.effective_current_time_ns as _now_ns
+	not lib.warning_category(rule) with time_lib.effective_current_time_ns as _now_ns
 		with data.rule_data__configuration__.volatile_config_warning_threshold_days as 7
 }
 
@@ -247,18 +312,18 @@ test_warning_category_expiring_custom_threshold if {
 
 test_warning_category_no_expiration_no_dates if {
 	rule := {"value": "some.rule"}
-	lib.assert_equal(vc.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_no_expiration_with_past_effective_on if {
 	# effectiveOn in past, no effectiveUntil
 	rule := {"value": "some.rule", "effectiveOn": "2024-06-01T12:00:00Z"}
-	lib.assert_equal(vc.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_no_expiration_empty_strings if {
 	rule := {"value": "some.rule", "effectiveOn": "", "effectiveUntil": ""}
-	lib.assert_equal(vc.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
 }
 
 # =============================================================================
@@ -268,7 +333,7 @@ test_warning_category_no_expiration_empty_strings if {
 test_warning_category_pending_takes_precedence_over_no_expiration if {
 	# effectiveOn in future, no effectiveUntil - should be "pending", not "no_expiration"
 	rule := {"value": "some.rule", "effectiveOn": "2024-07-15T12:00:00Z"}
-	lib.assert_equal(vc.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_with_both_dates_active_and_expiring if {
@@ -278,5 +343,5 @@ test_warning_category_with_both_dates_active_and_expiring if {
 		"effectiveOn": "2024-06-01T12:00:00Z",
 		"effectiveUntil": "2024-06-25T12:00:00Z",
 	}
-	lib.assert_equal(vc.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
+	lib.assert_equal(lib.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
 }

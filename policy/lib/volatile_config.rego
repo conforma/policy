@@ -18,15 +18,14 @@
 # warning categories based on lifecycle events (pending activation, expiring soon,
 # no expiration, expired, invalid dates).
 
-package lib.volatile_config
+package lib
 
 import rego.v1
 
-import data.lib
 import data.lib.time as time_lib
 
 # Get configurable warning threshold from rule_data (default defined in rule_data_defaults)
-warning_threshold_days := lib.rule_data("volatile_config_warning_threshold_days")
+warning_threshold_days := rule_data("volatile_config_warning_threshold_days")
 
 # Calculate days until a rule expires (returns integer days, can be negative if expired)
 days_until_expiration(rule) := days if {
@@ -39,43 +38,53 @@ days_until_expiration(rule) := days if {
 	days := floor(diff_ns / (((24 * 60) * 60) * 1000000000))
 }
 
-# Check if rule applies to current image - global rule (no image/component constraints)
-is_rule_applicable(rule, image_ref, image_digest, component_name) if {
+# Check if rule applies to current image/component
+# context is an object with optional fields: imageRef, imageDigest, componentName
+# Returns true if the rule matches based on any of the following criteria:
+# - Global rule (no image/component constraints)
+# - Match by imageRef (DEPRECATED: same as imageDigest, both are digests)
+# - Match by imageUrl prefix (URL without tag)
+# - Match by imageDigest
+# - Match by componentNames
+is_rule_applicable(rule, _) if {
+	# Global rule: no constraints specified
 	object.get(rule, "imageRef", "") == ""
 	object.get(rule, "imageUrl", "") == ""
 	object.get(rule, "imageDigest", "") == ""
 	count(object.get(rule, "componentNames", [])) == 0
 }
 
-# Check if rule applies - match by imageRef (DEPRECATED: same as imageDigest, both are digests)
-is_rule_applicable(rule, image_ref, image_digest, component_name) if {
+is_rule_applicable(rule, context) if {
+	# Match by imageRef (DEPRECATED: same as imageDigest, both are digests)
 	rule_image_ref := object.get(rule, "imageRef", "")
 	rule_image_ref != ""
-	rule_image_ref == image_digest
+	context_digest := object.get(context, "imageDigest", "")
+	rule_image_ref == context_digest
 }
 
-# Check if rule applies - match by imageUrl prefix (URL without tag)
-is_rule_applicable(rule, image_ref, image_digest, component_name) if {
+is_rule_applicable(rule, context) if {
+	# Match by imageUrl prefix (URL without tag)
 	rule_image_url := object.get(rule, "imageUrl", "")
 	rule_image_url != ""
-
-	# imageUrl is a URL prefix without tag, match against repo portion of image_ref
-	_image_url_matches(rule_image_url, image_ref)
+	context_image_ref := object.get(context, "imageRef", "")
+	_image_url_matches(rule_image_url, context_image_ref)
 }
 
-# Check if rule applies - match by imageDigest
-is_rule_applicable(rule, image_ref, image_digest, component_name) if {
+is_rule_applicable(rule, context) if {
+	# Match by imageDigest
 	rule_image_digest := object.get(rule, "imageDigest", "")
 	rule_image_digest != ""
-	rule_image_digest == image_digest
+	context_digest := object.get(context, "imageDigest", "")
+	rule_image_digest == context_digest
 }
 
-# Check if rule applies - match by componentNames
-is_rule_applicable(rule, image_ref, image_digest, component_name) if {
+is_rule_applicable(rule, context) if {
+	# Match by componentNames
 	component_names := object.get(rule, "componentNames", [])
 	count(component_names) > 0
+	context_component_name := object.get(context, "componentName", "")
 	some name in component_names
-	name == component_name
+	name == context_component_name
 }
 
 # Determine warning category - check for invalid dates first
@@ -142,10 +151,7 @@ _parse_date_safe(date_str) := ns if {
 # Helper: check if effectiveOn is active (in the past) or not set
 _is_active_or_unset(effective_on) if {
 	effective_on == ""
-}
-
-_is_active_or_unset(effective_on) if {
-	effective_on != ""
+} else if {
 	on_ns := _parse_date_safe(effective_on)
 	on_ns != null
 	now_ns := time_lib.effective_current_time_ns

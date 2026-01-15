@@ -1,0 +1,69 @@
+= Volatile Configuration Warnings Package
+
+This package generates warnings for volatile configuration rules that have lifecycle events requiring attention. Volatile config rules can include or exclude policy rules with time-based constraints (effectiveOn/effectiveUntil). Warnings help users proactively manage rule expirations and activations. The optional `reference` field in volatile criteria can be used to link to related documentation (e.g., Jira issues) but is not included in warnings.
+
+== Package Name
+
+* `volatile_config`
+
+== Rules Included
+
+[#volatile_config__expiring_rule]
+=== link:#volatile_config__expiring_rule[Volatile rule expiring soon]
+
+Generates a warning when a volatile configuration rule will expire within the configured warning threshold (default 30 days). This provides advance notice to extend or replace the rule before it expires.
+
+*Solution*: Review the volatile configuration rule and decide whether to extend its effectiveUntil date or remove it. If the rule is no longer needed, you can safely let it expire.
+
+* Rule type: [rule-type-indicator warning]#WARNING#
+* WARNING message: `Volatile %s rule '%s' expires in %d days (effective until: %s)`
+* Code: `volatile_config.expiring_rule`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L59[Source, window="_blank"]
+
+[#volatile_config__expired_rule]
+=== link:#volatile_config__expired_rule[Volatile rule has expired]
+
+Generates a warning when a volatile configuration rule has passed its effectiveUntil date. Expired rules are no longer active and should be removed from the policy configuration.
+
+*Solution*: Remove the expired volatile configuration rule from your policy. The rule is no longer having any effect and keeping it may cause confusion.
+
+* Rule type: [rule-type-indicator warning]#WARNING#
+* WARNING message: `Volatile %s rule '%s' has expired (effective until: %s)`
+* Code: `volatile_config.expired_rule`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L112[Source, window="_blank"]
+
+[#volatile_config__invalid_config]
+=== link:#volatile_config__invalid_config[Volatile rule has invalid configuration]
+
+Generates a warning when a volatile configuration rule has invalid date values that cannot be parsed. This indicates a configuration error that should be corrected.
+
+*Solution*: Correct the date format in the volatile configuration rule. Dates must be in RFC 3339 format (e.g., "2024-12-31T00:00:00Z").
+
+* Rule type: [rule-type-indicator warning]#WARNING#
+* WARNING message: `Volatile %s rule '%s' has invalid date configuration (effectiveOn: %s, effectiveUntil: %s)`
+* Code: `volatile_config.invalid_config`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L137[Source, window="_blank"]
+
+[#volatile_config__no_expiration]
+=== link:#volatile_config__no_expiration[Volatile rule has no expiration]
+
+Generates a warning when a volatile configuration rule has no effectiveUntil date set. Rules without expiration dates may accumulate over time and should be periodically reviewed.
+
+*Solution*: Consider adding an effectiveUntil date to the volatile configuration rule to ensure it is reviewed periodically. Permanent exceptions should be documented with justification.
+
+* Rule type: [rule-type-indicator warning]#WARNING#
+* WARNING message: `Volatile %s rule '%s' has no expiration date set`
+* Code: `volatile_config.no_expiration`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L86[Source, window="_blank"]
+
+[#volatile_config__pending_rule]
+=== link:#volatile_config__pending_rule[Volatile rule pending activation]
+
+Generates a warning when a volatile configuration rule has an effectiveOn date in the future, indicating it will become active at that time.
+
+*Solution*: This is informational. The volatile configuration rule will automatically become active on the effective date. No action is required unless you want to adjust the activation timing.
+
+* Rule type: [rule-type-indicator warning]#WARNING#
+* WARNING message: `Volatile %s rule '%s' is pending activation (effective on: %s)`
+* Code: `volatile_config.pending_rule`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L34[Source, window="_blank"]
