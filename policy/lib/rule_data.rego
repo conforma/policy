@@ -132,6 +132,9 @@ rule_data_defaults := {
 	"trusted_tasks": {},
 	# Number of days before a version of the Task expires that warnings are reported
 	"task_expiry_warning_days": 0,
+	# Number of days before a volatile config rule expires that warnings are reported
+	# Used in release/volatile_config
+	"volatile_config_warning_threshold_days": 30,
 	# The gpg-pubkey RPM does not abide to the rule of a single RPM name being installed.
 	"non_unique_rpm_names": ["gpg-pubkey"],
 }
