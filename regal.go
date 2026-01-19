@@ -23,7 +23,7 @@ import (
 
 	// Register custom rego functions
 	_ "github.com/conforma/cli/cmd/validate"
-	"github.com/styrainc/regal/cmd"
+	"github.com/open-policy-agent/regal/cmd"
 )
 
 func main() {
