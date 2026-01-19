@@ -213,7 +213,7 @@ lint: ## Runs Rego linter
 	@go run github.com/google/addlicense -c '$(COPY)' -y '' -s -check $(LICENSE_IGNORE) . | sed 's/^/Missing license header in: /g'
 # piping to sed above looses the exit code, luckily addlicense is fast so we invoke it for the second time to exit 1 in case of issues
 	@go run github.com/google/addlicense -c '$(COPY)' -y '' -s -check $(LICENSE_IGNORE) . >/dev/null 2>&1
-	@go run github.com/styrainc/regal lint . $(if $(GITHUB_ACTIONS),--format=github)
+	@go run github.com/open-policy-agent/regal lint . $(if $(GITHUB_ACTIONS),--format=github)
 
 .PHONY: lint-fix
 lint-fix: ## Fix linting issues automagically

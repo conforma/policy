@@ -20,7 +20,7 @@ import (
 	_ "github.com/conforma/cli"
 	_ "github.com/google/addlicense"
 	_ "github.com/open-policy-agent/conftest"
-	_ "github.com/styrainc/regal"
+	_ "github.com/open-policy-agent/regal"
 	_ "github.com/tektoncd/cli/cmd/tkn"
 	_ "oras.land/oras/cmd/oras"
 )
