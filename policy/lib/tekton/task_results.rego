@@ -23,11 +23,10 @@ _task_result_image_urls(task) := _non_empty_strings(task_result_endswith(task, "
 _task_result_artifact_uris(task) := _non_empty_strings(task_result_endswith(task, "ARTIFACT_URI"))
 
 # returns the image url from the task result IMAGES
-_task_result_images_urls(task) := _non_empty_strings([v |
+_task_result_images_urls(task) := _non_empty_strings([split_item[0] |
 	some result in task_result_endswith(task, "IMAGES")
 	some image in split(result, ",")
 	split_item := split(image, "@")
-	v := split_item[0]
 ])
 
 # returns the image url from the task result ARTIFACT_OUTPUTS
@@ -53,11 +52,10 @@ _task_result_image_digests(task) := _non_empty_strings(task_result_endswith(task
 _task_result_artifact_digests(task) := _non_empty_strings(task_result_endswith(task, "ARTIFACT_DIGEST"))
 
 # returns the image digest from the task result IMAGES
-_task_result_images_digests(task) := _non_empty_strings([v |
+_task_result_images_digests(task) := _non_empty_strings([split_item[1] |
 	some result in task_result_endswith(task, "IMAGES")
 	some image in split(result, ",")
 	split_item := split(image, "@")
-	v := split_item[1]
 ])
 
 # returns the image digest from the task result ARTIFACT_OUTPUTS
