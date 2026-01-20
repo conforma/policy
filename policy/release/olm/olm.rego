@@ -401,7 +401,7 @@ _related_images_not_in_snapshot := [related_image.ref |
 # contains the digest of a referring image manifest containing the related image json
 # array. We need to find the blob sha in order to download the related images.
 _related_images(tested_image) := [e |
-	some imgs in [[r |
+	imgs := [r |
 		input_image := image.parse(tested_image.ref)
 
 		some related in lib.results_named(_related_images_result_name)
@@ -421,7 +421,7 @@ _related_images(tested_image) := [e |
 			"path": "relatedImage",
 			"ref": image.parse(related_ref),
 		}
-	]]
+	]
 	some i in imgs
 
 	e := {"ref": i.ref, "path": i.path}
