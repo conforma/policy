@@ -349,10 +349,8 @@ deny contains result if {
 #   - redhat
 #   effective_on: 2025-5-01T00:00:00Z
 deny contains result if {
-	# Parse manifests from snapshot
-	some csv_manifest in _csv_manifests
-
 	# If we have a CSV manifest, ensure that the input image is not an image index
+	count(_csv_manifests) > 0
 	image.is_image_index(input.image.ref)
 
 	result := lib.result_helper_with_term(rego.metadata.chain(), [input.image.ref], input.image.ref)
