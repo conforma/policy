@@ -55,7 +55,7 @@ Every manifest in an OLM bundle must be of an allowed resource kind, as defined 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The %q manifest kind is not in the list of OLM allowed resource kinds.`
 * Code: `olm.allowed_resource_kinds`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L361[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L359[Source, window="_blank"]
 
 [#olm__olm_bundle_multi_arch]
 === link:#olm__olm_bundle_multi_arch[OLM bundle images are not multi-arch]
