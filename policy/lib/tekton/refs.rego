@@ -124,11 +124,10 @@ _ref_name(task) := value if {
 	# Location of labels in SLSA Provenance v1.0
 	some label, value in task.metadata.labels
 	label == "tekton.dev/task"
-} else := name if {
+} else := value if {
 	# Location of labels in SLSA Provenance v0.2
 	some label, value in task.invocation.environment.labels
 	label == "tekton.dev/task"
-	name := value
 } else := name if {
 	# Some resolvers specify the name of the Task as a parameter, e.g. bundles and hub.
 	name := _param(_ref(task), "name", "")
