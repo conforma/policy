@@ -458,7 +458,7 @@ all_image_ref(manifest) := [e |
 			}
 		],
 		[r |
-			some _, values in walk(manifest)
+			some values in walk(manifest)
 			some key, val in values.metadata.annotations
 			some annotation in regex.split(`(,|;|\n|\s+)`, val)
 			ref := image.parse(trim_space(annotation))
