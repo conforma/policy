@@ -14,8 +14,10 @@ single_test_case(branch, expected_results) if {
 
 	# regal ignore:with-outside-test-context
 	lib.assert_equal_results(expected_results, git_branch.deny) with input as mock_input
-		with lib.rule_data as mock_rule_data
-		with lib.tasks_from_pipelinerun as mock_tasks
+		# regal ignore:with-outside-test-context
+with 		lib.rule_data as mock_rule_data
+		# regal ignore:with-outside-test-context
+with 		lib.tasks_from_pipelinerun as mock_tasks
 }
 
 test_allow_with_main_branch if {
