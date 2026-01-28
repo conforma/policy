@@ -31,6 +31,9 @@ import data.lib
 import data.lib.json as j
 import data.lib.tekton
 
+# Batch fetch all manifests for tasks in the pipelineRun attestation
+_manifests := ec.oci.image_manifests(lib.pipelinerun_bundle_refs)
+
 # METADATA
 # title: Required tasks list for pipeline was provided
 # description: >-
@@ -184,7 +187,7 @@ deny contains result if {
 	flattened_required_tasks := flatten_list_to_sorted_array(required_task_names)
 
 	some att in lib.pipelinerun_attestations
-	some untrusted_task in tekton.untrusted_task_refs(lib.tasks_from_pipelinerun)
+	some untrusted_task in tekton.untrusted_task_refs(lib.tasks_from_pipelinerun, _manifests)
 
 	# Check if any untrusted task matches a required task
 	some required_task_name in flattened_required_tasks
