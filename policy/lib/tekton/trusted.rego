@@ -142,14 +142,14 @@ _trusted_task_rules_data := {
 default _data_allow_array := []
 
 _data_allow_array := data.trusted_task_rules.allow if {
-	data.trusted_task_rules
+	is_object(data.trusted_task_rules)
 }
 
 # Safely extract deny from data.trusted_task_rules
 default _data_deny_array := []
 
 _data_deny_array := data.trusted_task_rules.deny if {
-	data.trusted_task_rules
+	is_object(data.trusted_task_rules)
 }
 
 # Safely extract allow from rule_data

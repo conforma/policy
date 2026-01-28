@@ -23,14 +23,16 @@ test_when_package_precedence if {
 }
 
 test_effective_current_time_ns if {
+	now := time.now_ns()
+
 	# with no config at all
-	lib.assert_equal(lib_time.effective_current_time_ns, time.now_ns())
+	lib.assert_equal(lib_time.effective_current_time_ns, now)
 
 	# no config.policy
-	lib.assert_equal(lib_time.effective_current_time_ns, time.now_ns()) with data.config as {}
+	lib.assert_equal(lib_time.effective_current_time_ns, now) with data.config as {}
 
 	# no config.policy.when_ns
-	lib.assert_equal(lib_time.effective_current_time_ns, time.now_ns()) with data.config.policy as {}
+	lib.assert_equal(lib_time.effective_current_time_ns, now) with data.config.policy as {}
 	lib.assert_equal(
 		lib_time.effective_current_time_ns,
 		future_timestamp,

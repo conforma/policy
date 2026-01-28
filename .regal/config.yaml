@@ -70,3 +70,16 @@ rules:
         files:
           # Using fn(_) is a common pattern to mock functions in tests.
           - "*_test.rego"
+  imports:
+    # TODO: These import-related violations are temporarily ignored. They should
+    # be addressed together in a separate PR.
+    # - unresolved-reference: All lib.XXX references need to be changed 
+    #   to data.lib.XXX (e.g., lib.assert_equal() → data.lib.assert_equal()).
+    # - pointless-import: Packages under policy/lib that reference other packages from
+    #   policy/lib do not need to import them since they can directly reference them by
+    #   full path (e.g., data.lib.XXX). Once unresolved-reference is fixed, these imports
+    #   can be removed entirely.
+    unresolved-reference:
+      level: ignore
+    pointless-import:
+      level: ignore
