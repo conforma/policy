@@ -245,6 +245,44 @@ test_warning_category_invalid_effective_until if {
 	lib.assert_equal(lib.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
 }
 
+test_warning_category_empty_strings_not_invalid if {
+	# Empty strings should not be considered invalid (they're just not set)
+	rule := {"value": "some.rule", "effectiveOn": "", "effectiveUntil": ""}
+
+	# Should not be "invalid" - empty strings are valid (not set)
+	not lib.warning_category(rule) == "invalid" with time_lib.effective_current_time_ns as _now_ns
+}
+
+test_warning_category_invalid_on_valid_until if {
+	# effectiveOn invalid, effectiveUntil valid - should be "invalid"
+	rule := {
+		"value": "some.rule",
+		"effectiveOn": "not-a-date",
+		"effectiveUntil": "2024-06-25T12:00:00Z",
+	}
+	lib.assert_equal(lib.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
+}
+
+test_warning_category_valid_on_invalid_until if {
+	# effectiveOn valid, effectiveUntil invalid - should be "invalid"
+	rule := {
+		"value": "some.rule",
+		"effectiveOn": "2024-06-01T12:00:00Z",
+		"effectiveUntil": "not-a-date",
+	}
+	lib.assert_equal(lib.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
+}
+
+test_warning_category_both_dates_invalid if {
+	# Both dates invalid - should be "invalid"
+	rule := {
+		"value": "some.rule",
+		"effectiveOn": "not-a-date",
+		"effectiveUntil": "also-not-a-date",
+	}
+	lib.assert_equal(lib.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
+}
+
 # =============================================================================
 # warning_category tests - pending
 # =============================================================================
@@ -344,4 +382,56 @@ test_warning_category_with_both_dates_active_and_expiring if {
 		"effectiveUntil": "2024-06-25T12:00:00Z",
 	}
 	lib.assert_equal(lib.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
+}
+
+test_warning_category_pending_with_expired_until if {
+	# effectiveOn in future (pending takes precedence), effectiveUntil in past
+	rule := {
+		"value": "some.rule",
+		"effectiveOn": "2024-07-15T12:00:00Z",
+		"effectiveUntil": "2024-06-05T12:00:00Z",
+	}
+	lib.assert_equal(lib.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
+}
+
+test_warning_category_pending_with_expiring_until if {
+	# effectiveOn in future (pending takes precedence), effectiveUntil expiring
+	rule := {
+		"value": "some.rule",
+		"effectiveOn": "2024-07-15T12:00:00Z",
+		"effectiveUntil": "2024-06-25T12:00:00Z",
+	}
+	lib.assert_equal(lib.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
+}
+
+test_warning_category_pending_with_future_until_beyond_threshold if {
+	# effectiveOn in future (pending takes precedence), effectiveUntil beyond threshold
+	rule := {
+		"value": "some.rule",
+		"effectiveOn": "2024-07-15T12:00:00Z",
+		"effectiveUntil": "2024-08-14T12:00:00Z",
+	}
+	lib.assert_equal(lib.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
+}
+
+test_warning_category_active_with_expired_until if {
+	# effectiveOn in past, effectiveUntil in past
+	rule := {
+		"value": "some.rule",
+		"effectiveOn": "2024-06-01T12:00:00Z",
+		"effectiveUntil": "2024-06-05T12:00:00Z",
+	}
+	lib.assert_equal(lib.warning_category(rule), "expired") with time_lib.effective_current_time_ns as _now_ns
+}
+
+test_warning_category_active_with_future_until_beyond_threshold if {
+	# effectiveOn in past, effectiveUntil beyond threshold (no warning)
+	rule := {
+		"value": "some.rule",
+		"effectiveOn": "2024-06-01T12:00:00Z",
+		"effectiveUntil": "2024-08-14T12:00:00Z",
+	}
+
+	# Should not produce a category (no warning needed)
+	not lib.warning_category(rule) with time_lib.effective_current_time_ns as _now_ns
 }

@@ -27,15 +27,15 @@ import data.lib.time as time_lib
 # Get configurable warning threshold from rule_data (default defined in rule_data_defaults)
 warning_threshold_days := rule_data("volatile_config_warning_threshold_days")
 
+# Nanoseconds per day constant
+_ns_per_day := 86400000000000
+
 # Calculate days until a rule expires (returns integer days, can be negative if expired)
 days_until_expiration(rule) := days if {
-	effective_until := object.get(rule, "effectiveUntil", "")
-	effective_until != ""
-	until_ns := _parse_date_safe(effective_until)
-	until_ns != null
+	until_ns := _get_effective_until_ns(rule)
 	now_ns := time_lib.effective_current_time_ns
 	diff_ns := until_ns - now_ns
-	days := floor(diff_ns / (((24 * 60) * 60) * 1000000000))
+	days := floor(diff_ns / _ns_per_day)
 }
 
 # Check if rule applies to current image/component
@@ -89,73 +89,112 @@ is_rule_applicable(rule, context) if {
 
 # Determine warning category - check for invalid dates first
 warning_category(rule) := "invalid" if {
-	effective_on := object.get(rule, "effectiveOn", "")
-	effective_on != ""
-	_parse_date_safe(effective_on) == null
+	_is_date_invalid(_get_effective_on(rule))
 }
 
 warning_category(rule) := "invalid" if {
-	effective_until := object.get(rule, "effectiveUntil", "")
-	effective_until != ""
-	_parse_date_safe(effective_until) == null
+	_is_date_invalid(_get_effective_until(rule))
 }
 
 # Pending: effectiveOn is in the future
 warning_category(rule) := "pending" if {
-	effective_on := object.get(rule, "effectiveOn", "")
-	effective_on != ""
-	on_ns := _parse_date_safe(effective_on)
-	on_ns != null
-	now_ns := time_lib.effective_current_time_ns
-	on_ns > now_ns
+	_is_effective_on_in_future(rule)
+	_is_effective_until_valid_or_empty(rule)
 }
 
 # Expired: effectiveUntil is in the past
 warning_category(rule) := "expired" if {
-	effective_until := object.get(rule, "effectiveUntil", "")
-	effective_until != ""
-	until_ns := _parse_date_safe(effective_until)
-	until_ns != null
-	now_ns := time_lib.effective_current_time_ns
-	until_ns < now_ns
+	_is_effective_until_expired(rule)
+	_is_effective_on_valid_and_not_future(rule)
 }
 
 # Expiring: effectiveUntil is within the warning threshold
 warning_category(rule) := "expiring" if {
-	effective_until := object.get(rule, "effectiveUntil", "")
-	effective_until != ""
-	until_ns := _parse_date_safe(effective_until)
-	until_ns != null
-	now_ns := time_lib.effective_current_time_ns
-	until_ns >= now_ns # Not yet expired
-	days := days_until_expiration(rule)
-	days <= warning_threshold_days
+	_is_effective_until_expiring(rule)
+	_is_effective_on_valid_and_not_future(rule)
 }
 
 # No expiration: rule is active (effectiveOn in past or not set) but has no effectiveUntil
 warning_category(rule) := "no_expiration" if {
-	# No effectiveUntil date set
-	object.get(rule, "effectiveUntil", "") == ""
-
-	# And not pending (effectiveOn is in the past or not set)
-	effective_on := object.get(rule, "effectiveOn", "")
-	_is_active_or_unset(effective_on)
+	_get_effective_until(rule) == ""
+	_is_effective_on_active_or_unset(rule)
 }
 
-# Helper: safely parse RFC3339 date, returns null on failure
+# =============================================================================
+# Helper functions for date extraction and validation
+# =============================================================================
+
+# Extract effectiveOn date string from rule
+_get_effective_on(rule) := object.get(rule, "effectiveOn", "")
+
+# Extract effectiveUntil date string from rule
+_get_effective_until(rule) := object.get(rule, "effectiveUntil", "")
+
+# Safely parse RFC3339 date, undefined on failure
 _parse_date_safe(date_str) := ns if {
 	date_str != ""
 	ns := time.parse_rfc3339_ns(date_str)
-} else := null
+}
 
-# Helper: check if effectiveOn is active (in the past) or not set
-_is_active_or_unset(effective_on) if {
-	effective_on == ""
+# Check if a date string is invalid (non-empty but unparseable)
+# Empty strings are considered valid (not set, not invalid)
+_is_date_invalid(date_str) if {
+	date_str != ""
+	not _parse_date_safe(date_str)
+}
+
+# Get effectiveOn as nanoseconds, undefined if invalid or empty
+_get_effective_on_ns(rule) := _parse_date_safe(_get_effective_on(rule))
+
+# Get effectiveUntil as nanoseconds, undefined if invalid or empty
+_get_effective_until_ns(rule) := _parse_date_safe(_get_effective_until(rule))
+
+# Check if effectiveOn is in the future
+_is_effective_on_in_future(rule) if {
+	on_ns := _get_effective_on_ns(rule)
+	now_ns := time_lib.effective_current_time_ns
+	on_ns > now_ns
+}
+
+# Check if effectiveOn is active (in the past) or not set
+_is_effective_on_active_or_unset(rule) if {
+	_get_effective_on(rule) == ""
 } else if {
-	on_ns := _parse_date_safe(effective_on)
-	on_ns != null
+	on_ns := _get_effective_on_ns(rule)
 	now_ns := time_lib.effective_current_time_ns
 	on_ns <= now_ns
+}
+
+# Check if effectiveOn is valid (if set) and not in the future
+_is_effective_on_valid_and_not_future(rule) if {
+	_get_effective_on(rule) == ""
+} else if {
+	on_ns := _get_effective_on_ns(rule)
+	now_ns := time_lib.effective_current_time_ns
+	on_ns <= now_ns
+}
+
+# Check if effectiveUntil is valid (if set) or empty
+_is_effective_until_valid_or_empty(rule) if {
+	_get_effective_until(rule) == ""
+} else if {
+	_get_effective_until_ns(rule)
+}
+
+# Check if effectiveUntil is expired (in the past)
+_is_effective_until_expired(rule) if {
+	until_ns := _get_effective_until_ns(rule)
+	now_ns := time_lib.effective_current_time_ns
+	until_ns < now_ns
+}
+
+# Check if effectiveUntil is expiring (within warning threshold)
+_is_effective_until_expiring(rule) if {
+	until_ns := _get_effective_until_ns(rule)
+	now_ns := time_lib.effective_current_time_ns
+	until_ns >= now_ns
+	days := days_until_expiration(rule)
+	days <= warning_threshold_days
 }
 
 # Helper: check if imageUrl matches the image reference
