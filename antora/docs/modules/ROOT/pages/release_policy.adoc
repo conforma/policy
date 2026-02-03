@@ -103,6 +103,7 @@ a| Include the set of policy rules required for Red Hat products.
 
 Rules included:
         
+* xref:packages/release_maven_repos.adoc#maven_repos_package[All maven artifacts have known repository URLs: All maven artifacts have known repository URLs]        
 * xref:packages/release_attestation_type.adoc#attestation_type__deprecated_policy_attestation_format[Attestation type: Deprecated policy attestation format]        
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type[Attestation type: Known attestation type found]        
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_types_provided[Attestation type: Known attestation types provided]        
@@ -233,6 +234,13 @@ Rules included:
 * xref:packages/release_rpm_ostree_task.adoc#rpm_ostree_task__builder_image_param[rpm-ostree Task: Builder image parameter]        
 * xref:packages/release_rpm_ostree_task.adoc#rpm_ostree_task__rule_data[rpm-ostree Task: Rule data]
 
+| [#redhat_maven]`redhat_maven`
+a| Ruleset for validating artifacts built via Red Hat Maven repositories.
+
+Rules included:
+        
+* xref:packages/release_maven_repos.adoc#maven_repos_package[All maven artifacts have known repository URLs: All maven artifacts have known repository URLs]
+
 | [#redhat_rpms]`redhat_rpms`
 a| Include the set of policy rules required for building Red Hat RPMs.
 
@@ -335,6 +343,9 @@ Rules included:
 |===
 |*Package Name*
 |*Description*
+
+| xref:packages/release_maven_repos.adoc[maven_repos]
+a| Each Maven package listed in an SBOM must specify the repository URL that it comes from, and that URL must be present in the list of known and permitted Maven repositories. If no URL is specified, the package is assumed to come from Maven Central.
 
 | xref:packages/release_attestation_type.adoc[attestation_type]
 a| Sanity checks related to the format of the image build's attestation.

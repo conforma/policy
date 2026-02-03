@@ -1,0 +1,31 @@
+= All maven artifacts have known repository URLs Package
+
+Each Maven package listed in an SBOM must specify the repository URL that it comes from, and that URL must be present in the list of known and permitted Maven repositories. If no URL is specified, the package is assumed to come from Maven Central.
+
+== Package Name
+
+* `maven_repos`
+
+== Rules Included
+
+[#maven_repos__deny_unpermitted_urls]
+=== link:#maven_repos__deny_unpermitted_urls[Known Repository URLs]
+
+
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `maven_repos.deny_unpermitted_urls`
+* Effective from: `2026-05-10T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/maven_repos/maven_repos.rego#L34[Source, window="_blank"]
+
+[#maven_repos__policy_data_missing]
+=== link:#maven_repos__policy_data_missing[Missing Policy Data]
+
+
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Policy data is missing the required %q list`
+* Code: `maven_repos.policy_data_missing`
+* Effective from: `2026-05-10T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/maven_repos/maven_repos.rego#L22[Source, window="_blank"]
