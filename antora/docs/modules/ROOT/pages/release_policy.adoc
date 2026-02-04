@@ -56,7 +56,12 @@ Rules included:
 * xref:packages/release_slsa_source_correlated.adoc#slsa_source_correlated__attested_source_code_reference[SLSA - Verification model - Source: Source reference]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__valid[SPDX SBOM: Valid]        
 * xref:packages/release_tasks.adoc#tasks__pipeline_has_tasks[Tasks: Pipeline run includes at least one task]        
-* xref:packages/release_tasks.adoc#tasks__successful_pipeline_tasks[Tasks: Successful pipeline tasks]
+* xref:packages/release_tasks.adoc#tasks__successful_pipeline_tasks[Tasks: Successful pipeline tasks]        
+* xref:packages/release_volatile_config.adoc#volatile_config__expiring_rule[Volatile Configuration Warnings: Volatile rule expiring soon]        
+* xref:packages/release_volatile_config.adoc#volatile_config__expired_rule[Volatile Configuration Warnings: Volatile rule has expired]        
+* xref:packages/release_volatile_config.adoc#volatile_config__invalid_config[Volatile Configuration Warnings: Volatile rule has invalid configuration]        
+* xref:packages/release_volatile_config.adoc#volatile_config__no_expiration[Volatile Configuration Warnings: Volatile rule has no expiration]        
+* xref:packages/release_volatile_config.adoc#volatile_config__pending_rule[Volatile Configuration Warnings: Volatile rule pending activation]
 
 | [#policy_data]`policy_data`
 a| Include policy rules responsible for validating rule data.
@@ -214,6 +219,11 @@ Rules included:
 * xref:packages/release_trusted_task.adoc#trusted_task__current[Trusted Task checks: Tasks using the latest versions]        
 * xref:packages/release_trusted_task.adoc#trusted_task__valid_trusted_artifact_inputs[Trusted Task checks: Trusted Artifact produced in pipeline]        
 * xref:packages/release_trusted_task.adoc#trusted_task__trusted_parameters[Trusted Task checks: Trusted parameters]        
+* xref:packages/release_volatile_config.adoc#volatile_config__expiring_rule[Volatile Configuration Warnings: Volatile rule expiring soon]        
+* xref:packages/release_volatile_config.adoc#volatile_config__expired_rule[Volatile Configuration Warnings: Volatile rule has expired]        
+* xref:packages/release_volatile_config.adoc#volatile_config__invalid_config[Volatile Configuration Warnings: Volatile rule has invalid configuration]        
+* xref:packages/release_volatile_config.adoc#volatile_config__no_expiration[Volatile Configuration Warnings: Volatile rule has no expiration]        
+* xref:packages/release_volatile_config.adoc#volatile_config__pending_rule[Volatile Configuration Warnings: Volatile rule pending activation]        
 * xref:packages/release_rpm_ostree_task.adoc#rpm_ostree_task__builder_image_param[rpm-ostree Task: Builder image parameter]        
 * xref:packages/release_rpm_ostree_task.adoc#rpm_ostree_task__rule_data[rpm-ostree Task: Rule data]
 
@@ -469,6 +479,9 @@ a| Conforma requires that each build was subjected to a set of tests and that th
 
 | xref:packages/release_trusted_task.adoc[trusted_task]
 a| This package is used to verify all the Tekton Tasks involved in building the image are trusted. Trust is established by comparing the Task references found in the SLSA Provenance with a pre-defined list of trusted Tasks, which is expected to be provided as a data source that creates the `data.trusted_tasks` in the format demonstrated at https://github.com/conforma/policy/blob/main/example/data/trusted_tekton_tasks.yml. The list can be extended or customized using the `trusted_tasks` rule data key which is merged into the `trusted_tasks` data.
+
+| xref:packages/release_volatile_config.adoc[volatile_config]
+a| This package generates warnings for volatile configuration rules that have lifecycle events requiring attention. Volatile config rules can include or exclude policy rules with time-based constraints (effectiveOn/effectiveUntil). Warnings help users proactively manage rule expirations and activations. The optional `reference` field in volatile criteria can be used to link to related documentation (e.g., Jira issues) but is not included in warnings.
 
 | xref:packages/release_rpm_ostree_task.adoc[rpm_ostree_task]
 a| This package is responsible for verifying the rpm-ostree Tekton Task was executed with the expected parameters.
