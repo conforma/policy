@@ -18,7 +18,7 @@ Ensure that the all required tasks are resolved from trusted tasks.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s is required and present but not from a trusted task`
 * Code: `tasks.required_untrusted_task_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L164[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L167[Source, window="_blank"]
 
 [#tasks__required_tasks_found]
 === link:#tasks__required_tasks_found[All required tasks were included in the pipeline]
@@ -30,7 +30,7 @@ Ensure that the set of required tasks are included in the PipelineRun attestatio
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s is missing`
 * Code: `tasks.required_tasks_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L140[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L143[Source, window="_blank"]
 
 [#tasks__data_provided]
 === link:#tasks__data_provided[Data provided]
@@ -42,7 +42,7 @@ Confirm the expected data keys have been provided in the expected format. The ke
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `tasks.data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L291[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L294[Source, window="_blank"]
 
 [#tasks__future_required_tasks_found]
 === link:#tasks__future_required_tasks_found[Future required tasks were found]
@@ -54,7 +54,7 @@ Produce a warning when a task that will be required in the future was not includ
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `%s is missing and will be required on %s`
 * Code: `tasks.future_required_tasks_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L55[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L58[Source, window="_blank"]
 
 [#tasks__pinned_task_refs]
 === link:#tasks__pinned_task_refs[Pinned Task references]
@@ -66,7 +66,7 @@ Ensure that all Tasks in the SLSA Provenance attestation use an immuntable refer
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task %s is used by pipeline task %s via an unpinned reference.`
 * Code: `tasks.pinned_task_refs`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L225[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L228[Source, window="_blank"]
 
 [#tasks__pipeline_has_tasks]
 === link:#tasks__pipeline_has_tasks[Pipeline run includes at least one task]
@@ -78,7 +78,7 @@ Ensure that at least one Task is present in the PipelineRun attestation.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `No tasks found in PipelineRun attestation`
 * Code: `tasks.pipeline_has_tasks`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L85[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L88[Source, window="_blank"]
 
 [#tasks__pipeline_required_tasks_list_provided]
 === link:#tasks__pipeline_required_tasks_list_provided[Required tasks list for pipeline was provided]
@@ -90,7 +90,7 @@ Produce a warning if the required tasks list rule data was not provided.
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Required tasks do not exist for pipeline`
 * Code: `tasks.pipeline_required_tasks_list_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L34[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L37[Source, window="_blank"]
 
 [#tasks__required_tasks_list_provided]
 === link:#tasks__required_tasks_list_provided[Required tasks list was provided]
@@ -102,7 +102,7 @@ Confirm the `required-tasks` rule data was provided, since it's required by the 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Missing required required-tasks data`
 * Code: `tasks.required_tasks_list_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L201[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L204[Source, window="_blank"]
 
 [#tasks__successful_pipeline_tasks]
 === link:#tasks__successful_pipeline_tasks[Successful pipeline tasks]
@@ -114,7 +114,7 @@ Ensure that all of the Tasks in the Pipeline completed successfully. Note that s
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Pipeline task %q did not complete successfully, %q`
 * Code: `tasks.successful_pipeline_tasks`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L110[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L113[Source, window="_blank"]
 
 [#tasks__unsupported]
 === link:#tasks__unsupported[Task version unsupported]
@@ -124,4 +124,4 @@ The Tekton Task used is or will be unsupported. The Task is annotated with `buil
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task %q is used by pipeline task %q is or will be unsupported as of %s. %s`
 * Code: `tasks.unsupported`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L252[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L255[Source, window="_blank"]

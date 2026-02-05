@@ -18,7 +18,7 @@ Confirm the expected `trusted_tasks` data keys have been provided in the expecte
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `trusted_task.data_format`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L254[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L257[Source, window="_blank"]
 
 [#trusted_task__future_deny_rule]
 === link:#trusted_task__future_deny_rule[Future deny rule will apply]
@@ -30,7 +30,7 @@ Warn when a task matches a deny rule that has an effective_on date in the future
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Task %q will be denied by rule pattern %q starting on %s.`
 * Code: `trusted_task.future_deny_rule`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L108[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L111[Source, window="_blank"]
 
 [#trusted_task__pinned]
 === link:#trusted_task__pinned[Task references are pinned]
@@ -43,7 +43,7 @@ Check if all Tekton Tasks use a Task definition by a pinned reference. When usin
 * WARNING message: `Pipeline task %q uses an unpinned task reference, %s`
 * Code: `trusted_task.pinned`
 * Effective from: `2024-05-07T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L49[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L52[Source, window="_blank"]
 
 [#trusted_task__tagged]
 === link:#trusted_task__tagged[Task references are tagged]
@@ -56,7 +56,7 @@ Check if all Tekton Tasks defined with the bundle format contain a tag reference
 * WARNING message: `Pipeline task %q uses an untagged task reference, %s`
 * Code: `trusted_task.tagged`
 * Effective from: `2024-05-07T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L25[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L28[Source, window="_blank"]
 
 [#trusted_task__data]
 === link:#trusted_task__data[Task tracking data was provided]
@@ -69,7 +69,7 @@ Confirm the `trusted_tasks` rule data was provided, since it's required by the p
 * FAILURE message: `Missing required trusted_tasks data`
 * Code: `trusted_task.data`
 * Effective from: `2024-05-07T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L234[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L237[Source, window="_blank"]
 
 [#trusted_task__trusted]
 === link:#trusted_task__trusted[Tasks are trusted]
@@ -82,7 +82,7 @@ Check the trust of the Tekton Tasks used in the build Pipeline. There are two mo
 * FAILURE message: `%s`
 * Code: `trusted_task.trusted`
 * Effective from: `2024-05-07T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L134[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L137[Source, window="_blank"]
 
 [#trusted_task__current]
 === link:#trusted_task__current[Tasks using the latest versions]
@@ -95,7 +95,7 @@ Check if all Tekton Tasks use the latest known Task reference. When warnings wil
 * WARNING message: `A newer version of task %q exists. Please update before %s. The current bundle is %q and the latest bundle ref is %q`
 * Code: `trusted_task.current`
 * Effective from: `2024-05-07T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L75[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L78[Source, window="_blank"]
 
 [#trusted_task__valid_trusted_artifact_inputs]
 === link:#trusted_task__valid_trusted_artifact_inputs[Trusted Artifact produced in pipeline]
@@ -107,7 +107,7 @@ All input trusted artifacts must be produced on the pipeline. If they are not th
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Code tampering detected, input %q for task %q was not produced by the pipeline as attested.`
 * Code: `trusted_task.valid_trusted_artifact_inputs`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L196[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L199[Source, window="_blank"]
 
 [#trusted_task__trusted_parameters]
 === link:#trusted_task__trusted_parameters[Trusted parameters]
@@ -120,4 +120,4 @@ Confirm certain parameters provided to each builder Task have come from trusted 
 * FAILURE message: `The %q parameter of the %q PipelineTask includes an untrusted digest: %s`
 * Code: `trusted_task.trusted_parameters`
 * Effective from: `2021-07-04T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L160[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L163[Source, window="_blank"]

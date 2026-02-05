@@ -13,6 +13,24 @@ import rego.v1
 import data.lib
 import data.lib.tekton
 
+# =============================================================================
+# MANIFEST PRE-FETCHING
+# Collect all bundle references and fetch manifests in a single batch call.
+# =============================================================================
+
+# Collect all unique bundle references from tasks in the pipeline definition
+_all_bundle_refs contains bundle if {
+	some task in tekton.tasks(input)
+	bundle := tekton.task_ref(task).bundle
+	bundle != ""
+}
+
+# Batch fetch all manifests at once using ec.oci.image_manifests
+# This returns a map of bundle_ref -> manifest
+_manifests := ec.oci.image_manifests(_all_bundle_refs)
+
+# =============================================================================
+
 # METADATA
 # title: Required tasks found in pipeline definition
 # description: >-
@@ -107,7 +125,7 @@ deny contains result if {
 _missing_tasks(required_tasks) := {task |
 	trusted := [task_name |
 		some task in tekton.tasks(input)
-		tekton.is_trusted_task(task)
+		tekton.is_trusted_task(task, _manifests)
 		some task_name in tekton.task_names(task)
 	]
 

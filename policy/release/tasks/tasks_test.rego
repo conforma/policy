@@ -18,8 +18,10 @@ test_no_tasks_present if {
 		"buildType": lib.tekton_pipeline_run,
 		"buildConfig": {"tasks": []},
 	}}}]
+		with ec.oci.image_manifests as _mock_image_manifests
 
 	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [tekton_test.slsav1_attestation([])]
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 # regal ignore:rule-length
@@ -54,6 +56,7 @@ test_failed_tasks if {
 			"buildConfig": {"tasks": given_tasks},
 		},
 	}}]
+		with ec.oci.image_manifests as _mock_image_manifests
 
 	slsav1_tasks := [
 		tekton_test.with_bundle(tekton_test.slsav1_task("buildah"), _bundle),
@@ -81,18 +84,22 @@ test_failed_tasks if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)]
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_required_tasks_met if {
 	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 
 	slsav1_attestations := [tekton_test.slsav1_attestation(_slsav1_expected_required_tasks)]
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_required_tasks_met_no_label if {
@@ -100,11 +107,13 @@ test_required_tasks_met_no_label if {
 	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data["pipeline-required-tasks"] as {}
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 
 	attestations_no_label := _attestations_with_tasks_no_label(_slsav02_expected_required_tasks, [])
 	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations_no_label
 
 	slsav1_attestations := [tekton_test.slsav1_attestation_full(
@@ -115,12 +124,14 @@ test_required_tasks_met_no_label if {
 	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data["pipeline-required-tasks"] as {}
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
+		with ec.oci.image_manifests as _mock_image_manifests
 
-	slsav1_attestations_no_label := [tekton_test.slsav1_attestation(_slsav1_expected_required_tasks)]
 	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data.trusted_tasks as _trusted_tasks
-		with input.attestations as slsav1_attestations_no_label
+		with ec.oci.image_manifests as _mock_image_manifests
+		with input.attestations as [tekton_test.slsav1_attestation(_slsav1_expected_required_tasks)]
 }
 
 test_required_tasks_warning_no_label if {
@@ -133,6 +144,7 @@ test_required_tasks_warning_no_label if {
 		expected,
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 
 	slsav1_attestations := [tekton_test.slsav1_attestation(_slsav1_expected_required_tasks)]
@@ -140,6 +152,7 @@ test_required_tasks_warning_no_label if {
 		expected,
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
 }
 
@@ -153,6 +166,7 @@ test_required_tasks_not_met if {
 		tasks.deny,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 
 	slsav1_filtered_tasks := [task |
@@ -170,13 +184,16 @@ test_required_tasks_not_met if {
 		tasks.deny,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_future_required_tasks_met if {
 	attestations := _attestations_with_tasks(_slsav02_expected_future_required_tasks, [])
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 
 	slsav1_attestations := [tekton_test.slsav1_attestation_full(
@@ -186,7 +203,9 @@ test_future_required_tasks_met if {
 	)]
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_future_required_tasks_not_met if {
@@ -199,6 +218,7 @@ test_future_required_tasks_not_met if {
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 
 	slsav1_filtered_tasks := [task |
@@ -216,16 +236,20 @@ test_future_required_tasks_not_met if {
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_extra_tasks_ignored if {
 	attestations := _attestations_with_tasks(_slsav02_expected_future_required_tasks | {"spam"}, [])
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 
 	slsav1_attestations := [tekton_test.slsav1_attestation_full(
@@ -240,10 +264,14 @@ test_extra_tasks_ignored if {
 	# regal ignore:line-length
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
+		with ec.oci.image_manifests as _mock_image_manifests
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_current_equal_latest if {
@@ -255,6 +283,7 @@ test_current_equal_latest if {
 
 	lib.assert_empty(tasks.deny | tasks.warn) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 }
 
@@ -267,11 +296,13 @@ test_current_equal_latest_also if {
 
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 
 	expected_denies := _missing_tasks_violation(_slsav02_expected_future_required_tasks - _slsav02_expected_required_tasks)
 	lib.assert_equal_results(expected_denies, tasks.deny) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 
 	slsav1_attestations := [tekton_test.slsav1_attestation_full(
@@ -281,11 +312,15 @@ test_current_equal_latest_also if {
 	)]
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
+		with ec.oci.image_manifests as _mock_image_manifests
 
 	lib.assert_equal_results(expected_denies, tasks.deny) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 # regal ignore:rule-length
@@ -318,6 +353,7 @@ test_parameterized if {
 		expected,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 
 	_slsav1_task1_base := tekton_test.slsav1_task("label-check")
@@ -349,7 +385,9 @@ test_parameterized if {
 		expected,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_required_tasks_founds_data if {
@@ -359,6 +397,7 @@ test_required_tasks_founds_data if {
 		"msg": "Missing required required-tasks data",
 	}}
 	lib.assert_equal_results(expected, tasks.deny) with data["required-tasks"] as []
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 		with data["pipeline-required-tasks"] as {}
 
@@ -368,6 +407,7 @@ test_required_tasks_founds_data if {
 		{},
 	)]
 	lib.assert_equal_results(expected, tasks.deny) with data["required-tasks"] as []
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations with data["pipeline-required-tasks"] as {}
 }
 
@@ -378,6 +418,7 @@ test_missing_required_pipeline_data if {
 		"msg": "Required tasks do not exist for pipeline",
 	}}
 	lib.assert_equal_results(expected, tasks.warn) with data["required-tasks"] as _slsav02_expected_required_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 
 	slsav1_attestations := [tekton_test.slsav1_attestation_full(
@@ -388,6 +429,7 @@ test_missing_required_pipeline_data if {
 
 	# we use _slsav02_expected_required_tasks as rule data because it fits the rule data format
 	lib.assert_equal_results(expected, tasks.warn) with data["required-tasks"] as _slsav02_expected_required_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as slsav1_attestations
 }
 
@@ -425,6 +467,7 @@ test_one_of_required_tasks if {
 	}]}
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestation_v02
 
 	attestation_v1 := [tekton_test.slsav1_attestation_full(
@@ -441,6 +484,7 @@ test_one_of_required_tasks if {
 	)]
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestation_v1
 }
 
@@ -467,6 +511,7 @@ test_one_of_required_tasks_missing if {
 
 	lib.assert_equal_results(expected, tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestation_v02
 
 	attestation_v1 := tekton_test.slsav1_attestation_full(
@@ -482,7 +527,9 @@ test_one_of_required_tasks_missing if {
 	)
 	lib.assert_equal_results(expected, tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as [attestation_v1]
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_future_one_of_required_tasks if {
@@ -493,6 +540,7 @@ test_future_one_of_required_tasks if {
 	}]}
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestation_v02
 
 	attestation_v1 := [tekton_test.slsav1_attestation_full(
@@ -509,6 +557,7 @@ test_future_one_of_required_tasks if {
 	)]
 	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestation_v1
 }
 
@@ -537,6 +586,7 @@ test_future_one_of_required_tasks_missing if {
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestation_v02
 
 	attestation_v1 := [tekton_test.slsav1_attestation_full(
@@ -555,6 +605,7 @@ test_future_one_of_required_tasks_missing if {
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestation_v1
 }
 
@@ -571,6 +622,7 @@ test_future_required_tasks if {
 
 	lib.assert_equal_results(expected, tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 }
 
@@ -587,6 +639,7 @@ test_required_task_from_untrusted if {
 	}}
 	lib.assert_equal_results(expected, tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations
 }
 
@@ -629,6 +682,7 @@ test_pinned_task_refs_slsa_v0_2 if {
 	}}
 
 	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [att]
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_pinned_task_refs_slsa_v1 if {
@@ -686,6 +740,7 @@ test_pinned_task_refs_slsa_v1 if {
 	}}
 
 	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [att1]
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_deprecated_slsa_v0_2 if {
@@ -703,6 +758,7 @@ test_deprecated_slsa_v0_2 if {
 
 	lib.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
 		with data["task-bundles"] as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_expired_slsa_v0_2 if {
@@ -720,6 +776,7 @@ test_expired_slsa_v0_2 if {
 
 	lib.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
 		with data["task-bundles"] as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_deprecated_slsa_v1 if {
@@ -742,6 +799,7 @@ test_deprecated_slsa_v1 if {
 
 	lib.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
 		with data["task-bundles"] as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_expired_slsa_v1 if {
@@ -764,6 +822,7 @@ test_expired_slsa_v1 if {
 
 	lib.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
 		with data["task-bundles"] as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_expired_with_custom_message if {
@@ -789,6 +848,7 @@ test_expired_with_custom_message if {
 
 	lib.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
 		with data["task-bundles"] as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 }
 
 test_data_errors_on_required_tasks if {
@@ -938,6 +998,7 @@ test_missing_tasks_function_behavior if {
 	# Test with all required tasks present from trusted sources
 	attestations_trusted := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
 	missing_trusted := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations_trusted
 	lib.assert_equal(set(), missing_trusted)
 
@@ -945,6 +1006,7 @@ test_missing_tasks_function_behavior if {
 	missing_tasks := {"buildah", "git-clone"}
 	attestations_missing := _attestations_with_tasks(_slsav02_expected_required_tasks - missing_tasks, [])
 	missing_result := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations_missing
 	lib.assert_equal(missing_tasks, missing_result)
 
@@ -954,6 +1016,7 @@ test_missing_tasks_function_behavior if {
 	# Even though all tasks are untrusted, _missing_tasks should return empty set
 	# because all required tasks are PRESENT
 	missing_untrusted := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as {}
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as attestations_untrusted
 	lib.assert_equal(set(), missing_untrusted)
 
@@ -970,6 +1033,7 @@ test_missing_tasks_function_behavior if {
 		"label-check[POLICY_NAMESPACE=optional_checks]",
 	}
 	missing_mixed := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
+		with ec.oci.image_manifests as _mock_image_manifests
 		with input.attestations as mixed_attestations
 	lib.assert_equal(expected_missing_mixed, missing_mixed)
 }
@@ -1193,3 +1257,10 @@ _trusted_tasks := {"oci://registry.img/spam:0.1": [{
 	"ref": "sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb",
 	"effective_on": "2000-01-01T00:00:00Z",
 }]}
+
+# Mock function for ec.oci.image_manifests
+# Returns a map of bundle_ref -> manifest for test bundles
+_mock_image_manifests(refs) := {ref: manifest |
+	some ref in refs
+	manifest := {}
+}

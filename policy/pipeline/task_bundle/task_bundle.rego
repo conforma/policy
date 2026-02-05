@@ -17,6 +17,24 @@ import rego.v1
 import data.lib
 import data.lib.tekton
 
+# =============================================================================
+# MANIFEST PRE-FETCHING
+# Collect all bundle references and fetch manifests in a single batch call.
+# =============================================================================
+
+# Collect all unique bundle references from tasks in the pipeline definition
+_all_bundle_refs contains bundle if {
+	some task in input.spec.tasks
+	bundle := tekton.task_ref(task).bundle
+	bundle != ""
+}
+
+# Batch fetch all manifests at once using ec.oci.image_manifests
+# This returns a map of bundle_ref -> manifest
+_manifests := ec.oci.image_manifests(_all_bundle_refs)
+
+# =============================================================================
+
 # METADATA
 # title: Unpinned task bundle reference
 # description: >-
@@ -89,7 +107,7 @@ deny contains result if {
 #   failure_msg: Pipeline task '%s' uses an untrusted task bundle '%s'
 #
 deny contains result if {
-	some task in tekton.untrusted_task_refs(input.spec.tasks)
+	some task in tekton.untrusted_task_refs(input.spec.tasks, _manifests)
 	bundle := tekton.bundle(task)
 	bundle != ""
 	result := lib.result_helper(rego.metadata.chain(), [task.name, bundle])

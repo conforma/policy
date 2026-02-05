@@ -16,7 +16,7 @@ Produce a warning when a task that will be required in the future is not current
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `%s is missing and will be required on %s`
 * Code: `required_tasks.missing_future_required_task`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L35[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L53[Source, window="_blank"]
 
 [#required_tasks__missing_required_task]
 === link:#required_tasks__missing_required_task[Missing required task]
@@ -26,7 +26,7 @@ Ensure that the set of required tasks is included in the Pipeline definition.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s is missing or outdated`
 * Code: `required_tasks.missing_required_task`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L72[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L90[Source, window="_blank"]
 
 [#required_tasks__tasks_found]
 === link:#required_tasks__tasks_found[Pipeline contains tasks]
@@ -36,7 +36,7 @@ Confirm at least one task is present in the pipeline definition.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `No tasks found in pipeline`
 * Code: `required_tasks.tasks_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L59[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L77[Source, window="_blank"]
 
 [#required_tasks__required_tasks_list_present]
 === link:#required_tasks__required_tasks_list_present[Required task list is present in rule data]
@@ -46,7 +46,7 @@ Confirm the `required-tasks` rule data was provided, since it's required by the 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The required tasks list is missing from the rule data`
 * Code: `required_tasks.required_tasks_list_present`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L91[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L109[Source, window="_blank"]
 
 [#required_tasks__required_tasks_found]
 === link:#required_tasks__required_tasks_found[Required tasks found in pipeline definition]
@@ -56,4 +56,4 @@ Produce a warning if a list of current or future required tasks does not exist i
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Required tasks do not exist for pipeline %q`
 * Code: `required_tasks.required_tasks_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L16[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L34[Source, window="_blank"]
