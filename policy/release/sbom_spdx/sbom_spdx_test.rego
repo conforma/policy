@@ -97,7 +97,8 @@ assert_allowed(purl, disallowed_packages) if {
 
 	# regal ignore:with-outside-test-context
 	lib.assert_empty(sbom_spdx.deny) with input.attestations as [att]
-		with data.rule_data.disallowed_packages as disallowed_packages
+		# regal ignore:with-outside-test-context
+with 		data.rule_data.disallowed_packages as disallowed_packages
 }
 
 assert_not_allowed(purl, disallowed_packages) if {
@@ -113,7 +114,8 @@ assert_not_allowed(purl, disallowed_packages) if {
 
 	# regal ignore:with-outside-test-context
 	lib.assert_equal_results(sbom_spdx.deny, expected) with input.attestations as [att]
-		with data.rule_data.disallowed_packages as disallowed_packages
+		# regal ignore:with-outside-test-context
+with 		data.rule_data.disallowed_packages as disallowed_packages
 }
 
 test_external_references_allowed_regex_with_no_rules_is_allowed if {

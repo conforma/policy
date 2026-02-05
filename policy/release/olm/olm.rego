@@ -349,10 +349,8 @@ deny contains result if {
 #   - redhat
 #   effective_on: 2025-5-01T00:00:00Z
 deny contains result if {
-	# Parse manifests from snapshot
-	some csv_manifest in _csv_manifests
-
 	# If we have a CSV manifest, ensure that the input image is not an image index
+	count(_csv_manifests) > 0
 	image.is_image_index(input.image.ref)
 
 	result := lib.result_helper_with_term(rego.metadata.chain(), [input.image.ref], input.image.ref)
@@ -401,7 +399,7 @@ _related_images_not_in_snapshot := [related_image.ref |
 # contains the digest of a referring image manifest containing the related image json
 # array. We need to find the blob sha in order to download the related images.
 _related_images(tested_image) := [e |
-	some imgs in [[r |
+	imgs := [r |
 		input_image := image.parse(tested_image.ref)
 
 		some related in lib.results_named(_related_images_result_name)
@@ -421,7 +419,7 @@ _related_images(tested_image) := [e |
 			"path": "relatedImage",
 			"ref": image.parse(related_ref),
 		}
-	]]
+	]
 	some i in imgs
 
 	e := {"ref": i.ref, "path": i.path}
@@ -458,7 +456,7 @@ all_image_ref(manifest) := [e |
 			}
 		],
 		[r |
-			some _, values in walk(manifest)
+			some values in walk(manifest)
 			some key, val in values.metadata.annotations
 			some annotation in regex.split(`(,|;|\n|\s+)`, val)
 			ref := image.parse(trim_space(annotation))

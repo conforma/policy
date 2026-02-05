@@ -76,14 +76,10 @@ _prefix_git_url(url) := normalized if {
 	prefix := "git+"
 	not strings.any_prefix_match(url, prefix)
 	normalized := concat("", [prefix, url])
-} else := normalized if {
-	normalized := url
-}
+} else := url
 
 _suffix_git_url(url) := normalized if {
 	suffix := ".git"
 	not strings.any_suffix_match(url, suffix)
 	normalized := concat("", [url, suffix])
-} else := normalized if {
-	normalized := url
-}
+} else := url

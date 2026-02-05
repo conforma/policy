@@ -70,3 +70,28 @@ rules:
         files:
           # Using fn(_) is a common pattern to mock functions in tests.
           - "*_test.rego"
+  imports:
+    # Since Regal does not scan any data file, we have to exclude
+    # all references to data not in `lib`.
+    unresolved-reference:
+      level: error
+      except-paths:
+        - data.config
+        - data.config.*
+        - data.config.policy.*
+        - data.rpm_repos.*
+        - data.rule_data
+        - data.rule_data.*
+        - data.rule_data__configuration__
+        - data.rule_data__configuration__.*
+        - data.rule_data_custom
+        - data.trusted_tasks
+        - data.trusted_tasks.*
+        - data.trusted_task_rules
+        - data.trusted_task_rules.*
+    # To fix this rule, in the policy/lib folder we need to remove the imports
+    # from data.lib and use the fully qualified name when using function calls.
+    # E.g.: from `lib.assert_equal` to `data.lib.assert_equal`
+    # This rule is ignored until we decide if we want to fix it.
+    pointless-import:
+      level: ignore
