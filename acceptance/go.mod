@@ -5,7 +5,7 @@ go 1.24.6
 toolchain go1.25.7
 
 require (
-	github.com/conforma/cli v0.8.92
+	github.com/conforma/cli v0.8.95
 	github.com/cucumber/godog v0.15.1
 )
 
