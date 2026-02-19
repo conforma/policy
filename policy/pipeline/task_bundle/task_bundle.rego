@@ -30,6 +30,8 @@ _all_bundle_refs contains bundle if {
 }
 
 # Batch fetch all manifests at once using ec.oci.image_manifests
+# We need to fetch each image to get the version annotation. Doing this separately for each bundle
+# is too slow.
 # This returns a map of bundle_ref -> manifest
 _manifests := ec.oci.image_manifests(_all_bundle_refs)
 
