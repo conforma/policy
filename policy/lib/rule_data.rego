@@ -146,6 +146,7 @@ rule_data_defaults := {
 #   data.rule_data__configuration__[key_name]
 #   data.rule_data_custom[key_name]
 #   data.rule_data[key_name]
+#   data[key_name] (only for two specific keys related to required tasks)
 #   rule_data_defaults[key_name]
 #
 # And falls back to an empty list if the key is not found anywhere.
@@ -163,9 +164,22 @@ rule_data(key_name) := value if {
 	# an oci bundle or a maybe a git url. See example/data/rule_data.yml.
 	value := data.rule_data[key_name]
 } else := value if {
+	# Special handling for "pipeline-required-tasks" and "required-tasks" since they
+	# were placed at the top level historically. Note that we can't use data[key_name]
+	# since it evaluates at run-time and we get a recursion error because `data`
+	# includes this (and all) code, which tries to evaluate `data`, and so on.
+	key_name == "pipeline-required-tasks"
+	value := data["pipeline-required-tasks"]
+} else := value if {
+	key_name == "required-tasks"
+	value := data["required-tasks"]
+} else := value if {
 	# Default values defined in this file. See above.
 	value := rule_data_defaults[key_name]
 } else := value if {
-	# If the key is not found, default to an empty list
+	# If the key is not found, default to an empty list.
+	# (For backwards compatibility we don't provide a default for the two
+	# required tasks keys with the special handling above).
+	not key_name in {"required-tasks", "pipeline-required-tasks"}
 	value := []
 }

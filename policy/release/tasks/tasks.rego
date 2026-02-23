@@ -426,7 +426,7 @@ _expiry_msg_annotation := "build.appstudio.redhat.com/expiry-message"
 
 _data_errors contains error if {
 	some e in j.validate_schema(
-		data["pipeline-required-tasks"],
+		lib.rule_data("pipeline-required-tasks"),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "object",
@@ -442,7 +442,7 @@ _data_errors contains error if {
 
 _data_errors contains error if {
 	some e in j.validate_schema(
-		data["required-tasks"],
+		lib.rule_data("required-tasks"),
 		_required_tasks_schema,
 	)
 
@@ -453,7 +453,7 @@ _data_errors contains error if {
 }
 
 _data_errors contains error if {
-	some i, entry in data["required-tasks"]
+	some i, entry in lib.rule_data("required-tasks")
 	effective_on := entry.effective_on
 	not time.parse_rfc3339_ns(effective_on)
 	error := {
@@ -466,7 +466,7 @@ _data_errors contains error if {
 }
 
 _data_errors contains error if {
-	some key, entries in data["pipeline-required-tasks"]
+	some key, entries in lib.rule_data("pipeline-required-tasks")
 	some i, entry in entries
 	effective_on := entry.effective_on
 	not time.parse_rfc3339_ns(effective_on)
