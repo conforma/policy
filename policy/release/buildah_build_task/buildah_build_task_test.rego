@@ -413,6 +413,161 @@ test_privileged_nested_param if {
 	lib.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_false]
 }
 
+test_include_prefetch_sbom_false if {
+	expected := {{
+		"code": "buildah_build_task.include_prefetch_sbom_param",
+		"msg": "INCLUDE_PREFETCH_SBOM is set to 'false', which excludes prefetched dependency data from the SBOM. A policy exception is required for this configuration.",
+	}}
+
+	_task_base := tekton_test.slsav1_task("buildah")
+	_task_w_params = tekton_test.with_params(
+		_task_base,
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "INCLUDE_PREFETCH_SBOM",
+				"value": "false",
+			},
+		],
+	)
+	task = tekton_test.with_results(_task_w_params, _results)
+
+	attestation := tekton_test.slsav1_attestation([task])
+	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
+}
+
+test_include_prefetch_sbom_true if {
+	_task_base := tekton_test.slsav1_task("buildah")
+	_task_w_params = tekton_test.with_params(
+		_task_base,
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "INCLUDE_PREFETCH_SBOM",
+				"value": "true",
+			},
+		],
+	)
+	task = tekton_test.with_results(_task_w_params, _results)
+
+	attestation := tekton_test.slsav1_attestation([task])
+	lib.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
+}
+
+test_include_prefetch_sbom_missing if {
+	attestation := tekton_test.slsav1_attestation([_buildah_task("buildah")])
+	lib.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
+}
+
+test_include_source_sbom_false if {
+	expected := {{
+		"code": "buildah_build_task.include_source_sbom_param",
+		"msg": "INCLUDE_SOURCE_SBOM is set to 'false', which excludes source-scanned dependency data from the SBOM. A policy exception is required for this configuration.",
+	}}
+
+	_task_base := tekton_test.slsav1_task("buildah")
+	_task_w_params = tekton_test.with_params(
+		_task_base,
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "INCLUDE_SOURCE_SBOM",
+				"value": "false",
+			},
+		],
+	)
+	task = tekton_test.with_results(_task_w_params, _results)
+
+	attestation := tekton_test.slsav1_attestation([task])
+	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
+}
+
+test_include_source_sbom_true if {
+	_task_base := tekton_test.slsav1_task("buildah")
+	_task_w_params = tekton_test.with_params(
+		_task_base,
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "INCLUDE_SOURCE_SBOM",
+				"value": "true",
+			},
+		],
+	)
+	task = tekton_test.with_results(_task_w_params, _results)
+
+	attestation := tekton_test.slsav1_attestation([task])
+	lib.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
+}
+
+test_include_both_sbom_false if {
+	expected := {
+		{
+			"code": "buildah_build_task.include_prefetch_sbom_param",
+			"msg": "INCLUDE_PREFETCH_SBOM is set to 'false', which excludes prefetched dependency data from the SBOM. A policy exception is required for this configuration.",
+		},
+		{
+			"code": "buildah_build_task.include_source_sbom_param",
+			"msg": "INCLUDE_SOURCE_SBOM is set to 'false', which excludes source-scanned dependency data from the SBOM. A policy exception is required for this configuration.",
+		},
+	}
+
+	_task_base := tekton_test.slsav1_task("buildah")
+	_task_w_params = tekton_test.with_params(
+		_task_base,
+		[
+			{
+				"name": "IMAGE",
+				"value": "quay.io/jstuart/hacbs-docker-build",
+			},
+			{
+				"name": "DOCKERFILE",
+				"value": "./image_with_labels/Dockerfile",
+			},
+			{
+				"name": "INCLUDE_PREFETCH_SBOM",
+				"value": "false",
+			},
+			{
+				"name": "INCLUDE_SOURCE_SBOM",
+				"value": "false",
+			},
+		],
+	)
+	task = tekton_test.with_results(_task_w_params, _results)
+
+	attestation := tekton_test.slsav1_attestation([task])
+	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
+}
+
 _attestation(task_name, params, results) := {"statement": {
 	"predicateType": "https://slsa.dev/provenance/v0.2",
 	"predicate": {
