@@ -1,13 +1,13 @@
 module github.com/conforma/policy
 
-go 1.25.3
+go 1.25.5
 
 require (
 	github.com/conforma/cli v0.8.108
 	github.com/google/addlicense v1.2.0
 	github.com/open-policy-agent/conftest v0.66.0
 	github.com/open-policy-agent/regal v0.37.0
-	github.com/tektoncd/cli v0.42.0
+	github.com/tektoncd/cli v0.42.1
 	oras.land/oras v1.3.0
 )
 
@@ -52,7 +52,7 @@ require (
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.30.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.54.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.54.0 // indirect
-	github.com/IBM/sarama v1.45.1 // indirect
+	github.com/IBM/sarama v1.45.2 // indirect
 	github.com/KeisukeYamashita/go-vcl v0.4.0 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
 	github.com/Maldris/go-billy-afero v0.0.0-20200815120323-e9d3de59c99a // indirect
@@ -148,7 +148,7 @@ require (
 	github.com/dimchansky/utfbom v1.1.1 // indirect
 	github.com/docker/cli v29.0.3+incompatible // indirect
 	github.com/docker/distribution v2.8.3+incompatible // indirect
-	github.com/docker/docker v28.3.3+incompatible // indirect
+	github.com/docker/docker v28.5.2+incompatible // indirect
 	github.com/docker/docker-credential-helpers v0.9.4 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
@@ -262,9 +262,9 @@ require (
 	github.com/huandu/go-sqlbuilder v1.38.1 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/imdario/mergo v0.3.16 // indirect
-	github.com/in-toto/archivista v0.9.1 // indirect
+	github.com/in-toto/archivista v0.10.0 // indirect
 	github.com/in-toto/attestation v1.1.2 // indirect
-	github.com/in-toto/go-witness v0.8.1 // indirect
+	github.com/in-toto/go-witness v0.8.6 // indirect
 	github.com/in-toto/in-toto-golang v0.10.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 // indirect
@@ -371,7 +371,7 @@ require (
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/shteou/go-ignore v0.3.1 // indirect
-	github.com/sigstore/cosign/v2 v2.5.3 // indirect
+	github.com/sigstore/cosign/v2 v2.6.2 // indirect
 	github.com/sigstore/cosign/v3 v3.0.4 // indirect
 	github.com/sigstore/fulcio v1.8.4 // indirect
 	github.com/sigstore/protobuf-specs v0.5.0 // indirect
@@ -404,13 +404,13 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/syndtr/goleveldb v1.0.1-0.20220721030215-126854af5e6d // indirect
 	github.com/tchap/go-patricia/v2 v2.3.3 // indirect
-	github.com/tektoncd/chains v0.25.1 // indirect
+	github.com/tektoncd/chains v0.26.0 // indirect
 	github.com/tektoncd/hub v1.22.2 // indirect
 	github.com/tektoncd/pipeline v1.3.1 // indirect
 	github.com/tektoncd/triggers v0.33.0 // indirect
 	github.com/thales-e-security/pool v0.0.2 // indirect
 	github.com/theupdateframework/go-tuf v0.7.0 // indirect
-	github.com/theupdateframework/go-tuf/v2 v2.3.0 // indirect
+	github.com/theupdateframework/go-tuf/v2 v2.4.1 // indirect
 	github.com/titanous/rocacheck v0.0.0-20171023193734-afe73141d399 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect
 	github.com/tmccombs/hcl2json v0.6.7 // indirect
@@ -457,9 +457,9 @@ require (
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	goa.design/goa/v3 v3.23.4 // indirect
-	gocloud.dev v0.40.0 // indirect
-	gocloud.dev/docstore/mongodocstore v0.40.0 // indirect
-	gocloud.dev/pubsub/kafkapubsub v0.40.0 // indirect
+	gocloud.dev v0.43.0 // indirect
+	gocloud.dev/docstore/mongodocstore v0.43.0 // indirect
+	gocloud.dev/pubsub/kafkapubsub v0.43.0 // indirect
 	golang.org/x/crypto v0.47.0 // indirect
 	golang.org/x/exp v0.0.0-20250911091902-df9299821621 // indirect
 	golang.org/x/mod v0.31.0 // indirect
