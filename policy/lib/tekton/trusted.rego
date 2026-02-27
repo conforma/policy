@@ -125,14 +125,18 @@ untrusted_task_refs_rules(tasks, bundle_manifests) := {task |
 }
 
 # Returns true if the task uses a trusted Task reference according to trusted_task_rules.
-# 1. If task matches a deny rule, it's not trusted
-# 2. If task matches an allow rule, it's trusted
-# 3. Otherwise, it's not trusted
+# To be trusted, a task should:
+# 1. Match at least one allow rule
+# 2. Not match any deny rule
+# 3. If a matched allow rule specifies signature details, the
+#    task bundle must successfully pass a signature check
+# Otherwise, it's not trusted.
 # bundle_manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
 is_trusted_task_rules(task, bundle_manifests) if {
 	ref := task_ref(task)
 	not _task_matches_deny_rule(ref, bundle_manifests)
 	_task_matches_allow_rule(ref, bundle_manifests)
+	_task_bundle_sig_check_okay(ref, bundle_manifests)
 }
 
 # Merging in the trusted_task_rules rule data
@@ -400,6 +404,33 @@ denial_reason(task, bundle_manifests) := reason if {
 		"messages": deny_info.messages,
 	}
 } else := reason if {
+	# Case: Matches allow rule but fails signature verification
+	ref := task_ref(task)
+	not _task_matches_deny_rule(ref, bundle_manifests)
+	_task_matches_allow_rule(ref, bundle_manifests)
+	not _task_bundle_sig_check_okay(ref, bundle_manifests)
+
+	sig_rules := [rule |
+		some rule in _effective_allow_rules
+		_pattern_matches(ref.key, rule.pattern)
+		_version_satisfies_all_rule_constraints(ref, rule, bundle_manifests)
+		rule.signing_identity
+	]
+	messages := [msg |
+		some rule in sig_rules
+		opts := _sigstore_opts_for_rule(rule)
+		msg := sprintf(
+			"Task bundle %s failed signature verification for pattern %s with options %v",
+			[ref.bundle, rule.pattern, opts],
+		)
+	]
+
+	reason := {
+		"type": "signing_identity_failed",
+		"pattern": [rule.pattern | some rule in sig_rules],
+		"messages": messages,
+	}
+} else := reason if {
 	# Case 2: Doesn't match any allow rule
 	# Only applies if there are effective allow rules defined
 	ref := task_ref(task)
@@ -449,6 +480,59 @@ _task_matches_allow_rule(ref, bundle_manifests) if {
 	_version_satisfies_all_rule_constraints(ref, rule, bundle_manifests)
 }
 
+# Returns true if the task's signature is verified against all matching allow rules
+# that require signature verification. True when:
+# - No matching allow rule has a signing_identity config, OR
+# - The ref is not an OCI bundle (git tasks are exempt), OR
+# - At least one matching allow rule's signature verification passes
+_task_bundle_sig_check_okay(ref, bundle_manifests) if {
+	matching_rules := [rule |
+		some rule in _effective_allow_rules
+		_pattern_matches(ref.key, rule.pattern)
+		_version_satisfies_all_rule_constraints(ref, rule, bundle_manifests)
+	]
+	_signature_verified_for_rules(ref, matching_rules)
+}
+
+_signature_verified_for_rules(_, matching_rules) if {
+	some rule in matching_rules
+	not rule.signing_identity
+}
+
+_signature_verified_for_rules(ref, _) if {
+	not ref.bundle
+}
+
+_signature_verified_for_rules(ref, matching_rules) if {
+	ref.bundle
+	some rule in matching_rules
+	rule.signing_identity
+	opts := _sigstore_opts_for_rule(rule)
+	not _sigstore_verify_has_errors(ref.bundle, opts)
+}
+
+# Omit empty/false values so Sigstore doesn't treat them as "no constraint".
+_sigstore_opts_for_rule(rule) := opts if {
+	sv := rule.signing_identity
+	is_object(sv)
+	opts := {k: v |
+		some k, v in sv
+		v != ""
+		v != false
+	}
+}
+
+# Todo: This gets "called" first to check if the task is trusted and
+# then again when generating a denial reason text. Generally OPA memoizes
+# everything so it would not be re-run when called the second time, but
+# I'm not sure if the call to ec.sigstore.verify_image makes OPA think it
+# can't memoize it. If we are really calling the (possibly expensive)
+# sigstore verify twice then we might want to refactor and try to avoid that.
+_sigstore_verify_has_errors(bundle, opts) if {
+	info := ec.sigstore.verify_image(bundle, opts)
+	some _ in info.errors
+}
+
 # Checks if the key matches the wildcard pattern using glob matching.
 # Wildcards (*) match any sequence of characters. Patterns without a
 # wildcard also match keys that have a :tag suffix appended (e.g.
@@ -487,6 +571,27 @@ _trusted_task_rule_entry_schema := {
 			"type": "array",
 			"description": "List of version constraints",
 			"items": {"type": "string"},
+		},
+		"signing_identity": {
+			"type": "object",
+			# regal ignore:line-length
+			"description": "Sigstore verification options. When present, bundles matching this allow rule must also have a verified signature.",
+			"properties": {
+				"certificate_identity": {"type": "string", "minLength": 1},
+				"certificate_identity_regexp": {"type": "string", "minLength": 1},
+				"certificate_oidc_issuer": {"type": "string", "minLength": 1},
+				"certificate_oidc_issuer_regexp": {"type": "string", "minLength": 1},
+				"ignore_rekor": {"type": "boolean"},
+				"public_key": {"type": "string", "minLength": 1},
+				"rekor_url": {"type": "string", "minLength": 1},
+			},
+			"additionalProperties": false,
+			# regal ignore:line-length
+			"anyOf": [
+				{"required": ["certificate_identity"]},
+				{"required": ["certificate_identity_regexp"]},
+				{"required": ["public_key"]},
+			],
 		},
 	},
 	"additionalProperties": true,
