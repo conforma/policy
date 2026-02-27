@@ -1358,6 +1358,37 @@ test_mixed_trusted_and_untrusted_tasks if {
 		with ec.oci.image_manifest as _mock_image_manifest
 }
 
+test_signature_verification_failed_error_rules if {
+	att := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [trusted_bundle_pipeline_task]},
+		},
+	}}
+
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signature_verification": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+		},
+	}]}}
+
+	results := trusted_task.deny with input.attestations as [att]
+		with data.trusted_task_rules as rules
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+		with ec.oci.image_manifests as _mock_empty_manifests
+
+	count(results) > 0
+	some result in results
+	contains(result.msg, "signature_verification_failed")
+}
+
+_mock_verify_image_failure(_, _) := {"success": false, "errors": ["signature verification failed"]}
+
+_mock_empty_manifests(_) := {}
+
 #####################################################
 # Helper Functions for trusted_task_rules tests
 #####################################################
