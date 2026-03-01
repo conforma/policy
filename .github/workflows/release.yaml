@@ -114,7 +114,7 @@ jobs:
             Also save the release notes in a file named "release-notes.md".
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: release-notes
           path: release-notes.md
@@ -152,7 +152,7 @@ jobs:
           git push -f --tags
 
       - name: Download artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: release-notes
 
