@@ -451,6 +451,11 @@ _format_denial_reason(reason) := msg if {
 
 	pattern_lines := [sprintf("  - %s", [pattern]) | some pattern in reason.pattern]
 	msg := sprintf("%s\n%s", [reason.type, concat("\n", pattern_lines)])
+} else := msg if {
+	reason.type == "signature_verification_failed"
+	count(reason.messages) > 0
+	message_lines := [sprintf("  - %s", [m]) | some m in reason.messages]
+	msg := sprintf("%s\n%s", [reason.type, concat("\n", message_lines)])
 } else := reason.type
 
 # Format error for rules system with Trusted Artifacts

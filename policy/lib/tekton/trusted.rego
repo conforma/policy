@@ -328,6 +328,23 @@ denial_reason(task) := reason if {
 		"messages": deny_info.messages,
 	}
 } else := reason if {
+	# Case: Matches pattern+version on an allow rule but fails signature verification
+	ref := task_ref(task)
+	not _task_matches_deny_rule(ref)
+
+	some rule in _effective_allow_rules
+	_pattern_matches(ref.key, rule.pattern)
+	_version_satisfies_all_rule_constraints(ref, rule)
+
+	# But no allow rule passes signature verification
+	not _task_matches_allow_rule(ref)
+
+	reason := {
+		"type": "signature_verification_failed",
+		"pattern": [],
+		"messages": [sprintf("Task bundle %s failed signature verification", [ref.bundle])],
+	}
+} else := reason if {
 	# Case 2: Doesn't match any allow rule
 	# Only applies if there are effective allow rules defined
 	ref := task_ref(task)
@@ -373,6 +390,45 @@ _task_matches_allow_rule(ref) if {
 	some rule in _effective_allow_rules
 	_pattern_matches(ref.key, rule.pattern)
 	_version_satisfies_all_rule_constraints(ref, rule)
+	_signature_verified_for_rule(ref, rule)
+}
+
+# Build sigstore opts object from a rule's signature_verification config.
+_sigstore_opts_for_rule(rule) := opts if {
+	sv := rule.signature_verification
+	is_object(sv)
+	opts := {
+		"certificate_identity": object.get(sv, "certificate_identity", ""),
+		"certificate_identity_regexp": object.get(sv, "certificate_identity_regexp", ""),
+		"certificate_oidc_issuer": object.get(sv, "certificate_oidc_issuer", ""),
+		"certificate_oidc_issuer_regexp": object.get(sv, "certificate_oidc_issuer_regexp", ""),
+		"ignore_rekor": object.get(sv, "ignore_rekor", false),
+		"public_key": object.get(sv, "public_key", ""),
+		"rekor_url": object.get(sv, "rekor_url", ""),
+	}
+}
+
+# A ref is signature-verified for a given rule if:
+# 1. The rule has no signature_verification config (pass through), OR
+# 2. The ref is not an OCI bundle (git tasks are exempt), OR
+# 3. The bundle passes sigstore verification with the rule's opts
+_signature_verified_for_rule(_, rule) if {
+	not rule.signature_verification
+}
+
+_signature_verified_for_rule(ref, _) if {
+	not ref.bundle
+}
+
+_signature_verified_for_rule(ref, rule) if {
+	ref.bundle
+	opts := _sigstore_opts_for_rule(rule)
+	not _sigstore_verify_has_errors(ref.bundle, opts)
+}
+
+_sigstore_verify_has_errors(bundle, opts) if {
+	info := ec.sigstore.verify_image(bundle, opts)
+	some _ in info.errors
 }
 
 # Converts a wildcard pattern to a regex pattern and checks if the key matches
@@ -421,6 +477,21 @@ _trusted_task_rules_schema := {
 							"type": "string",
 							"description": "Version constraint (e.g., '>=2.1', '<1.2.3')",
 						},
+					},
+					"signature_verification": {
+						"type": "object",
+						# regal ignore:line-length
+						"description": "Sigstore verification options. When present, bundles matching this allow rule must also have a verified signature.",
+						"properties": {
+							"certificate_identity": {"type": "string"},
+							"certificate_identity_regexp": {"type": "string"},
+							"certificate_oidc_issuer": {"type": "string"},
+							"certificate_oidc_issuer_regexp": {"type": "string"},
+							"ignore_rekor": {"type": "boolean"},
+							"public_key": {"type": "string"},
+							"rekor_url": {"type": "string"},
+						},
+						"additionalProperties": false,
 					},
 				},
 				"additionalProperties": true,

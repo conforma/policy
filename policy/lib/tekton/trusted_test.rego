@@ -831,6 +831,127 @@ untrusted_git_task := {
 }
 
 # =============================================================================
+# SIGNATURE VERIFICATION TESTS
+# =============================================================================
+
+# Test: Allow rule without signature_verification works as before (backward compat)
+test_allow_rule_without_signature_verification if {
+	rules := {"allow": [{"name": "test", "pattern": "oci://registry.local/trusty*"}]}
+
+	tekton.is_trusted_task(trusted_bundle_task) with data.trusted_task_rules as rules
+}
+
+# Test: Allow rule with signature_verification passes when signature is valid
+test_allow_rule_with_valid_signature if {
+	rules := {"allow": [{
+		"name": "signed catalog",
+		"pattern": "oci://registry.local/trusty*",
+		"signature_verification": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+		},
+	}]}
+
+	tekton.is_trusted_task(trusted_bundle_task) with data.trusted_task_rules as rules
+		with ec.sigstore.verify_image as _mock_verify_image_success
+}
+
+# Test: Allow rule with signature_verification fails when signature is invalid
+test_allow_rule_with_invalid_signature if {
+	rules := {"allow": [{
+		"name": "signed catalog",
+		"pattern": "oci://registry.local/trusty*",
+		"signature_verification": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+		},
+	}]}
+
+	not tekton.is_trusted_task(trusted_bundle_task) with data.trusted_task_rules as rules
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+}
+
+# Test: Multiple allow rules - task passes if any rule's pattern+signature match
+test_multiple_allow_rules_different_sig_configs if {
+	rules := {"allow": [
+		{
+			"name": "signed catalog",
+			"pattern": "oci://registry.local/trusty*",
+			"signature_verification": {
+				"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+				"certificate_oidc_issuer": "https://accounts.google.com",
+			},
+		},
+		{
+			"name": "unsigned catalog",
+			"pattern": "oci://registry.local/trusty*",
+		},
+	]}
+
+	# Passes because the second rule has no sig verification requirement
+	tekton.is_trusted_task(trusted_bundle_task) with data.trusted_task_rules as rules
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+}
+
+# Test: Git-resolved tasks are exempt from signature verification
+test_git_tasks_exempt_from_signature_verification if {
+	rules := {"allow": [{
+		"name": "signed catalog",
+		"pattern": "git\\+git\\.local/repo\\.git//*",
+		"signature_verification": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+		},
+	}]}
+
+	# Git task should pass even though ec.sigstore.verify_image would fail,
+	# because git tasks are exempt from signature verification
+	tekton.is_trusted_task(trusted_git_task) with data.trusted_task_rules as rules
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+}
+
+# Test: denial_reason returns signature_verification_failed when pattern matches but sig fails
+test_denial_reason_signature_verification_failed if {
+	rules := {"allow": [{
+		"name": "signed catalog",
+		"pattern": "oci://registry.local/trusty*",
+		"signature_verification": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+		},
+	}]}
+
+	reason := tekton.denial_reason(trusted_bundle_task) with data.trusted_task_rules as rules
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+
+	lib.assert_equal("signature_verification_failed", reason.type)
+	lib.assert_equal([], reason.pattern)
+	count(reason.messages) == 1
+	contains(reason.messages[0], "failed signature verification")
+}
+
+# Test: Schema validation accepts valid signature_verification on allow rules
+test_schema_accepts_signature_verification if {
+	rules := {"allow": [{
+		"name": "signed catalog",
+		"pattern": "oci://registry.local/trusty*",
+		"signature_verification": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+			"ignore_rekor": true,
+		},
+	}]}
+
+	# No data errors should be produced for valid signature_verification
+	lib.assert_empty(tekton.data_errors) with data.rule_data.trusted_task_rules as rules
+}
+
+# Mock helpers for signature verification tests
+_mock_verify_image_success(_, _) := {"success": true, "errors": []}
+
+_mock_verify_image_failure(_, _) := {"success": false, "errors": ["signature verification failed"]}
+
+# =============================================================================
 # BEGIN LEGACY TEST DATA (trusted_tasks)
 # DELETE THIS SECTION when removing legacy support.
 # =============================================================================
