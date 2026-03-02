@@ -416,6 +416,7 @@ test_privileged_nested_param if {
 test_include_prefetch_sbom_false if {
 	expected := {{
 		"code": "buildah_build_task.include_prefetch_sbom_param",
+		# regal ignore:line-length
 		"msg": "INCLUDE_PREFETCH_SBOM is set to 'false', which excludes prefetched dependency data from the SBOM. A policy exception is required for this configuration.",
 	}}
 
@@ -476,6 +477,7 @@ test_include_prefetch_sbom_missing if {
 test_include_source_sbom_false if {
 	expected := {{
 		"code": "buildah_build_task.include_source_sbom_param",
+		# regal ignore:line-length
 		"msg": "INCLUDE_SOURCE_SBOM is set to 'false', which excludes source-scanned dependency data from the SBOM. A policy exception is required for this configuration.",
 	}}
 
@@ -532,10 +534,12 @@ test_include_both_sbom_false if {
 	expected := {
 		{
 			"code": "buildah_build_task.include_prefetch_sbom_param",
+			# regal ignore:line-length
 			"msg": "INCLUDE_PREFETCH_SBOM is set to 'false', which excludes prefetched dependency data from the SBOM. A policy exception is required for this configuration.",
 		},
 		{
 			"code": "buildah_build_task.include_source_sbom_param",
+			# regal ignore:line-length
 			"msg": "INCLUDE_SOURCE_SBOM is set to 'false', which excludes source-scanned dependency data from the SBOM. A policy exception is required for this configuration.",
 		},
 	}

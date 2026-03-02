@@ -116,6 +116,59 @@ deny contains result if {
 	result := lib.result_helper(rego.metadata.chain(), [])
 }
 
+# METADATA
+# title: INCLUDE_PREFETCH_SBOM parameter
+# description: >-
+#   Verify the INCLUDE_PREFETCH_SBOM parameter of a builder Task was not set to `false`.
+#   Prefetch SBOM inclusion is required by default to ensure hermetic builds produce
+#   accurate SBOMs. Pipelines that need to exclude prefetch SBOM content (e.g. due to
+#   Yarn workspace monorepo limitations) must obtain a policy exception.
+# custom:
+#   short_name: include_prefetch_sbom_param
+#   failure_msg: >-
+#     INCLUDE_PREFETCH_SBOM is set to 'false', which excludes prefetched dependency
+#     data from the SBOM. A policy exception is required for this configuration.
+#   solution: >-
+#     Set the INCLUDE_PREFETCH_SBOM parameter to 'true', or obtain a policy exception
+#     if excluding prefetch SBOM content is justified (e.g. monorepo Yarn workspace
+#     scenarios where the prefetch SBOM is inaccurate for the specific image).
+#   collections:
+#   - redhat
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+deny contains result if {
+	some param in _include_prefetch_sbom_params
+	trim_space(param) == "false"
+	result := lib.result_helper(rego.metadata.chain(), [])
+}
+
+# METADATA
+# title: INCLUDE_SOURCE_SBOM parameter
+# description: >-
+#   Verify the INCLUDE_SOURCE_SBOM parameter of a builder Task was not set to `false`.
+#   Source SBOM inclusion is required by default to ensure builds produce comprehensive
+#   SBOMs. Pipelines that need to exclude source SBOM content must obtain a policy
+#   exception.
+# custom:
+#   short_name: include_source_sbom_param
+#   failure_msg: >-
+#     INCLUDE_SOURCE_SBOM is set to 'false', which excludes source-scanned dependency
+#     data from the SBOM. A policy exception is required for this configuration.
+#   solution: >-
+#     Set the INCLUDE_SOURCE_SBOM parameter to 'true', or obtain a policy exception
+#     if excluding source SBOM content is justified.
+#   collections:
+#   - redhat
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+deny contains result if {
+	some param in _include_source_sbom_params
+	trim_space(param) == "false"
+	result := lib.result_helper(rego.metadata.chain(), [])
+}
+
 _not_allowed_prefix(search) if {
 	not_allowed_prefixes := ["http://", "https://"]
 	some not_allowed_prefix in not_allowed_prefixes
@@ -177,59 +230,6 @@ _rule_data_errors contains error if {
 }
 
 _plat_patterns_rule_data_key := "disallowed_platform_patterns"
-
-# METADATA
-# title: INCLUDE_PREFETCH_SBOM parameter
-# description: >-
-#   Verify the INCLUDE_PREFETCH_SBOM parameter of a builder Task was not set to `false`.
-#   Prefetch SBOM inclusion is required by default to ensure hermetic builds produce
-#   accurate SBOMs. Pipelines that need to exclude prefetch SBOM content (e.g. due to
-#   Yarn workspace monorepo limitations) must obtain a policy exception.
-# custom:
-#   short_name: include_prefetch_sbom_param
-#   failure_msg: >-
-#     INCLUDE_PREFETCH_SBOM is set to 'false', which excludes prefetched dependency
-#     data from the SBOM. A policy exception is required for this configuration.
-#   solution: >-
-#     Set the INCLUDE_PREFETCH_SBOM parameter to 'true', or obtain a policy exception
-#     if excluding prefetch SBOM content is justified (e.g. monorepo Yarn workspace
-#     scenarios where the prefetch SBOM is inaccurate for the specific image).
-#   collections:
-#   - redhat
-#   depends_on:
-#   - attestation_type.known_attestation_type
-#
-deny contains result if {
-	some param in _include_prefetch_sbom_params
-	trim_space(param) == "false"
-	result := lib.result_helper(rego.metadata.chain(), [])
-}
-
-# METADATA
-# title: INCLUDE_SOURCE_SBOM parameter
-# description: >-
-#   Verify the INCLUDE_SOURCE_SBOM parameter of a builder Task was not set to `false`.
-#   Source SBOM inclusion is required by default to ensure builds produce comprehensive
-#   SBOMs. Pipelines that need to exclude source SBOM content must obtain a policy
-#   exception.
-# custom:
-#   short_name: include_source_sbom_param
-#   failure_msg: >-
-#     INCLUDE_SOURCE_SBOM is set to 'false', which excludes source-scanned dependency
-#     data from the SBOM. A policy exception is required for this configuration.
-#   solution: >-
-#     Set the INCLUDE_SOURCE_SBOM parameter to 'true', or obtain a policy exception
-#     if excluding source SBOM content is justified.
-#   collections:
-#   - redhat
-#   depends_on:
-#   - attestation_type.known_attestation_type
-#
-deny contains result if {
-	some param in _include_source_sbom_params
-	trim_space(param) == "false"
-	result := lib.result_helper(rego.metadata.chain(), [])
-}
 
 _include_prefetch_sbom_params contains param if {
 	some buildah_task in _buildah_tasks

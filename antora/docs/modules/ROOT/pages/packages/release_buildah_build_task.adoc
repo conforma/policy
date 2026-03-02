@@ -33,6 +33,30 @@ Verify the Dockerfile used in the buildah task was not fetched from an external 
 * Code: `buildah_build_task.buildah_uses_local_dockerfile`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/buildah_build_task/buildah_build_task.rego#L14[Source, window="_blank"]
 
+[#buildah_build_task__include_prefetch_sbom_param]
+=== link:#buildah_build_task__include_prefetch_sbom_param[INCLUDE_PREFETCH_SBOM parameter]
+
+Verify the INCLUDE_PREFETCH_SBOM parameter of a builder Task was not set to `false`. Prefetch SBOM inclusion is required by default to ensure hermetic builds produce accurate SBOMs. Pipelines that need to exclude prefetch SBOM content (e.g. due to Yarn workspace monorepo limitations) must obtain a policy exception.
+
+*Solution*: Set the INCLUDE_PREFETCH_SBOM parameter to 'true', or obtain a policy exception if excluding prefetch SBOM content is justified (e.g. monorepo Yarn workspace scenarios where the prefetch SBOM is inaccurate for the specific image).
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `INCLUDE_PREFETCH_SBOM is set to 'false', which excludes prefetched dependency data from the SBOM. A policy exception is required for this configuration.`
+* Code: `buildah_build_task.include_prefetch_sbom_param`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/buildah_build_task/buildah_build_task.rego#L119[Source, window="_blank"]
+
+[#buildah_build_task__include_source_sbom_param]
+=== link:#buildah_build_task__include_source_sbom_param[INCLUDE_SOURCE_SBOM parameter]
+
+Verify the INCLUDE_SOURCE_SBOM parameter of a builder Task was not set to `false`. Source SBOM inclusion is required by default to ensure builds produce comprehensive SBOMs. Pipelines that need to exclude source SBOM content must obtain a policy exception.
+
+*Solution*: Set the INCLUDE_SOURCE_SBOM parameter to 'true', or obtain a policy exception if excluding source SBOM content is justified.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `INCLUDE_SOURCE_SBOM is set to 'false', which excludes source-scanned dependency data from the SBOM. A policy exception is required for this configuration.`
+* Code: `buildah_build_task.include_source_sbom_param`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/buildah_build_task/buildah_build_task.rego#L146[Source, window="_blank"]
+
 [#buildah_build_task__platform_param]
 === link:#buildah_build_task__platform_param[PLATFORM parameter]
 
