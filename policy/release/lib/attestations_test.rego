@@ -4,6 +4,7 @@ import rego.v1
 
 import data.lib
 import data.lib.tekton_test
+import data.lib.utils
 
 pr_build_type := "tekton.dev/v1beta1/PipelineRun"
 
@@ -108,16 +109,16 @@ test_tasks_from_pipelinerun if {
 	slsa1_att := tekton_test.slsav1_attestation([slsa1_task])
 	_resolved_task_base := tekton_test.resolved_slsav1_task("buildah", [], [])
 	resolved_task := json.remove(_resolved_task_base, ["/params"])
-	lib.assert_equal([resolved_task], lib.tasks_from_pipelinerun) with input.attestations as [slsa1_att]
+	utils.assert_equal([resolved_task], lib.tasks_from_pipelinerun) with input.attestations as [slsa1_att]
 
 	slsa02_task := {"name": "my-task", "ref": {"kind": "task"}}
 	slsa02_att := att_mock_task_helper(slsa02_task)
 	resolved_slsa02_task := {"name": "my-task", "ref": {"kind": "task"}}
-	lib.assert_equal([resolved_slsa02_task], lib.tasks_from_pipelinerun) with input.attestations as slsa02_att
+	utils.assert_equal([resolved_slsa02_task], lib.tasks_from_pipelinerun) with input.attestations as slsa02_att
 }
 
 test_slsa_provenance_attestations if {
-	lib.assert_equal(lib.slsa_provenance_attestations, []) with input.attestations as []
+	utils.assert_equal(lib.slsa_provenance_attestations, []) with input.attestations as []
 
 	attestations := [
 		mock_pr_att,
@@ -132,12 +133,12 @@ test_slsa_provenance_attestations if {
 		mock_tr_att,
 		mock_tr_att_legacy,
 	]
-	lib.assert_equal(lib.slsa_provenance_attestations, expected) with input.attestations as attestations
+	utils.assert_equal(lib.slsa_provenance_attestations, expected) with input.attestations as attestations
 }
 
 test_pr_attestations_v1 if {
 	# Test v1.0 PipelineRun attestation
-	lib.assert_equal([mock_pr_att], lib.pipelinerun_attestations) with input.attestations as [
+	utils.assert_equal([mock_pr_att], lib.pipelinerun_attestations) with input.attestations as [
 		mock_tr_att,
 		mock_pr_att,
 		garbage_att,
@@ -146,7 +147,7 @@ test_pr_attestations_v1 if {
 
 test_pr_attestations_v02 if {
 	# Test v0.2 PipelineRun attestation
-	lib.assert_equal([mock_pr_att_legacy], lib.pipelinerun_attestations) with input.attestations as [
+	utils.assert_equal([mock_pr_att_legacy], lib.pipelinerun_attestations) with input.attestations as [
 		mock_tr_att_legacy,
 		mock_pr_att_legacy,
 		garbage_att,
@@ -163,7 +164,7 @@ test_pr_attestations_both if {
 			"externalParameters": {"runSpec": {"pipelineSpec": {}}},
 		}},
 	}}
-	lib.assert_equal(
+	utils.assert_equal(
 		[mock_pr_att_legacy, v1_att],
 		lib.pipelinerun_attestations,
 	) with input.attestations as [
@@ -177,7 +178,7 @@ test_pr_attestations_both if {
 
 test_pr_attestations_empty if {
 	# Test that no PipelineRun attestations returns empty list
-	lib.assert_equal([], lib.pipelinerun_attestations) with input.attestations as [
+	utils.assert_equal([], lib.pipelinerun_attestations) with input.attestations as [
 		mock_tr_att,
 		mock_tr_att_legacy,
 		garbage_att,
@@ -234,17 +235,17 @@ test_pipelinerun_slsa_provenance_v1 if {
 		}]),
 	]
 	expected := [provenance_with_pr_spec, provenance_with_pr_ref]
-	lib.assert_equal(expected, lib.pipelinerun_slsa_provenance_v1) with input.attestations as attestations
+	utils.assert_equal(expected, lib.pipelinerun_slsa_provenance_v1) with input.attestations as attestations
 }
 
 test_tr_attestations if {
-	lib.assert_equal([mock_tr_att], lib.taskrun_attestations) with input.attestations as [
+	utils.assert_equal([mock_tr_att], lib.taskrun_attestations) with input.attestations as [
 		mock_tr_att,
 		mock_pr_att,
 		garbage_att,
 	]
 
-	lib.assert_equal([], lib.taskrun_attestations) with input.attestations as [mock_pr_att, garbage_att]
+	utils.assert_equal([], lib.taskrun_attestations) with input.attestations as [mock_pr_att, garbage_att]
 }
 
 test_att_mock_helper if {
@@ -259,7 +260,7 @@ test_att_mock_helper if {
 		},
 	}}
 
-	lib.assert_equal(expected, att_mock_helper("result-name", {"foo": "bar"}, "mytask"))
+	utils.assert_equal(expected, att_mock_helper("result-name", {"foo": "bar"}, "mytask"))
 }
 
 test_att_mock_helper_ref if {
@@ -282,7 +283,7 @@ test_att_mock_helper_ref if {
 		},
 	}}
 
-	lib.assert_equal(expected, att_mock_helper_ref(
+	utils.assert_equal(expected, att_mock_helper_ref(
 		"result-name",
 		{"foo": "bar"},
 		"mytask",
@@ -291,7 +292,7 @@ test_att_mock_helper_ref if {
 }
 
 test_results_from_tests if {
-	lib.assert_equal("TEST_OUTPUT", lib.task_test_result_name)
+	utils.assert_equal("TEST_OUTPUT", lib.task_test_result_name)
 
 	expected := {
 		"value": {"result": "SUCCESS", "foo": "bar"},
@@ -306,7 +307,7 @@ test_results_from_tests if {
 		},
 		"mytask", trusted_bundle_ref,
 	)
-	lib.assert_equal([expected], lib.results_from_tests) with input.attestations as [att1]
+	utils.assert_equal([expected], lib.results_from_tests) with input.attestations as [att1]
 
 	# An edge case that may never happen
 	att2 := att_mock_helper_ref(
@@ -316,7 +317,7 @@ test_results_from_tests if {
 		},
 		"mytask", trusted_bundle_ref,
 	)
-	lib.assert_equal([expected], lib.results_from_tests) with input.attestations as [att2]
+	utils.assert_equal([expected], lib.results_from_tests) with input.attestations as [att2]
 
 	task3_base := tekton_test.resolved_slsav1_task(
 		"mytask",
@@ -329,27 +330,27 @@ test_results_from_tests if {
 	task3 = tekton_test.with_bundle(task3_base, trusted_bundle_ref)
 
 	att3 := tekton_test.slsav1_attestation([task3])
-	lib.assert_equal([expected], lib.results_from_tests) with input.attestations as [att3]
+	utils.assert_equal([expected], lib.results_from_tests) with input.attestations as [att3]
 }
 
 test_unmarshall_json if {
-	lib.assert_equal({"a": 1, "b": "c"}, lib.unmarshal("{\"a\":1,\"b\":\"c\"}"))
-	lib.assert_equal("not JSON", lib.unmarshal("not JSON"))
-	lib.assert_equal("", lib.unmarshal(""))
+	utils.assert_equal({"a": 1, "b": "c"}, lib.unmarshal("{\"a\":1,\"b\":\"c\"}"))
+	utils.assert_equal("not JSON", lib.unmarshal("not JSON"))
+	utils.assert_equal("", lib.unmarshal(""))
 }
 
 test_param_values if {
-	lib.assert_equal(lib.param_values("spam"), {"spam"})
-	lib.assert_equal(lib.param_values(["spam", "eggs"]), {"spam", "eggs"})
-	lib.assert_equal(lib.param_values({"maps": "spam", "sgge": "eggs"}), {"spam", "eggs"})
+	utils.assert_equal(lib.param_values("spam"), {"spam"})
+	utils.assert_equal(lib.param_values(["spam", "eggs"]), {"spam", "eggs"})
+	utils.assert_equal(lib.param_values({"maps": "spam", "sgge": "eggs"}), {"spam", "eggs"})
 
 	not lib.param_values(123)
 }
 
 test_result_values if {
-	lib.assert_equal(lib.result_values({"type": "string", "value": "spam"}), {"spam"})
-	lib.assert_equal(lib.result_values({"type": "array", "value": ["spam", "eggs"]}), {"spam", "eggs"})
-	lib.assert_equal(lib.result_values({"type": "object", "value": {"maps": "spam", "sgge": "eggs"}}), {"spam", "eggs"})
+	utils.assert_equal(lib.result_values({"type": "string", "value": "spam"}), {"spam"})
+	utils.assert_equal(lib.result_values({"type": "array", "value": ["spam", "eggs"]}), {"spam", "eggs"})
+	utils.assert_equal(lib.result_values({"type": "object", "value": {"maps": "spam", "sgge": "eggs"}}), {"spam", "eggs"})
 
 	not lib.result_values(123)
 }
@@ -358,13 +359,13 @@ test_attestation_materials if {
 	# SLSA v0.2: materials are just the mock materials
 	att_v02 := _attestation_v02_with_metadata("2025-01-15T10:30:00Z", [_build_task])
 	materials_v02 := lib.attestation_materials(att_v02)
-	lib.assert_equal(materials_v02, _mock_materials)
+	utils.assert_equal(materials_v02, _mock_materials)
 
 	# SLSA v1.0: resolvedDependencies includes both task dependencies and materials
 	att_v1 := _attestation_v1_with_metadata("2025-01-20T15:45:00Z", [_build_task])
 	materials_v1 := lib.attestation_materials(att_v1)
 	expected_v1 := array.concat(tekton_test.resolved_dependencies([_build_task]), _mock_materials)
-	lib.assert_equal(materials_v1, expected_v1)
+	utils.assert_equal(materials_v1, expected_v1)
 }
 
 # Mock materials for attestations (usable for both v0.2 and v1.0)
@@ -433,7 +434,7 @@ test_pipelinerun_attestations_single_v02 if {
 	# Test single v0.2 attestation
 	att := _attestation_v02_with_metadata("2025-01-15T10:30:00Z", [_build_task])
 	expected := [att]
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as [att]
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as [att]
 }
 
 test_pipelinerun_attestations_multiple_v02_latest_first if {
@@ -442,7 +443,7 @@ test_pipelinerun_attestations_multiple_v02_latest_first if {
 	att2 := _attestation_v02_with_metadata("2025-01-15T10:30:00Z", [_build_task])
 	attestations := [att1, att2]
 	expected := [att1]
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
 }
 
 test_pipelinerun_attestations_multiple_v02_latest_last if {
@@ -451,7 +452,7 @@ test_pipelinerun_attestations_multiple_v02_latest_last if {
 	att2 := _attestation_v02_with_metadata("2025-01-20T15:45:00Z", [_build_task])
 	attestations := [att1, att2]
 	expected := [att2]
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
 }
 
 test_pipelinerun_attestations_multiple_v02_middle if {
@@ -461,7 +462,7 @@ test_pipelinerun_attestations_multiple_v02_middle if {
 	att3 := _attestation_v02_with_metadata("2025-01-20T15:45:00Z", [_build_task])
 	attestations := [att1, att2, att3]
 	expected := [att2]
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
 }
 
 test_pipelinerun_attestations_multiple_v02_missing_timestamp if {
@@ -473,7 +474,7 @@ test_pipelinerun_attestations_multiple_v02_missing_timestamp if {
 	)
 	attestations := [att_with_metadata, att_without_metadata]
 	expected := []
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
 }
 
 test_pipelinerun_attestations_multiple_v1_missing_timestamp if {
@@ -494,7 +495,7 @@ test_pipelinerun_attestations_multiple_v1_missing_timestamp if {
 	)
 	attestations := [att_with_metadata, att_without_metadata]
 	expected := []
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
 }
 
 test_pipelinerun_attestations_mixed_formats if {
@@ -516,20 +517,20 @@ test_pipelinerun_attestations_mixed_formats if {
 	att_v1 := _attestation_v1_with_metadata("2025-01-20T15:45:00Z", [v1_task])
 	attestations := [att_v02, att_v1]
 	expected := [att_v02, att_v1]
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
 }
 
 test_pipelinerun_attestations_empty if {
 	# No attestations should return empty list
 	expected := []
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as []
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as []
 }
 
 test_pipelinerun_attestations_single_no_timestamp if {
 	# Single attestation without timestamp should still be returned
 	att := _attestation_v02_with_metadata("2025-01-15T10:30:00Z", [_non_build_task])
 	expected := [att]
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as [att]
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as [att]
 }
 
 test_pipelinerun_attestations_multiple_per_type if {
@@ -542,7 +543,7 @@ test_pipelinerun_attestations_multiple_per_type if {
 
 	# Should return latest v0.2 (v02_att2) and the v1.0 (v1_att)
 	expected := [v02_att2, v1_att]
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
 }
 
 test_pipelinerun_attestations_v1_multiple if {
@@ -551,7 +552,7 @@ test_pipelinerun_attestations_v1_multiple if {
 	v1_att2 := _attestation_v1_with_metadata("2025-01-20T15:45:00Z", [_build_task])
 	attestations := [v1_att1, v1_att2]
 	expected := [v1_att2]
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as attestations
 }
 
 test_pipelinerun_attestations_v1_single_no_timestamp if {
@@ -576,5 +577,5 @@ test_pipelinerun_attestations_v1_single_no_timestamp if {
 		}},
 	}}
 	expected := [v1_att]
-	lib.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as [v1_att]
+	utils.assert_equal(expected, lib.pipelinerun_attestations) with input.attestations as [v1_att]
 }

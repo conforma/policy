@@ -1,6 +1,7 @@
 package git_branch_test
 
 import data.git_branch
+import data.lib.utils
 import data.lib
 import rego.v1
 
@@ -19,9 +20,9 @@ single_test_case(branch, expected_results) if {
 	mock_tasks := mock_input.attestations[0].statement.predicate.buildConfig.tasks
 
 	# regal ignore:with-outside-test-context
-	lib.assert_equal_results(expected_results, git_branch.deny) with input as mock_input
+	utils.assert_equal_results(expected_results, git_branch.deny) with input as mock_input
 		# regal ignore:with-outside-test-context
-with 		lib.rule_data as mock_rule_data
+with 		utils.rule_data as mock_rule_data
 		# regal ignore:with-outside-test-context
 with 		lib.tasks_from_pipelinerun as mock_tasks
 }

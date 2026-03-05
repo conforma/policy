@@ -8,6 +8,7 @@ package sbom_cyclonedx
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.sbom
 
@@ -33,7 +34,7 @@ deny contains result if {
 	# Fail if it's not one of our explicitly supported versions
 	not version in {"1.4", "1.5", "1.6"}
 
-	result := lib.result_helper(rego.metadata.chain(), [index, version])
+	result := utils.result_helper(rego.metadata.chain(), [index, version])
 }
 
 # METADATA
@@ -55,7 +56,7 @@ deny contains result if {
 	s.specVersion == "1.4"
 	some violation in json.match_schema(s, schema_1_4)[1]
 	error := violation.error
-	result := lib.result_helper(rego.metadata.chain(), [index, error])
+	result := utils.result_helper(rego.metadata.chain(), [index, error])
 }
 
 # METADATA
@@ -77,7 +78,7 @@ deny contains result if {
 	s.specVersion == "1.5"
 	some violation in json.match_schema(s, schema_1_5)[1]
 	error := violation.error
-	result := lib.result_helper(rego.metadata.chain(), [index, error])
+	result := utils.result_helper(rego.metadata.chain(), [index, error])
 }
 
 # METADATA
@@ -99,7 +100,7 @@ deny contains result if {
 	s.specVersion == "1.6"
 	some violation in json.match_schema(s, schema_1_6)[1]
 	error := violation.error
-	result := lib.result_helper(rego.metadata.chain(), [index, error])
+	result := utils.result_helper(rego.metadata.chain(), [index, error])
 }
 
 # METADATA
@@ -119,8 +120,8 @@ deny contains result if {
 deny contains result if {
 	some s in sbom.cyclonedx_sboms
 	some component in s.components
-	sbom.has_item(component.purl, lib.rule_data(sbom.rule_data_packages_key))
-	result := lib.result_helper(rego.metadata.chain(), [component.purl])
+	sbom.has_item(component.purl, utils.rule_data(sbom.rule_data_packages_key))
+	result := utils.result_helper(rego.metadata.chain(), [component.purl])
 }
 
 # METADATA
@@ -143,7 +144,7 @@ deny contains result if {
 	some s in sbom.cyclonedx_sboms
 	some component in s.components
 	some property in component.properties
-	some disallowed in lib.rule_data(sbom.rule_data_attributes_key)
+	some disallowed in utils.rule_data(sbom.rule_data_attributes_key)
 
 	property.name == disallowed.name
 	object.get(property, "value", "") == object.get(disallowed, "value", "")
@@ -152,7 +153,7 @@ deny contains result if {
 
 	id := object.get(component, "purl", component.name)
 	result := _with_effective_on(
-		lib.result_helper_with_term(rego.metadata.chain(), [id, property.name, msg], id),
+		utils.result_helper_with_term(rego.metadata.chain(), [id, property.name, msg], id),
 		disallowed,
 	)
 }
@@ -178,7 +179,7 @@ deny contains result if {
 	some s in sbom.cyclonedx_sboms
 	some component in s.components
 	some reference in component.externalReferences
-	some allowed in lib.rule_data(sbom.rule_data_allowed_external_references_key)
+	some allowed in utils.rule_data(sbom.rule_data_allowed_external_references_key)
 
 	reference.type == allowed.type
 	not regex.match(object.get(allowed, "url", ""), object.get(reference, "url", ""))
@@ -186,7 +187,7 @@ deny contains result if {
 	msg := regex.replace(object.get(allowed, "url", ""), `(.+)`, ` by pattern "$1"`)
 
 	id := object.get(component, "purl", component.name)
-	result := lib.result_helper_with_term(rego.metadata.chain(), [id, reference.url, reference.type, msg], id)
+	result := utils.result_helper_with_term(rego.metadata.chain(), [id, reference.url, reference.type, msg], id)
 }
 
 # METADATA
@@ -210,7 +211,7 @@ deny contains result if {
 	some s in sbom.cyclonedx_sboms
 	some component in s.components
 	some reference in component.externalReferences
-	some disallowed in lib.rule_data(sbom.rule_data_disallowed_external_references_key)
+	some disallowed in utils.rule_data(sbom.rule_data_disallowed_external_references_key)
 
 	reference.type == disallowed.type
 	regex.match(object.get(disallowed, "url", ""), object.get(reference, "url", ""))
@@ -218,7 +219,7 @@ deny contains result if {
 	msg := regex.replace(object.get(disallowed, "url", ""), `(.+)`, ` by pattern "$1"`)
 
 	id := object.get(component, "purl", component.name)
-	result := lib.result_helper_with_term(rego.metadata.chain(), [id, reference.url, reference.type, msg], id)
+	result := utils.result_helper_with_term(rego.metadata.chain(), [id, reference.url, reference.type, msg], id)
 }
 
 # METADATA
@@ -255,14 +256,14 @@ deny contains result if {
 	parsed_purl := ec.purl.parse(purl)
 
 	# patterns are either those defined by the rule for a given purl type, or empty by default
-	allowed_data := lib.rule_data(sbom.rule_data_allowed_package_sources_key)
+	allowed_data := utils.rule_data(sbom.rule_data_allowed_package_sources_key)
 	patterns := sbom.purl_allowed_patterns(parsed_purl.type, allowed_data)
 	distribution_url := object.get(reference, "url", "")
 
 	# only progress past this point if no matches were found
 	not sbom.url_matches_any_pattern(distribution_url, patterns)
 
-	result := lib.result_helper_with_term(rego.metadata.chain(), [purl, distribution_url], purl)
+	result := utils.result_helper_with_term(rego.metadata.chain(), [purl, distribution_url], purl)
 }
 
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does

@@ -29,6 +29,7 @@ package volatile_config
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 
 # METADATA
@@ -49,8 +50,8 @@ import data.lib
 #
 warn contains result if {
 	some rule in _applicable_rules
-	lib.warning_category(rule.config) == "pending"
-	result := lib.result_helper(
+	utils.warning_category(rule.config) == "pending"
+	result := utils.result_helper(
 		rego.metadata.chain(),
 		[rule.type, rule.config.value, rule.config.effectiveOn],
 	)
@@ -75,9 +76,9 @@ warn contains result if {
 #
 warn contains result if {
 	some rule in _applicable_rules
-	lib.warning_category(rule.config) == "expiring"
-	days := lib.days_until_expiration(rule.config)
-	result := lib.result_helper(
+	utils.warning_category(rule.config) == "expiring"
+	days := utils.days_until_expiration(rule.config)
+	result := utils.result_helper(
 		rego.metadata.chain(),
 		[rule.type, rule.config.value, days, rule.config.effectiveUntil],
 	)
@@ -102,8 +103,8 @@ warn contains result if {
 #
 warn contains result if {
 	some rule in _applicable_rules
-	lib.warning_category(rule.config) == "no_expiration"
-	result := lib.result_helper(
+	utils.warning_category(rule.config) == "no_expiration"
+	result := utils.result_helper(
 		rego.metadata.chain(),
 		[rule.type, rule.config.value],
 	)
@@ -127,8 +128,8 @@ warn contains result if {
 #
 warn contains result if {
 	some rule in _applicable_rules
-	lib.warning_category(rule.config) == "expired"
-	result := lib.result_helper(
+	utils.warning_category(rule.config) == "expired"
+	result := utils.result_helper(
 		rego.metadata.chain(),
 		[rule.type, rule.config.value, rule.config.effectiveUntil],
 	)
@@ -152,8 +153,8 @@ warn contains result if {
 #
 warn contains result if {
 	some rule in _applicable_rules
-	lib.warning_category(rule.config) == "invalid"
-	result := lib.result_helper(
+	utils.warning_category(rule.config) == "invalid"
+	result := utils.result_helper(
 		rego.metadata.chain(),
 		[
 			rule.type,
@@ -171,7 +172,7 @@ _applicable_rules contains rule if {
 
 	# Process include rules
 	some config in object.get(volatile_config, "include", [])
-	lib.is_rule_applicable(config, _context)
+	utils.is_rule_applicable(config, _context)
 	rule := {"config": config, "type": "include", "source": object.get(source, "name", "")}
 }
 
@@ -181,7 +182,7 @@ _applicable_rules contains rule if {
 
 	# Process exclude rules
 	some config in object.get(volatile_config, "exclude", [])
-	lib.is_rule_applicable(config, _context)
+	utils.is_rule_applicable(config, _context)
 	rule := {"config": config, "type": "exclude", "source": object.get(source, "name", "")}
 }
 

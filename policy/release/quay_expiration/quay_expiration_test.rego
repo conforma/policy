@@ -2,22 +2,23 @@ package quay_expiration_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.quay_expiration
 
 test_ci_pipeline if {
-	lib.assert_empty(quay_expiration.deny) with input.image as _image_expires_none
+	utils.assert_empty(quay_expiration.deny) with input.image as _image_expires_none
 		with data.rule_data as _rule_data_for_ci
 
-	lib.assert_empty(quay_expiration.deny) with input.image as _image_expires_blank
+	utils.assert_empty(quay_expiration.deny) with input.image as _image_expires_blank
 		with data.rule_data as _rule_data_for_ci
 
-	lib.assert_empty(quay_expiration.deny) with input.image as _image_expires_5d
+	utils.assert_empty(quay_expiration.deny) with input.image as _image_expires_5d
 		with data.rule_data as _rule_data_for_ci
 }
 
 test_release_pipeline if {
-	lib.assert_empty(quay_expiration.deny) with input.image as _image_expires_none
+	utils.assert_empty(quay_expiration.deny) with input.image as _image_expires_none
 		with data.rule_data as _rule_data_for_release
 
 	expected := {{
@@ -25,10 +26,10 @@ test_release_pipeline if {
 		"msg": "The label 'quay.expires-after' is not allowed in the released image",
 	}}
 
-	lib.assert_equal_results(expected, quay_expiration.deny) with input.image as _image_expires_blank
+	utils.assert_equal_results(expected, quay_expiration.deny) with input.image as _image_expires_blank
 		with data.rule_data as _rule_data_for_release
 
-	lib.assert_equal_results(expected, quay_expiration.deny) with input.image as _image_expires_5d
+	utils.assert_equal_results(expected, quay_expiration.deny) with input.image as _image_expires_5d
 		with data.rule_data as _rule_data_for_release
 }
 

@@ -9,6 +9,7 @@ package external_parameters
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.json as j
 
@@ -30,10 +31,10 @@ deny contains result if {
 		some p in provenance.statement.predicate.buildDefinition.externalParameters.runSpec.params
 		p.value != ""
 	}
-	expected_names := {n | some n in lib.rule_data(_rule_data_key)}
+	expected_names := {n | some n in utils.rule_data(_rule_data_key)}
 
 	expected_names != param_names
-	result := lib.result_helper(rego.metadata.chain(), [param_names, expected_names])
+	result := utils.result_helper(rego.metadata.chain(), [param_names, expected_names])
 }
 
 # METADATA
@@ -48,7 +49,7 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := utils.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 # METADATA
@@ -67,13 +68,13 @@ deny contains result if {
 		w.persistentVolumeClaim
 	}
 	count(shared_workspaces) > 0
-	result := lib.result_helper(rego.metadata.chain(), [shared_workspaces])
+	result := utils.result_helper(rego.metadata.chain(), [shared_workspaces])
 }
 
 # Verify pipeline_run_params is a non-empty list of strings
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		lib.rule_data(_rule_data_key),
+		utils.rule_data(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

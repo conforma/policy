@@ -3,7 +3,7 @@ package checks_test
 import rego.v1
 
 import data.checks
-import data.lib
+import data.lib.utils as lib
 
 opa_inspect_valid := {
 	"namespaces": {

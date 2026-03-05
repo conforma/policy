@@ -9,7 +9,7 @@ package step_image_registries
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 import data.lib.json as j
 import data.lib.k8s
 

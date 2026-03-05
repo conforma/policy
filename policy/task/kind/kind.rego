@@ -9,7 +9,7 @@ package kind
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 
 expected_kind := "Task"
 

@@ -2,12 +2,13 @@ package pre_build_script_task_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.pre_build_script_task
 
 test_good_pre_build_script_tasks if {
 	# regal ignore:line-length
-	lib.assert_empty(pre_build_script_task.deny) with input.attestations as [_good_attestation, _cyclonedx_sbom_attestation]
+	utils.assert_empty(pre_build_script_task.deny) with input.attestations as [_good_attestation, _cyclonedx_sbom_attestation]
 		with data.rule_data.allowed_registry_prefixes as _allowed_registries
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}
@@ -29,7 +30,7 @@ test_good_pre_build_script_tasks if {
 	image_manifest := {"mediaType": "application/vnd.oci.image.index.v1+json"}
 
 	# regal ignore:line-length
-	lib.assert_empty(pre_build_script_task.deny) with input.attestations as [good_attestation_with_image_index, _cyclonedx_sbom_attestation]
+	utils.assert_empty(pre_build_script_task.deny) with input.attestations as [good_attestation_with_image_index, _cyclonedx_sbom_attestation]
 		with data.rule_data.allowed_registry_prefixes as _allowed_registries
 		with ec.oci.descriptor as image_manifest
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}
@@ -49,7 +50,7 @@ test_disallowed_script_task_runner_image if {
 	}])
 
 	# regal ignore:line-length
-	lib.assert_equal_results(expected, pre_build_script_task.deny) with input.attestations as [disallowed_image, _cyclonedx_sbom_attestation]
+	utils.assert_equal_results(expected, pre_build_script_task.deny) with input.attestations as [disallowed_image, _cyclonedx_sbom_attestation]
 		with data.rule_data.allowed_registry_prefixes as _allowed_registries
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}
@@ -67,7 +68,7 @@ test_pre_build_image_not_in_task_result if {
 	}])
 
 	# regal ignore:line-length
-	lib.assert_equal_results(expected, pre_build_script_task.deny) with input.attestations as [attestation_missing_task_result, _cyclonedx_sbom_attestation]
+	utils.assert_equal_results(expected, pre_build_script_task.deny) with input.attestations as [attestation_missing_task_result, _cyclonedx_sbom_attestation]
 		with data.rule_data.allowed_registry_prefixes as _allowed_registries
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}
@@ -75,13 +76,13 @@ test_pre_build_image_not_in_task_result if {
 
 test_pre_build_image_in_sbom if {
 	# regal ignore:line-length
-	lib.assert_empty(pre_build_script_task.deny) with input.attestations as [_good_attestation, _cyclonedx_sbom_attestation]
+	utils.assert_empty(pre_build_script_task.deny) with input.attestations as [_good_attestation, _cyclonedx_sbom_attestation]
 		with data.rule_data.allowed_registry_prefixes as _allowed_registries
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}
 
 	# regal ignore:line-length
-	lib.assert_empty(pre_build_script_task.deny) with input.attestations as [_good_attestation, _spdx_sbom_attestation]
+	utils.assert_empty(pre_build_script_task.deny) with input.attestations as [_good_attestation, _spdx_sbom_attestation]
 		with data.rule_data.allowed_registry_prefixes as _allowed_registries
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}
@@ -103,13 +104,13 @@ test_pre_build_image_in_sbom_ignoring_tag if {
 	])
 
 	# regal ignore:line-length
-	lib.assert_empty(pre_build_script_task.deny) with input.attestations as [good_attestation_with_tag_in_image_ref, _cyclonedx_sbom_attestation]
+	utils.assert_empty(pre_build_script_task.deny) with input.attestations as [good_attestation_with_tag_in_image_ref, _cyclonedx_sbom_attestation]
 		with data.rule_data.allowed_registry_prefixes as _allowed_registries
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}
 
 	# regal ignore:line-length
-	lib.assert_empty(pre_build_script_task.deny) with input.attestations as [good_attestation_with_tag_in_image_ref, _spdx_sbom_attestation]
+	utils.assert_empty(pre_build_script_task.deny) with input.attestations as [good_attestation_with_tag_in_image_ref, _spdx_sbom_attestation]
 		with data.rule_data.allowed_registry_prefixes as _allowed_registries
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}
@@ -127,7 +128,7 @@ test_pre_build_image_not_in_sbom if {
 	}])
 
 	# regal ignore:line-length
-	lib.assert_equal_results(expected, pre_build_script_task.deny) with input.attestations as [_good_attestation, incomplete_cyclonedx_sbom_attestation]
+	utils.assert_equal_results(expected, pre_build_script_task.deny) with input.attestations as [_good_attestation, incomplete_cyclonedx_sbom_attestation]
 		with data.rule_data.allowed_registry_prefixes as _allowed_registries
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}
@@ -138,7 +139,7 @@ test_pre_build_image_not_in_sbom if {
 	}])
 
 	# regal ignore:line-length
-	lib.assert_equal_results(expected, pre_build_script_task.deny) with input.attestations as [_good_attestation, incomplete_spdx_sbom_attestation]
+	utils.assert_equal_results(expected, pre_build_script_task.deny) with input.attestations as [_good_attestation, incomplete_spdx_sbom_attestation]
 		with data.rule_data.allowed_registry_prefixes as _allowed_registries
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}
@@ -158,7 +159,7 @@ test_pre_build_image_reference_is_not_valid if {
 	}])
 
 	# regal ignore:line-length
-	lib.assert_equal_results(expected, pre_build_script_task.deny) with input.attestations as [invalid_prebuild_img_attestation, _cyclonedx_sbom_attestation]
+	utils.assert_equal_results(expected, pre_build_script_task.deny) with input.attestations as [invalid_prebuild_img_attestation, _cyclonedx_sbom_attestation]
 		with data.rule_data.allowed_registry_prefixes as _allowed_registries
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with input.image as {"ref": "registry.io/repository/image@sha256:284e3029"}

@@ -2,47 +2,48 @@ package schedule_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.schedule
 
 test_no_restriction_by_default if {
-	lib.assert_empty(schedule.deny)
+	utils.assert_empty(schedule.deny)
 }
 
 test_weekday_restriction if {
 	_rule_data := weekday_rule_data(["friday", "saturday", "sunday"])
 
-	lib.assert_empty(schedule.deny) with data.rule_data as _rule_data
+	utils.assert_empty(schedule.deny) with data.rule_data as _rule_data
 		with data.config.policy.when_ns as monday
 
-	lib.assert_empty(schedule.deny) with data.rule_data as _rule_data
+	utils.assert_empty(schedule.deny) with data.rule_data as _rule_data
 		with data.config.policy.when_ns as tuesday
 
-	lib.assert_empty(schedule.deny) with data.rule_data as _rule_data
+	utils.assert_empty(schedule.deny) with data.rule_data as _rule_data
 		with data.config.policy.when_ns as wednesday
 
-	lib.assert_empty(schedule.deny) with data.rule_data as _rule_data
+	utils.assert_empty(schedule.deny) with data.rule_data as _rule_data
 		with data.config.policy.when_ns as thursday
 
 	friday_violation := {{
 		"code": "schedule.weekday_restriction",
 		"msg": "friday is a disallowed weekday: friday, saturday, sunday",
 	}}
-	lib.assert_equal_results(schedule.deny, friday_violation) with data.rule_data as _rule_data
+	utils.assert_equal_results(schedule.deny, friday_violation) with data.rule_data as _rule_data
 		with data.config.policy.when_ns as friday
 
 	saturday_violation := {{
 		"code": "schedule.weekday_restriction",
 		"msg": "saturday is a disallowed weekday: friday, saturday, sunday",
 	}}
-	lib.assert_equal_results(schedule.deny, saturday_violation) with data.rule_data as _rule_data
+	utils.assert_equal_results(schedule.deny, saturday_violation) with data.rule_data as _rule_data
 		with data.config.policy.when_ns as saturday
 
 	sunday_violation := {{
 		"code": "schedule.weekday_restriction",
 		"msg": "sunday is a disallowed weekday: friday, saturday, sunday",
 	}}
-	lib.assert_equal_results(schedule.deny, sunday_violation) with data.rule_data as _rule_data
+	utils.assert_equal_results(schedule.deny, sunday_violation) with data.rule_data as _rule_data
 		with data.config.policy.when_ns as sunday
 }
 
@@ -52,14 +53,14 @@ test_weekday_restriction_case_insensitive if {
 		"msg": "friday is a disallowed weekday: friday",
 	}}
 
-	lib.assert_equal_results(schedule.deny, violation) with data.rule_data as weekday_rule_data(["FRIDAY"])
+	utils.assert_equal_results(schedule.deny, violation) with data.rule_data as weekday_rule_data(["FRIDAY"])
 		with data.config.policy.when_ns as friday
-	lib.assert_empty(schedule.deny) with data.rule_data as weekday_rule_data(["FRIDAY"])
+	utils.assert_empty(schedule.deny) with data.rule_data as weekday_rule_data(["FRIDAY"])
 		with data.config.policy.when_ns as monday
 
-	lib.assert_equal_results(schedule.deny, violation) with data.rule_data as weekday_rule_data(["friday"])
+	utils.assert_equal_results(schedule.deny, violation) with data.rule_data as weekday_rule_data(["friday"])
 		with data.config.policy.when_ns as friday
-	lib.assert_empty(schedule.deny) with data.rule_data as weekday_rule_data(["friday"])
+	utils.assert_empty(schedule.deny) with data.rule_data as weekday_rule_data(["friday"])
 		with data.config.policy.when_ns as monday
 }
 
@@ -68,16 +69,16 @@ test_date_restriction if {
 		"code": "schedule.date_restriction",
 		"msg": "2023-01-01 is a disallowed date: 2023-01-01",
 	}}
-	lib.assert_equal_results(schedule.deny, violation) with data.rule_data as date_rule_data(["2023-01-01"])
+	utils.assert_equal_results(schedule.deny, violation) with data.rule_data as date_rule_data(["2023-01-01"])
 		with data.config.policy.when_ns as time.parse_rfc3339_ns("2023-01-01T00:00:00Z")
 
-	lib.assert_empty(schedule.deny) with data.rule_data as date_rule_data(["2023-01-01"])
+	utils.assert_empty(schedule.deny) with data.rule_data as date_rule_data(["2023-01-01"])
 		with data.config.policy.when_ns as time.parse_rfc3339_ns("2023-01-02T00:00:00Z")
-	lib.assert_empty(schedule.deny) with data.rule_data as date_rule_data(["2023-01-01"])
+	utils.assert_empty(schedule.deny) with data.rule_data as date_rule_data(["2023-01-01"])
 		with data.config.policy.when_ns as time.parse_rfc3339_ns("2023-02-01T00:00:00Z")
-	lib.assert_empty(schedule.deny) with data.rule_data as date_rule_data(["2023-01-01"])
+	utils.assert_empty(schedule.deny) with data.rule_data as date_rule_data(["2023-01-01"])
 		with data.config.policy.when_ns as time.parse_rfc3339_ns("2024-01-01T00:00:00Z")
-	lib.assert_empty(schedule.deny) with data.rule_data as date_rule_data(["2023-01-01"])
+	utils.assert_empty(schedule.deny) with data.rule_data as date_rule_data(["2023-01-01"])
 		with data.config.policy.when_ns as time.parse_rfc3339_ns("2024-02-03T00:00:00Z")
 }
 
@@ -88,7 +89,7 @@ test_pipeline_intention if {
 		"code": "schedule.weekday_restriction",
 		"msg": "monday is a disallowed weekday: monday",
 	}}
-	lib.assert_equal_results(schedule.deny, monday_violation) with data.rule_data as release_weekday_data
+	utils.assert_equal_results(schedule.deny, monday_violation) with data.rule_data as release_weekday_data
 		with data.config.policy.when_ns as monday
 
 	release_date_data := date_rule_data(["2024-05-12"])
@@ -97,24 +98,24 @@ test_pipeline_intention if {
 		"code": "schedule.date_restriction",
 		"msg": "2024-05-12 is a disallowed date: 2024-05-12",
 	}}
-	lib.assert_equal_results(schedule.deny, violation) with data.rule_data as release_date_data
+	utils.assert_equal_results(schedule.deny, violation) with data.rule_data as release_date_data
 		with data.config.policy.when_ns as rfc_date
 
 	# Without pipeline intention set to "release" we do not get a violation
 	build_weekday_data := object.union(release_weekday_data, {"pipeline_intention": null})
-	lib.assert_empty(schedule.deny) with data.rule_data as build_weekday_data
+	utils.assert_empty(schedule.deny) with data.rule_data as build_weekday_data
 		with data.config.policy.when_ns as monday
 
 	spam_weekday_data := object.union(release_weekday_data, {"pipeline_intention": "spam"})
-	lib.assert_empty(schedule.deny) with data.rule_data as spam_weekday_data
+	utils.assert_empty(schedule.deny) with data.rule_data as spam_weekday_data
 		with data.config.policy.when_ns as monday
 
 	build_date_data := object.union(release_date_data, {"pipeline_intention": null})
-	lib.assert_empty(schedule.deny) with data.rule_data as build_date_data
+	utils.assert_empty(schedule.deny) with data.rule_data as build_date_data
 		with data.config.policy.when_ns as rfc_date
 
 	spam_date_data := object.union(release_date_data, {"pipeline_intention": "spam"})
-	lib.assert_empty(schedule.deny) with data.rule_data as spam_date_data
+	utils.assert_empty(schedule.deny) with data.rule_data as spam_date_data
 		with data.config.policy.when_ns as rfc_date
 }
 
@@ -149,7 +150,7 @@ test_rule_data_format_disallowed_weekdays if {
 		},
 	}
 
-	lib.assert_equal_results(schedule.deny, expected) with data.rule_data as d
+	utils.assert_equal_results(schedule.deny, expected) with data.rule_data as d
 		with data.config.policy.when_ns as sunday
 }
 
@@ -199,7 +200,7 @@ test_rule_data_format_disallowed_dates if {
 		},
 	}
 
-	lib.assert_equal_results(schedule.deny, expected) with data.rule_data as d
+	utils.assert_equal_results(schedule.deny, expected) with data.rule_data as d
 		with data.config.policy.when_ns as sunday
 }
 

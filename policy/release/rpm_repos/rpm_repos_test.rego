@@ -2,6 +2,7 @@ package rpm_repos_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.sbom
 import data.rpm_repos
@@ -13,7 +14,7 @@ test_repo_id_data_empty if {
 		"severity": "failure",
 	}
 
-	lib.assert_equal_results({expected}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as []
+	utils.assert_equal_results({expected}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as []
 }
 
 test_repo_id_data_not_an_array if {
@@ -26,7 +27,7 @@ test_repo_id_data_not_an_array if {
 		"severity": "failure",
 	}
 
-	lib.assert_equal_results({expected}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as {"chunky": "bacon"}
+	utils.assert_equal_results({expected}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as {"chunky": "bacon"}
 }
 
 test_repo_id_data_not_strings if {
@@ -36,40 +37,40 @@ test_repo_id_data_not_strings if {
 		"severity": "failure",
 	}
 
-	lib.assert_equal_results({expected}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as ["spam", 42]
+	utils.assert_equal_results({expected}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as ["spam", 42]
 }
 
 test_repo_id_all if {
-	lib.assert_equal(
+	utils.assert_equal(
 		{p1, p2, p3, p4, p5, p7},
 		rpm_repos.all_c2_rpm_purls,
 	) with lib.sbom.all_sboms as fake_cyclonedx_sboms
 
-	lib.assert_equal(
+	utils.assert_equal(
 		{p1, p2, p3, p4, p5, p7},
 		rpm_repos.all_c2_rpm_purls,
 	) with lib.sbom.all_sboms as fake_spdx_sboms
 }
 
 test_repo_id_all_with_repo_id if {
-	lib.assert_equal(
+	utils.assert_equal(
 		{p1, p2, p3, p7},
 		rpm_repos._plain_purls(rpm_repos.all_c2_purls_with_repo_ids),
 	) with lib.sbom.all_sboms as fake_cyclonedx_sboms
 
-	lib.assert_equal(
+	utils.assert_equal(
 		{p1, p2, p3, p7},
 		rpm_repos._plain_purls(rpm_repos.all_c2_purls_with_repo_ids),
 	) with lib.sbom.all_sboms as fake_spdx_sboms
 }
 
 test_repo_id_all_known if {
-	lib.assert_equal(
+	utils.assert_equal(
 		{p1, p2, p7},
 		rpm_repos._plain_purls(rpm_repos.all_c2_purls_with_known_repo_ids),
 	) with lib.sbom.all_sboms as fake_cyclonedx_sboms with data.rule_data.known_rpm_repositories as fake_repo_id_list
 
-	lib.assert_equal(
+	utils.assert_equal(
 		{p1, p2, p7},
 		rpm_repos._plain_purls(rpm_repos.all_c2_purls_with_known_repo_ids),
 	) with lib.sbom.all_sboms as fake_spdx_sboms with data.rule_data.known_rpm_repositories as fake_repo_id_list
@@ -80,12 +81,12 @@ test_repo_id_all_known_with_extras if {
 		"known_rpm_repositories": array.slice(fake_repo_id_list, 1, count(fake_repo_id_list)),
 		"extra_rpm_repositories": array.slice(fake_repo_id_list, 0, 1),
 	}
-	lib.assert_equal(
+	utils.assert_equal(
 		{p1, p2, p7},
 		rpm_repos._plain_purls(rpm_repos.all_c2_purls_with_known_repo_ids),
 	) with lib.sbom.all_sboms as fake_cyclonedx_sboms with data.rule_data as rule_data
 
-	lib.assert_equal(
+	utils.assert_equal(
 		{p1, p2, p7},
 		rpm_repos._plain_purls(rpm_repos.all_c2_purls_with_known_repo_ids),
 	) with lib.sbom.all_sboms as fake_spdx_sboms with data.rule_data as rule_data
@@ -112,11 +113,11 @@ test_repo_id_purls_missing_repo_ids if {
 	}
 
 	cyclonedx_sboms := [fake_cyclonedx_sbom({p1, p2, p4, p5, p6, p7})]
-	lib.assert_equal_results(expected, rpm_repos.deny) with lib.sbom.all_sboms as cyclonedx_sboms
+	utils.assert_equal_results(expected, rpm_repos.deny) with lib.sbom.all_sboms as cyclonedx_sboms
 		with data.rule_data.known_rpm_repositories as fake_repo_id_list
 
 	spdx_sboms := [fake_spdx_sbom({p1, p2, p4, p5, p6, p7})]
-	lib.assert_equal_results(expected, rpm_repos.deny) with lib.sbom.all_sboms as spdx_sboms
+	utils.assert_equal_results(expected, rpm_repos.deny) with lib.sbom.all_sboms as spdx_sboms
 		with data.rule_data.known_rpm_repositories as fake_repo_id_list
 }
 
@@ -129,12 +130,12 @@ test_repo_id_purls_missing_repo_ids_truncated if {
 	}}
 
 	cyclonedx_sboms := [fake_cyclonedx_sbom({p1, p2, p4, p5, p6})]
-	lib.assert_equal_results(expected, rpm_repos.deny) with lib.sbom.all_sboms as cyclonedx_sboms
+	utils.assert_equal_results(expected, rpm_repos.deny) with lib.sbom.all_sboms as cyclonedx_sboms
 		with data.rule_data.known_rpm_repositories as fake_repo_id_list
 		with rpm_repos._truncate_threshold as 1 with rpm_repos._min_remainder_count as 0
 
 	spdx_sboms := [fake_spdx_sbom({p1, p2, p4, p5, p6})]
-	lib.assert_equal_results(expected, rpm_repos.deny) with lib.sbom.all_sboms as spdx_sboms
+	utils.assert_equal_results(expected, rpm_repos.deny) with lib.sbom.all_sboms as spdx_sboms
 		with data.rule_data.known_rpm_repositories as fake_repo_id_list
 		with rpm_repos._truncate_threshold as 1 with rpm_repos._min_remainder_count as 0
 }
@@ -150,11 +151,11 @@ test_repo_id_purls_unknown_repo_ids if {
 	}
 
 	cyclonedx_sboms := [fake_cyclonedx_sbom({p1, p2, p3, p6})]
-	lib.assert_equal_results({expected}, rpm_repos.deny) with lib.sbom.all_sboms as cyclonedx_sboms
+	utils.assert_equal_results({expected}, rpm_repos.deny) with lib.sbom.all_sboms as cyclonedx_sboms
 		with data.rule_data.known_rpm_repositories as fake_repo_id_list
 
 	spdx_sboms := [fake_spdx_sbom({p1, p2, p3, p6})]
-	lib.assert_equal_results({expected}, rpm_repos.deny) with lib.sbom.all_sboms as spdx_sboms
+	utils.assert_equal_results({expected}, rpm_repos.deny) with lib.sbom.all_sboms as spdx_sboms
 		with data.rule_data.known_rpm_repositories as fake_repo_id_list
 }
 
@@ -170,39 +171,39 @@ test_purl_in_multiple_sboms if {
 	}
 
 	all_sboms := [fake_cyclonedx_sbom({p1, p2, p3, p6}), fake_spdx_sbom({p1, p2, p3, p6})]
-	lib.assert_equal_results({expected}, rpm_repos.deny) with lib.sbom.all_sboms as all_sboms
+	utils.assert_equal_results({expected}, rpm_repos.deny) with lib.sbom.all_sboms as all_sboms
 		with data.rule_data.known_rpm_repositories as fake_repo_id_list
 }
 
 test_repo_id_happy_path_cachi2_components if {
 	# These three purls are valid, so we see no violations
 	all_sboms := [fake_cyclonedx_sbom({p1, p2, p7}), fake_spdx_sbom({p1, p2, p7})]
-	lib.assert_empty(rpm_repos.deny) with rpm_repos._all_sboms as all_sboms
+	utils.assert_empty(rpm_repos.deny) with rpm_repos._all_sboms as all_sboms
 		with data.rule_data.known_rpm_repositories as fake_repo_id_list
 }
 
 test_repo_id_happy_path_syft_components if {
 	# All the rpm components are ignored because they were not generated by cachi2, so we see no violations
-	lib.assert_empty(rpm_repos.deny) with rpm_repos._all_sboms as fake_sboms_syft
+	utils.assert_empty(rpm_repos.deny) with rpm_repos._all_sboms as fake_sboms_syft
 		with data.rule_data.known_rpm_repositories as fake_repo_id_list
 
 	# Notice the rule data doesn't make a difference
-	lib.assert_empty(rpm_repos.deny) with rpm_repos._all_sboms as fake_sboms_syft
+	utils.assert_empty(rpm_repos.deny) with rpm_repos._all_sboms as fake_sboms_syft
 		with data.rule_data.known_rpm_repositories as ["pancakes"]
 }
 
 test_clamp_violation_strings if {
-	lib.assert_equal(
+	utils.assert_equal(
 		{"remainder": 2, "values": ["a", "b", "c"]},
 		rpm_repos._truncate(["a", "b", "c", "d", "e"]),
 	) with rpm_repos._truncate_threshold as 3 with rpm_repos._min_remainder_count as 0
 
-	lib.assert_equal(
+	utils.assert_equal(
 		{"remainder": 0, "values": ["a", "b", "c", "d", "e"]},
 		rpm_repos._truncate(["a", "b", "c", "d", "e"]),
 	) with rpm_repos._truncate_threshold as 5
 
-	lib.assert_equal(
+	utils.assert_equal(
 		{"remainder": 3, "values": ["a", "b"]},
 		rpm_repos._truncate(["a", "b", "c", "d", "e"]),
 	) with rpm_repos._truncate_threshold as 2 with rpm_repos._min_remainder_count as 3

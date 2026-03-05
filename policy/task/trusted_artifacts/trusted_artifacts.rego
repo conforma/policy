@@ -9,7 +9,7 @@ package trusted_artifacts
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 import data.lib.k8s
 
 # METADATA

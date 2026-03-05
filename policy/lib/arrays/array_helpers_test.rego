@@ -2,29 +2,30 @@ package lib.arrays_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.arrays
 
 ary := [{"x": 1, "z": "X"}, {"x": 2}, {"x": 6, "y": "B"}, {"x": 1, "z": "X"}, {"x": -1}]
 
 test_rank if {
-	lib.assert_equal(4, arrays.rank({"x": 4, "y": "A"}, "x", ary))
-	lib.assert_equal(1, arrays.rank({"x": -1}, "x", ary))
-	lib.assert_equal(0, arrays.rank({"x": -2}, "x", ary))
-	lib.assert_equal(5, arrays.rank({"x": 7}, "x", ary))
-	lib.assert_equal(count(ary), arrays.rank({}, "x", ary))
-	lib.assert_equal(count(ary), arrays.rank({}, "w", ary))
+	utils.assert_equal(4, arrays.rank({"x": 4, "y": "A"}, "x", ary))
+	utils.assert_equal(1, arrays.rank({"x": -1}, "x", ary))
+	utils.assert_equal(0, arrays.rank({"x": -2}, "x", ary))
+	utils.assert_equal(5, arrays.rank({"x": 7}, "x", ary))
+	utils.assert_equal(count(ary), arrays.rank({}, "x", ary))
+	utils.assert_equal(count(ary), arrays.rank({}, "w", ary))
 }
 
 test_sort_by if {
-	lib.assert_equal(
+	utils.assert_equal(
 		[
 			{"x": -1},
 			{"x": 1, "z": "X"}, {"x": 1, "z": "X"}, {"x": 2}, {"x": 6, "y": "B"},
 		],
 		arrays.sort_by("x", ary),
 	)
-	lib.assert_equal(
+	utils.assert_equal(
 		[
 			{"x": 6, "y": "B"},
 			{"x": 1, "z": "X"}, {"x": 2}, {"x": 1, "z": "X"}, {"x": -1},
@@ -34,7 +35,7 @@ test_sort_by if {
 }
 
 test_sort_by_mixed_types if {
-	lib.assert_equal([{"x": 0}, {"x": "1"}, {"x": 2.0}], arrays.sort_by("x", [{"x": "1"}, {"x": 0}, {"x": 2.0}]))
+	utils.assert_equal([{"x": 0}, {"x": "1"}, {"x": 2.0}], arrays.sort_by("x", [{"x": "1"}, {"x": 0}, {"x": 2.0}]))
 }
 
 test_le if {

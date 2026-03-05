@@ -3,23 +3,24 @@ package github_certificate_test
 import rego.v1
 
 import data.github_certificate
+import data.lib.utils
 import data.lib
 
 test_all_good if {
 	signatures := [{"certificate": good_cert}]
-	lib.assert_empty(github_certificate.deny) with input.image.signatures as signatures
-	lib.assert_empty(github_certificate.warn) with input.image.signatures as signatures
+	utils.assert_empty(github_certificate.deny) with input.image.signatures as signatures
+	utils.assert_empty(github_certificate.warn) with input.image.signatures as signatures
 }
 
 test_at_least_one_good if {
 	signatures := [{"certificate": good_cert}, {"certificate": bad_cert}]
-	lib.assert_empty(github_certificate.deny) with input.image.signatures as signatures
-	lib.assert_empty(github_certificate.warn) with input.image.signatures as signatures
+	utils.assert_empty(github_certificate.deny) with input.image.signatures as signatures
+	utils.assert_empty(github_certificate.warn) with input.image.signatures as signatures
 }
 
 test_gh_workflow_repository_match if {
 	signatures := [{"certificate": good_cert}]
-	lib.assert_empty(github_certificate.deny) with input.image.signatures as signatures
+	utils.assert_empty(github_certificate.deny) with input.image.signatures as signatures
 		with data.rule_data.allowed_gh_workflow_repos as ["spam", "lcarva/festoji", "eggs"]
 }
 
@@ -29,13 +30,13 @@ test_gh_workflow_repository_mismatch if {
 		"code": "github_certificate.gh_workflow_repository",
 		"msg": "Repository \"lcarva/festoji\" not in allowed list: [\"cli\", \"policy\"]",
 	}}
-	lib.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
+	utils.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
 		with data.rule_data.allowed_gh_workflow_repos as ["cli", "policy"]
 }
 
 test_gh_workflow_ref_match if {
 	signatures := [{"certificate": good_cert}]
-	lib.assert_empty(github_certificate.deny) with input.image.signatures as signatures
+	utils.assert_empty(github_certificate.deny) with input.image.signatures as signatures
 		with data.rule_data.allowed_gh_workflow_refs as ["refs/heads/master", "refs/heads/main"]
 }
 
@@ -45,13 +46,13 @@ test_gh_workflow_ref_mismatch if {
 		"code": "github_certificate.gh_workflow_ref",
 		"msg": "Ref \"refs/heads/master\" not in allowed list: [\"refs/heads/prod\"]",
 	}}
-	lib.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
+	utils.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
 		with data.rule_data.allowed_gh_workflow_refs as ["refs/heads/prod"]
 }
 
 test_gh_workflow_name_match if {
 	signatures := [{"certificate": good_cert}]
-	lib.assert_empty(github_certificate.deny) with input.image.signatures as signatures
+	utils.assert_empty(github_certificate.deny) with input.image.signatures as signatures
 		with data.rule_data.allowed_gh_workflow_names as ["Package"]
 }
 
@@ -61,13 +62,13 @@ test_gh_workflow_name_mismatch if {
 		"code": "github_certificate.gh_workflow_name",
 		"msg": "Name \"Package\" not in allowed list: [\"hackery\"]",
 	}}
-	lib.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
+	utils.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
 		with data.rule_data.allowed_gh_workflow_names as ["hackery"]
 }
 
 test_gh_workflow_trigger_match if {
 	signatures := [{"certificate": good_cert}]
-	lib.assert_empty(github_certificate.deny) with input.image.signatures as signatures
+	utils.assert_empty(github_certificate.deny) with input.image.signatures as signatures
 		with data.rule_data.allowed_gh_workflow_triggers as ["push"]
 }
 
@@ -77,7 +78,7 @@ test_gh_workflow_trigger_mismatch if {
 		"code": "github_certificate.gh_workflow_trigger",
 		"msg": "Trigger \"push\" not in allowed list: [\"build\"]",
 	}}
-	lib.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
+	utils.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
 		with data.rule_data.allowed_gh_workflow_triggers as ["build"]
 }
 
@@ -105,13 +106,13 @@ test_missing_extensions if {
 			"msg": "Missing extension \"GitHub Workflow Trigger\"",
 		},
 	}
-	lib.assert_equal_results(github_certificate.warn, expected)
-	lib.assert_equal_results(github_certificate.warn, expected) with input as {}
-	lib.assert_equal_results(github_certificate.warn, expected) with input.image as {}
-	lib.assert_equal_results(github_certificate.warn, expected) with input.image.signatures as []
-	lib.assert_equal_results(github_certificate.warn, expected) with input.image.signatures as [{}]
-	lib.assert_equal_results(github_certificate.warn, expected) with input.image.signatures as [{"certificate": ""}]
-	lib.assert_equal_results(github_certificate.warn, expected) with input.image.signatures as [{"certificate": bad_cert}]
+	utils.assert_equal_results(github_certificate.warn, expected)
+	utils.assert_equal_results(github_certificate.warn, expected) with input as {}
+	utils.assert_equal_results(github_certificate.warn, expected) with input.image as {}
+	utils.assert_equal_results(github_certificate.warn, expected) with input.image.signatures as []
+	utils.assert_equal_results(github_certificate.warn, expected) with input.image.signatures as [{}]
+	utils.assert_equal_results(github_certificate.warn, expected) with input.image.signatures as [{"certificate": ""}]
+	utils.assert_equal_results(github_certificate.warn, expected) with input.image.signatures as [{"certificate": bad_cert}]
 }
 
 test_rule_data_provided if {
@@ -163,7 +164,7 @@ test_rule_data_provided if {
 	}
 
 	signatures := [{"certificate": good_cert}]
-	lib.assert_equal_results(github_certificate.deny, expected) with data.rule_data as d
+	utils.assert_equal_results(github_certificate.deny, expected) with data.rule_data as d
 		with input.image.signatures as signatures
 }
 

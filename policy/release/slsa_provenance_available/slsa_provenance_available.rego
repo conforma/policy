@@ -14,6 +14,7 @@ package slsa_provenance_available
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.json as j
 
@@ -38,9 +39,9 @@ import data.lib.json as j
 #
 deny contains result if {
 	some att in lib.pipelinerun_attestations
-	allowed_predicate_types := lib.rule_data(_rule_data_key)
+	allowed_predicate_types := utils.rule_data(_rule_data_key)
 	not att.statement.predicateType in allowed_predicate_types
-	result := lib.result_helper(
+	result := utils.result_helper(
 		rego.metadata.chain(),
 		[att.statement.predicateType, concat(", ", allowed_predicate_types)],
 	)
@@ -63,13 +64,13 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := utils.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 # Verify allowed_predicate_types is a non-empty list of strings
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		lib.rule_data(_rule_data_key),
+		utils.rule_data(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

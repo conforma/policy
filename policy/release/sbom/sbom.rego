@@ -9,6 +9,7 @@ package sbom
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.konflux
 
@@ -29,7 +30,7 @@ deny contains result if {
 	not konflux.is_validating_image_index
 
 	count(_sboms) == 0
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := utils.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -49,7 +50,7 @@ deny contains result if {
 #   - redhat_rpms
 deny contains result if {
 	some error in lib.sbom.rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
+	result := utils.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
 }
 
 _sboms := array.concat(lib.sbom.spdx_sboms, lib.sbom.cyclonedx_sboms)

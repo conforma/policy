@@ -9,7 +9,7 @@ package build_labels
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 import data.lib.tekton
 
 build_label := "build.appstudio.redhat.com/build_type"

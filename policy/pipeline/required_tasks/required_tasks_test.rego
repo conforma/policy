@@ -2,7 +2,7 @@ package required_tasks_test
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 import data.required_tasks
 
 test_required_tasks_met if {

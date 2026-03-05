@@ -9,7 +9,7 @@ package annotations
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 
 # METADATA
 # title: Task definition uses expires-on annotation in RFC3339 format

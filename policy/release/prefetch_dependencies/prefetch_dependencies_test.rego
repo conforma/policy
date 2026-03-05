@@ -2,11 +2,12 @@ package prefetch_dependencies_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.prefetch_dependencies
 
 test_mode_permissive_violation if {
-	lib.assert_equal_results(prefetch_dependencies.deny, {{
+	utils.assert_equal_results(prefetch_dependencies.deny, {{
 		"code": "prefetch_dependencies.mode_not_permissive",
 		"effective_on": "2022-01-01T00:00:00Z",
 		"msg": "Task 'prefetch-dependencies' was invoked with mode parameter set to 'permissive'",
@@ -14,19 +15,19 @@ test_mode_permissive_violation if {
 }
 
 test_mode_not_permissive_pass if {
-	lib.assert_empty(prefetch_dependencies.deny) with input as _attestation("prefetch-dependencies", "strict")
+	utils.assert_empty(prefetch_dependencies.deny) with input as _attestation("prefetch-dependencies", "strict")
 }
 
 test_missing_mode_param_pass if {
-	lib.assert_empty(prefetch_dependencies.deny) with input as _attestation_without_mode("prefetch-dependencies")
+	utils.assert_empty(prefetch_dependencies.deny) with input as _attestation_without_mode("prefetch-dependencies")
 }
 
 test_task_not_present_pass if {
-	lib.assert_empty(prefetch_dependencies.deny) with input as _attestation("some-other-task", "permissive")
+	utils.assert_empty(prefetch_dependencies.deny) with input as _attestation("some-other-task", "permissive")
 }
 
 test_oci_ta_mode_permissive_violation if {
-	lib.assert_equal_results(prefetch_dependencies.deny, {{
+	utils.assert_equal_results(prefetch_dependencies.deny, {{
 		"code": "prefetch_dependencies.mode_not_permissive",
 		"effective_on": "2022-01-01T00:00:00Z",
 		"msg": "Task 'prefetch-dependencies' was invoked with mode parameter set to 'permissive'",
@@ -34,7 +35,7 @@ test_oci_ta_mode_permissive_violation if {
 }
 
 test_oci_ta_mode_not_permissive_pass if {
-	lib.assert_empty(prefetch_dependencies.deny) with input as _attestation("prefetch-dependencies-oci-ta", "strict")
+	utils.assert_empty(prefetch_dependencies.deny) with input as _attestation("prefetch-dependencies-oci-ta", "strict")
 }
 
 # Helper to create attestation with mode parameter

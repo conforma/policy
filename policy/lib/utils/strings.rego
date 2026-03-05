@@ -1,4 +1,4 @@
-package lib
+package lib.utils
 
 import rego.v1
 

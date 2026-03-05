@@ -3,7 +3,7 @@ package build_labels_test
 import rego.v1
 
 import data.build_labels
-import data.lib
+import data.lib.utils as lib
 
 test_build_label_found if {
 	# regal ignore:line-length

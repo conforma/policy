@@ -2,6 +2,7 @@ package slsa_source_version_controlled_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.slsa_source_version_controlled
 
@@ -17,8 +18,8 @@ test_all_good if {
 		},
 	]
 
-	lib.assert_empty(slsa_source_version_controlled.deny) with input.attestations as [_mock_slsa_v02_attestation(materials)] # regal ignore:line-length
-	lib.assert_empty(slsa_source_version_controlled.deny) with input.attestations as [_mock_slsa_v1_attestation(materials)]
+	utils.assert_empty(slsa_source_version_controlled.deny) with input.attestations as [_mock_slsa_v02_attestation(materials)] # regal ignore:line-length
+	utils.assert_empty(slsa_source_version_controlled.deny) with input.attestations as [_mock_slsa_v1_attestation(materials)]
 }
 
 test_non_git_uri if {
@@ -44,12 +45,12 @@ test_non_git_uri if {
 		},
 	}
 
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v02_attestation(materials)]
 
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v1_attestation(materials)]
@@ -90,12 +91,12 @@ test_non_git_commit if {
 		},
 	}
 
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v02_attestation(materials)]
 
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v1_attestation(materials)]
@@ -116,12 +117,12 @@ test_invalid_materials if {
 		"msg": "No materials match expected format",
 	}}
 
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v02_attestation(materials)]
 
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v1_attestation(materials)]

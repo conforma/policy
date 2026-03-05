@@ -2,6 +2,7 @@ package lib.konflux_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.konflux
 

@@ -2,7 +2,7 @@ package trusted_artifacts_test
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 import data.trusted_artifacts
 
 test_all_good if {

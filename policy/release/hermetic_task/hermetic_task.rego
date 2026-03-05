@@ -10,6 +10,7 @@ package hermetic_task
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.tekton
 
@@ -32,11 +33,11 @@ import data.lib.tekton
 #
 deny contains result if {
 	some not_hermetic_task in _not_hermetic_tasks
-	result := lib.result_helper(rego.metadata.chain(), [tekton.task_name(not_hermetic_task)])
+	result := utils.result_helper(rego.metadata.chain(), [tekton.task_name(not_hermetic_task)])
 }
 
 _not_hermetic_tasks contains task if {
-	required_hermetic_tasks := lib.rule_data("required_hermetic_tasks")
+	required_hermetic_tasks := utils.rule_data("required_hermetic_tasks")
 	some attestation in lib.pipelinerun_attestations
 	some task in tekton.tasks(attestation)
 	some required_hermetic_task in required_hermetic_tasks

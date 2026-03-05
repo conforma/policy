@@ -7,7 +7,7 @@ package results
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 import data.lib.json as j
 
 # METADATA

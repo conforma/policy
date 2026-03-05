@@ -2,6 +2,7 @@ package source_image_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.tekton_test
 import data.source_image
@@ -54,7 +55,7 @@ test_success if {
 
 	attestations := [slsa_v02_attestation, slsa_v1_attestation]
 
-	lib.assert_empty(source_image.deny) with input.attestations as attestations
+	utils.assert_empty(source_image.deny) with input.attestations as attestations
 		with ec.oci.image_manifest as mock_ec_oci_image_manifest
 		with ec.sigstore.verify_image as _mock_verify_image
 }
@@ -63,7 +64,7 @@ test_missing_source_image_references if {
 	expected := {{"code": "source_image.exists", "msg": "No source image references found"}}
 
 	# SLSA v0.2
-	lib.assert_equal_results(expected, source_image.deny) with input.attestations as [{"statement": {
+	utils.assert_equal_results(expected, source_image.deny) with input.attestations as [{"statement": {
 		"predicateType": "https://slsa.dev/provenance/v0.2",
 		"predicate": {
 			"buildType": lib.tekton_pipeline_run,
@@ -84,7 +85,7 @@ test_missing_source_image_references if {
 
 	slsa_v1_attestation := tekton_test.slsav1_attestation([slsa_v1_task])
 
-	lib.assert_equal_results(expected, source_image.deny) with input.attestations as slsa_v1_attestation
+	utils.assert_equal_results(expected, source_image.deny) with input.attestations as slsa_v1_attestation
 }
 
 test_inaccessible_source_image_references if {
@@ -128,7 +129,7 @@ test_inaccessible_source_image_references if {
 		},
 	}
 
-	lib.assert_equal_results(expected, source_image.deny) with input.attestations as attestations
+	utils.assert_equal_results(expected, source_image.deny) with input.attestations as attestations
 		with ec.oci.image_manifest as false
 		with ec.sigstore.verify_image as _mock_verify_image
 }
@@ -174,7 +175,7 @@ test_empty_source_image if {
 		},
 	}
 
-	lib.assert_equal_results(expected, source_image.deny) with input.attestations as attestations
+	utils.assert_equal_results(expected, source_image.deny) with input.attestations as attestations
 		with ec.oci.image_manifest as {"schemaVersion": 2}
 		with ec.sigstore.verify_image as _mock_verify_image
 }
@@ -223,7 +224,7 @@ test_missing_signature if {
 		},
 	}
 
-	lib.assert_equal_results(expected, source_image.deny) with input.attestations as attestations
+	utils.assert_equal_results(expected, source_image.deny) with input.attestations as attestations
 		with ec.oci.image_manifest as mock_ec_oci_image_manifest
 		with ec.sigstore.verify_image as {"errors": ["kaboom!"]}
 }

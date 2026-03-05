@@ -3,6 +3,7 @@ package tasks_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.tekton
 import data.lib.tekton_test
@@ -14,12 +15,12 @@ test_no_tasks_present if {
 		"msg": "No tasks found in PipelineRun attestation",
 	}}
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [{"statement": {"predicate": {
+	utils.assert_equal_results(tasks.deny, expected) with input.attestations as [{"statement": {"predicate": {
 		"buildType": lib.tekton_pipeline_run,
 		"buildConfig": {"tasks": []},
 	}}}]
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [tekton_test.slsav1_attestation([])]
+	utils.assert_equal_results(tasks.deny, expected) with input.attestations as [tekton_test.slsav1_attestation([])]
 }
 
 # regal ignore:rule-length
@@ -47,7 +48,7 @@ test_failed_tasks if {
 		json.remove(_task("cve-scanner"), ["/status"]),
 	]
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [{"statement": {
+	utils.assert_equal_results(tasks.deny, expected) with input.attestations as [{"statement": {
 		"predicateType": "https://slsa.dev/provenance/v0.2",
 		"predicate": {
 			"buildType": lib.tekton_pipeline_run,
@@ -73,7 +74,7 @@ test_failed_tasks if {
 		),
 	]
 
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		tasks.deny,
 		expected,
 	) with input.attestations as [tekton_test.slsav1_attestation_full(
@@ -85,25 +86,25 @@ test_failed_tasks if {
 
 test_required_tasks_met if {
 	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
-	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+	utils.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
 	slsav1_attestations := [tekton_test.slsav1_attestation(_slsav1_expected_required_tasks)]
-	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+	utils.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
 }
 
 test_required_tasks_met_no_label if {
 	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
-	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
+	utils.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data["pipeline-required-tasks"] as {}
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
 	attestations_no_label := _attestations_with_tasks_no_label(_slsav02_expected_required_tasks, [])
-	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
+	utils.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations_no_label
 
@@ -112,13 +113,13 @@ test_required_tasks_met_no_label if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)]
-	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
+	utils.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data["pipeline-required-tasks"] as {}
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
 
 	slsav1_attestations_no_label := [tekton_test.slsav1_attestation(_slsav1_expected_required_tasks)]
-	lib.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
+	utils.assert_empty(tasks.deny) with data["required-tasks"] as _time_based_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations_no_label
 }
@@ -129,14 +130,14 @@ test_required_tasks_warning_no_label if {
 		"code": "tasks.pipeline_required_tasks_list_provided",
 		"msg": "Required tasks do not exist for pipeline",
 	}}
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with input.attestations as attestations
 
 	slsav1_attestations := [tekton_test.slsav1_attestation(_slsav1_expected_required_tasks)]
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
@@ -148,7 +149,7 @@ test_required_tasks_not_met if {
 	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks - missing_tasks, [])
 
 	expected := _missing_tasks_violation(missing_tasks)
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		tasks.deny,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
@@ -165,7 +166,7 @@ test_required_tasks_not_met if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)]
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		tasks.deny,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
@@ -175,7 +176,7 @@ test_required_tasks_not_met if {
 
 test_future_required_tasks_met if {
 	attestations := _attestations_with_tasks(_slsav02_expected_future_required_tasks, [])
-	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+	utils.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
@@ -184,7 +185,7 @@ test_future_required_tasks_met if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)]
-	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+	utils.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
 }
@@ -194,7 +195,7 @@ test_future_required_tasks_not_met if {
 	attestations := _attestations_with_tasks(_slsav02_expected_future_required_tasks - missing_tasks, [])
 
 	expected := _missing_tasks_warning(missing_tasks)
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
@@ -211,7 +212,7 @@ test_future_required_tasks_not_met if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)]
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
@@ -221,10 +222,10 @@ test_future_required_tasks_not_met if {
 
 test_extra_tasks_ignored if {
 	attestations := _attestations_with_tasks(_slsav02_expected_future_required_tasks | {"spam"}, [])
-	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+	utils.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
-	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+	utils.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
@@ -238,10 +239,10 @@ test_extra_tasks_ignored if {
 	)]
 
 	# regal ignore:line-length
-	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+	utils.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
-	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+	utils.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
 }
@@ -253,7 +254,7 @@ test_current_equal_latest if {
 	}]}
 	attestations := _attestations_with_tasks(_slsav02_expected_future_required_tasks, [])
 
-	lib.assert_empty(tasks.deny | tasks.warn) with data["pipeline-required-tasks"] as required_tasks
+	utils.assert_empty(tasks.deny | tasks.warn) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 }
@@ -265,12 +266,12 @@ test_current_equal_latest_also if {
 	}]}
 	attestations := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
 
-	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as required_tasks
+	utils.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
 	expected_denies := _missing_tasks_violation(_slsav02_expected_future_required_tasks - _slsav02_expected_required_tasks)
-	lib.assert_equal_results(expected_denies, tasks.deny) with data["pipeline-required-tasks"] as required_tasks
+	utils.assert_equal_results(expected_denies, tasks.deny) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 
@@ -279,11 +280,11 @@ test_current_equal_latest_also if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)]
-	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as required_tasks
+	utils.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
 
-	lib.assert_equal_results(expected_denies, tasks.deny) with data["pipeline-required-tasks"] as required_tasks
+	utils.assert_equal_results(expected_denies, tasks.deny) with data["pipeline-required-tasks"] as required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as slsav1_attestations
 }
@@ -313,7 +314,7 @@ test_parameterized if {
 	attestations := _attestations_with_tasks({"git-clone", "buildah"}, with_wrong_parameter)
 
 	expected := _missing_tasks_violation({"label-check[POLICY_NAMESPACE=required_checks]"})
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		tasks.deny,
 		expected,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
@@ -344,7 +345,7 @@ test_parameterized if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)]
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		tasks.deny,
 		expected,
 	) with data["pipeline-required-tasks"] as _required_pipeline_tasks
@@ -358,7 +359,7 @@ test_required_tasks_founds_data if {
 		"code": "tasks.required_tasks_list_provided",
 		"msg": "Missing required required-tasks data",
 	}}
-	lib.assert_equal_results(expected, tasks.deny) with data["required-tasks"] as []
+	utils.assert_equal_results(expected, tasks.deny) with data["required-tasks"] as []
 		with input.attestations as attestations
 		with data["pipeline-required-tasks"] as {}
 
@@ -367,7 +368,7 @@ test_required_tasks_founds_data if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)]
-	lib.assert_equal_results(expected, tasks.deny) with data["required-tasks"] as []
+	utils.assert_equal_results(expected, tasks.deny) with data["required-tasks"] as []
 		with input.attestations as slsav1_attestations with data["pipeline-required-tasks"] as {}
 }
 
@@ -377,7 +378,7 @@ test_missing_required_pipeline_data if {
 		"code": "tasks.pipeline_required_tasks_list_provided",
 		"msg": "Required tasks do not exist for pipeline",
 	}}
-	lib.assert_equal_results(expected, tasks.warn) with data["required-tasks"] as _slsav02_expected_required_tasks
+	utils.assert_equal_results(expected, tasks.warn) with data["required-tasks"] as _slsav02_expected_required_tasks
 		with input.attestations as attestations
 
 	slsav1_attestations := [tekton_test.slsav1_attestation_full(
@@ -387,7 +388,7 @@ test_missing_required_pipeline_data if {
 	)]
 
 	# we use _slsav02_expected_required_tasks as rule data because it fits the rule data format
-	lib.assert_equal_results(expected, tasks.warn) with data["required-tasks"] as _slsav02_expected_required_tasks
+	utils.assert_equal_results(expected, tasks.warn) with data["required-tasks"] as _slsav02_expected_required_tasks
 		with input.attestations as slsav1_attestations
 }
 
@@ -405,16 +406,16 @@ test_multiple_conditions_in_status if {
 	]
 	slsav1_task := tekton_test.with_conditions(tekton_test.slsav1_task("buildah"), conditions)
 
-	lib.assert_equal(["Succeeded", "Failed"], tasks._status(slsav1_task))
+	utils.assert_equal(["Succeeded", "Failed"], tasks._status(slsav1_task))
 }
 
 test_invalid_status_conditions if {
 	conditions := []
 	slsav1_task1 := tekton_test.with_conditions(tekton_test.slsav1_task("buildah"), conditions)
-	lib.assert_equal(["MISSING"], tasks._status(slsav1_task1))
+	utils.assert_equal(["MISSING"], tasks._status(slsav1_task1))
 
 	given_task := json.remove(_task("buildah"), ["/status"])
-	lib.assert_equal(["MISSING"], tasks._status(given_task))
+	utils.assert_equal(["MISSING"], tasks._status(given_task))
 }
 
 test_one_of_required_tasks if {
@@ -423,7 +424,7 @@ test_one_of_required_tasks if {
 		"tasks": {"a", ["c1", "c2", "c3"], ["d1", "d2", "d3"], ["e"]},
 		"effective_on": "2009-01-02T00:00:00Z",
 	}]}
-	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
+	utils.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestation_v02
 
@@ -439,7 +440,7 @@ test_one_of_required_tasks if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)]
-	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
+	utils.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestation_v1
 }
@@ -465,7 +466,7 @@ test_one_of_required_tasks_missing if {
 		},
 	}
 
-	lib.assert_equal_results(expected, tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
+	utils.assert_equal_results(expected, tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestation_v02
 
@@ -480,7 +481,7 @@ test_one_of_required_tasks_missing if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)
-	lib.assert_equal_results(expected, tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
+	utils.assert_equal_results(expected, tasks.deny) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as [attestation_v1]
 }
@@ -491,7 +492,7 @@ test_future_one_of_required_tasks if {
 		"tasks": {"a", ["c1", "c2", "c3"], ["d1", "d2", "d3"], ["e"]},
 		"effective_on": "2099-01-02T00:00:00Z",
 	}]}
-	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as data_required_tasks
+	utils.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestation_v02
 
@@ -507,7 +508,7 @@ test_future_one_of_required_tasks if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)]
-	lib.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as data_required_tasks
+	utils.assert_empty(tasks.warn) with data["pipeline-required-tasks"] as data_required_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestation_v1
 }
@@ -532,7 +533,7 @@ test_future_one_of_required_tasks_missing if {
 			"term": ["d1", "d3"],
 		},
 	}
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as data_required_tasks
@@ -550,7 +551,7 @@ test_future_one_of_required_tasks_missing if {
 		{"pipelines.openshift.io/runtime": "generic"},
 		{},
 	)]
-	lib.assert_equal_results(
+	utils.assert_equal_results(
 		expected,
 		tasks.warn,
 	) with data["pipeline-required-tasks"] as data_required_tasks
@@ -569,7 +570,7 @@ test_future_required_tasks if {
 		"term": "conftest-clair",
 	}}
 
-	lib.assert_equal_results(expected, tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+	utils.assert_equal_results(expected, tasks.warn) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 }
@@ -585,7 +586,7 @@ test_required_task_from_untrusted if {
 		"msg": "Required task \"buildah\" is required and present but not from a trusted task",
 		"term": "buildah",
 	}}
-	lib.assert_equal_results(expected, tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
+	utils.assert_equal_results(expected, tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations
 }
@@ -628,7 +629,7 @@ test_pinned_task_refs_slsa_v0_2 if {
 		"term": "task-01",
 	}}
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [att]
+	utils.assert_equal_results(tasks.deny, expected) with input.attestations as [att]
 }
 
 test_pinned_task_refs_slsa_v1 if {
@@ -685,7 +686,7 @@ test_pinned_task_refs_slsa_v1 if {
 		"term": "task-01",
 	}}
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as [att1]
+	utils.assert_equal_results(tasks.deny, expected) with input.attestations as [att1]
 }
 
 test_deprecated_slsa_v0_2 if {
@@ -701,7 +702,7 @@ test_deprecated_slsa_v0_2 if {
 		"term": "task",
 	}}
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
+	utils.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
 		with data["task-bundles"] as _trusted_tasks
 }
 
@@ -718,7 +719,7 @@ test_expired_slsa_v0_2 if {
 		"term": "task",
 	}}
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
+	utils.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
 		with data["task-bundles"] as _trusted_tasks
 }
 
@@ -740,7 +741,7 @@ test_deprecated_slsa_v1 if {
 		"term": "task",
 	}}
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
+	utils.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
 		with data["task-bundles"] as _trusted_tasks
 }
 
@@ -762,7 +763,7 @@ test_expired_slsa_v1 if {
 		"term": "task",
 	}}
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
+	utils.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
 		with data["task-bundles"] as _trusted_tasks
 }
 
@@ -787,7 +788,7 @@ test_expired_with_custom_message if {
 		"term": "task",
 	}}
 
-	lib.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
+	utils.assert_equal_results(tasks.deny, expected) with input.attestations as attestation
 		with data["task-bundles"] as _trusted_tasks
 }
 
@@ -887,7 +888,7 @@ test_data_errors_on_required_tasks if {
 		},
 	}
 
-	lib.assert_equal_results(tasks.deny, expected) with data["required-tasks"] as required_tasks
+	utils.assert_equal_results(tasks.deny, expected) with data["required-tasks"] as required_tasks
 }
 
 test_data_errors_on_pipeline_required_tasks if {
@@ -930,7 +931,7 @@ test_data_errors_on_pipeline_required_tasks if {
 		},
 	}
 
-	lib.assert_equal_results(tasks.deny, expected) with data["pipeline-required-tasks"] as pipeline_required_tasks
+	utils.assert_equal_results(tasks.deny, expected) with data["pipeline-required-tasks"] as pipeline_required_tasks
 }
 
 # Direct test of _missing_tasks function behavior
@@ -939,14 +940,14 @@ test_missing_tasks_function_behavior if {
 	attestations_trusted := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
 	missing_trusted := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations_trusted
-	lib.assert_equal(set(), missing_trusted)
+	utils.assert_equal(set(), missing_trusted)
 
 	# Test with some required tasks missing entirely
 	missing_tasks := {"buildah", "git-clone"}
 	attestations_missing := _attestations_with_tasks(_slsav02_expected_required_tasks - missing_tasks, [])
 	missing_result := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
 		with input.attestations as attestations_missing
-	lib.assert_equal(missing_tasks, missing_result)
+	utils.assert_equal(missing_tasks, missing_result)
 
 	# Test with required tasks present but from untrusted sources
 	attestations_untrusted := _attestations_with_tasks(_slsav02_expected_required_tasks, [])
@@ -955,7 +956,7 @@ test_missing_tasks_function_behavior if {
 	# because all required tasks are PRESENT
 	missing_untrusted := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as {}
 		with input.attestations as attestations_untrusted
-	lib.assert_equal(set(), missing_untrusted)
+	utils.assert_equal(set(), missing_untrusted)
 
 	# Test mixed scenario: some tasks missing, some present but untrusted, some trusted
 	mixed_attestations := _attestations_with_tasks({"git-clone"}, [{
@@ -971,7 +972,7 @@ test_missing_tasks_function_behavior if {
 	}
 	missing_mixed := tasks._missing_tasks(_slsav02_expected_required_tasks) with data.trusted_tasks as _trusted_tasks
 		with input.attestations as mixed_attestations
-	lib.assert_equal(expected_missing_mixed, missing_mixed)
+	utils.assert_equal(expected_missing_mixed, missing_mixed)
 }
 
 _attestations_with_tasks(names, add_tasks) := attestations if {

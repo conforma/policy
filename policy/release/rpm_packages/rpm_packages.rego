@@ -9,6 +9,7 @@ package rpm_packages
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.image
 import data.lib.sbom
@@ -30,11 +31,11 @@ deny contains result if {
 	image.is_image_index(input.image.ref)
 
 	some rpm_name in rpm_names_with_mismatched_nvr_sets
-	not rpm_name in lib.rule_data("non_unique_rpm_names")
+	not rpm_name in utils.rule_data("non_unique_rpm_names")
 
 	detail_text := concat(" ", sort(rpm_mismatch_details(rpm_name)))
 
-	result := lib.result_helper_with_term(
+	result := utils.result_helper_with_term(
 		rego.metadata.chain(),
 		[rpm_name, detail_text],
 		rpm_name,
@@ -55,9 +56,9 @@ rpm_mismatch_details(rpm_name) := [detail |
 	]
 
 	detail := sprintf("%s %s %s %s.", [
-		lib.pluralize_maybe(platforms_with_nvr_set, "Platform", ""),
+		utils.pluralize_maybe(platforms_with_nvr_set, "Platform", ""),
 		concat(", ", sort(platforms_with_nvr_set)),
-		lib.pluralize_maybe(platforms_with_nvr_set, "has", "have"),
+		utils.pluralize_maybe(platforms_with_nvr_set, "has", "have"),
 		concat(", ", sort(nvr_set)),
 	])
 ]

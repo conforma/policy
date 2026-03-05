@@ -8,6 +8,7 @@ package sbom_spdx
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.image
 import data.lib.sbom
@@ -30,7 +31,7 @@ deny contains result if {
 	some index, s in sbom.spdx_sboms
 	some violation in json.match_schema(s, schema_2_3)[1]
 	error := violation.error
-	result := lib.result_helper(rego.metadata.chain(), [index, error])
+	result := utils.result_helper(rego.metadata.chain(), [index, error])
 }
 
 # METADATA
@@ -45,7 +46,7 @@ deny contains result if {
 deny contains result if {
 	some s in sbom.spdx_sboms
 	count(s.packages) == 0
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := utils.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -67,8 +68,8 @@ deny contains result if {
 	some pkg in s.packages
 	some ref in pkg.externalRefs
 	ref.referenceType == "purl"
-	sbom.has_item(ref.referenceLocator, lib.rule_data(sbom.rule_data_packages_key))
-	result := lib.result_helper(rego.metadata.chain(), [ref.referenceLocator])
+	sbom.has_item(ref.referenceLocator, utils.rule_data(sbom.rule_data_packages_key))
+	result := utils.result_helper(rego.metadata.chain(), [ref.referenceLocator])
 }
 
 # METADATA
@@ -92,14 +93,14 @@ deny contains result if {
 	some s in sbom.spdx_sboms
 	some pkg in s.packages
 	some reference in pkg.externalRefs
-	some allowed in lib.rule_data(sbom.rule_data_allowed_external_references_key)
+	some allowed in utils.rule_data(sbom.rule_data_allowed_external_references_key)
 	reference.referenceType == allowed.type
 	not regex.match(object.get(allowed, "url", ""), object.get(reference, "referenceLocator", ""))
 
 	msg := regex.replace(object.get(allowed, "url", ""), `(.+)`, ` by pattern "$1"`)
 
 	# regal ignore:line-length
-	result := lib.result_helper(rego.metadata.chain(), [pkg.name, reference.referenceLocator, reference.referenceType, msg])
+	result := utils.result_helper(rego.metadata.chain(), [pkg.name, reference.referenceLocator, reference.referenceType, msg])
 }
 
 # METADATA
@@ -123,7 +124,7 @@ deny contains result if {
 	some s in sbom.spdx_sboms
 	some pkg in s.packages
 	some reference in pkg.externalRefs
-	some disallowed in lib.rule_data(sbom.rule_data_disallowed_external_references_key)
+	some disallowed in utils.rule_data(sbom.rule_data_disallowed_external_references_key)
 
 	reference.referenceType == disallowed.type
 	regex.match(object.get(disallowed, "url", ""), object.get(reference, "referenceLocator", ""))
@@ -131,7 +132,7 @@ deny contains result if {
 	msg := regex.replace(object.get(disallowed, "url", ""), `(.+)`, ` by pattern "$1"`)
 
 	# regal ignore:line-length
-	result := lib.result_helper(rego.metadata.chain(), [pkg.name, reference.referenceLocator, reference.referenceType, msg])
+	result := utils.result_helper(rego.metadata.chain(), [pkg.name, reference.referenceLocator, reference.referenceType, msg])
 }
 
 # METADATA
@@ -146,7 +147,7 @@ deny contains result if {
 deny contains result if {
 	some s in sbom.spdx_sboms
 	count(s.files) == 0
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := utils.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -164,7 +165,7 @@ deny contains result if {
 	sbom_image := image.parse(s.name)
 	expected_image := image.parse(input.image.ref)
 	sbom_image.digest != expected_image.digest
-	result := lib.result_helper(rego.metadata.chain(), [sbom_image.digest, expected_image.digest])
+	result := utils.result_helper(rego.metadata.chain(), [sbom_image.digest, expected_image.digest])
 }
 
 # METADATA
@@ -202,7 +203,7 @@ deny contains result if {
 	parsed_purl := ec.purl.parse(purl)
 
 	# patterns are either those defined by the rule for a given purl type, or empty by default
-	allowed_data := lib.rule_data(sbom.rule_data_allowed_package_sources_key)
+	allowed_data := utils.rule_data(sbom.rule_data_allowed_package_sources_key)
 	patterns := sbom.purl_allowed_patterns(parsed_purl.type, allowed_data)
 
 	some qualifier in parsed_purl.qualifiers
@@ -210,7 +211,7 @@ deny contains result if {
 
 	not sbom.url_matches_any_pattern(qualifier.value, patterns)
 
-	result := lib.result_helper_with_term(rego.metadata.chain(), [purl, qualifier.value], purl)
+	result := utils.result_helper_with_term(rego.metadata.chain(), [purl, qualifier.value], purl)
 }
 
 # METADATA
@@ -237,7 +238,7 @@ deny contains result if {
 
 	some annotation in pkg.annotations
 	properties := json.unmarshal(annotation.comment)
-	some disallowed in lib.rule_data(sbom.rule_data_attributes_key)
+	some disallowed in utils.rule_data(sbom.rule_data_attributes_key)
 	properties.name == disallowed.name
 
 	object.get(properties, "value", "") == object.get(disallowed, "value", "")
@@ -246,7 +247,7 @@ deny contains result if {
 
 	id := object.get(externalref, "referenceLocator", pkg.name)
 	result := _with_effective_on(
-		lib.result_helper_with_term(rego.metadata.chain(), [id, properties.name, msg], id),
+		utils.result_helper_with_term(rego.metadata.chain(), [id, properties.name, msg], id),
 		disallowed,
 	)
 }

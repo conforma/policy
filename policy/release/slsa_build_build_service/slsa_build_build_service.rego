@@ -14,6 +14,7 @@ package slsa_build_build_service
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.json as j
 
@@ -36,7 +37,7 @@ import data.lib.json as j
 deny contains result if {
 	some att in lib.pipelinerun_attestations
 	not _builder_id(att)
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := utils.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -59,11 +60,11 @@ deny contains result if {
 #   - attestation_type.known_attestation_type
 #
 deny contains result if {
-	allowed_builder_ids := lib.rule_data(_rule_data_key)
+	allowed_builder_ids := utils.rule_data(_rule_data_key)
 	some att in lib.pipelinerun_attestations
 	builder_id := _builder_id(att)
 	not builder_id in allowed_builder_ids
-	result := lib.result_helper(rego.metadata.chain(), [builder_id])
+	result := utils.result_helper(rego.metadata.chain(), [builder_id])
 }
 
 # METADATA
@@ -82,13 +83,13 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := utils.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 # Verify allowed_builder_ids is a non-empty list of strings
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		lib.rule_data(_rule_data_key),
+		utils.rule_data(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

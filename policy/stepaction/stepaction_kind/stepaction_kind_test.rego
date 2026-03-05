@@ -2,7 +2,7 @@ package stepaction_kind_test
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 import data.stepaction_kind as kind
 
 test_invalid_kind if {

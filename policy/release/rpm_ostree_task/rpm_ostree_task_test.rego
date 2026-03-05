@@ -2,6 +2,7 @@ package rpm_ostree_task_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.tekton_test
 import data.rpm_ostree_task
@@ -33,7 +34,7 @@ test_success if {
 
 	attestations := [slsa_v02_attestation, slsa_v1_attestation]
 
-	lib.assert_empty(rpm_ostree_task.deny) with input.attestations as attestations
+	utils.assert_empty(rpm_ostree_task.deny) with input.attestations as attestations
 		with data.rule_data.allowed_rpm_ostree_builder_image_prefixes as ["registry.local/builder"]
 }
 
@@ -127,7 +128,7 @@ test_builder_image_param_failures if {
 		{"value": "registry.local/deprecated", "expires_on": "2099-01-01T00:00:00Z"},
 	]
 
-	lib.assert_equal_results_no_collections(expected, rpm_ostree_task.deny) with input.attestations as attestations
+	utils.assert_equal_results_no_collections(expected, rpm_ostree_task.deny) with input.attestations as attestations
 		with data.rule_data.allowed_rpm_ostree_builder_image_prefixes as allowed_prefixes
 }
 
@@ -199,5 +200,5 @@ test_rule_data_failures if {
 		},
 	}
 
-	lib.assert_equal_results(expected, rpm_ostree_task.deny) with data.rule_data as rd
+	utils.assert_equal_results(expected, rpm_ostree_task.deny) with data.rule_data as rd
 }

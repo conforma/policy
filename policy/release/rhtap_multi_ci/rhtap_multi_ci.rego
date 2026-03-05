@@ -10,6 +10,7 @@ package rhtap_multi_ci
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.json as j
 
@@ -34,7 +35,7 @@ import data.lib.json as j
 #
 deny contains result if {
 	count(_attestations) < 1
-	result := lib.result_helper(rego.metadata.chain(), [lib.quoted_values_string(_known_build_types)])
+	result := utils.result_helper(rego.metadata.chain(), [utils.quoted_values_string(_known_build_types)])
 }
 
 # METADATA
@@ -63,7 +64,7 @@ deny contains result if {
 	some ci_type in _known_ci_types
 	att.statement.predicate.buildDefinition.buildType == _build_type(ci_type)
 	some schema_error in j.validate_schema(att.statement.predicate, _predicate_schema(ci_type))
-	result := lib.result_helper(rego.metadata.chain(), [ci_type, schema_error.message])
+	result := utils.result_helper(rego.metadata.chain(), [ci_type, schema_error.message])
 }
 
 # -----------------------------------------------------------------------------

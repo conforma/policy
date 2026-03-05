@@ -2,7 +2,7 @@ package step_images_test
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 import data.step_images
 
 test_looks_at_tasks_only if {

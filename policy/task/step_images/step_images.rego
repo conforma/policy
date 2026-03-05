@@ -9,7 +9,7 @@ package step_images
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 
 # METADATA
 # title: Step images are valid

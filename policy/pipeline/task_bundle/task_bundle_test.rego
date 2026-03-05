@@ -2,7 +2,7 @@ package task_bundle_test
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 import data.task_bundle
 
 test_bundle_not_exists if {

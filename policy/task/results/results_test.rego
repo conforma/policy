@@ -2,7 +2,7 @@ package results_test
 
 import rego.v1
 
-import data.lib
+import data.lib.utils as lib
 import data.results
 
 test_all_good if {

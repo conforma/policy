@@ -2,11 +2,12 @@ package lib.tekton_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.tekton
 
 test_slsa_v02_task_extraction if {
-	lib.assert_equal(
+	utils.assert_equal(
 		[t |
 			some task in tekton.tasks({"statement": input})
 			t := tekton.task_data(task)
@@ -113,5 +114,5 @@ test_slsa_v1_task_extraction if {
 		},
 	]
 
-	lib.assert_equal(tasks_data, expected)
+	utils.assert_equal(tasks_data, expected)
 }

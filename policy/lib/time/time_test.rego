@@ -6,6 +6,7 @@ package lib.time_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.time as lib_time
 
@@ -26,14 +27,14 @@ test_effective_current_time_ns if {
 	now := time.now_ns()
 
 	# with no config at all
-	lib.assert_equal(lib_time.effective_current_time_ns, now)
+	utils.assert_equal(lib_time.effective_current_time_ns, now)
 
 	# no config.policy
-	lib.assert_equal(lib_time.effective_current_time_ns, now) with data.config as {}
+	utils.assert_equal(lib_time.effective_current_time_ns, now) with data.config as {}
 
 	# no config.policy.when_ns
-	lib.assert_equal(lib_time.effective_current_time_ns, now) with data.config.policy as {}
-	lib.assert_equal(
+	utils.assert_equal(lib_time.effective_current_time_ns, now) with data.config.policy as {}
+	utils.assert_equal(
 		lib_time.effective_current_time_ns,
 		future_timestamp,
 	) with data.config.policy.when_ns as future_timestamp
@@ -42,7 +43,7 @@ test_effective_current_time_ns if {
 # regal ignore:rule-length
 test_most_current if {
 	# Ignore future item
-	lib.assert_equal(
+	utils.assert_equal(
 		lib_time.most_current([
 			{"name": "future", "effective_on": "2099-01-01T00:00:00Z"},
 			{"name": "past", "effective_on": "2022-01-01T00:00:00Z"},
@@ -62,7 +63,7 @@ test_most_current if {
 	])
 
 	# Ignore items without effective_on
-	lib.assert_equal(
+	utils.assert_equal(
 		lib_time.most_current([
 			{"name": "incomplete"},
 			{"name": "past", "effective_on": "2022-01-01T00:00:00Z"},
@@ -73,7 +74,7 @@ test_most_current if {
 }
 
 test_newest if {
-	lib.assert_equal({"effective_on": "2262-04-11T00:00:00Z"}, lib_time.newest([
+	utils.assert_equal({"effective_on": "2262-04-11T00:00:00Z"}, lib_time.newest([
 		{"effective_on": "2199-01-01T00:00:00Z"},
 		{"effective_on": "2262-04-11T00:00:00Z"},
 		{"effective_on": "2099-01-01T00:00:00Z"},

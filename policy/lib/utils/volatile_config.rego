@@ -18,7 +18,7 @@
 # warning categories based on lifecycle events (pending activation, expiring soon,
 # no expiration, expired, invalid dates).
 
-package lib
+package lib.utils
 
 import rego.v1
 

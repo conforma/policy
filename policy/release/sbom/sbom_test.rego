@@ -2,12 +2,13 @@ package sbom_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.sbom
 
 test_not_found if {
 	expected := {{"code": "sbom.found", "msg": "No SBOM attestations found"}}
-	lib.assert_equal_results(expected, sbom.deny) with input.attestations as []
+	utils.assert_equal_results(expected, sbom.deny) with input.attestations as []
 		with input.image.ref as "registry.local/spam@sha256:123"
 }
 
@@ -36,7 +37,7 @@ test_not_found_image_index if {
 		},
 	}}
 
-	lib.assert_empty(sbom.deny) with input.attestations as [att]
+	utils.assert_empty(sbom.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/ham@sha256:fff"
 }
 
@@ -244,13 +245,13 @@ test_rule_data_validation if {
 		},
 	}
 
-	lib.assert_equal_results(sbom.deny, expected) with input.attestations as _sbom_attestation
+	utils.assert_equal_results(sbom.deny, expected) with input.attestations as _sbom_attestation
 		with data.rule_data as d
 
 	# rule data keys are optional
-	lib.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
+	utils.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
 		with data.rule_data as {}
-	lib.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
+	utils.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
 		with data.rule_data as {
 			lib.sbom.rule_data_packages_key: [],
 			lib.sbom.rule_data_attributes_key: [],

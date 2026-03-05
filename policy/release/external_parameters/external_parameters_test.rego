@@ -3,10 +3,11 @@ package external_parameters_test
 import rego.v1
 
 import data.external_parameters
+import data.lib.utils
 import data.lib
 
 test_success if {
-	lib.assert_empty(external_parameters.deny) with input.attestations as [good_provenance]
+	utils.assert_empty(external_parameters.deny) with input.attestations as [good_provenance]
 }
 
 test_pipeline_run_params_missing_params if {
@@ -17,7 +18,7 @@ test_pipeline_run_params_missing_params if {
 		# regal ignore:line-length
 		"msg": `PipelineRun params, {"git-revision", "output-image"}, do not match expectation, {"git-repo", "git-revision", "output-image"}.`,
 	}}
-	lib.assert_equal_results(external_parameters.deny, expected) with input.attestations as [provenance]
+	utils.assert_equal_results(external_parameters.deny, expected) with input.attestations as [provenance]
 }
 
 test_pipeline_run_params_empty_values if {
@@ -31,7 +32,7 @@ test_pipeline_run_params_empty_values if {
 		# regal ignore:line-length
 		"msg": `PipelineRun params, {"git-revision", "output-image"}, do not match expectation, {"git-repo", "git-revision", "output-image"}.`,
 	}}
-	lib.assert_equal_results(external_parameters.deny, expected) with input.attestations as [provenance]
+	utils.assert_equal_results(external_parameters.deny, expected) with input.attestations as [provenance]
 }
 
 test_restrict_shared_volumes_existing_pvc if {
@@ -44,7 +45,7 @@ test_restrict_shared_volumes_existing_pvc if {
 		"code": "external_parameters.restrict_shared_volumes",
 		"msg": "PipelineRun uses shared volumes, {{\"persistentVolumeClaim\": {\"claimName\": \"my-pvc\"}}}.",
 	}}
-	lib.assert_equal_results(external_parameters.deny, expected) with input.attestations as [provenance]
+	utils.assert_equal_results(external_parameters.deny, expected) with input.attestations as [provenance]
 }
 
 test_rule_data_validation if {
@@ -74,7 +75,7 @@ test_rule_data_validation if {
 		"path": "/statement/predicate/buildDefinition/externalParameters/runSpec/params",
 		"value": [{"name": 1, "value": "one"}, {"name": "foo", "value": "oof"}],
 	}])
-	lib.assert_equal_results(external_parameters.deny, expected) with data.rule_data as d
+	utils.assert_equal_results(external_parameters.deny, expected) with data.rule_data as d
 		with input.attestations as [provenance]
 }
 

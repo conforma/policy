@@ -9,6 +9,7 @@ package rpm_signature
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.json as j
 
@@ -32,7 +33,7 @@ import data.lib.json as j
 deny contains result if {
 	some key in _signature_keys
 	not key in _allowed_rpm_signature_keys
-	result := lib.result_helper_with_term(rego.metadata.chain(), [key, _allowed_rpm_signature_keys], key)
+	result := utils.result_helper_with_term(rego.metadata.chain(), [key, _allowed_rpm_signature_keys], key)
 }
 
 # METADATA
@@ -49,7 +50,7 @@ deny contains result if {
 #
 deny contains result if {
 	some error in _result_format_errors
-	result := lib.result_helper(rego.metadata.chain(), [error])
+	result := utils.result_helper(rego.metadata.chain(), [error])
 }
 
 # METADATA
@@ -68,10 +69,10 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := utils.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
-_allowed_rpm_signature_keys := lib.rule_data("allowed_rpm_signature_keys")
+_allowed_rpm_signature_keys := utils.rule_data("allowed_rpm_signature_keys")
 
 _signature_keys contains key if {
 	some result in lib.results_named(_rpms_data_result_name)

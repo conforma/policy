@@ -11,6 +11,7 @@ package quay_expiration
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 
 # METADATA
@@ -35,7 +36,7 @@ import data.lib
 #   - redhat
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
+	utils.pipeline_intention_match(rego.metadata.chain())
 
 	# This is where we can access the image labels
 	some label_name, label_value in input.image.config.Labels
@@ -44,5 +45,5 @@ deny contains result if {
 	label_name == "quay.expires-after"
 
 	# Send up the violation the details
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := utils.result_helper(rego.metadata.chain(), [])
 }

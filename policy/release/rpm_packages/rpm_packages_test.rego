@@ -2,6 +2,7 @@ package rpm_packages_test
 
 import rego.v1
 
+import data.lib.utils
 import data.lib
 import data.lib.tekton_test
 import data.rpm_packages
@@ -9,7 +10,7 @@ import data.rpm_packages
 test_success_cyclonedx if {
 	att := _attestation_with_sboms([_cyclonedx_url_1, _cyclonedx_url_1])
 
-	lib.assert_empty(rpm_packages.deny) with input.attestations as [att]
+	utils.assert_empty(rpm_packages.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
@@ -18,7 +19,7 @@ test_success_cyclonedx if {
 test_success_spdx if {
 	att := _attestation_with_sboms([_spdx_url_1, _spdx_url_1])
 
-	lib.assert_empty(rpm_packages.deny) with input.attestations as [att]
+	utils.assert_empty(rpm_packages.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
@@ -36,7 +37,7 @@ test_failure_cyclonedx if {
 		"term": "spam",
 	}}
 
-	lib.assert_equal_results(expected, rpm_packages.deny) with input.attestations as [att]
+	utils.assert_equal_results(expected, rpm_packages.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
@@ -54,7 +55,7 @@ test_failure_spdx if {
 		"term": "spam",
 	}}
 
-	lib.assert_equal_results(expected, rpm_packages.deny) with input.attestations as [att]
+	utils.assert_equal_results(expected, rpm_packages.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/image-index@sha256:image-index-digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
@@ -63,7 +64,7 @@ test_failure_spdx if {
 test_non_image_index if {
 	att := _attestation_with_sboms([_spdx_url_1, _spdx_url_2])
 
-	lib.assert_empty(rpm_packages.deny) with input.attestations as [att]
+	utils.assert_empty(rpm_packages.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/image-manifest@sha256:image-manifest-digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with ec.oci.blob as _mock_blob
@@ -72,7 +73,7 @@ test_non_image_index if {
 test_ignore_names if {
 	att := _attestation_with_sboms([_spdx_url_1, _spdx_url_2])
 
-	lib.assert_empty(rpm_packages.deny) with input.attestations as [att]
+	utils.assert_empty(rpm_packages.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/image-index@sha256:image-index-digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
@@ -83,7 +84,7 @@ test_success_multiple_versions_same_across_platforms if {
 	# Both platforms have the same set of multiple spam versions - should NOT trigger violation
 	att := _attestation_with_sboms([_multi_spam_url, _multi_spam_url])
 
-	lib.assert_empty(rpm_packages.deny) with input.attestations as [att]
+	utils.assert_empty(rpm_packages.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
@@ -102,7 +103,7 @@ test_failure_multiple_versions_different_across_platforms if {
 		"term": "spam",
 	}}
 
-	lib.assert_equal_results(expected, rpm_packages.deny) with input.attestations as [att]
+	utils.assert_equal_results(expected, rpm_packages.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
@@ -121,7 +122,7 @@ test_failure_with_platform_grouping if {
 		"term": "spam",
 	}}
 
-	lib.assert_equal_results(expected, rpm_packages.deny) with input.attestations as [att]
+	utils.assert_equal_results(expected, rpm_packages.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
@@ -135,7 +136,7 @@ test_lockfile_entries_filtered if {
 
 	# Should NOT trigger violation because installed versions are the same (spam-1.0.0-1)
 	# even though lockfile entries show different versions for other arches
-	lib.assert_empty(rpm_packages.deny) with input.attestations as [att]
+	utils.assert_empty(rpm_packages.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
@@ -154,7 +155,7 @@ test_mismatch_detected_with_lockfile_noise if {
 		"term": "spam",
 	}}
 
-	lib.assert_equal_results(expected, rpm_packages.deny) with input.attestations as [att]
+	utils.assert_equal_results(expected, rpm_packages.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
