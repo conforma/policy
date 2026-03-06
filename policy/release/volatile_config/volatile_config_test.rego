@@ -18,8 +18,8 @@ package volatile_config_test
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.assertions
 import data.lib.time as time_lib
 import data.volatile_config
 
@@ -47,7 +47,7 @@ test_warn_pending_rule if {
 		"msg": "Volatile include rule 'cve.cve_blockers' is pending activation (effective on: 2024-07-15T12:00:00Z)",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -64,7 +64,7 @@ test_warn_pending_rule_exclude if {
 		"msg": "Volatile exclude rule 'test.some_test' is pending activation (effective on: 2024-07-15T12:00:00Z)",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -86,7 +86,7 @@ test_warn_expiring_rule if {
 		"msg": "Volatile include rule 'sbom.disallowed_packages' expires in 15 days (effective until: 2024-06-30T12:00:00Z)",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -99,7 +99,7 @@ test_no_warn_expiring_beyond_threshold if {
 		"effectiveUntil": "2024-08-14T12:00:00Z",
 	})
 
-	utils.assert_empty(volatile_config.warn) with input.policy_spec as policy_spec
+	assertions.assert_empty(volatile_config.warn) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -117,7 +117,7 @@ test_warn_expiring_custom_threshold if {
 		"msg": "Volatile include rule 'test.rule' expires in 10 days (effective until: 2024-06-25T12:00:00Z)",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -136,7 +136,7 @@ test_warn_no_expiration if {
 		"msg": "Volatile include rule 'permanent.exception' has no expiration date set",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -153,7 +153,7 @@ test_warn_no_expiration_with_past_effective_on if {
 		"msg": "Volatile include rule 'active.rule' has no expiration date set",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -174,7 +174,7 @@ test_warn_expired_rule if {
 		"msg": "Volatile include rule 'old.exception' has expired (effective until: 2024-06-05T12:00:00Z)",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -196,7 +196,7 @@ test_warn_invalid_config_effective_on if {
 		"msg": "Volatile include rule 'broken.rule' has invalid date configuration (effectiveOn: not-a-date, effectiveUntil: )",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -213,7 +213,7 @@ test_warn_invalid_config_effective_until if {
 		"msg": "Volatile include rule 'broken.rule' has invalid date configuration (effectiveOn: , effectiveUntil: invalid)",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -234,7 +234,7 @@ test_warn_scoped_by_image_digest_match if {
 		"msg": "Volatile include rule 'scoped.rule' has no expiration date set",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -246,7 +246,7 @@ test_no_warn_scoped_by_image_digest_no_match if {
 		"imageDigest": "sha256:different",
 	})
 
-	utils.assert_empty(volatile_config.warn) with input.policy_spec as policy_spec
+	assertions.assert_empty(volatile_config.warn) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -263,7 +263,7 @@ test_warn_scoped_by_component_name_match if {
 		"msg": "Volatile include rule 'component.rule' has no expiration date set",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -275,7 +275,7 @@ test_no_warn_scoped_by_component_name_no_match if {
 		"componentNames": ["other-component"],
 	})
 
-	utils.assert_empty(volatile_config.warn) with input.policy_spec as policy_spec
+	assertions.assert_empty(volatile_config.warn) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -292,7 +292,7 @@ test_warn_scoped_by_image_url_match if {
 		"msg": "Volatile include rule 'url.rule' has no expiration date set",
 	}}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -329,7 +329,7 @@ test_warn_multiple_rules if {
 		},
 	}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -358,7 +358,7 @@ test_warn_multiple_sources if {
 		},
 	}
 
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -369,7 +369,7 @@ test_warn_multiple_sources if {
 # =============================================================================
 
 test_no_warn_no_policy_spec if {
-	utils.assert_empty(volatile_config.warn) with input.image.ref as _image_ref
+	assertions.assert_empty(volatile_config.warn) with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
 }
@@ -377,7 +377,7 @@ test_no_warn_no_policy_spec if {
 test_no_warn_no_volatile_config if {
 	policy_spec := {"sources": [{"name": "test-source"}]}
 
-	utils.assert_empty(volatile_config.warn) with input.policy_spec as policy_spec
+	assertions.assert_empty(volatile_config.warn) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -389,7 +389,7 @@ test_no_warn_empty_volatile_config if {
 		"volatileConfig": {},
 	}]}
 
-	utils.assert_empty(volatile_config.warn) with input.policy_spec as policy_spec
+	assertions.assert_empty(volatile_config.warn) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -408,7 +408,7 @@ test_warn_with_no_image_ref if {
 	}}
 
 	# Global rules apply even without image ref
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
 }
@@ -422,7 +422,7 @@ test_warn_with_image_ref_no_digest if {
 	}}
 
 	# Global rules apply with image ref that has no digest
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as "quay.io/repo/image:v1"
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -437,7 +437,7 @@ test_warn_with_no_component_name if {
 	}}
 
 	# Global rules apply without component_name in input
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as _image_ref
 		with time_lib.effective_current_time_ns as _now_ns
 }
@@ -452,7 +452,7 @@ test_warn_with_malformed_image_ref_multiple_at if {
 
 	# Global rules apply with malformed image ref containing multiple @ symbols
 	# This tests the case where split("@") doesn't produce exactly 2 parts
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as "quay.io/repo/image@sha256:abc123@sha256:def456"
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
@@ -468,7 +468,7 @@ test_warn_with_malformed_image_ref_trailing_at if {
 
 	# Global rules apply with malformed image ref with trailing @ (no digest)
 	# This tests the case where split("@") doesn't produce exactly 2 parts
-	utils.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
+	assertions.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
 		with input.image.ref as "quay.io/repo/image@"
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns

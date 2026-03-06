@@ -28,8 +28,8 @@ package slsa_source_version_controlled
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.metadata
 
 # METADATA
 # title: Materials have uri and digest
@@ -53,7 +53,7 @@ import data.lib
 deny contains result if {
 	count(lib.pipelinerun_attestations) > 0
 	count(materials) == 0
-	result := utils.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -79,7 +79,7 @@ deny contains result if {
 deny contains result if {
 	some material in materials
 	not startswith(material.uri, "git+")
-	result := utils.result_helper(rego.metadata.chain(), [material.uri])
+	result := metadata.result_helper(rego.metadata.chain(), [material.uri])
 }
 
 # METADATA
@@ -106,7 +106,7 @@ deny contains result if {
 	some material in materials
 	commit := material.digest.sha1
 	not regex.match(`^[a-f0-9]{40}$`, commit)
-	result := utils.result_helper(rego.metadata.chain(), [commit])
+	result := metadata.result_helper(rego.metadata.chain(), [commit])
 }
 
 materials contains material if {

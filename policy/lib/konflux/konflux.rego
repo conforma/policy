@@ -5,7 +5,6 @@ import rego.v1
 import data.lib
 import data.lib.image
 import data.lib.tekton
-import data.lib.utils
 
 # Currently, it's not possible to determine if the image being validated is an Image Index or an
 # Image Manifest, see https://github.com/conforma/cli/issues/2121. This function is

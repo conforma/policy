@@ -2,15 +2,15 @@ package rpm_signature_test
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.assertions
 import data.lib_test
 import data.rpm_signature
 
 test_success if {
 	result_value := {"keys": {"abcdef0123456789": 1, "ABCDEF0123456789": 2, "unsigned": 0}}
 	attestations := [_attestation_v1_0(result_value), _attestation_v0_2(result_value)]
-	utils.assert_empty(rpm_signature.deny) with input.attestations as attestations
+	assertions.assert_empty(rpm_signature.deny) with input.attestations as attestations
 		with data.rule_data.allowed_rpm_signature_keys as ["abcdef0123456789", "ABCDEF0123456789"]
 }
 
@@ -29,14 +29,14 @@ test_disallowed_key if {
 			"term": "abcdef0123456789",
 		},
 	}
-	utils.assert_equal_results(rpm_signature.deny, expected) with input.attestations as attestations
+	assertions.assert_equal_results(rpm_signature.deny, expected) with input.attestations as attestations
 		with data.rule_data.allowed_rpm_signature_keys as ["bcdef0123456789a"]
 }
 
 test_can_allow_unsigned if {
 	result_value := {"keys": {"unsigned": 10}}
 	attestations := [_attestation_v1_0(result_value), _attestation_v0_2(result_value)]
-	utils.assert_empty(rpm_signature.deny) with input.attestations as attestations
+	assertions.assert_empty(rpm_signature.deny) with input.attestations as attestations
 		with data.rule_data.allowed_rpm_signature_keys as ["unsigned"]
 }
 
@@ -47,7 +47,7 @@ test_task_result_invalid_format if {
 		"code": "rpm_signature.result_format",
 		"msg": "Task result has unexpected format: keys.abcdef0123456789: Invalid type. Expected: integer, given: string",
 	}}
-	utils.assert_equal_results(rpm_signature.deny, expected) with input.attestations as attestations
+	assertions.assert_equal_results(rpm_signature.deny, expected) with input.attestations as attestations
 		with data.rule_data.allowed_rpm_signature_keys as ["abcdef0123456789"]
 }
 
@@ -78,7 +78,7 @@ test_rule_data_provided if {
 		},
 	}
 
-	utils.assert_equal_results(rpm_signature.deny, expected) with data.rule_data as d
+	assertions.assert_equal_results(rpm_signature.deny, expected) with data.rule_data as d
 }
 
 test_rule_data_not_provided if {
@@ -88,7 +88,7 @@ test_rule_data_not_provided if {
 		"severity": "failure",
 	}}
 
-	utils.assert_equal_results(rpm_signature.deny, expected) with data.rule_data as {}
+	assertions.assert_equal_results(rpm_signature.deny, expected) with data.rule_data as {}
 }
 
 _attestation_v0_2(result_value) := lib_test.att_mock_helper_ref(

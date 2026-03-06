@@ -2,13 +2,13 @@ package rhtap_multi_ci_test
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.assertions
 import data.rhtap_multi_ci
 
 test_atts_happy_path if {
-	utils.assert_empty(rhtap_multi_ci.deny) with input.attestations as [good_att]
-	utils.assert_empty(rhtap_multi_ci.deny) with input.attestations as [ignored_att, good_att]
+	assertions.assert_empty(rhtap_multi_ci.deny) with input.attestations as [good_att]
+	assertions.assert_empty(rhtap_multi_ci.deny) with input.attestations as [ignored_att, good_att]
 }
 
 test_atts_missing if {
@@ -23,8 +23,8 @@ test_atts_missing if {
 		]),
 	}
 
-	utils.assert_equal_results({expected}, rhtap_multi_ci.deny) with input.attestations as []
-	utils.assert_equal_results({expected}, rhtap_multi_ci.deny) with input.attestations as [ignored_att]
+	assertions.assert_equal_results({expected}, rhtap_multi_ci.deny) with input.attestations as []
+	assertions.assert_equal_results({expected}, rhtap_multi_ci.deny) with input.attestations as [ignored_att]
 }
 
 test_fields_missing if {
@@ -38,15 +38,15 @@ test_fields_missing if {
 			"msg": "RHTAP jenkins attestation problem: runDetails.builder: id is required",
 		},
 	}
-	utils.assert_equal_results(expected, rhtap_multi_ci.deny) with input.attestations as [missing_fields_att]
+	assertions.assert_equal_results(expected, rhtap_multi_ci.deny) with input.attestations as [missing_fields_att]
 }
 
 # Not very useful except to get 100% coverage
 # (I don't feel like repeating the above tests with the other two build types)
 test_schema_sanity if {
-	utils.assert_not_equal(rhtap_multi_ci._predicate_schema_base, rhtap_multi_ci._predicate_schema("jenkins"))
-	utils.assert_equal(rhtap_multi_ci._predicate_schema_base, rhtap_multi_ci._predicate_schema("github"))
-	utils.assert_equal(rhtap_multi_ci._predicate_schema_base, rhtap_multi_ci._predicate_schema("gitlab"))
+	assertions.assert_not_equal(rhtap_multi_ci._predicate_schema_base, rhtap_multi_ci._predicate_schema("jenkins"))
+	assertions.assert_equal(rhtap_multi_ci._predicate_schema_base, rhtap_multi_ci._predicate_schema("github"))
+	assertions.assert_equal(rhtap_multi_ci._predicate_schema_base, rhtap_multi_ci._predicate_schema("gitlab"))
 }
 
 good_build_type := "https://redhat.com/rhtap/slsa-build-types/jenkins-build/v1"
@@ -72,7 +72,7 @@ mock_att(build_type, run_details) := {"statement": {
 }}
 
 test_rhtap_build_type if {
-	utils.assert_equal(
+	assertions.assert_equal(
 		"https://redhat.com/rhtap/slsa-build-types/bacon-build/v1",
 		rhtap_multi_ci._build_type("bacon"),
 	)

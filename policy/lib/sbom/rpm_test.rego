@@ -1,8 +1,8 @@
 package lib.sbom_test
+import data.lib.assertions
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
 import data.lib.sbom
 
@@ -22,7 +22,7 @@ test_all_rpm_entities if {
 	}
 
 	all_sboms := [s_cyclonedx, s_spdx]
-	utils.assert_equal_results(expected, sbom.all_rpm_entities) with lib.sbom.all_sboms as all_sboms
+	assertions.assert_equal_results(expected, sbom.all_rpm_entities) with lib.sbom.all_sboms as all_sboms
 }
 
 test_all_rpm_entities_no_dupes if {
@@ -48,7 +48,7 @@ test_all_rpm_entities_no_dupes if {
 	}
 
 	all_sboms := [s_cyclonedx, s_spdx]
-	utils.assert_equal_results(expected, sbom.all_rpm_entities) with lib.sbom.all_sboms as all_sboms
+	assertions.assert_equal_results(expected, sbom.all_rpm_entities) with lib.sbom.all_sboms as all_sboms
 }
 
 test_rpms_from_sbom_cyclonedx if {
@@ -68,7 +68,7 @@ test_rpms_from_sbom_cyclonedx if {
 		},
 	}
 
-	utils.assert_equal_results(expected, sbom.rpms_from_sbom(s))
+	assertions.assert_equal_results(expected, sbom.rpms_from_sbom(s))
 }
 
 test_rpms_from_sbom_spdx if {
@@ -88,7 +88,7 @@ test_rpms_from_sbom_spdx if {
 		},
 	}
 
-	utils.assert_equal_results(expected, sbom.rpms_from_sbom(s))
+	assertions.assert_equal_results(expected, sbom.rpms_from_sbom(s))
 }
 
 _cyclonedx_sbom(components) := {"components": components}

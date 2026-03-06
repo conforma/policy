@@ -2,7 +2,8 @@ package stepaction_image_test
 
 import rego.v1
 
-import data.lib.utils as lib
+import data.lib.assertions
+
 import data.stepaction_image as image
 
 test_image_accessible if {
@@ -11,7 +12,7 @@ test_image_accessible if {
 		"spec": {"image": "registry.io/repository/ok:1"},
 	}
 
-	lib.assert_empty(image.deny) with input as stepaction
+	assertions.assert_empty(image.deny) with input as stepaction
 		with ec.oci.image_manifest as mock_image_manifest
 		with data.rule_data as default_rule_data
 }
@@ -28,7 +29,7 @@ test_image_not_accessible if {
 		"term": "registry.io/repository/not_ok:1",
 	}}
 
-	lib.assert_equal_results(expected, image.deny) with input as stepaction
+	assertions.assert_equal_results(expected, image.deny) with input as stepaction
 		with ec.oci.image_manifest as mock_image_manifest
 		with data.rule_data as default_rule_data
 }
@@ -47,7 +48,7 @@ test_image_not_permitted if {
 		"term": "noname/noversion",
 	}}
 
-	lib.assert_equal_results(expected, image.deny) with input as stepaction
+	assertions.assert_equal_results(expected, image.deny) with input as stepaction
 		with ec.oci.image_manifest as mock_image_manifest
 		with data.rule_data as rule_data
 }
@@ -60,7 +61,7 @@ test_rule_data_list_empty if {
 		"severity": "failure",
 	}}
 
-	lib.assert_equal_results(expected, image.deny) with data.rule_data as {}
+	assertions.assert_equal_results(expected, image.deny) with data.rule_data as {}
 }
 
 test_rule_data_list_format if {
@@ -87,7 +88,7 @@ test_rule_data_list_format if {
 		},
 	}
 
-	lib.assert_equal_results(expected, image.deny) with data.rule_data as d
+	assertions.assert_equal_results(expected, image.deny) with data.rule_data as d
 }
 
 mock_image_manifest(ref) := {} if {

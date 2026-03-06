@@ -14,8 +14,8 @@ package slsa_build_scripted_build
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.metadata
 import data.lib.image
 import data.lib.tekton
 
@@ -43,7 +43,7 @@ deny contains result if {
 	build_tasks := tekton.build_tasks(attestation)
 	some build_task in build_tasks
 	count(task_steps(build_task)) == 0
-	result := utils.result_helper(rego.metadata.chain(), [build_task.name])
+	result := metadata.result_helper(rego.metadata.chain(), [build_task.name])
 }
 
 # METADATA
@@ -68,7 +68,7 @@ deny contains result if {
 	some attestation in lib.pipelinerun_attestations
 	builds := tekton.build_tasks(attestation)
 	count(builds) == 0
-	result := utils.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -102,7 +102,7 @@ deny contains result if {
 	some subject_image_ref in subject_image_refs
 	not _contains_equal_ref(result_image_refs, subject_image_ref)
 
-	result := utils.result_helper(rego.metadata.chain(), [subject_image_ref])
+	result := metadata.result_helper(rego.metadata.chain(), [subject_image_ref])
 }
 
 # METADATA
@@ -133,7 +133,7 @@ deny contains result if {
 	}
 
 	error := _trusted_build_task_error(tasks)
-	result := utils.result_helper(rego.metadata.chain(), [expected_ref, error])
+	result := metadata.result_helper(rego.metadata.chain(), [expected_ref, error])
 }
 
 task_steps(task) := steps if {

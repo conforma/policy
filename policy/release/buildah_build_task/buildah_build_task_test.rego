@@ -3,20 +3,21 @@ package buildah_build_task_test
 import rego.v1
 
 import data.buildah_build_task
-import data.lib.utils
+
 import data.lib
+import data.lib.assertions
 import data.lib.tekton_test
 
 test_good_dockerfile_param if {
 	attestation := _attestation("buildah", {"parameters": {"DOCKERFILE": "./Dockerfile"}}, _results)
-	utils.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
 
 	task_base := tekton_test.slsav1_task("buildah")
 	task_w_params := tekton_test.with_params(task_base, [{"name": "DOCKERFILE", "value": "./Dockerfile"}])
 	task_w_results := tekton_test.with_results(task_w_params, _results)
 
 	slsav1_attestation := tekton_test.slsav1_attestation([task_w_results])
-	utils.assert_empty(buildah_build_task.deny) with input.attestations as [slsav1_attestation]
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
 
 # regal ignore:rule-length
@@ -31,7 +32,7 @@ test_buildah_tasks if {
 		],
 		_results,
 	)}
-	utils.assert_equal(expected, buildah_build_task._buildah_tasks) with input.attestations as [slsav1_attestation]
+	assertions.assert_equal(expected, buildah_build_task._buildah_tasks) with input.attestations as [slsav1_attestation]
 }
 
 test_dockerfile_param_https_source if {
@@ -41,7 +42,7 @@ test_dockerfile_param_https_source if {
 	}}
 
 	attestation := _attestation("buildah", {"parameters": {"DOCKERFILE": "https://Dockerfile"}}, _results)
-	utils.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
+	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
 
 	ext_source_task_base := tekton_test.slsav1_task("buildah")
 	ext_source_task_w_params = tekton_test.with_params(
@@ -60,7 +61,7 @@ test_dockerfile_param_https_source if {
 	ext_source_task_full = tekton_test.with_results(ext_source_task_w_params, _results)
 
 	slsav1_attestation := tekton_test.slsav1_attestation([ext_source_task_full])
-	utils.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [slsav1_attestation]
+	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
 
 test_dockerfile_param_http_source if {
@@ -69,7 +70,7 @@ test_dockerfile_param_http_source if {
 		"msg": "DOCKERFILE param value (http://Dockerfile) is an external source",
 	}}
 	attestation := _attestation("buildah", {"parameters": {"DOCKERFILE": "http://Dockerfile"}}, _results)
-	utils.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
+	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
 
 	ext_source_task_base := tekton_test.slsav1_task("buildah")
 	ext_source_task_w_params = tekton_test.with_params(
@@ -88,7 +89,7 @@ test_dockerfile_param_http_source if {
 	ext_source_task_full = tekton_test.with_results(ext_source_task_w_params, _results)
 
 	slsav1_attestation := tekton_test.slsav1_attestation([ext_source_task_full])
-	utils.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [slsav1_attestation]
+	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
 
 test_missing_pipeline_run_attestations if {
@@ -96,10 +97,10 @@ test_missing_pipeline_run_attestations if {
 		"predicateType": "https://slsa.dev/provenance/v0.2",
 		"predicate": {"buildType": "something/else"},
 	}}
-	utils.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
 
 	slsav1_attestation := tekton_test.slsav1_attestation([])
-	utils.assert_empty(buildah_build_task.deny) with input.attestations as [slsav1_attestation]
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
 
 # regal ignore:rule-length
@@ -122,7 +123,7 @@ test_multiple_buildah_tasks if {
 			]},
 		},
 	}}
-	utils.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
 
 	tasks := [
 		_buildah_task("buildah"),
@@ -132,7 +133,7 @@ test_multiple_buildah_tasks if {
 	]
 
 	slsav1_attestation := tekton_test.slsav1_attestation(tasks)
-	utils.assert_empty(buildah_build_task.deny) with input.attestations as [slsav1_attestation]
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
 
 # regal ignore:rule-length
@@ -161,7 +162,7 @@ test_multiple_buildah_tasks_one_with_external_dockerfile if {
 		"code": "buildah_build_task.buildah_uses_local_dockerfile",
 		"msg": "DOCKERFILE param value (http://Dockerfile) is an external source",
 	}}
-	utils.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
+	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
 
 	ext_source_task_base := tekton_test.slsav1_task("buildah")
 	ext_source_task_w_params = tekton_test.with_params(
@@ -189,7 +190,7 @@ test_multiple_buildah_tasks_one_with_external_dockerfile if {
 
 	slsav1_attestation := tekton_test.slsav1_attestation(tasks)
 
-	utils.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [slsav1_attestation]
+	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [slsav1_attestation]
 }
 
 test_add_capabilities_param if {
@@ -219,7 +220,7 @@ test_add_capabilities_param if {
 	task1 = tekton_test.with_results(_task1_w_params, _results)
 
 	attestation := tekton_test.slsav1_attestation([task1])
-	utils.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
+	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
 
 	_task2_base := tekton_test.slsav1_task("buildah")
 	_task2_w_params = tekton_test.with_params(
@@ -242,7 +243,7 @@ test_add_capabilities_param if {
 	task2 = tekton_test.with_results(_task2_w_params, _results)
 
 	attestation_spaces := tekton_test.slsav1_attestation([task2])
-	utils.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_spaces]
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_spaces]
 }
 
 test_platform_param_disallowed if {
@@ -293,10 +294,10 @@ test_platform_param_disallowed if {
 	task2 = tekton_test.with_results(_task2_w_params, _results)
 
 	# regal ignore:line-length
-	utils.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [tekton_test.slsav1_attestation([task1])]
+	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [tekton_test.slsav1_attestation([task1])]
 		with data.rule_data.disallowed_platform_patterns as [".*root.*"]
 
-	utils.assert_empty(buildah_build_task.deny) with input.attestations as [tekton_test.slsav1_attestation([task2])]
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [tekton_test.slsav1_attestation([task2])]
 		with data.rule_data.disallowed_platform_patterns as [".*root.*"]
 }
 
@@ -335,7 +336,7 @@ test_plat_patterns_rule_data_validation if {
 		},
 	}
 
-	utils.assert_equal_results(buildah_build_task.deny, expected) with data.rule_data as d
+	assertions.assert_equal_results(buildah_build_task.deny, expected) with data.rule_data as d
 }
 
 test_privileged_nested_param if {
@@ -365,7 +366,7 @@ test_privileged_nested_param if {
 	task = tekton_test.with_results(_task_w_params, _results)
 
 	attestation := tekton_test.slsav1_attestation([task])
-	utils.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
+	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
 
 	_task_empty_base := tekton_test.slsav1_task("buildah")
 	_task_empty_w_params = tekton_test.with_params(
@@ -388,7 +389,7 @@ test_privileged_nested_param if {
 	task_empty = tekton_test.with_results(_task_empty_w_params, _results)
 
 	attestation_empty := tekton_test.slsav1_attestation([task_empty])
-	utils.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_empty]
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_empty]
 
 	_task_false_base := tekton_test.slsav1_task("buildah")
 	_task_false_w_params = tekton_test.with_params(
@@ -411,7 +412,7 @@ test_privileged_nested_param if {
 	task_false = tekton_test.with_results(_task_false_w_params, _results)
 
 	attestation_false := tekton_test.slsav1_attestation([task_false])
-	utils.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_false]
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_false]
 }
 
 _attestation(task_name, params, results) := {"statement": {

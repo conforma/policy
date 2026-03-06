@@ -1,4 +1,4 @@
-package lib.utils
+package lib.strings
 
 import rego.v1
 

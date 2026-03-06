@@ -2,8 +2,8 @@ package lib.tekton
 
 import rego.v1
 
+import data.lib.sets
 import data.lib.time as ectime
-import data.lib.utils as lib
 
 pipeline_label := "pipelines.openshift.io/runtime"
 
@@ -33,14 +33,14 @@ pipeline_label_selector(pipeline) := value if {
 
 	# Labels of the build Task from the SLSA Provenance v1.0 of a PipelineRun
 	values := [l | some build_task in build_tasks(pipeline); l := build_task.metadata.labels[task_label]]
-	count(lib.to_set(values)) == 1
+	count(sets.to_set(values)) == 1
 	value := values[0]
 } else := value if {
 	not is_fbc # given that the build task is shared between fbc and docker builds we can't rely on the task's label
 
 	# Labels of the build Task from the SLSA Provenance v0.2 of a PipelineRun
 	values := [l | some build_task in build_tasks(pipeline); l := build_task.invocation.environment.labels[task_label]]
-	count(lib.to_set(values)) == 1
+	count(sets.to_set(values)) == 1
 	value := values[0]
 } else := value if {
 	# PipelineRun labels found in the SLSA Provenance v1.0

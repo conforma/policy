@@ -7,7 +7,9 @@ package results
 
 import rego.v1
 
-import data.lib.utils as lib
+import data.lib.metadata
+import data.lib.rule_data
+
 import data.lib.json as j
 
 # METADATA
@@ -21,7 +23,7 @@ import data.lib.json as j
 #
 deny contains result if {
 	some err in errors
-	result := lib.result_helper(rego.metadata.chain(), [err])
+	result := metadata.result_helper(rego.metadata.chain(), [err])
 }
 
 # METADATA
@@ -36,16 +38,16 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 errors contains err if {
 	version := object.get(input.metadata, ["labels", "app.kubernetes.io/version"], "")
-	version_constraints := {r.version | some r in lib.rule_data(_rule_data_key)}
+	version_constraints := {r.version | some r in rule_data.rule_data(_rule_data_key)}
 	not version in version_constraints
 
 	some required in {r |
-		some r in lib.rule_data(_rule_data_key)
+		some r in rule_data.rule_data(_rule_data_key)
 		input.metadata.name == r.task
 		not r.version
 	}
@@ -60,7 +62,7 @@ errors contains err if {
 errors contains err if {
 	version := object.get(input.metadata, ["labels", "app.kubernetes.io/version"], "")
 	some required in {r |
-		some r in lib.rule_data(_rule_data_key)
+		some r in rule_data.rule_data(_rule_data_key)
 		input.metadata.name == r.task
 		r.version == version
 	}
@@ -89,7 +91,7 @@ _rule_data_errors contains error if {
 		"uniqueItems": true,
 	}
 
-	some e in j.validate_schema(lib.rule_data(_rule_data_key), schema)
+	some e in j.validate_schema(rule_data.rule_data(_rule_data_key), schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
 		"severity": e.severity,

@@ -3,11 +3,12 @@ package lib.tekton
 import rego.v1
 
 import data.lib.arrays
+import data.lib.rule_data
 import data.lib.json as j
 import data.lib.time as time_lib
 
 # regal ignore:prefer-package-imports
-import data.lib.utils.rule_data as lib_rule_data
+import data.lib.rule_data.rule_data as lib_rule_data
 
 # #############################################################################
 # TRUSTED TASK LIBRARY

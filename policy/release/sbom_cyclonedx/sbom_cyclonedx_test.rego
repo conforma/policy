@@ -2,19 +2,19 @@ package sbom_cyclonedx_test
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.assertions
 import data.lib.sbom
 import data.sbom_cyclonedx
 
 test_all_good_from_attestation if {
-	utils.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 }
 
 test_all_good_from_image if {
 	files := {"root/buildinfo/content_manifests/sbom-cyclonedx.json": _sbom_1_5_attestation.statement.predicate}
-	utils.assert_empty(sbom_cyclonedx.deny) with input.image.files as files
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.image.files as files
 		with input.image.ref as "registry.local/spam@sha256:123"
 }
 
@@ -28,7 +28,7 @@ test_not_valid if {
 		"path": "/statement/predicate/components",
 		"value": "spam",
 	}])
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
 }
 
 test_unsupported_version if {
@@ -41,11 +41,11 @@ test_unsupported_version if {
 		"path": "/statement/predicate/specVersion",
 		"value": "1.3",
 	}])
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
 }
 
 test_valid_cdx_1_4 if {
-	utils.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_4_attestation]
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_4_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 }
 
@@ -59,11 +59,11 @@ test_invalid_cdx_1_4 if {
 		"path": "/statement/predicate/components",
 		"value": "spam",
 	}])
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
 }
 
 test_valid_cdx_1_5 if {
-	utils.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 }
 
@@ -77,11 +77,11 @@ test_invalid_cdx_1_5 if {
 		"path": "/statement/predicate/components",
 		"value": "spam",
 	}])
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
 }
 
 test_valid_cdx_1_6 if {
-	utils.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_6_attestation]
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_6_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 }
 
@@ -95,14 +95,14 @@ test_invalid_cdx_1_6 if {
 		"path": "/statement/predicate/components",
 		"value": "spam",
 	}])
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
 }
 
 test_attributes_not_allowed_all_good if {
-	utils.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 
-	utils.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attrX", "value": "valueX"}]}
 }
@@ -116,7 +116,7 @@ test_attributes_not_allowed_pair if {
 		"msg": `Package pkg:rpm/rhel/coreutils-single@8.32-34.el9?arch=x86_64&upstream=coreutils-8.32-34.el9.src.rpm&distro=rhel-9.3 has the attribute "attr1" set`,
 	}}
 
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attr1"}]}
 }
@@ -130,7 +130,7 @@ test_attributes_not_allowed_value if {
 		"msg": `Package pkg:rpm/rhel/coreutils-single@8.32-34.el9?arch=x86_64&upstream=coreutils-8.32-34.el9.src.rpm&distro=rhel-9.3 has the attribute "attr2" set to "value2"`,
 	}}
 
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attr2", "value": "value2"}]}
 }
@@ -167,7 +167,7 @@ test_attributes_not_allowed_effective_on if {
 		result_no_collections := json.remove(result, ["collections"])
 	}
 
-	utils.assert_equal(expected, results)
+	assertions.assert_equal(expected, results)
 }
 
 test_attributes_not_allowed_value_no_purl if {
@@ -178,14 +178,14 @@ test_attributes_not_allowed_value_no_purl if {
 		"msg": `Package rhel has the attribute "syft:distro:id" set to "rhel"`,
 	}}
 
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "syft:distro:id", "value": "rhel"}]}
 }
 
 test_external_references_allowed_regex_with_no_rules_is_allowed if {
 	expected := {}
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_allowed_external_references_key: []}
 }
@@ -199,7 +199,7 @@ test_external_references_allowed_regex if {
 		"msg": `Package pkg:rpm/rhel/coreutils-single@8.32-34.el9?arch=x86_64&upstream=coreutils-8.32-34.el9.src.rpm&distro=rhel-9.3 has reference "https://example.com/file.txt" of type "distribution" which is not explicitly allowed by pattern ".*allowed.net.*"`,
 	}}
 
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_allowed_external_references_key: [{
 			"type": "distribution",
@@ -215,7 +215,7 @@ test_external_references_allowed_no_purl if {
 		"msg": `Package rhel has reference "https://www.redhat.com/" of type "website" which is not explicitly allowed by pattern ".*example.com.*"`,
 	}}
 
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_allowed_external_references_key: [{
 			"type": "website",
@@ -232,7 +232,7 @@ test_external_references_disallowed_regex if {
 		"msg": `Package pkg:rpm/rhel/coreutils-single@8.32-34.el9?arch=x86_64&upstream=coreutils-8.32-34.el9.src.rpm&distro=rhel-9.3 has reference "https://example.com/file.txt" of type "distribution" which is disallowed by pattern ".*example.com.*"`,
 	}}
 
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_disallowed_external_references_key: [{
 			"type": "distribution",
@@ -248,7 +248,7 @@ test_external_references_disallowed_no_purl if {
 		"msg": `Package rhel has reference "https://www.redhat.com/" of type "website" which is disallowed by pattern ".*redhat.com.*"`,
 	}}
 
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_disallowed_external_references_key: [{
 			"type": "website",
@@ -306,7 +306,7 @@ test_allowed_package_sources if {
 		},
 	])
 
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
 		with data.rule_data as {sbom.rule_data_allowed_package_sources_key: [
 			{
 				"type": "maven",
@@ -344,7 +344,7 @@ test_allowed_package_sources_no_rule_defined if {
 	}])
 
 	# rule data is defined only for purl of type generic
-	utils.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
 		with data.rule_data as {sbom.rule_data_allowed_package_sources_key: [{
 			"type": "generic",
 			"patterns": [".*example.com.*"],
@@ -357,7 +357,7 @@ test_attributes_not_allowed_no_properties if {
 		"path": "/statement/predicate/components/0/properties",
 	}])
 
-	utils.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attr", "value": "value"}]}
 }
@@ -473,7 +473,7 @@ assert_allowed(purl, disallowed_packages) if {
 	}])
 
 	# regal ignore:with-outside-test-context
-	utils.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
 		# regal ignore:with-outside-test-context
 with 		data.rule_data.disallowed_packages as disallowed_packages
 }
@@ -490,7 +490,7 @@ assert_not_allowed(purl, disallowed_packages) if {
 	}])
 
 	# regal ignore:with-outside-test-context
-	utils.assert_equal_results(sbom_cyclonedx.deny, expected) with input.attestations as [att]
+	assertions.assert_equal_results(sbom_cyclonedx.deny, expected) with input.attestations as [att]
 		# regal ignore:with-outside-test-context
 with 		data.rule_data.disallowed_packages as disallowed_packages
 }

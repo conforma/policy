@@ -2,7 +2,8 @@ package step_images_test
 
 import rego.v1
 
-import data.lib.utils as lib
+import data.lib.assertions
+
 import data.step_images
 
 test_looks_at_tasks_only if {
@@ -11,13 +12,13 @@ test_looks_at_tasks_only if {
 		"spec": {"steps": [{"image": "registry.io/repository/not_ok"}]},
 	}
 
-	lib.assert_empty(step_images.deny) with input as pipeline
+	assertions.assert_empty(step_images.deny) with input as pipeline
 }
 
 test_task_with_no_steps if {
 	task := {"kind": "Task"}
 
-	lib.assert_empty(step_images.deny) with input as task
+	assertions.assert_empty(step_images.deny) with input as task
 }
 
 test_task_with_valid_steps if {
@@ -30,7 +31,7 @@ test_task_with_valid_steps if {
 		]},
 	}
 
-	lib.assert_empty(step_images.deny) with input as task with ec.oci.image_manifest as mock_image_manifest
+	assertions.assert_empty(step_images.deny) with input as task with ec.oci.image_manifest as mock_image_manifest
 }
 
 test_task_with_invalid_steps if {
@@ -58,7 +59,7 @@ test_task_with_invalid_steps if {
 		},
 	}
 
-	lib.assert_equal_results(expected, step_images.deny) with input as task
+	assertions.assert_equal_results(expected, step_images.deny) with input as task
 		with ec.oci.image_manifest as mock_image_manifest
 }
 

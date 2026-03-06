@@ -1,12 +1,13 @@
-package lib.utils_test
+package lib.rule_data_test
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.assertions
+import data.lib.rule_data
 
 test_rule_data if {
-	utils.assert_equal(
+	assertions.assert_equal(
 		[
 			40, # key0 value comes from data.rule_data__configuration__
 			30, # key1 value comes from data.rule_data_custom
@@ -15,19 +16,19 @@ test_rule_data if {
 			[], # key4 value is not defined
 		],
 		[
-			utils.rule_data("key0"),
-			utils.rule_data("key1"),
-			utils.rule_data("key2"),
-			utils.rule_data("key3"),
-			utils.rule_data("key4"),
+			rule_data.rule_data("key0"),
+			rule_data.rule_data("key1"),
+			rule_data.rule_data("key2"),
+			rule_data.rule_data("key3"),
+			rule_data.rule_data("key4"),
 		],
 	) with data.rule_data__configuration__ as {"key0": 40}
 		with data.rule_data_custom as {"key0": 30, "key1": 30}
 		with data.rule_data as {"key0": 20, "key1": 20, "key2": 20}
-		with utils.rule_data_defaults as {"key3": 10}
+		with rule_data.rule_data_defaults as {"key3": 10}
 }
 
 # Need this for 100% coverage
 test_rule_data_defaults if {
-	utils.assert_not_empty(utils.rule_data_defaults)
+	assertions.assert_not_empty(rule_data.rule_data_defaults)
 }

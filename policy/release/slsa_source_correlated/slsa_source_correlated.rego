@@ -14,8 +14,9 @@ package slsa_source_correlated
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.metadata
+import data.lib.rule_data
 import data.lib.json as j
 
 # METADATA
@@ -36,7 +37,7 @@ deny contains result if {
 	source := object.get(input, ["image", "source"], {})
 	count(source) == 0
 
-	result := utils.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -62,7 +63,7 @@ deny contains result if {
 deny contains result if {
 	count(_source_references) == 0
 
-	result := utils.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -97,7 +98,7 @@ deny contains result if {
 
 	some attested_source in _source_references
 
-	result := utils.result_helper_with_term(
+	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[sprintf("%s@%s", [expected_source.expected_vcs_uri, expected_source.expected_revision])], attested_source,
 	)
@@ -119,7 +120,7 @@ deny contains result if {
 #   - policy_data
 deny contains result if {
 	some e in _rule_data_errors
-	result := utils.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 _refs(expected_vcs_uri, expected_revision) := refs if {
@@ -161,13 +162,13 @@ _source_references contains ref if {
 	some att in lib.slsa_provenance_attestations
 	some material in lib.attestation_materials(att)
 	some digest_alg in object.keys(material.digest)
-	some supported_vcs_type in utils.rule_data("supported_vcs")
+	some supported_vcs_type in rule_data.rule_data("supported_vcs")
 
 	# the material.uri is a kind of vcs_type, lets us ignore other, non-vcs, materials
 	startswith(material.uri, sprintf("%s+", [supported_vcs_type]))
 
 	# make sure the digest algorithm is supported
-	digest_alg in utils.rule_data("supported_digests")
+	digest_alg in rule_data.rule_data("supported_digests")
 
 	# note, the digest_alg is not compared, it is expected that the value
 	# matches the expected reference
@@ -178,7 +179,7 @@ _rule_data_errors contains error if {
 	some key in ["supported_vcs", "supported_digests"]
 
 	some e in j.validate_schema(
-		utils.rule_data(key),
+		rule_data.rule_data(key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

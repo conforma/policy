@@ -1,4 +1,4 @@
-package lib.utils
+package lib.rule_data
 
 import rego.v1
 

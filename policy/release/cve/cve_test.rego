@@ -3,21 +3,22 @@ package cve_test
 import rego.v1
 
 import data.cve
-import data.lib.utils
+
 import data.lib
+import data.lib.assertions
 import data.lib.tekton_test
 import data.lib.time as lib_time
 import data.lib_test
 
 test_success if {
-	utils.assert_empty(cve.deny | cve.warn) with input.attestations as _no_vuln_attestations
+	assertions.assert_empty(cve.deny | cve.warn) with input.attestations as _no_vuln_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 }
 
 test_success_with_rule_data if {
-	utils.assert_empty(cve.deny | cve.warn) with input.attestations as _with_vuln_attestations
+	assertions.assert_empty(cve.deny | cve.warn) with input.attestations as _with_vuln_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
@@ -49,7 +50,7 @@ test_failure if {
 		},
 	}
 
-	utils.assert_equal_results(cve.deny, expected_deny) with input.attestations as _with_vuln_attestations
+	assertions.assert_equal_results(cve.deny, expected_deny) with input.attestations as _with_vuln_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
@@ -99,7 +100,7 @@ test_failure_with_rule_data if {
 		},
 	}
 
-	utils.assert_equal_results(cve.deny, expected) with input.attestations as _with_vuln_attestations
+	assertions.assert_equal_results(cve.deny, expected) with input.attestations as _with_vuln_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
@@ -138,7 +139,7 @@ test_failure_with_leeway if {
 	}
 
 	# Violations are updated with an effective_on in the future.
-	utils.assert_equal_results_no_collections(cve.deny, expected_deny) with input.attestations as _with_vuln_attestations
+	assertions.assert_equal_results_no_collections(cve.deny, expected_deny) with input.attestations as _with_vuln_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
@@ -182,7 +183,7 @@ test_failure_with_missing_leeway_data if {
 	}
 
 	# Violations are updated with an effective_on in the future.
-	utils.assert_equal_results_no_collections(cve.deny, expected_deny) with input.attestations as _with_vuln_attestations
+	assertions.assert_equal_results_no_collections(cve.deny, expected_deny) with input.attestations as _with_vuln_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
@@ -218,7 +219,7 @@ test_warn if {
 		},
 	}
 
-	utils.assert_equal_results(cve.warn, expected) with input.attestations as _with_vuln_attestations
+	assertions.assert_equal_results(cve.warn, expected) with input.attestations as _with_vuln_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
@@ -288,7 +289,7 @@ test_warn_with_rule_data if {
 		},
 	}
 
-	utils.assert_equal_results(cve.warn, expected) with input.attestations as _with_vuln_attestations
+	assertions.assert_equal_results(cve.warn, expected) with input.attestations as _with_vuln_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
@@ -305,24 +306,24 @@ test_full_report_fetch_issue if {
 		"msg": "Clair CVE scan results were not found",
 	}}
 
-	utils.assert_equal_results(cve.deny, expected) with input.image.ref as ref
+	assertions.assert_equal_results(cve.deny, expected) with input.image.ref as ref
 		with ec.oci.descriptor as descriptor
 
-	utils.assert_equal_results(cve.deny, expected) with input.attestations as _no_vuln_attestations
+	assertions.assert_equal_results(cve.deny, expected) with input.attestations as _no_vuln_attestations
 		with input.image.ref as ref
 		with ec.oci.descriptor as descriptor
 		with ec.oci.image_manifest as null
-	utils.assert_equal_results(cve.deny, expected) with input.attestations as _no_vuln_attestations
+	assertions.assert_equal_results(cve.deny, expected) with input.attestations as _no_vuln_attestations
 		with input.image.ref as ref
 		with ec.oci.descriptor as descriptor
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as null
 
-	utils.assert_empty(cve.warn) with input.attestations as _no_vuln_attestations
+	assertions.assert_empty(cve.warn) with input.attestations as _no_vuln_attestations
 		with input.image.ref as ref
 		with ec.oci.descriptor as descriptor
 		with ec.oci.image_manifest as null
-	utils.assert_empty(cve.warn) with input.attestations as _no_vuln_attestations
+	assertions.assert_empty(cve.warn) with input.attestations as _no_vuln_attestations
 		with input.image.ref as ref
 		with ec.oci.descriptor as descriptor
 		with ec.oci.image_manifest as _mock_image_manifest
@@ -377,7 +378,7 @@ test_rule_data_provided if {
 		},
 	}
 
-	utils.assert_equal_results(cve.deny, expected) with input.attestations as _no_vuln_attestations
+	assertions.assert_equal_results(cve.deny, expected) with input.attestations as _no_vuln_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
@@ -414,7 +415,7 @@ test_leeway_rule_data_check if {
 		},
 	}
 
-	utils.assert_equal_results(cve.deny, expected) with input.attestations as _no_vuln_attestations
+	assertions.assert_equal_results(cve.deny, expected) with input.attestations as _no_vuln_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob

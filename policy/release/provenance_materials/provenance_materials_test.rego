@@ -2,8 +2,8 @@ package provenance_materials_test
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.assertions
 import data.lib.tekton_test
 import data.provenance_materials
 
@@ -17,8 +17,8 @@ test_all_good if {
 		"steps": [{"entrypoint": "/bin/bash"}],
 	}]
 
-	utils.assert_empty(provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
-	utils.assert_empty(provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
+	assertions.assert_empty(provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
+	assertions.assert_empty(provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
 }
 
 test_normalized_git_url if {
@@ -31,8 +31,8 @@ test_normalized_git_url if {
 		"steps": [{"entrypoint": "/bin/bash"}],
 	}]
 
-	utils.assert_empty(provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
-	utils.assert_empty(provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
+	assertions.assert_empty(provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
+	assertions.assert_empty(provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
 }
 
 test_missing_git_clone_task if {
@@ -50,8 +50,8 @@ test_missing_git_clone_task if {
 		"msg": "Task git-clone not found",
 	}}
 
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
 }
 
 test_scattered_results if {
@@ -73,7 +73,7 @@ test_scattered_results if {
 		"msg": "Task git-clone not found",
 	}}
 
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
 }
 
 test_missing_materials if {
@@ -93,7 +93,7 @@ test_missing_materials if {
 
 	# v0.2: remove materials
 	missing_materials_v02 := json.remove(_mock_attestation_v02(tasks), ["/statement/predicate/materials"])
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [missing_materials_v02]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [missing_materials_v02]
 
 	# v1.0: remove only the git material from resolvedDependencies (keep task dependencies)
 	good_attestation_v1 := _mock_attestation_v1(tasks)
@@ -107,7 +107,7 @@ test_missing_materials if {
 			[deps_count - 1],
 		)],
 	)
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [missing_materials_v1]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [missing_materials_v1]
 }
 
 test_commit_mismatch if {
@@ -125,8 +125,8 @@ test_commit_mismatch if {
 		# regal ignore:line-length
 		"msg": `Entry in materials for the git repo "git+https://gitforge/repo.git" and commit "b10a8c637a91f427576eb0a4f39f1766c7987385" not found`,
 	}}
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
 }
 
 test_url_mismatch if {
@@ -151,8 +151,8 @@ test_url_mismatch if {
 			],
 		),
 	}}
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
 }
 
 test_commit_and_url_mismatch if {
@@ -170,8 +170,8 @@ test_commit_and_url_mismatch if {
 		# regal ignore:line-length
 		"msg": `Entry in materials for the git repo "git+https://shady/repo.git" and commit "b10a8c637a91f427576eb0a4f39f1766c7987385" not found`,
 	}}
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v1(tasks)]
 }
 
 test_provenance_many_git_clone_tasks if {
@@ -199,10 +199,10 @@ test_provenance_many_git_clone_tasks if {
 	attestation_v02 := _mock_attestation_v02([task1, task2])
 
 	# all good
-	utils.assert_empty(provenance_materials.deny) with input.attestations as [attestation_v02]
+	assertions.assert_empty(provenance_materials.deny) with input.attestations as [attestation_v02]
 
 	attestation_v1 := _mock_attestation_v1([task1, task2])
-	utils.assert_empty(provenance_materials.deny) with input.attestations as [attestation_v1]
+	assertions.assert_empty(provenance_materials.deny) with input.attestations as [attestation_v1]
 
 	# one task's cloned digest doesn't match
 	expected := {{
@@ -213,7 +213,7 @@ test_provenance_many_git_clone_tasks if {
 
 	# v0.2: patch buildConfig/tasks
 	# regal ignore:line-length
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [json.patch(attestation_v02, [{
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [json.patch(attestation_v02, [{
 		"op": "replace",
 		"path": "/statement/predicate/buildConfig/tasks/0/results/1/value",
 		"value": "big-bada-boom",
@@ -232,7 +232,7 @@ test_provenance_many_git_clone_tasks if {
 			}],
 		))),
 	}])
-	utils.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [v1_bad_commit]
+	assertions.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [v1_bad_commit]
 }
 
 _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"

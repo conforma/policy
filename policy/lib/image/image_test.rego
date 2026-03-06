@@ -2,8 +2,8 @@ package lib.image_test
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.assertions
 import data.lib.image
 
 # regal ignore:rule-length
@@ -14,41 +14,41 @@ test_parse if {
 	tag := "latest"
 	digest := "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
 
-	utils.assert_equal(
+	assertions.assert_equal(
 		image.parse(concat("", [repository, ":", tag, "@", digest])),
 		{"repo": repository, "tag": tag, "digest": digest},
 	)
 
-	utils.assert_equal(
+	assertions.assert_equal(
 		image.parse(concat("", [repository, "@", digest])),
 		{"repo": repository, "tag": "", "digest": digest},
 	)
 
-	utils.assert_equal(
+	assertions.assert_equal(
 		image.parse(concat("", [repository, ":", tag])),
 		{"repo": repository, "tag": tag, "digest": ""},
 	)
 
-	utils.assert_equal(
+	assertions.assert_equal(
 		image.parse(concat("", [repository_with_port, ":", tag, "@", digest])),
 		{"repo": repository_with_port, "tag": tag, "digest": digest},
 	)
 
-	utils.assert_equal(
+	assertions.assert_equal(
 		image.parse(concat("", [repository_with_port, "@", digest])),
 		{"repo": repository_with_port, "tag": "", "digest": digest},
 	)
 
-	utils.assert_equal(
+	assertions.assert_equal(
 		image.parse(concat("", [repository_with_port, ":", tag])),
 		{"repo": repository_with_port, "tag": tag, "digest": ""},
 	)
 
-	utils.assert_equal(
+	assertions.assert_equal(
 		image.parse(concat("", [repository_with_port, ":", tag, " "])),
 		{"repo": repository_with_port, "tag": tag, "digest": ""},
 	)
-	utils.assert_equal(
+	assertions.assert_equal(
 		image.parse(concat("", [local_repository, ":", tag, "@", digest])),
 		{"repo": local_repository, "tag": tag, "digest": digest},
 	)
@@ -84,12 +84,12 @@ test_equal if {
 }
 
 test_str if {
-	utils.assert_equal(
+	assertions.assert_equal(
 		"registry.io/repository:tag@digest",
 		image.str({"repo": "registry.io/repository", "tag": "tag", "digest": "digest"}),
 	)
-	utils.assert_equal("registry.io/repository:tag", image.str({"repo": "registry.io/repository", "tag": "tag"}))
-	utils.assert_equal("registry.io/repository@digest", image.str({"repo": "registry.io/repository", "digest": "digest"}))
+	assertions.assert_equal("registry.io/repository:tag", image.str({"repo": "registry.io/repository", "tag": "tag"}))
+	assertions.assert_equal("registry.io/repository@digest", image.str({"repo": "registry.io/repository", "digest": "digest"}))
 }
 
 test_is_image_index if {

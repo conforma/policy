@@ -29,8 +29,9 @@ package volatile_config
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.metadata
+import data.lib.volatile
 
 # METADATA
 # title: Volatile rule pending activation
@@ -50,8 +51,8 @@ import data.lib
 #
 warn contains result if {
 	some rule in _applicable_rules
-	utils.warning_category(rule.config) == "pending"
-	result := utils.result_helper(
+	volatile.warning_category(rule.config) == "pending"
+	result := metadata.result_helper(
 		rego.metadata.chain(),
 		[rule.type, rule.config.value, rule.config.effectiveOn],
 	)
@@ -76,9 +77,9 @@ warn contains result if {
 #
 warn contains result if {
 	some rule in _applicable_rules
-	utils.warning_category(rule.config) == "expiring"
-	days := utils.days_until_expiration(rule.config)
-	result := utils.result_helper(
+	volatile.warning_category(rule.config) == "expiring"
+	days := volatile.days_until_expiration(rule.config)
+	result := metadata.result_helper(
 		rego.metadata.chain(),
 		[rule.type, rule.config.value, days, rule.config.effectiveUntil],
 	)
@@ -103,8 +104,8 @@ warn contains result if {
 #
 warn contains result if {
 	some rule in _applicable_rules
-	utils.warning_category(rule.config) == "no_expiration"
-	result := utils.result_helper(
+	volatile.warning_category(rule.config) == "no_expiration"
+	result := metadata.result_helper(
 		rego.metadata.chain(),
 		[rule.type, rule.config.value],
 	)
@@ -128,8 +129,8 @@ warn contains result if {
 #
 warn contains result if {
 	some rule in _applicable_rules
-	utils.warning_category(rule.config) == "expired"
-	result := utils.result_helper(
+	volatile.warning_category(rule.config) == "expired"
+	result := metadata.result_helper(
 		rego.metadata.chain(),
 		[rule.type, rule.config.value, rule.config.effectiveUntil],
 	)
@@ -153,8 +154,8 @@ warn contains result if {
 #
 warn contains result if {
 	some rule in _applicable_rules
-	utils.warning_category(rule.config) == "invalid"
-	result := utils.result_helper(
+	volatile.warning_category(rule.config) == "invalid"
+	result := metadata.result_helper(
 		rego.metadata.chain(),
 		[
 			rule.type,
@@ -172,7 +173,7 @@ _applicable_rules contains rule if {
 
 	# Process include rules
 	some config in object.get(volatile_config, "include", [])
-	utils.is_rule_applicable(config, _context)
+	volatile.is_rule_applicable(config, _context)
 	rule := {"config": config, "type": "include", "source": object.get(source, "name", "")}
 }
 
@@ -182,7 +183,7 @@ _applicable_rules contains rule if {
 
 	# Process exclude rules
 	some config in object.get(volatile_config, "exclude", [])
-	utils.is_rule_applicable(config, _context)
+	volatile.is_rule_applicable(config, _context)
 	rule := {"config": config, "type": "exclude", "source": object.get(source, "name", "")}
 }
 

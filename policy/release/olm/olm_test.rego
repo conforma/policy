@@ -2,8 +2,9 @@ package olm_test
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.assertions
+import data.lib.metadata
 import data.lib.tekton_test
 import data.lib_test
 import data.olm
@@ -115,7 +116,7 @@ service_manifest := {
 
 # regal ignore:rule-length
 test_all_image_ref if {
-	utils.assert_equal(
+	assertions.assert_equal(
 		[
 			{"path": "spec.relatedImages[0].image", "ref": pinned_ref},
 			{"path": "annotations.containerImage", "ref": pinned_ref},
@@ -149,14 +150,14 @@ test_all_image_ref if {
 }
 
 test_all_good if {
-	utils.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest}
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
 }
 
 test_all_good_custom_dir if {
-	utils.assert_empty(olm.deny) with input.image.files as {"other/csv.yaml": manifest}
+	assertions.assert_empty(olm.deny) with input.image.files as {"other/csv.yaml": manifest}
 		with input.image.config.Labels as {olm.manifestv1: "other/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
@@ -176,7 +177,7 @@ test_related_img_unpinned if {
 		"term": "registry.io/repository:tag",
 	}}
 
-	utils.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": unpinned_manifest}
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": unpinned_manifest}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
@@ -216,7 +217,7 @@ test_feature_annotations_format if {
 		},
 	}
 
-	utils.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": bad_manifest}
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": bad_manifest}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
@@ -233,7 +234,7 @@ test_feature_annotations_format_custom_rule_data if {
 		"msg": "The annotation \"foo\" is either missing or has an unexpected value", "term": "foo",
 	}}
 
-	utils.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": bad_manifest}
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": bad_manifest}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.required_olm_features_annotations as ["foo", "spam"]
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
@@ -247,7 +248,7 @@ test_required_olm_features_annotations_provided if {
 		"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Array must have at least 1 items",
 		"severity": "failure",
 	}}
-	utils.assert_equal_results(olm.deny, expected_empty) with input.image.files as {"manifests/csv.yaml": manifest}
+	assertions.assert_equal_results(olm.deny, expected_empty) with input.image.files as {"manifests/csv.yaml": manifest}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with data.rule_data.required_olm_features_annotations as []
@@ -285,7 +286,7 @@ test_required_olm_features_annotations_provided if {
 		},
 	}
 
-	utils.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest}
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with data.rule_data.required_olm_features_annotations as d
@@ -300,7 +301,7 @@ test_csv_semver_format_bad_semver if {
 		"msg": "The ClusterServiceVersion spec.version, \"spam\", is not a valid semver",
 	}}
 
-	utils.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": csv}
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": csv}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
@@ -314,7 +315,7 @@ test_csv_semver_format_missing if {
 		"msg": "The ClusterServiceVersion spec.version, \"<MISSING>\", is not a valid semver",
 	}}
 
-	utils.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": csv}
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": csv}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
@@ -361,7 +362,7 @@ test_subscriptions_annotation_format if {
 		},
 	}
 
-	utils.assert_equal_results(olm.deny, expected) with input.image.files as files
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as files
 		with input.image.config.Labels as {olm.manifestv1: "m/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
@@ -373,7 +374,7 @@ test_unpinned_snapshot_references_operator if {
 		"msg": "The \"registry.io/repo/msd:no_digest\" image reference is not pinned in the input snapshot.",
 		"term": "registry.io/repo/msd:no_digest",
 	}}
-	utils.assert_equal_results(olm.deny, expected) with input.snapshot.components as [unpinned_component, component1]
+	assertions.assert_equal_results(olm.deny, expected) with input.snapshot.components as [unpinned_component, component1]
 		with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with ec.oci.image_manifest as `{"config": {"digest": "sha256:goat"}}`
@@ -382,7 +383,7 @@ test_unpinned_snapshot_references_operator if {
 }
 
 test_unpinned_snapshot_references_different_input if {
-	utils.assert_empty(olm.deny) with input.snapshot.components as [unpinned_component]
+	assertions.assert_empty(olm.deny) with input.snapshot.components as [unpinned_component]
 		with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with ec.oci.image_manifest as `{"config": {"digest": "sha256:goat"}}`
@@ -396,7 +397,7 @@ test_unmapped_references_in_operator if {
 		"term": "registry.io/repository/image2@sha256:tea",
 	}}
 
-	utils.assert_equal_results(olm.deny, expected) with input.snapshot.components as [component1]
+	assertions.assert_equal_results(olm.deny, expected) with input.snapshot.components as [component1]
 		with input.image.files as {"manifests/csv.yaml": manifest}
 		with data.rule_data as {"pipeline_intention": "release", "allowed_olm_image_registry_prefixes": ["registry.io"]}
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
@@ -411,7 +412,7 @@ test_unpinned_related_images if {
 		"msg": "2 related images are not pinned with a digest: registry.io/repo/msd:latest, registry.io/repo/msd:latest.",
 	}}
 
-	utils.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with input.snapshot.components as [component0]
 		with input.attestations as _with_related_images
@@ -428,7 +429,7 @@ test_inaccessible_related_images if {
 		"term": "registry.io/repository/image2@sha256:tea",
 	}}
 
-	utils.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with input.snapshot.components as [component1]
 		with input.attestations as _with_related_images
@@ -449,17 +450,17 @@ mock_ec_oci_image_descriptor("registry.io/repo/msd:latest") := `{"config": {"dig
 test_olm_ci_pipeline if {
 	# Make sure no violations are thrown if it isn't a release pipeline
 	# regal ignore:line-length
-	utils.assert_equal(false, utils.pipeline_intention_match(rego.metadata.chain())) with data.rule_data as {"pipeline_intention": null}
+	assertions.assert_equal(false, metadata.pipeline_intention_match(rego.metadata.chain())) with data.rule_data as {"pipeline_intention": null}
 }
 
 test_mock_cafe_descriptor if {
 	# Test case that uses the mock_ec_oci_image_descriptor for cafe image
 	expected := `{"config": {"digest": "sha256:cafe"}}`
-	utils.assert_equal(mock_ec_oci_image_descriptor("registry.io/repository/image@sha256:cafe"), expected)
+	assertions.assert_equal(mock_ec_oci_image_descriptor("registry.io/repository/image@sha256:cafe"), expected)
 }
 
 test_unmapped_references_none_found if {
-	utils.assert_empty(olm.deny) with input.snapshot.components as [component1, component2]
+	assertions.assert_empty(olm.deny) with input.snapshot.components as [component1, component2]
 		with input.image.files as {"manifests/csv.yaml": manifest}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
@@ -468,7 +469,7 @@ test_unmapped_references_none_found if {
 
 test_allowed_registries if {
 	# This should pass since registry.io is a member of allowed_olm_image_registry_prefixes
-	utils.assert_empty(olm.deny) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_empty(olm.deny) with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io", "registry.redhat.io"]
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with input.image.files as {"manifests/csv.yaml": manifest}
@@ -484,7 +485,7 @@ test_bundle_image_index if {
 		"term": "registry.io/repository/image@sha256:cafe",
 	}}
 
-	utils.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io", "registry.redhat.io"]
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
@@ -510,7 +511,7 @@ test_unallowed_registries if {
 	}
 
 	# This expects failure as registry.io is not a member of allowed_olm_image_registry_prefixes
-	utils.assert_equal_results(olm.deny, expected) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_equal_results(olm.deny, expected) with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.access.redhat.com", "registry.redhat.io"]
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
@@ -537,7 +538,7 @@ test_allowed_registries_related if {
 		},
 	}
 
-	utils.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_equal_results(olm.deny, expected_deny) with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.access.redhat.com", "registry.redhat.io"]
 		with input.snapshot.components as [component1, component2, component3]
 		with input.attestations as _with_related_images
@@ -623,19 +624,19 @@ _attestations_with_attachment(attachment) := attestations if {
 test_image_ref_with_digest if {
 	img := {"repo": "registry.io/repo", "digest": "sha256:abc", "tag": "latest"}
 	expected := "registry.io/repo@sha256:abc"
-	utils.assert_equal(olm._image_ref(img), expected)
+	assertions.assert_equal(olm._image_ref(img), expected)
 }
 
 test_image_ref_with_tag if {
 	img := {"repo": "registry.io/repo", "digest": "", "tag": "latest"}
 	expected := "registry.io/repo:latest"
-	utils.assert_equal(olm._image_ref(img), expected)
+	assertions.assert_equal(olm._image_ref(img), expected)
 }
 
 test_image_ref_with_repo_only if {
 	img := {"repo": "registry.io/repo", "digest": "", "tag": ""}
 	expected := "registry.io/repo"
-	utils.assert_equal(olm._image_ref(img), expected)
+	assertions.assert_equal(olm._image_ref(img), expected)
 }
 
 test_disallowed_olm_resource_kind if {
@@ -645,7 +646,7 @@ test_disallowed_olm_resource_kind if {
 		"term": "NetworkPolicy",
 	}}
 
-	utils.assert_equal_results(olm.deny, expected) with input.image.config.Labels as {olm.manifestv1: "manifests/"}
+	assertions.assert_equal_results(olm.deny, expected) with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with input.image.files as {"manifests/networkpolicy.yaml": network_policy_manifest}
 		with data.rule_data.allowed_olm_resource_kinds as ["foo", "bar"]
 }
@@ -653,7 +654,7 @@ test_disallowed_olm_resource_kind if {
 test_allowed_olm_resource_kind if {
 	expected_empty := {}
 
-	utils.assert_equal_results(olm.deny, expected_empty) with input.image.config.Labels as {olm.manifestv1: "manifests/"}
+	assertions.assert_equal_results(olm.deny, expected_empty) with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with input.image.files as {"manifests/service.yaml": service_manifest}
 		with data.rule_data.allowed_olm_resource_kinds as ["Service"]
 }

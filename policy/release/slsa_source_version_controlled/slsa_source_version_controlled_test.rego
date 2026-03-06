@@ -2,8 +2,8 @@ package slsa_source_version_controlled_test
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.assertions
 import data.slsa_source_version_controlled
 
 test_all_good if {
@@ -18,8 +18,8 @@ test_all_good if {
 		},
 	]
 
-	utils.assert_empty(slsa_source_version_controlled.deny) with input.attestations as [_mock_slsa_v02_attestation(materials)] # regal ignore:line-length
-	utils.assert_empty(slsa_source_version_controlled.deny) with input.attestations as [_mock_slsa_v1_attestation(materials)]
+	assertions.assert_empty(slsa_source_version_controlled.deny) with input.attestations as [_mock_slsa_v02_attestation(materials)] # regal ignore:line-length
+	assertions.assert_empty(slsa_source_version_controlled.deny) with input.attestations as [_mock_slsa_v1_attestation(materials)]
 }
 
 test_non_git_uri if {
@@ -45,12 +45,12 @@ test_non_git_uri if {
 		},
 	}
 
-	utils.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v02_attestation(materials)]
 
-	utils.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v1_attestation(materials)]
@@ -91,12 +91,12 @@ test_non_git_commit if {
 		},
 	}
 
-	utils.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v02_attestation(materials)]
 
-	utils.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v1_attestation(materials)]
@@ -117,12 +117,12 @@ test_invalid_materials if {
 		"msg": "No materials match expected format",
 	}}
 
-	utils.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v02_attestation(materials)]
 
-	utils.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_source_version_controlled.deny,
 	) with input.attestations as [_mock_slsa_v1_attestation(materials)]

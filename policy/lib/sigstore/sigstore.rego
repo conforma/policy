@@ -1,4 +1,4 @@
-package lib.utils
+package lib.sigstore
 
 import rego.v1
 

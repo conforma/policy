@@ -8,8 +8,9 @@ package rpm_build_deps
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.metadata
+import data.lib.rule_data
 import data.lib.sbom
 
 # METADATA
@@ -25,13 +26,13 @@ warn contains result if {
 	some pkg in s.packages
 
 	# NOASSERTION is displayed in the SBOM for the RPMS that have been built
-	valid_locations := array.concat(["NOASSERTION"], utils.rule_data("allowed_rpm_build_dependency_sources"))
+	valid_locations := array.concat(["NOASSERTION"], rule_data.rule_data("allowed_rpm_build_dependency_sources"))
 	not matches_any(pkg.downloadLocation, valid_locations)
-	result := utils.result_helper(rego.metadata.chain(), [pkg.downloadLocation, valid_locations])
+	result := metadata.result_helper(rego.metadata.chain(), [pkg.downloadLocation, valid_locations])
 }
 
 matches_any(branch, valid_locations) if {
-	#	some pattern in utils.rule_data("allowed_target_branch_patterns")
+	#	some pattern in rule_data.rule_data("allowed_target_branch_patterns")
 	some pattern in valid_locations
 	regex.match(pattern, branch)
 }

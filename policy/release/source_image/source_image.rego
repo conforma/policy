@@ -9,8 +9,8 @@ package source_image
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.metadata
 import data.lib.tekton
 
 # METADATA
@@ -25,7 +25,7 @@ import data.lib.tekton
 #
 deny contains result if {
 	some error in _source_image_errors
-	result := utils.result_helper(rego.metadata.chain(), [error])
+	result := metadata.result_helper(rego.metadata.chain(), [error])
 }
 
 # METADATA
@@ -42,7 +42,7 @@ deny contains result if {
 #
 deny contains result if {
 	some error in _source_image_sig_errors
-	result := utils.result_helper(rego.metadata.chain(), [error])
+	result := metadata.result_helper(rego.metadata.chain(), [error])
 }
 
 _source_image_errors contains error if {

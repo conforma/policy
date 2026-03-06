@@ -8,8 +8,9 @@ package attestation_type
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.metadata
+import data.lib.rule_data
 import data.lib.json as j
 
 # METADATA
@@ -35,8 +36,8 @@ deny contains result if {
 
 	# regal ignore:leaked-internal-reference
 	att_type := att.statement._type
-	not att_type in utils.rule_data(_rule_data_key)
-	result := utils.result_helper(rego.metadata.chain(), [att_type])
+	not att_type in rule_data.rule_data(_rule_data_key)
+	result := metadata.result_helper(rego.metadata.chain(), [att_type])
 }
 
 # METADATA
@@ -54,7 +55,7 @@ deny contains result if {
 #
 deny contains result if {
 	some error in _rule_data_errors
-	result := utils.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
 }
 
 # METADATA
@@ -73,7 +74,7 @@ deny contains result if {
 #
 deny contains result if {
 	count(lib.pipelinerun_attestations) == 0
-	result := utils.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -94,13 +95,13 @@ deny contains result if {
 	# Use input.attestations directly so we can detect the actual format in use.
 	some att in input.attestations
 	not att.statement
-	result := utils.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # Verify known_attestation_types is a non-empty list of strings
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		utils.rule_data(_rule_data_key),
+		rule_data.rule_data(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

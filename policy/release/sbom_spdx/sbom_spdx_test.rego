@@ -2,13 +2,13 @@ package sbom_spdx_test
 
 import rego.v1
 
-import data.lib.utils
 import data.lib
+import data.lib.assertions
 import data.lib.sbom
 import data.sbom_spdx
 
 test_all_good if {
-	utils.assert_empty(sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 }
 
@@ -18,7 +18,7 @@ test_all_good_marshaled if {
 		"path": "/statement/predicate",
 		"value": json.marshal(_sbom_attestation.statement.predicate),
 	}])
-	utils.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:123"
 }
 
@@ -29,7 +29,7 @@ test_missing_packages if {
 		"path": "/statement/predicate/packages",
 		"value": [],
 	}])
-	utils.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:123"
 }
 
@@ -40,7 +40,7 @@ test_missing_files if {
 		"path": "/statement/predicate/files",
 		"value": [],
 	}])
-	utils.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:123"
 }
 
@@ -49,7 +49,7 @@ test_digest_mismatch if {
 		"code": "sbom_spdx.matches_image",
 		"msg": "Image digest in the SBOM, \"sha256:123\", is not as expected, \"sha256:abc\"",
 	}}
-	utils.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:abc"
 }
 
@@ -63,7 +63,7 @@ test_not_valid if {
 		"path": "/statement/predicate/packages",
 		"value": "spam",
 	}])
-	utils.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
 }
 
 test_not_allowed_with_min if {
@@ -97,7 +97,7 @@ assert_allowed(purl, disallowed_packages) if {
 	}])
 
 	# regal ignore:with-outside-test-context
-	utils.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
 		# regal ignore:with-outside-test-context
 with 		data.rule_data.disallowed_packages as disallowed_packages
 }
@@ -114,14 +114,14 @@ assert_not_allowed(purl, disallowed_packages) if {
 	}])
 
 	# regal ignore:with-outside-test-context
-	utils.assert_equal_results(sbom_spdx.deny, expected) with input.attestations as [att]
+	assertions.assert_equal_results(sbom_spdx.deny, expected) with input.attestations as [att]
 		# regal ignore:with-outside-test-context
 with 		data.rule_data.disallowed_packages as disallowed_packages
 }
 
 test_external_references_allowed_regex_with_no_rules_is_allowed if {
 	expected := {}
-	utils.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_allowed_external_references_key: []}
 }
@@ -133,7 +133,7 @@ test_external_references_allowed_regex if {
 		"msg": `Package spam has reference "pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98" of type "purl" which is not explicitly allowed by pattern ".*allowed.net.*"`,
 	}}
 
-	utils.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_allowed_external_references_key: [{
 			"type": "purl",
@@ -148,7 +148,7 @@ test_external_references_disallowed_regex if {
 		"msg": `Package spam has reference "pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98" of type "purl" which is disallowed by pattern ".*kernel-module-management-rhel9-operator.*"`,
 	}}
 
-	utils.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_disallowed_external_references_key: [{
 			"type": "purl",
@@ -231,7 +231,7 @@ test_allowed_package_sources if {
 		},
 	])
 
-	utils.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
 		with data.rule_data as {sbom.rule_data_allowed_package_sources_key: [
 			{
 				"type": "maven",
@@ -253,7 +253,7 @@ test_attributes_not_allowed_pair if {
 		"msg": `Package pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98 has the attribute "attr1" set`,
 	}}
 
-	utils.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attr1"}]}
 }
@@ -267,7 +267,7 @@ test_attributes_not_allowed_value if {
 		"msg": `Package pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98 has the attribute "attr2" set to "value2"`,
 	}}
 
-	utils.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attr2", "value": "value2"}]}
 }
@@ -304,7 +304,7 @@ test_attributes_not_allowed_effective_on if {
 		result_no_collections := json.remove(result, ["collections"])
 	}
 
-	utils.assert_equal(expected, results)
+	assertions.assert_equal(expected, results)
 }
 
 test_attributes_multiple_external_refs if {
@@ -333,7 +333,7 @@ test_attributes_multiple_external_refs if {
 		},
 	}
 
-	utils.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom]
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom]
 		with input.image.ref as "registry.local/spam@sha256:123"
 		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attr2", "value": "value2"}]}
 }
