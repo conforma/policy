@@ -1,6 +1,5 @@
 package lib.json_test
 
-import data.lib
 import data.lib.assertions
 import data.lib.json as j
 import rego.v1

@@ -4,7 +4,6 @@ import rego.v1
 
 import data.external_parameters
 
-import data.lib
 import data.lib.assertions
 
 test_success if {

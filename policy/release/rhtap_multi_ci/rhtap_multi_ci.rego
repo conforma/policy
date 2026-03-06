@@ -10,7 +10,6 @@ package rhtap_multi_ci
 
 import rego.v1
 
-import data.lib
 import data.lib.metadata
 import data.lib.strings
 import data.lib.json as j

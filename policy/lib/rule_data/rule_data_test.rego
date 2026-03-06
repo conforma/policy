@@ -2,7 +2,6 @@ package lib.rule_data_test
 
 import rego.v1
 
-import data.lib
 import data.lib.assertions
 import data.lib.rule_data
 

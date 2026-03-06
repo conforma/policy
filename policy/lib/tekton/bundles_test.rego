@@ -2,7 +2,6 @@ package lib.tekton_test
 
 import rego.v1
 
-import data.lib
 import data.lib.assertions
 import data.lib.sets
 import data.lib.tekton

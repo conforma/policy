@@ -11,7 +11,6 @@ package quay_expiration
 
 import rego.v1
 
-import data.lib
 import data.lib.metadata
 
 # METADATA

@@ -3,7 +3,6 @@ package lib.tekton
 import rego.v1
 
 import data.lib.arrays
-import data.lib.rule_data
 import data.lib.json as j
 import data.lib.time as time_lib
 

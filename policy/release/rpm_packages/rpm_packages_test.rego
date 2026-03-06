@@ -2,7 +2,6 @@ package rpm_packages_test
 
 import rego.v1
 
-import data.lib
 import data.lib.assertions
 import data.lib.tekton_test
 import data.rpm_packages

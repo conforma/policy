@@ -4,7 +4,6 @@ import rego.v1
 
 import data.github_certificate
 
-import data.lib
 import data.lib.assertions
 
 test_all_good if {

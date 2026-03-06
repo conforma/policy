@@ -18,7 +18,6 @@ package lib.volatile_test
 
 import rego.v1
 
-import data.lib
 import data.lib.assertions
 import data.lib.volatile
 import data.lib.time as time_lib

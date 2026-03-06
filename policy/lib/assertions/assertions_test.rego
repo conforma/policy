@@ -2,7 +2,6 @@ package lib.assertions_test
 
 import rego.v1
 
-import data.lib
 import data.lib.assertions
 
 test_assert_equal if {

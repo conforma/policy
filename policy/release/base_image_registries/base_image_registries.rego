@@ -9,7 +9,6 @@ package base_image_registries
 
 import rego.v1
 
-import data.lib
 import data.lib.metadata
 import data.lib.rule_data
 import data.lib.image

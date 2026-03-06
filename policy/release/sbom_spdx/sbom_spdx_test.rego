@@ -2,7 +2,6 @@ package sbom_spdx_test
 
 import rego.v1
 
-import data.lib
 import data.lib.assertions
 import data.lib.sbom
 import data.sbom_spdx

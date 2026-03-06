@@ -2,7 +2,6 @@ package rhtap_multi_ci_test
 
 import rego.v1
 
-import data.lib
 import data.lib.assertions
 import data.rhtap_multi_ci
 

@@ -18,7 +18,6 @@ package volatile_config_test
 
 import rego.v1
 
-import data.lib
 import data.lib.assertions
 import data.lib.time as time_lib
 import data.volatile_config

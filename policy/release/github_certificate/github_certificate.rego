@@ -9,7 +9,6 @@ package github_certificate
 
 import rego.v1
 
-import data.lib
 import data.lib.metadata
 import data.lib.rule_data
 import data.lib.json as j

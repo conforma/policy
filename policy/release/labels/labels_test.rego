@@ -4,7 +4,6 @@ import rego.v1
 
 import data.labels
 
-import data.lib
 import data.lib.assertions
 
 # For these tests builtin functions ec.oci.image_manifest and ec.oci.blob need

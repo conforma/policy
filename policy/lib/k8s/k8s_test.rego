@@ -2,7 +2,6 @@ package lib.k8s_test
 
 import rego.v1
 
-import data.lib
 import data.lib.assertions
 import data.lib.k8s
 

@@ -29,7 +29,6 @@ package volatile_config
 
 import rego.v1
 
-import data.lib
 import data.lib.metadata
 import data.lib.volatile
 

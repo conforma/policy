@@ -4,7 +4,6 @@ import rego.v1
 
 import data.cve
 
-import data.lib
 import data.lib.assertions
 import data.lib.tekton_test
 import data.lib.time as lib_time
