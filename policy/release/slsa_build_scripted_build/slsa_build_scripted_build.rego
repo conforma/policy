@@ -15,8 +15,8 @@ package slsa_build_scripted_build
 import rego.v1
 
 import data.lib
-import data.lib.metadata
 import data.lib.image
+import data.lib.metadata
 import data.lib.tekton
 
 # METADATA

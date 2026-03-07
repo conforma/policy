@@ -9,11 +9,11 @@ package rpm_repos
 
 import rego.v1
 
+import data.lib.json as j
 import data.lib.metadata
 import data.lib.rule_data
-import data.lib.sets
-import data.lib.json as j
 import data.lib.sbom
+import data.lib.sets
 
 # METADATA
 # title: Known repo id list provided

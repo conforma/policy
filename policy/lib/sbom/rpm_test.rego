@@ -1,4 +1,5 @@
 package lib.sbom_test
+
 import data.lib.assertions
 
 import rego.v1

@@ -28,9 +28,9 @@ package tasks
 import rego.v1
 
 import data.lib
+import data.lib.json as j
 import data.lib.metadata
 import data.lib.sets
-import data.lib.json as j
 import data.lib.tekton
 
 # METADATA

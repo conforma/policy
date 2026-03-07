@@ -10,9 +10,9 @@ package pre_build_script_task
 import rego.v1
 
 import data.lib
+import data.lib.image
 import data.lib.metadata
 import data.lib.rule_data
-import data.lib.image
 import data.lib.sbom
 import data.lib.tekton
 

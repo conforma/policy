@@ -2,8 +2,8 @@ package lib.arrays_test
 
 import rego.v1
 
-import data.lib.assertions
 import data.lib.arrays
+import data.lib.assertions
 
 ary := [{"x": 1, "z": "X"}, {"x": 2}, {"x": 6, "y": "B"}, {"x": 1, "z": "X"}, {"x": -1}]
 

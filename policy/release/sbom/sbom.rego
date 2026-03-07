@@ -10,8 +10,8 @@ package sbom
 import rego.v1
 
 import data.lib
-import data.lib.metadata
 import data.lib.konflux
+import data.lib.metadata
 
 # METADATA
 # title: Found

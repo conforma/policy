@@ -19,8 +19,8 @@ package lib.volatile_test
 import rego.v1
 
 import data.lib.assertions
-import data.lib.volatile
 import data.lib.time as time_lib
+import data.lib.volatile
 
 # Use a fixed "now" time for deterministic tests: 2024-06-15T12:00:00Z
 _now_ns := 1718452800000000000

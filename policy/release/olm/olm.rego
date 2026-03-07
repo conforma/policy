@@ -9,10 +9,10 @@ package olm
 import rego.v1
 
 import data.lib
-import data.lib.metadata
-import data.lib.rule_data
 import data.lib.image
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.rule_data
 
 manifestv1 := "operators.operatorframework.io.bundle.manifests.v1"
 

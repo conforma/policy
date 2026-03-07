@@ -15,8 +15,8 @@ package trusted_task
 import rego.v1
 
 import data.lib
-import data.lib.metadata
 import data.lib.image
+import data.lib.metadata
 import data.lib.tekton
 
 _supported_ta_uris_reg := {"oci:.*@sha256:[0-9a-f]{64}"}
