@@ -8,7 +8,7 @@ import data.lib.rule_data
 import data.slsa_build_build_service
 
 test_all_good if {
-	builder_id := rule_data.rule_data("allowed_builder_ids")[0]
+	builder_id := rule_data.get("allowed_builder_ids")[0]
 	assertions.assert_empty(slsa_build_build_service.deny) with input.attestations as [_mock_slsa_v02_attestation(builder_id)]
 
 	assertions.assert_empty(slsa_build_build_service.deny) with input.attestations as [_mock_slsa_v1_attestation(builder_id)]

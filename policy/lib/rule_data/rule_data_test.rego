@@ -15,19 +15,19 @@ test_rule_data if {
 			[], # key4 value is not defined
 		],
 		[
-			rule_data.rule_data("key0"),
-			rule_data.rule_data("key1"),
-			rule_data.rule_data("key2"),
-			rule_data.rule_data("key3"),
-			rule_data.rule_data("key4"),
+			rule_data.get("key0"),
+			rule_data.get("key1"),
+			rule_data.get("key2"),
+			rule_data.get("key3"),
+			rule_data.get("key4"),
 		],
 	) with data.rule_data__configuration__ as {"key0": 40}
 		with data.rule_data_custom as {"key0": 30, "key1": 30}
 		with data.rule_data as {"key0": 20, "key1": 20, "key2": 20}
-		with rule_data.rule_data_defaults as {"key3": 10}
+		with rule_data.defaults as {"key3": 10}
 }
 
 # Need this for 100% coverage
 test_rule_data_defaults if {
-	assertions.assert_not_empty(rule_data.rule_data_defaults)
+	assertions.assert_not_empty(rule_data.defaults)
 }

@@ -16,7 +16,7 @@ Verify if Task defines the required result. This is controlled by the `required_
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `results.required`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/results/results.rego#L13[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/results/results.rego#L15[Source, window="_blank"]
 
 [#results__rule_data_provided]
 === link:#results__rule_data_provided[Rule data provided]
@@ -28,4 +28,4 @@ Confirm the expected `required_task_results` rule data key has been provided in 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `results.rule_data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/results/results.rego#L27[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/results/results.rego#L29[Source, window="_blank"]

@@ -120,7 +120,7 @@ deny contains result if {
 deny contains result if {
 	some s in sbom.cyclonedx_sboms
 	some component in s.components
-	sbom.has_item(component.purl, rule_data.rule_data(sbom.rule_data_packages_key))
+	sbom.has_item(component.purl, rule_data.get(sbom.rule_data_packages_key))
 	result := metadata.result_helper(rego.metadata.chain(), [component.purl])
 }
 
@@ -144,7 +144,7 @@ deny contains result if {
 	some s in sbom.cyclonedx_sboms
 	some component in s.components
 	some property in component.properties
-	some disallowed in rule_data.rule_data(sbom.rule_data_attributes_key)
+	some disallowed in rule_data.get(sbom.rule_data_attributes_key)
 
 	property.name == disallowed.name
 	object.get(property, "value", "") == object.get(disallowed, "value", "")
@@ -179,7 +179,7 @@ deny contains result if {
 	some s in sbom.cyclonedx_sboms
 	some component in s.components
 	some reference in component.externalReferences
-	some allowed in rule_data.rule_data(sbom.rule_data_allowed_external_references_key)
+	some allowed in rule_data.get(sbom.rule_data_allowed_external_references_key)
 
 	reference.type == allowed.type
 	not regex.match(object.get(allowed, "url", ""), object.get(reference, "url", ""))
@@ -211,7 +211,7 @@ deny contains result if {
 	some s in sbom.cyclonedx_sboms
 	some component in s.components
 	some reference in component.externalReferences
-	some disallowed in rule_data.rule_data(sbom.rule_data_disallowed_external_references_key)
+	some disallowed in rule_data.get(sbom.rule_data_disallowed_external_references_key)
 
 	reference.type == disallowed.type
 	regex.match(object.get(disallowed, "url", ""), object.get(reference, "url", ""))
@@ -256,7 +256,7 @@ deny contains result if {
 	parsed_purl := ec.purl.parse(purl)
 
 	# patterns are either those defined by the rule for a given purl type, or empty by default
-	allowed_data := rule_data.rule_data(sbom.rule_data_allowed_package_sources_key)
+	allowed_data := rule_data.get(sbom.rule_data_allowed_package_sources_key)
 	patterns := sbom.purl_allowed_patterns(parsed_purl.type, allowed_data)
 	distribution_url := object.get(reference, "url", "")
 

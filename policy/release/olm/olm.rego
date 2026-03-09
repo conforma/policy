@@ -81,7 +81,7 @@ deny contains result if {
 #
 deny contains result if {
 	some manifest in _csv_manifests
-	some annotation in rule_data.rule_data("required_olm_features_annotations")
+	some annotation in rule_data.get("required_olm_features_annotations")
 	value := object.get(manifest.metadata.annotations, annotation, "")
 	not value in {"true", "false"}
 	result := metadata.result_helper_with_term(rego.metadata.chain(), [annotation], annotation)
@@ -246,7 +246,7 @@ deny contains result if {
 #
 deny contains result if {
 	# The presence of expected rule_data verified in _rule_data_errors
-	allowed_olm_image_registry_prefixes := rule_data.rule_data("allowed_olm_image_registry_prefixes")
+	allowed_olm_image_registry_prefixes := rule_data.get("allowed_olm_image_registry_prefixes")
 
 	# Parse manifests from snapshot
 	some related_images in _related_images(input.image)
@@ -320,7 +320,7 @@ deny contains result if {
 #
 deny contains result if {
 	# The presence of expected rule_data verified in _rule_data_errors
-	allowed_olm_image_registry_prefixes := rule_data.rule_data("allowed_olm_image_registry_prefixes")
+	allowed_olm_image_registry_prefixes := rule_data.get("allowed_olm_image_registry_prefixes")
 
 	# Parse manifests from snapshot
 	some csv_manifest in _csv_manifests
@@ -377,7 +377,7 @@ deny contains result if {
 	manifest_dir := input.image.config.Labels[manifestv1]
 	startswith(path, manifest_dir)
 
-	not manifest.kind in rule_data.rule_data("allowed_olm_resource_kinds")
+	not manifest.kind in rule_data.get("allowed_olm_resource_kinds")
 
 	result := metadata.result_helper_with_term(rego.metadata.chain(), [manifest.kind], manifest.kind)
 }
@@ -548,7 +548,7 @@ _csv_manifests contains manifest if {
 _rule_data_errors contains error if {
 	some rule_data_key in _rule_data_keys
 	some e in j.validate_schema(
-		rule_data.rule_data(rule_data_key),
+		rule_data.get(rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

@@ -16,4 +16,4 @@ The Tekton Task used specifies an invalid pipeline. The Task is annotated with `
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task %q uses invalid pipleline %s, which is not in the list of valid pipelines: %s`
 * Code: `rpm_pipeline.invalid_pipeline`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_pipeline/rpm_pipeline.rego#L18[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_pipeline/rpm_pipeline.rego#L20[Source, window="_blank"]

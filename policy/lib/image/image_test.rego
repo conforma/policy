@@ -87,8 +87,14 @@ test_str if {
 		"registry.io/repository:tag@digest",
 		image.str({"repo": "registry.io/repository", "tag": "tag", "digest": "digest"}),
 	)
-	assertions.assert_equal("registry.io/repository:tag", image.str({"repo": "registry.io/repository", "tag": "tag"}))
-	assertions.assert_equal("registry.io/repository@digest", image.str({"repo": "registry.io/repository", "digest": "digest"}))
+	assertions.assert_equal(
+		"registry.io/repository:tag",
+		image.str({"repo": "registry.io/repository", "tag": "tag"}),
+	)
+	assertions.assert_equal(
+		"registry.io/repository@digest",
+		image.str({"repo": "registry.io/repository", "digest": "digest"}),
+	)
 }
 
 test_is_image_index if {

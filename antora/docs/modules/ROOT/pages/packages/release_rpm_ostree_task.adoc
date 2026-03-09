@@ -19,7 +19,7 @@ Verify the BUILDER_IMAGE parameter of the rpm-ostree Task uses an image referenc
 * FAILURE message: `%s`
 * Code: `rpm_ostree_task.builder_image_param`
 * Effective from: `2024-03-20T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_ostree_task/rpm_ostree_task.rego#L16[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_ostree_task/rpm_ostree_task.rego#L18[Source, window="_blank"]
 
 [#rpm_ostree_task__rule_data]
 === link:#rpm_ostree_task__rule_data[Rule data]
@@ -31,4 +31,4 @@ Verify the rule data used by this package, `allowed_rpm_ostree_builder_image_pre
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `rpm_ostree_task.rule_data`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_ostree_task/rpm_ostree_task.rego#L37[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_ostree_task/rpm_ostree_task.rego#L39[Source, window="_blank"]

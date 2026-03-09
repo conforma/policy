@@ -12,7 +12,7 @@ import rego.v1
 
 import data.lib.json as j
 import data.lib.metadata
-import data.lib.strings
+import data.lib.strings as string_utils
 
 # METADATA
 # title: SLSA Provenance Attestation Found
@@ -35,7 +35,7 @@ import data.lib.strings
 #
 deny contains result if {
 	count(_attestations) < 1
-	result := metadata.result_helper(rego.metadata.chain(), [strings.quoted_values_string(_known_build_types)])
+	result := metadata.result_helper(rego.metadata.chain(), [string_utils.quoted_values_string(_known_build_types)])
 }
 
 # METADATA

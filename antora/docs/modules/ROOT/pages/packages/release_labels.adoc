@@ -18,7 +18,7 @@ Check the image for the presence of labels that have been deprecated. Use the ru
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The %q label is deprecated, replace with %q`
 * Code: `labels.deprecated_labels`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L87[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L88[Source, window="_blank"]
 
 [#labels__disallowed_inherited_labels]
 === link:#labels__disallowed_inherited_labels[Disallowed inherited labels]
@@ -30,7 +30,7 @@ Check that certain labels on the image have different values than the labels fro
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The %q label should not be inherited from the parent image`
 * Code: `labels.disallowed_inherited_labels`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L136[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L137[Source, window="_blank"]
 
 [#labels__inaccessible_config]
 === link:#labels__inaccessible_config[Inaccessible image config]
@@ -42,7 +42,7 @@ The image config is not accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Image config of the image %q is inaccessible`
 * Code: `labels.inaccessible_config`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L65[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L66[Source, window="_blank"]
 
 [#labels__inaccessible_manifest]
 === link:#labels__inaccessible_manifest[Inaccessible image manifest]
@@ -54,7 +54,7 @@ The image manifest is not accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Manifest of the image %q is inaccessible`
 * Code: `labels.inaccessible_manifest`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L46[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L47[Source, window="_blank"]
 
 [#labels__inaccessible_parent_config]
 === link:#labels__inaccessible_parent_config[Inaccessible parent image config]
@@ -66,7 +66,7 @@ The parent image config is not accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Image config of the image %q, parent of image %q is inaccessible`
 * Code: `labels.inaccessible_parent_config`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L200[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L201[Source, window="_blank"]
 
 [#labels__inaccessible_parent_manifest]
 === link:#labels__inaccessible_parent_manifest[Inaccessible parent image manifest]
@@ -78,7 +78,7 @@ The parent image manifest is not accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Manifest of the image %q, parent of image %q is inaccessible`
 * Code: `labels.inaccessible_parent_manifest`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L181[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L182[Source, window="_blank"]
 
 [#labels__optional_labels]
 === link:#labels__optional_labels[Optional labels]
@@ -90,7 +90,7 @@ Check the image for the presence of labels that are recommended, but not require
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `The optional %q label is missing. Label description: %s`
 * Code: `labels.optional_labels`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L19[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L20[Source, window="_blank"]
 
 [#labels__required_labels]
 === link:#labels__required_labels[Required labels]
@@ -102,7 +102,7 @@ Check the image for the presence of labels that are required. Use the rule data 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `labels.required_labels`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L115[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L116[Source, window="_blank"]
 
 [#labels__rule_data_provided]
 === link:#labels__rule_data_provided[Rule data provided]
@@ -114,4 +114,4 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `labels.rule_data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L162[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L163[Source, window="_blank"]

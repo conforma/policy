@@ -14,7 +14,7 @@ import data.lib.image
 import data.lib.metadata
 import data.lib.rule_data
 import data.lib.sbom
-import data.lib.strings
+import data.lib.strings as string_utils
 import data.lib.tekton
 
 # METADATA
@@ -33,7 +33,7 @@ deny contains result if {
 	image.is_image_index(input.image.ref)
 
 	some rpm_name in rpm_names_with_mismatched_nvr_sets
-	not rpm_name in rule_data.rule_data("non_unique_rpm_names")
+	not rpm_name in rule_data.get("non_unique_rpm_names")
 
 	detail_text := concat(" ", sort(rpm_mismatch_details(rpm_name)))
 
@@ -58,9 +58,9 @@ rpm_mismatch_details(rpm_name) := [detail |
 	]
 
 	detail := sprintf("%s %s %s %s.", [
-		strings.pluralize_maybe(platforms_with_nvr_set, "Platform", ""),
+		string_utils.pluralize_maybe(platforms_with_nvr_set, "Platform", ""),
 		concat(", ", sort(platforms_with_nvr_set)),
-		strings.pluralize_maybe(platforms_with_nvr_set, "has", "have"),
+		string_utils.pluralize_maybe(platforms_with_nvr_set, "has", "have"),
 		concat(", ", sort(nvr_set)),
 	])
 ]

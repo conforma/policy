@@ -160,7 +160,11 @@ deny contains result if {
 
 	# Don't report an error if a task is required now, but not in the future
 	required_task in latest_required_tasks.tasks
-	result := metadata.result_helper_with_term(rego.metadata.chain(), [_format_missing(required_task, false)], required_task)
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[_format_missing(required_task, false)],
+		required_task,
+	)
 }
 
 # METADATA

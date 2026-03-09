@@ -18,7 +18,7 @@ Confirm the CycloneDX SBOM contains only allowed packages. By default all packag
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Package is not allowed: %s`
 * Code: `sbom_cyclonedx.allowed`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L105[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L106[Source, window="_blank"]
 
 [#sbom_cyclonedx__allowed_package_external_references]
 === link:#sbom_cyclonedx__allowed_package_external_references[Allowed package external references]
@@ -30,7 +30,7 @@ Confirm the CycloneDX SBOM contains only packages with explicitly allowed extern
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Package %s has reference %q of type %q which is not explicitly allowed%s`
 * Code: `sbom_cyclonedx.allowed_package_external_references`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L160[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L161[Source, window="_blank"]
 
 [#sbom_cyclonedx__allowed_package_sources]
 === link:#sbom_cyclonedx__allowed_package_sources[Allowed package sources]
@@ -43,7 +43,7 @@ For each of the components fetched by Hermeto which define externalReferences of
 * FAILURE message: `Package %s fetched by Hermeto was sourced from %q which is not allowed`
 * Code: `sbom_cyclonedx.allowed_package_sources`
 * Effective from: `2024-12-15T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L224[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L225[Source, window="_blank"]
 
 [#sbom_cyclonedx__disallowed_package_attributes]
 === link:#sbom_cyclonedx__disallowed_package_attributes[Disallowed package attributes]
@@ -56,7 +56,7 @@ Confirm the CycloneDX SBOM contains only packages without disallowed attributes.
 * FAILURE message: `Package %s has the attribute %q set%s`
 * Code: `sbom_cyclonedx.disallowed_package_attributes`
 * Effective from: `2024-07-31T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L126[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L127[Source, window="_blank"]
 
 [#sbom_cyclonedx__disallowed_package_external_references]
 === link:#sbom_cyclonedx__disallowed_package_external_references[Disallowed package external references]
@@ -69,7 +69,7 @@ Confirm the CycloneDX SBOM contains only packages without disallowed external re
 * FAILURE message: `Package %s has reference %q of type %q which is disallowed%s`
 * Code: `sbom_cyclonedx.disallowed_package_external_references`
 * Effective from: `2024-07-31T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L192[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L193[Source, window="_blank"]
 
 [#sbom_cyclonedx__cdx_supported_version]
 === link:#sbom_cyclonedx__cdx_supported_version[Supported Version]
@@ -81,7 +81,7 @@ Check that the CycloneDX SBOM specifies a supported schema version (1.4, 1.5 or 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `CycloneDX SBOM at index %d has unsupported or missing version: %s`
 * Code: `sbom_cyclonedx.cdx_supported_version`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L14[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L15[Source, window="_blank"]
 
 [#sbom_cyclonedx__valid_cdx_1_4]
 === link:#sbom_cyclonedx__valid_cdx_1_4[Valid 1.4]
@@ -93,7 +93,7 @@ Check the CycloneDX SBOM has the expected format. It verifies the CycloneDX SBOM
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `CycloneDX SBOM at index %d is not valid: %s`
 * Code: `sbom_cyclonedx.valid_cdx_1_4`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L39[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L40[Source, window="_blank"]
 
 [#sbom_cyclonedx__valid_cdx_1_5]
 === link:#sbom_cyclonedx__valid_cdx_1_5[Valid 1.5]
@@ -105,7 +105,7 @@ Check the CycloneDX SBOM has the expected format. It verifies the CycloneDX SBOM
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `CycloneDX SBOM at index %d is not valid: %s`
 * Code: `sbom_cyclonedx.valid_cdx_1_5`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L61[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L62[Source, window="_blank"]
 
 [#sbom_cyclonedx__valid_cdx_1_6]
 === link:#sbom_cyclonedx__valid_cdx_1_6[Valid 1.6]
@@ -117,4 +117,4 @@ Check the CycloneDX SBOM has the expected format. It verifies the CycloneDX SBOM
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `CycloneDX SBOM at index %d is not valid: %s`
 * Code: `sbom_cyclonedx.valid_cdx_1_6`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L83[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L84[Source, window="_blank"]

@@ -18,7 +18,7 @@ Verify that the images used to run the pre-build script tasks come from a known 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Pre-Build-Script task runner image %q is from a disallowed registry`
 * Code: `pre_build_script_task.pre_build_script_task_runner_image_allowed`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L17[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L19[Source, window="_blank"]
 
 [#pre_build_script_task__valid_pre_build_script_task_runner_image_ref]
 === link:#pre_build_script_task__valid_pre_build_script_task_runner_image_ref[Script runner image is a valid image reference]
@@ -30,7 +30,7 @@ Verify that a valid image reference is specified as image being used to run the 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Pre-Build-Script task runner image %q is not a valid image reference`
 * Code: `pre_build_script_task.valid_pre_build_script_task_runner_image_ref`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L70[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L72[Source, window="_blank"]
 
 [#pre_build_script_task__pre_build_script_task_runner_image_in_sbom]
 === link:#pre_build_script_task__pre_build_script_task_runner_image_in_sbom[Script runner image is included in the sbom]
@@ -42,7 +42,7 @@ Verify that the image used to run the pre-build script task is included in the S
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Pre-Build-Script task runner image %q is not in the SBOM`
 * Code: `pre_build_script_task.pre_build_script_task_runner_image_in_sbom`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L94[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L96[Source, window="_blank"]
 
 [#pre_build_script_task__pre_build_script_task_runner_image_in_results]
 === link:#pre_build_script_task__pre_build_script_task_runner_image_in_results[Script runner image is listed in the task results]
@@ -54,4 +54,4 @@ Verify that the image used to run the pre-build script task is listed in the tas
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The runner image used for the pre-Build-Script task '%s' is not listed in the task results`
 * Code: `pre_build_script_task.pre_build_script_task_runner_image_in_results`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L47[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L49[Source, window="_blank"]

@@ -38,7 +38,7 @@ deny contains result if {
 
 	labels := tekton.task_labels(task)
 	pipeline := labels[_pipeline_key]
-	allowed_pipelines := rule_data.rule_data(_rule_data_key)
+	allowed_pipelines := rule_data.get(_rule_data_key)
 
 	not pipeline in allowed_pipelines
 

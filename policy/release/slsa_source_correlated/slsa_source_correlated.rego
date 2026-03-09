@@ -162,13 +162,13 @@ _source_references contains ref if {
 	some att in lib.slsa_provenance_attestations
 	some material in lib.attestation_materials(att)
 	some digest_alg in object.keys(material.digest)
-	some supported_vcs_type in rule_data.rule_data("supported_vcs")
+	some supported_vcs_type in rule_data.get("supported_vcs")
 
 	# the material.uri is a kind of vcs_type, lets us ignore other, non-vcs, materials
 	startswith(material.uri, sprintf("%s+", [supported_vcs_type]))
 
 	# make sure the digest algorithm is supported
-	digest_alg in rule_data.rule_data("supported_digests")
+	digest_alg in rule_data.get("supported_digests")
 
 	# note, the digest_alg is not compared, it is expected that the value
 	# matches the expected reference
@@ -179,7 +179,7 @@ _rule_data_errors contains error if {
 	some key in ["supported_vcs", "supported_digests"]
 
 	some e in j.validate_schema(
-		rule_data.rule_data(key),
+		rule_data.get(key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

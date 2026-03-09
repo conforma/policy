@@ -38,7 +38,7 @@ deny contains result if {
 }
 
 _not_hermetic_tasks contains task if {
-	required_hermetic_tasks := rule_data.rule_data("required_hermetic_tasks")
+	required_hermetic_tasks := rule_data.get("required_hermetic_tasks")
 	some attestation in lib.pipelinerun_attestations
 	some task in tekton.tasks(attestation)
 	some required_hermetic_task in required_hermetic_tasks

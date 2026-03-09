@@ -112,7 +112,7 @@ deny contains result if {
 
 _check_extension(chain, key, extension) := result if {
 	value := _fulcio_extension_value(extension)
-	allowed := rule_data.rule_data(key)
+	allowed := rule_data.get(key)
 	count(allowed) > 0
 	not value in allowed
 	result := metadata.result_helper(chain, [value, allowed])
@@ -158,7 +158,7 @@ _rule_data_errors contains error if {
 	some key in keys
 
 	some e in j.validate_schema(
-		rule_data.rule_data(key),
+		rule_data.get(key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

@@ -26,7 +26,7 @@ import data.lib.rule_data
 import data.lib.time as time_lib
 
 # Get configurable warning threshold from rule_data (default defined in rule_data_defaults)
-warning_threshold_days := rule_data.rule_data("volatile_config_warning_threshold_days")
+warning_threshold_days := rule_data.get("volatile_config_warning_threshold_days")
 
 # Nanoseconds per day constant
 _ns_per_day := 86400000000000

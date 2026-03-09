@@ -73,7 +73,7 @@ deny contains result if {
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
-_allowed_rpm_signature_keys := rule_data.rule_data("allowed_rpm_signature_keys")
+_allowed_rpm_signature_keys := rule_data.get("allowed_rpm_signature_keys")
 
 _signature_keys contains key if {
 	some result in lib.results_named(_rpms_data_result_name)

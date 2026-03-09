@@ -114,7 +114,7 @@ rule_data_errors contains error if {
 		"uniqueItems": true,
 	}
 
-	some e in j.validate_schema(rule_data.rule_data(_rule_data_key), schema)
+	some e in j.validate_schema(rule_data.get(_rule_data_key), schema)
 
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
@@ -134,7 +134,7 @@ _builder_images contains image if {
 # _allowed_prefixes is a set of objects. Each object is guaranteed to contains a `value` attribute.
 # If there are no items in the underlying rule data, this rules does not produce a result.
 _allowed_prefixes := prefixes if {
-	allowed_prefixes := rule_data.rule_data(_rule_data_key)
+	allowed_prefixes := rule_data.get(_rule_data_key)
 	count(allowed_prefixes) > 0
 	prefixes := [_prefix_obj(prefix) | some prefix in allowed_prefixes]
 }

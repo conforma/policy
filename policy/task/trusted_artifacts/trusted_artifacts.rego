@@ -56,7 +56,7 @@ deny contains result if {
 deny contains result if {
 	_uses_trusted_artifacts(input)
 	some workspace in input.spec.workspaces
-	not workspace.name in rule_data.rule_data("allowed_trusted_artifacts_workspaces")
+	not workspace.name in rule_data.get("allowed_trusted_artifacts_workspaces")
 	result := metadata.result_helper(rego.metadata.chain(), [workspace.name])
 }
 

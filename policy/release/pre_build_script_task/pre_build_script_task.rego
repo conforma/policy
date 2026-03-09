@@ -120,7 +120,7 @@ deny contains result if {
 _pre_build_script_runner_image_param := "SCRIPT_RUNNER_IMAGE"
 
 _image_ref_permitted(image_ref) if {
-	allowed_prefixes := rule_data.rule_data(_rule_data_allowed_registries_key)
+	allowed_prefixes := rule_data.get(_rule_data_allowed_registries_key)
 	some allowed_prefix in allowed_prefixes
 	startswith(image_ref, allowed_prefix)
 }

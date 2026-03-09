@@ -93,7 +93,7 @@ deny contains result if {
 }
 
 _image_ref_permitted(image_ref) if {
-	allowed_prefixes := rule_data.rule_data(_rule_data_key)
+	allowed_prefixes := rule_data.get(_rule_data_key)
 	some allowed_prefix in allowed_prefixes
 	startswith(image_ref, allowed_prefix)
 } else if {
@@ -170,7 +170,7 @@ _cyclonedx_image_ref(component) := image_ref if {
 # Verify allowed_registry_prefixes is a non-empty list of strings
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		rule_data.rule_data(_rule_data_key),
+		rule_data.get(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

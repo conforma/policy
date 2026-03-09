@@ -130,11 +130,11 @@ all_c2_rpm_purls contains purl if {
 }
 
 _known_repo_ids := combined if {
-	extra := rule_data.rule_data(_rule_data_extras_key)
-	known := rule_data.rule_data(_rule_data_key)
+	extra := rule_data.get(_rule_data_extras_key)
+	known := rule_data.get(_rule_data_key)
 	combined := array.concat(extra, known)
 } else := known if {
-	known := rule_data.rule_data(_rule_data_key)
+	known := rule_data.get(_rule_data_key)
 }
 
 _rule_data_key := "known_rpm_repositories"

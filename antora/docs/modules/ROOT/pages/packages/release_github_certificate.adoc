@@ -16,7 +16,7 @@ Check if the image signature certificate contains the expected GitHub extensions
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Missing extension %q`
 * Code: `github_certificate.gh_workflow_extensions`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L15[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L16[Source, window="_blank"]
 
 [#github_certificate__gh_workflow_name]
 === link:#github_certificate__gh_workflow_name[GitHub Workflow Name]
@@ -26,7 +26,7 @@ Check if the value of the GitHub Workflow Name extension in the image signature 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Name %q not in allowed list: %v`
 * Code: `github_certificate.gh_workflow_name`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L63[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L64[Source, window="_blank"]
 
 [#github_certificate__gh_workflow_repository]
 === link:#github_certificate__gh_workflow_repository[GitHub Workflow Repository]
@@ -36,7 +36,7 @@ Check if the value of the GitHub Workflow Repository extension in the image sign
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Repository %q not in allowed list: %v`
 * Code: `github_certificate.gh_workflow_repository`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L33[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L34[Source, window="_blank"]
 
 [#github_certificate__gh_workflow_ref]
 === link:#github_certificate__gh_workflow_ref[GitHub Workflow Repository]
@@ -46,7 +46,7 @@ Check if the value of the GitHub Workflow Ref extension in the image signature c
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Ref %q not in allowed list: %v`
 * Code: `github_certificate.gh_workflow_ref`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L48[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L49[Source, window="_blank"]
 
 [#github_certificate__gh_workflow_trigger]
 === link:#github_certificate__gh_workflow_trigger[GitHub Workflow Trigger]
@@ -56,7 +56,7 @@ Check if the value of the GitHub Workflow Trigger extension in the image signatu
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Trigger %q not in allowed list: %v`
 * Code: `github_certificate.gh_workflow_trigger`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L78[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L79[Source, window="_blank"]
 
 [#github_certificate__rule_data_provided]
 === link:#github_certificate__rule_data_provided[Rule data provided]
@@ -68,4 +68,4 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `github_certificate.rule_data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L93[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L94[Source, window="_blank"]

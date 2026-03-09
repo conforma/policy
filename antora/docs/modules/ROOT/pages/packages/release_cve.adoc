@@ -41,7 +41,7 @@ The SLSA Provenance attestation for the image is inspected to ensure CVEs that h
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Found %q vulnerability of %s security level`
 * Code: `cve.cve_blockers`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L114[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L116[Source, window="_blank"]
 
 [#cve__unpatched_cve_blockers]
 === link:#cve__unpatched_cve_blockers[Blocking unpatched CVE check]
@@ -53,7 +53,7 @@ The SLSA Provenance attestation for the image is inspected to ensure CVEs that d
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Found %q unpatched vulnerability of %s security level`
 * Code: `cve.unpatched_cve_blockers`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L148[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L150[Source, window="_blank"]
 
 [#cve__cve_results_found]
 === link:#cve__cve_results_found[CVE scan results found]
@@ -65,7 +65,7 @@ Confirm that clair-scan task results are present in the SLSA Provenance attestat
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Clair CVE scan results were not found`
 * Code: `cve.cve_results_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L185[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L187[Source, window="_blank"]
 
 [#cve__cve_warnings]
 === link:#cve__cve_warnings[Non-blocking CVE check]
@@ -77,7 +77,7 @@ The SLSA Provenance attestation for the image is inspected to ensure CVEs that h
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Found %q non-blocking vulnerability of %s security level`
 * Code: `cve.cve_warnings`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L58[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L60[Source, window="_blank"]
 
 [#cve__unpatched_cve_warnings]
 === link:#cve__unpatched_cve_warnings[Non-blocking unpatched CVE check]
@@ -89,7 +89,7 @@ The SLSA Provenance attestation for the image is inspected to ensure CVEs that d
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Found %q non-blocking unpatched vulnerability of %s security level`
 * Code: `cve.unpatched_cve_warnings`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L86[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L88[Source, window="_blank"]
 
 [#cve__rule_data_provided]
 === link:#cve__rule_data_provided[Rule data provided]
@@ -101,4 +101,4 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `cve.rule_data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L211[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L213[Source, window="_blank"]

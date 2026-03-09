@@ -32,7 +32,7 @@ deny contains result if {
 		some p in provenance.statement.predicate.buildDefinition.externalParameters.runSpec.params
 		p.value != ""
 	}
-	expected_names := {n | some n in rule_data.rule_data(_rule_data_key)}
+	expected_names := {n | some n in rule_data.get(_rule_data_key)}
 
 	expected_names != param_names
 	result := metadata.result_helper(rego.metadata.chain(), [param_names, expected_names])
@@ -75,7 +75,7 @@ deny contains result if {
 # Verify pipeline_run_params is a non-empty list of strings
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		rule_data.rule_data(_rule_data_key),
+		rule_data.get(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

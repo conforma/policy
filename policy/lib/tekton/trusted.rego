@@ -7,7 +7,7 @@ import data.lib.json as j
 import data.lib.time as time_lib
 
 # regal ignore:prefer-package-imports
-import data.lib.rule_data.rule_data as lib_rule_data
+import data.lib.rule_data.get as lib_rule_data
 
 # #############################################################################
 # TRUSTED TASK LIBRARY

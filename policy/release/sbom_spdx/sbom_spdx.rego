@@ -68,7 +68,7 @@ deny contains result if {
 	some pkg in s.packages
 	some ref in pkg.externalRefs
 	ref.referenceType == "purl"
-	sbom.has_item(ref.referenceLocator, rule_data.rule_data(sbom.rule_data_packages_key))
+	sbom.has_item(ref.referenceLocator, rule_data.get(sbom.rule_data_packages_key))
 	result := metadata.result_helper(rego.metadata.chain(), [ref.referenceLocator])
 }
 
@@ -93,7 +93,7 @@ deny contains result if {
 	some s in sbom.spdx_sboms
 	some pkg in s.packages
 	some reference in pkg.externalRefs
-	some allowed in rule_data.rule_data(sbom.rule_data_allowed_external_references_key)
+	some allowed in rule_data.get(sbom.rule_data_allowed_external_references_key)
 	reference.referenceType == allowed.type
 	not regex.match(object.get(allowed, "url", ""), object.get(reference, "referenceLocator", ""))
 
@@ -124,7 +124,7 @@ deny contains result if {
 	some s in sbom.spdx_sboms
 	some pkg in s.packages
 	some reference in pkg.externalRefs
-	some disallowed in rule_data.rule_data(sbom.rule_data_disallowed_external_references_key)
+	some disallowed in rule_data.get(sbom.rule_data_disallowed_external_references_key)
 
 	reference.referenceType == disallowed.type
 	regex.match(object.get(disallowed, "url", ""), object.get(reference, "referenceLocator", ""))
@@ -203,7 +203,7 @@ deny contains result if {
 	parsed_purl := ec.purl.parse(purl)
 
 	# patterns are either those defined by the rule for a given purl type, or empty by default
-	allowed_data := rule_data.rule_data(sbom.rule_data_allowed_package_sources_key)
+	allowed_data := rule_data.get(sbom.rule_data_allowed_package_sources_key)
 	patterns := sbom.purl_allowed_patterns(parsed_purl.type, allowed_data)
 
 	some qualifier in parsed_purl.qualifiers
@@ -238,7 +238,7 @@ deny contains result if {
 
 	some annotation in pkg.annotations
 	properties := json.unmarshal(annotation.comment)
-	some disallowed in rule_data.rule_data(sbom.rule_data_attributes_key)
+	some disallowed in rule_data.get(sbom.rule_data_attributes_key)
 	properties.name == disallowed.name
 
 	object.get(properties, "value", "") == object.get(disallowed, "value", "")

@@ -17,7 +17,7 @@ Verify the source container image exists.
 * FAILURE message: `%s`
 * Code: `source_image.exists`
 * Effective from: `2024-06-05T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/source_image/source_image.rego#L15[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/source_image/source_image.rego#L17[Source, window="_blank"]
 
 [#source_image__signed]
 === link:#source_image__signed[Signed]
@@ -28,4 +28,4 @@ Verify the source container image is signed.
 * FAILURE message: `%s`
 * Code: `source_image.signed`
 * Effective from: `2024-05-04T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/source_image/source_image.rego#L30[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/source_image/source_image.rego#L32[Source, window="_blank"]

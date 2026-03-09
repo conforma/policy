@@ -18,7 +18,7 @@ Confirm the `disallowed_packages` and `disallowed_attributes` rule data were pro
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `sbom.disallowed_packages_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom/sbom.rego#L35[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom/sbom.rego#L36[Source, window="_blank"]
 
 [#sbom__found]
 === link:#sbom__found[Found]
@@ -30,4 +30,4 @@ Confirm an SBOM attestation exists.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `No SBOM attestations found`
 * Code: `sbom.found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom/sbom.rego#L15[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom/sbom.rego#L16[Source, window="_blank"]

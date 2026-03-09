@@ -40,7 +40,7 @@ import data.lib.rule_data
 #
 deny contains result if {
 	some att in lib.pipelinerun_attestations
-	allowed_predicate_types := rule_data.rule_data(_rule_data_key)
+	allowed_predicate_types := rule_data.get(_rule_data_key)
 	not att.statement.predicateType in allowed_predicate_types
 	result := metadata.result_helper(
 		rego.metadata.chain(),
@@ -71,7 +71,7 @@ deny contains result if {
 # Verify allowed_predicate_types is a non-empty list of strings
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		rule_data.rule_data(_rule_data_key),
+		rule_data.get(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

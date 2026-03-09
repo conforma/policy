@@ -244,7 +244,7 @@ deny contains result if {
 # }
 _grouped_vulns[key][level] contains vuln if {
 	some key, patched in _levels_keys_patched
-	levels := rule_data.rule_data(key)
+	levels := rule_data.get(key)
 	some vuln in _clair_report.vulnerabilities
 	level := lower(object.get(vuln, "normalized_severity", "unknown"))
 
@@ -302,7 +302,7 @@ _compute_leeway(vuln, severity) := effective_on if {
 	issued := object.get(vuln, "issued", null)
 	ns := time.parse_rfc3339_ns(issued)
 
-	leeway := rule_data.rule_data("cve_leeway")
+	leeway := rule_data.get("cve_leeway")
 	years := 0
 	months := 0
 	days := leeway[severity]
@@ -321,7 +321,7 @@ _rule_data_errors contains error if {
 	some key in keys
 
 	some e in j.validate_schema(
-		rule_data.rule_data(key),
+		rule_data.get(key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",
@@ -341,7 +341,7 @@ _rule_data_errors contains error if {
 		"minimum": 0,
 	}
 	some e in j.validate_schema(
-		rule_data.rule_data("cve_leeway"),
+		rule_data.get("cve_leeway"),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "object",

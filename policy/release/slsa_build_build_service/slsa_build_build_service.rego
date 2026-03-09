@@ -61,7 +61,7 @@ deny contains result if {
 #   - attestation_type.known_attestation_type
 #
 deny contains result if {
-	allowed_builder_ids := rule_data.rule_data(_rule_data_key)
+	allowed_builder_ids := rule_data.get(_rule_data_key)
 	some att in lib.pipelinerun_attestations
 	builder_id := _builder_id(att)
 	not builder_id in allowed_builder_ids
@@ -90,7 +90,7 @@ deny contains result if {
 # Verify allowed_builder_ids is a non-empty list of strings
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		rule_data.rule_data(_rule_data_key),
+		rule_data.get(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

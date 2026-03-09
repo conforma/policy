@@ -32,7 +32,7 @@ deny contains result if {
 
 	some step_index, step in input.spec.steps
 	image_ref := step.image
-	allowed_registry_prefixes := rule_data.rule_data(_rule_data_key)
+	allowed_registry_prefixes := rule_data.get(_rule_data_key)
 	not image_ref_permitted(image_ref, allowed_registry_prefixes)
 
 	result := metadata.result_helper_with_term(
@@ -67,7 +67,7 @@ image_ref_permitted(image_ref, allowed_prefixes) if {
 
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		rule_data.rule_data(_rule_data_key),
+		rule_data.get(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

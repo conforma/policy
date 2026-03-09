@@ -76,7 +76,7 @@ deny contains result if {
 #
 deny contains result if {
 	some param in _platform_params
-	some pattern in rule_data.rule_data(_plat_patterns_rule_data_key)
+	some pattern in rule_data.get(_plat_patterns_rule_data_key)
 	regex.match(pattern, param)
 	result := metadata.result_helper(rego.metadata.chain(), [param, pattern])
 }
@@ -153,7 +153,7 @@ _privileged_nested_params contains param if {
 # Verify disallowed_platform_patterns is a list of strings. Empty list is fine.
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		rule_data.rule_data(_plat_patterns_rule_data_key),
+		rule_data.get(_plat_patterns_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",
@@ -171,7 +171,7 @@ _rule_data_errors contains error if {
 _rule_data_errors contains error if {
 	# We could use `"pattern": "regex"` in the JSON schema. However, rego doesn't fully support all
 	# regex features. This ensures that the regexes provides are valid within the context of rego.
-	some r in rule_data.rule_data(_plat_patterns_rule_data_key)
+	some r in rule_data.get(_plat_patterns_rule_data_key)
 	not regex.is_valid(r)
 	error := {
 		"message": sprintf("%q is not a valid regular expression in rego", [r]),

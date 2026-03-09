@@ -101,7 +101,7 @@ deny contains result if {
 #
 deny contains result if {
 	some label in _image_labels
-	some deprecated_label in rule_data.rule_data("deprecated_labels")
+	some deprecated_label in rule_data.get("deprecated_labels")
 	label.name == deprecated_label.name
 	result := _with_effective_on(
 		metadata.result_helper_with_term(
@@ -282,17 +282,17 @@ _value(labels, name) := [label.value |
 
 _strip_digest(ref_with_digest_maybe) := regex.replace(ref_with_digest_maybe, `@[^@]+$`, "")
 
-required_labels := rule_data.rule_data("required_labels") if {
+required_labels := rule_data.get("required_labels") if {
 	not is_fbc
-} else := rule_data.rule_data("fbc_required_labels")
+} else := rule_data.get("fbc_required_labels")
 
-optional_labels := rule_data.rule_data("optional_labels") if {
+optional_labels := rule_data.get("optional_labels") if {
 	not is_fbc
-} else := rule_data.rule_data("fbc_optional_labels")
+} else := rule_data.get("fbc_optional_labels")
 
-disallowed_inherited_labels := rule_data.rule_data("disallowed_inherited_labels") if {
+disallowed_inherited_labels := rule_data.get("disallowed_inherited_labels") if {
 	not is_fbc
-} else := rule_data.rule_data("fbc_disallowed_inherited_labels")
+} else := rule_data.get("fbc_disallowed_inherited_labels")
 
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does
 # not have the attribute, result is returned unmodified.
@@ -429,7 +429,7 @@ _rule_data_errors contains error if {
 	schema := item[1]
 
 	some e in j.validate_schema(
-		rule_data.rule_data(key),
+		rule_data.get(key),
 		schema,
 	)
 	error := {

@@ -12,7 +12,7 @@ import data.lib.time as time_lib
 _rule_annotations(chain) := chain[0].annotations
 
 pipeline_intention_match(chain) if {
-	rule_data.rule_data("pipeline_intention") in _rule_annotations(chain).custom.pipeline_intention
+	rule_data.get("pipeline_intention") in _rule_annotations(chain).custom.pipeline_intention
 } else := false
 
 result_helper(chain, failure_sprintf_params) := result if {

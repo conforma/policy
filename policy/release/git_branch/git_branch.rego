@@ -33,6 +33,6 @@ deny contains result if {
 }
 
 matches_any(branch) if {
-	some pattern in rule_data.rule_data("allowed_target_branch_patterns")
+	some pattern in rule_data.get("allowed_target_branch_patterns")
 	regex.match(pattern, branch)
 }

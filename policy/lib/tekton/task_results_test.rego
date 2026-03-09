@@ -24,8 +24,14 @@ test_image_result if {
 			"value": "4321\n",
 		},
 	]
-	assertions.assert_equal(["image1", "image2"], tekton.task_result_artifact_url(resolved_slsav1_task("task1", [], results)))
-	assertions.assert_equal(["1234", "4321"], tekton.task_result_artifact_digest(resolved_slsav1_task("task1", [], results)))
+	assertions.assert_equal(
+		["image1", "image2"],
+		tekton.task_result_artifact_url(resolved_slsav1_task("task1", [], results)),
+	)
+	assertions.assert_equal(
+		["1234", "4321"],
+		tekton.task_result_artifact_digest(resolved_slsav1_task("task1", [], results)),
+	)
 }
 
 test_artifact_result if {
@@ -47,8 +53,14 @@ test_artifact_result if {
 			"value": "4321\n",
 		},
 	]
-	assertions.assert_equal(["image1", "image2"], tekton.task_result_artifact_url(resolved_slsav1_task("task1", [], results)))
-	assertions.assert_equal(["1234", "4321"], tekton.task_result_artifact_digest(resolved_slsav1_task("task1", [], results)))
+	assertions.assert_equal(
+		["image1", "image2"],
+		tekton.task_result_artifact_url(resolved_slsav1_task("task1", [], results)),
+	)
+	assertions.assert_equal(
+		["1234", "4321"],
+		tekton.task_result_artifact_digest(resolved_slsav1_task("task1", [], results)),
+	)
 }
 
 test_images_result if {
@@ -75,7 +87,10 @@ test_artifact_outputs_result if {
 		},
 	]
 	assertions.assert_equal(["img1", "img2"], tekton.task_result_artifact_url(resolved_slsav1_task("task1", [], results)))
-	assertions.assert_equal(["1234", "4321"], tekton.task_result_artifact_digest(resolved_slsav1_task("task1", [], results)))
+	assertions.assert_equal(
+		["1234", "4321"],
+		tekton.task_result_artifact_digest(resolved_slsav1_task("task1", [], results)),
+	)
 }
 
 test_invalid_result_name if {

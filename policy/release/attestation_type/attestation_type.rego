@@ -36,7 +36,7 @@ deny contains result if {
 
 	# regal ignore:leaked-internal-reference
 	att_type := att.statement._type
-	not att_type in rule_data.rule_data(_rule_data_key)
+	not att_type in rule_data.get(_rule_data_key)
 	result := metadata.result_helper(rego.metadata.chain(), [att_type])
 }
 
@@ -101,7 +101,7 @@ deny contains result if {
 # Verify known_attestation_types is a non-empty list of strings
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		rule_data.rule_data(_rule_data_key),
+		rule_data.get(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

@@ -18,4 +18,4 @@ Verify the prefetch-dependencies task in the PipelineRun attestation was not inv
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task 'prefetch-dependencies' was invoked with mode parameter set to 'permissive'`
 * Code: `prefetch_dependencies.mode_not_permissive`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/prefetch_dependencies/prefetch_dependencies.rego#L15[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/prefetch_dependencies/prefetch_dependencies.rego#L16[Source, window="_blank"]

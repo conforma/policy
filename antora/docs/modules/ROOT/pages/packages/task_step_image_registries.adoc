@@ -18,7 +18,7 @@ Confirm the `allowed_step_image_registry_prefixes` rule data was provided, since
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `step_image_registries.step_image_registry_prefix_list_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_image_registries/step_image_registries.rego#L43[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_image_registries/step_image_registries.rego#L45[Source, window="_blank"]
 
 [#step_image_registries__step_images_permitted]
 === link:#step_image_registries__step_images_permitted[Step images come from permitted registry]
@@ -30,4 +30,4 @@ Confirm that each step in the Task uses a container image with a URL that matche
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Step %d uses disallowed image ref '%s'`
 * Code: `step_image_registries.step_images_permitted`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_image_registries/step_image_registries.rego#L16[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_image_registries/step_image_registries.rego#L18[Source, window="_blank"]

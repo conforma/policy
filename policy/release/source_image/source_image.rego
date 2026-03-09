@@ -67,7 +67,7 @@ _source_image_errors contains error if {
 
 _source_image_sig_errors contains error if {
 	some img in _source_images
-	info := ec.sigstore.verify_image(img, sigstore.sigstore_opts)
+	info := ec.sigstore.verify_image(img, sigstore.opts)
 	some raw_error in info.errors
 	error := sprintf("Image signature verification failed for %s: %s", [img, raw_error])
 }
