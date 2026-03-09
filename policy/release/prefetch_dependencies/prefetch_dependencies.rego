@@ -10,6 +10,7 @@ package prefetch_dependencies
 import rego.v1
 
 import data.lib
+import data.lib.metadata
 import data.lib.tekton
 
 # METADATA
@@ -36,5 +37,5 @@ deny contains result if {
 	some name in {"prefetch-dependencies", "prefetch-dependencies-oci-ta"}
 	name in tekton.task_names(task)
 	tekton.task_param(task, "mode") == "permissive"
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }

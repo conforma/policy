@@ -19,7 +19,7 @@ The SLSA Provenance attestation for the image is inspected to ensure RPMs have b
 * FAILURE message: `Signing key %q is not one of the allowed keys: %s`
 * Code: `rpm_signature.allowed`
 * Effective from: `2024-10-05T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L15[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L17[Source, window="_blank"]
 
 [#rpm_signature__result_format]
 === link:#rpm_signature__result_format[Result format]
@@ -30,7 +30,7 @@ Confirm the format of the RPMS_DATA result is in the expected format.
 * FAILURE message: `%s`
 * Code: `rpm_signature.result_format`
 * Effective from: `2024-10-05T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L38[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L40[Source, window="_blank"]
 
 [#rpm_signature__rule_data_provided]
 === link:#rpm_signature__rule_data_provided[Rule data provided]
@@ -41,4 +41,4 @@ Confirm the expected `allowed_rpm_signature_keys` rule data key has been provide
 * FAILURE message: `%s`
 * Code: `rpm_signature.rule_data_provided`
 * Effective from: `2024-10-05T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L55[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L57[Source, window="_blank"]

@@ -18,7 +18,7 @@ Generates a warning when a volatile configuration rule will expire within the co
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Volatile %s rule '%s' expires in %d days (effective until: %s)`
 * Code: `volatile_config.expiring_rule`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L59[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L60[Source, window="_blank"]
 
 [#volatile_config__expired_rule]
 === link:#volatile_config__expired_rule[Volatile rule has expired]
@@ -30,7 +30,7 @@ Generates a warning when a volatile configuration rule has passed its effectiveU
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Volatile %s rule '%s' has expired (effective until: %s)`
 * Code: `volatile_config.expired_rule`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L112[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L113[Source, window="_blank"]
 
 [#volatile_config__invalid_config]
 === link:#volatile_config__invalid_config[Volatile rule has invalid configuration]
@@ -42,7 +42,7 @@ Generates a warning when a volatile configuration rule has invalid date values t
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Volatile %s rule '%s' has invalid date configuration (effectiveOn: %s, effectiveUntil: %s)`
 * Code: `volatile_config.invalid_config`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L137[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L138[Source, window="_blank"]
 
 [#volatile_config__no_expiration]
 === link:#volatile_config__no_expiration[Volatile rule has no expiration]
@@ -54,7 +54,7 @@ Generates a warning when a volatile configuration rule has no effectiveUntil dat
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Volatile %s rule '%s' has no expiration date set`
 * Code: `volatile_config.no_expiration`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L86[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L87[Source, window="_blank"]
 
 [#volatile_config__pending_rule]
 === link:#volatile_config__pending_rule[Volatile rule pending activation]
@@ -66,4 +66,4 @@ Generates a warning when a volatile configuration rule has an effectiveOn date i
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Volatile %s rule '%s' is pending activation (effective on: %s)`
 * Code: `volatile_config.pending_rule`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L34[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/volatile_config/volatile_config.rego#L35[Source, window="_blank"]

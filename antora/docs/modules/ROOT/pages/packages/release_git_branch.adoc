@@ -17,4 +17,4 @@ Build must target a configured branch pattern (e.g., 'c10s')
 * FAILURE message: `Build target is %s which is not a trusted target branch`
 * Code: `git_branch.git_branch`
 * Effective from: `2025-07-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/git_branch/git_branch.rego#L14[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/git_branch/git_branch.rego#L16[Source, window="_blank"]

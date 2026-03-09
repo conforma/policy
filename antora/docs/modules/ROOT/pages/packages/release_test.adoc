@@ -19,7 +19,7 @@ Ensure that task producing the IMAGES_PROCESSED result contains the digests of t
 * FAILURE message: `Test '%s' did not process image with digest '%s'.`
 * Code: `test.test_all_images`
 * Effective from: `2024-05-29T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L239[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L241[Source, window="_blank"]
 
 [#test__no_failed_informative_tests]
 === link:#test__no_failed_informative_tests[No informative tests failed]
@@ -31,7 +31,7 @@ Produce a warning if any informative tests have their result set to "FAILED". Th
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `The Task %q from the build Pipeline reports a failed informative test`
 * Code: `test.no_failed_informative_tests`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L17[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L19[Source, window="_blank"]
 
 [#test__no_erred_tests]
 === link:#test__no_erred_tests[No tests erred]
@@ -43,7 +43,7 @@ Produce a violation if any tests have their result set to "ERROR". The result ty
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The Task %q from the build Pipeline reports a test erred`
 * Code: `test.no_erred_tests`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L169[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L171[Source, window="_blank"]
 
 [#test__no_failed_tests]
 === link:#test__no_failed_tests[No tests failed]
@@ -55,7 +55,7 @@ Produce a violation if any non-informative tests have their result set to "FAILE
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The Task %q from the build Pipeline reports a failed test`
 * Code: `test.no_failed_tests`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L144[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L146[Source, window="_blank"]
 
 [#test__no_test_warnings]
 === link:#test__no_test_warnings[No tests produced warnings]
@@ -67,7 +67,7 @@ Produce a warning if any tests have their result set to "WARNING". The result ty
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `The Task %q from the build Pipeline reports a test contains warnings`
 * Code: `test.no_test_warnings`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L41[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L43[Source, window="_blank"]
 
 [#test__no_skipped_tests]
 === link:#test__no_skipped_tests[No tests were skipped]
@@ -80,7 +80,7 @@ Produce a violation if any tests have their result set to "SKIPPED". A skipped r
 * FAILURE message: `The Task %q from the build Pipeline reports a test was skipped`
 * Code: `test.no_skipped_tests`
 * Effective from: `2023-12-08T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L192[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L194[Source, window="_blank"]
 
 [#test__test_results_known]
 === link:#test__test_results_known[No unsupported test result values found]
@@ -92,7 +92,7 @@ Ensure all test data result values are in the set of known/supported result valu
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The Task %q from the build Pipeline has an unsupported test result %q`
 * Code: `test.test_results_known`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L111[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L113[Source, window="_blank"]
 
 [#test__rule_data_provided]
 === link:#test__rule_data_provided[Rule data provided]
@@ -104,7 +104,7 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `test.rule_data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L219[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L221[Source, window="_blank"]
 
 [#test__test_data_found]
 === link:#test__test_data_found[Test data found in task results]
@@ -116,7 +116,7 @@ Ensure that at least one of the tasks in the pipeline includes a TEST_OUTPUT tas
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `No test data found`
 * Code: `test.test_data_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L64[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L66[Source, window="_blank"]
 
 [#test__test_results_found]
 === link:#test__test_results_found[Test data includes results key]
@@ -128,4 +128,4 @@ Each test result is expected to have a `results` key. Verify that the `results` 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Found tests without results`
 * Code: `test.test_results_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L88[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test/test.rego#L90[Source, window="_blank"]

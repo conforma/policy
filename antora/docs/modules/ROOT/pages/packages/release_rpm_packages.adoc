@@ -16,4 +16,4 @@ Check if a multi-arch build has the same RPM versions installed across each diff
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Mismatched versions of the %q RPM were found across different arches. %s`
 * Code: `rpm_packages.unique_version`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_packages/rpm_packages.rego#L17[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_packages/rpm_packages.rego#L20[Source, window="_blank"]

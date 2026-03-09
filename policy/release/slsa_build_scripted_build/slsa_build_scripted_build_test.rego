@@ -3,6 +3,7 @@ package slsa_build_scripted_build_test
 import rego.v1
 
 import data.lib
+import data.lib.assertions
 import data.slsa_build_scripted_build
 
 mock_bundle_digest := "sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
@@ -26,7 +27,7 @@ test_all_good if {
 	group := sprintf("oci://%s", [mock_bundle_repo])
 	trusted_tasks := {group: [{"ref": mock_bundle_digest, "effective_on": "2023-11-06T00:00:00Z"}]}
 
-	lib.assert_empty(slsa_build_scripted_build.deny) with input.image as image
+	assertions.assert_empty(slsa_build_scripted_build.deny) with input.image as image
 		with input.attestations as [_mock_attestation(tasks)]
 		with data.trusted_tasks as trusted_tasks
 }
@@ -52,7 +53,7 @@ test_scattered_results if {
 		"msg": "Build task not found",
 	}}
 
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_build_scripted_build.deny,
 	) with input.attestations as [_mock_attestation(tasks)]
@@ -73,7 +74,7 @@ test_missing_task_steps if {
 		"msg": "Build task \"buildah\" does not contain any steps",
 	}}
 
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_build_scripted_build.deny,
 	) with input.attestations as [_mock_attestation(tasks)]
@@ -94,7 +95,7 @@ test_empty_task_steps if {
 		"msg": "Build task \"buildah\" does not contain any steps",
 	}}
 
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_build_scripted_build.deny,
 	) with input.attestations as [_mock_attestation(tasks)]
@@ -123,14 +124,14 @@ test_build_script_used_many_build_tasks if {
 	]
 
 	# all good
-	lib.assert_empty(slsa_build_scripted_build.deny) with input.attestations as [_mock_attestation(tasks)]
+	assertions.assert_empty(slsa_build_scripted_build.deny) with input.attestations as [_mock_attestation(tasks)]
 
 	# one of the build tasks doesn't have any steps
 	expected_scripted := {{
 		"code": "slsa_build_scripted_build.build_script_used",
 		"msg": "Build task \"build-2\" does not contain any steps",
 	}}
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected_scripted,
 		slsa_build_scripted_build.deny,
 	) with input.attestations as [_mock_attestation(json.patch(tasks, [{
@@ -139,7 +140,7 @@ test_build_script_used_many_build_tasks if {
 	}]))]
 
 	# one of the build tasks produces the expected results, the other one doesn't, this is ok
-	lib.assert_empty(slsa_build_scripted_build.deny) with input.attestations as [_mock_attestation(json.patch(tasks, [{
+	assertions.assert_empty(slsa_build_scripted_build.deny) with input.attestations as [_mock_attestation(json.patch(tasks, [{
 		"op": "replace",
 		"path": "1/results/0/value",
 		"value": "something-else",
@@ -150,7 +151,7 @@ test_build_script_used_many_build_tasks if {
 		"code": "slsa_build_scripted_build.subject_build_task_matches",
 		"msg": `The attestation subject, "some.image/foo:bar@sha256:123", does not match any of the images built`,
 	}}
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected_results,
 		slsa_build_scripted_build.deny,
 	) with input.attestations as [_mock_attestation(json.patch(tasks, [
@@ -182,7 +183,7 @@ test_results_missing_value_url if {
 		"msg": "Build task not found",
 	}}
 
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_build_scripted_build.deny,
 	) with input.attestations as [_mock_attestation(tasks)]
@@ -203,7 +204,7 @@ test_results_missing_value_digest if {
 		"msg": "Build task not found",
 	}}
 
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_build_scripted_build.deny,
 	) with input.attestations as [_mock_attestation(tasks)]
@@ -224,7 +225,7 @@ test_results_empty_value_url if {
 		"msg": "Build task not found",
 	}}
 
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_build_scripted_build.deny,
 	) with input.attestations as [_mock_attestation(tasks)]
@@ -245,7 +246,7 @@ test_results_empty_value_digest if {
 		"msg": "Build task not found",
 	}}
 
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_build_scripted_build.deny,
 	) with input.attestations as [_mock_attestation(tasks)]
@@ -266,7 +267,7 @@ test_subject_mismatch if {
 		"msg": `The attestation subject, "some.image/foo:bar@sha256:123", does not match any of the images built`,
 	}}
 
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_build_scripted_build.deny,
 	) with input.attestations as [_mock_attestation(tasks)]
@@ -282,7 +283,7 @@ test_subject_with_tag_and_digest_is_good if {
 		"steps": [{"entrypoint": "/bin/bash"}],
 	}]
 
-	lib.assert_empty(slsa_build_scripted_build.deny) with input.attestations as [{"statement": {
+	assertions.assert_empty(slsa_build_scripted_build.deny) with input.attestations as [{"statement": {
 		"subject": [{
 			"name": "registry.io/repository/image",
 			"digest": {"sha256": "digest"},
@@ -305,7 +306,7 @@ test_subject_with_tag_and_digest_mismatch_tag_is_good if {
 		"steps": [{"entrypoint": "/bin/bash"}],
 	}]
 
-	lib.assert_empty(slsa_build_scripted_build.deny) with input.attestations as [{"statement": {
+	assertions.assert_empty(slsa_build_scripted_build.deny) with input.attestations as [{"statement": {
 		"subject": [{
 			"name": "registry.io/repository/image:different",
 			"digest": {"sha256": "digest"},
@@ -334,7 +335,7 @@ test_subject_with_tag_and_digest_mismatch_digest_fails if {
 		"msg": `The attestation subject, "registry.io/repository/image@sha256:unexpected", does not match any of the images built`,
 	}}
 
-	lib.assert_equal_results(expected, slsa_build_scripted_build.deny) with input.attestations as [{"statement": {
+	assertions.assert_equal_results(expected, slsa_build_scripted_build.deny) with input.attestations as [{"statement": {
 		"subject": [{
 			"name": "registry.io/repository/image",
 			"digest": {"sha256": "unexpected"},
@@ -371,7 +372,7 @@ test_image_built_by_trusted_task_no_build_task if {
 		"msg": "Image \"some.image/foo:bar@sha256:123\" not built by a trusted task: No Pipeline Tasks built the image",
 	}}
 
-	lib.assert_equal_results(expected, slsa_build_scripted_build.deny) with input.image as image
+	assertions.assert_equal_results(expected, slsa_build_scripted_build.deny) with input.image as image
 		with input.attestations as [att]
 }
 
@@ -400,7 +401,7 @@ test_image_built_by_trusted_task_not_trusted if {
 		"msg": `Image "some.image/foo:bar@sha256:123" not built by a trusted task: Build Task(s) "buildah" are not trusted`,
 	}}
 
-	lib.assert_equal_results(expected, slsa_build_scripted_build.deny) with input.image as image
+	assertions.assert_equal_results(expected, slsa_build_scripted_build.deny) with input.image as image
 		with input.attestations as [_mock_attestation(tasks)]
 }
 
@@ -446,7 +447,7 @@ test_image_built_by_multiple_not_trusted_tasks if {
 		"msg": `Image "some.image/foo:bar@sha256:123" not built by a trusted task: Build Task(s) "buildah-1,buildah-2" are not trusted`,
 	}}
 
-	lib.assert_equal_results(expected, slsa_build_scripted_build.deny) with input.image as image
+	assertions.assert_equal_results(expected, slsa_build_scripted_build.deny) with input.image as image
 		with input.attestations as [_mock_attestation(tasks)]
 }
 

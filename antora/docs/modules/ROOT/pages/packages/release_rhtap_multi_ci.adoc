@@ -18,7 +18,7 @@ Confirm the attestation created by the RHTAP Multi-CI build pipeline matches the
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `RHTAP %s attestation problem: %s`
 * Code: `rhtap_multi_ci.attestation_format`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rhtap_multi_ci/rhtap_multi_ci.rego#L40[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rhtap_multi_ci/rhtap_multi_ci.rego#L41[Source, window="_blank"]
 
 [#rhtap_multi_ci__attestation_found]
 === link:#rhtap_multi_ci__attestation_found[SLSA Provenance Attestation Found]
@@ -30,4 +30,4 @@ Verify an attestation created by the RHTAP Multi-CI build pipeline is present.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `A SLSA v1.0 provenance with one of the following RHTAP Multi-CI build types was not found: %s.`
 * Code: `rhtap_multi_ci.attestation_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rhtap_multi_ci/rhtap_multi_ci.rego#L16[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rhtap_multi_ci/rhtap_multi_ci.rego#L17[Source, window="_blank"]

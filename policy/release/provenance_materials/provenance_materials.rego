@@ -10,6 +10,7 @@ package provenance_materials
 import rego.v1
 
 import data.lib
+import data.lib.metadata
 import data.lib.tekton
 
 # METADATA
@@ -31,7 +32,7 @@ import data.lib.tekton
 deny contains result if {
 	some attestation in lib.pipelinerun_attestations
 	count(tekton.git_clone_tasks(attestation)) == 0
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -67,7 +68,7 @@ deny contains result if {
 	]
 	count(materials) == 0
 
-	result := lib.result_helper(rego.metadata.chain(), [url, commit])
+	result := metadata.result_helper(rego.metadata.chain(), [url, commit])
 }
 
 _normalize_git_url(url) := _suffix_git_url(_prefix_git_url(url))

@@ -3,11 +3,12 @@ package lib.tekton_test
 import rego.v1
 
 import data.lib
+import data.lib.assertions
 import data.lib.tekton
 
 test_latest_required_tasks if {
 	expected := [t | some t in _expected_latest.tasks]
-	lib.assert_equal(
+	assertions.assert_equal(
 		expected,
 		tekton.latest_required_default_tasks.tasks,
 	) with data["required-tasks"] as _time_based_required_tasks
@@ -15,7 +16,7 @@ test_latest_required_tasks if {
 
 test_current_required_tasks if {
 	expected := [t | some t in _expected_current.tasks]
-	lib.assert_equal(
+	assertions.assert_equal(
 		expected,
 		tekton.current_required_default_tasks.tasks,
 	) with data["required-tasks"] as _time_based_required_tasks
@@ -33,7 +34,7 @@ test_tasks_from_attestation if {
 		{"name": "ignored", "ref": {"name": "git-clone"}},
 		{"name": "ignored", "ref": {"name": "buildah"}},
 	}
-	lib.assert_equal(expected, tekton.tasks(attestation))
+	assertions.assert_equal(expected, tekton.tasks(attestation))
 }
 
 test_tasks_from_slsav1_tekton_attestation if {
@@ -62,7 +63,7 @@ test_tasks_from_slsav1_tekton_attestation if {
 	attestation := slsav1_attestation([task_w_params])
 
 	tasks := tekton.tasks(attestation)
-	lib.assert_equal({expected_task}, tasks)
+	assertions.assert_equal({expected_task}, tasks)
 }
 
 test_tasks_from_pipeline if {
@@ -81,36 +82,36 @@ test_tasks_from_pipeline if {
 		{"taskRef": {"name": "buildah"}},
 		{"taskRef": {"name": "summary"}},
 	}
-	lib.assert_equal(expected, tekton.tasks(pipeline))
+	assertions.assert_equal(expected, tekton.tasks(pipeline))
 }
 
 test_tasks_from_partial_pipeline if {
-	lib.assert_empty(tekton.tasks({"kind": "Pipeline"}))
-	lib.assert_empty(tekton.tasks({"kind": "Pipeline", "spec": {}}))
+	assertions.assert_empty(tekton.tasks({"kind": "Pipeline"}))
+	assertions.assert_empty(tekton.tasks({"kind": "Pipeline", "spec": {}}))
 
 	git_clone := {"taskRef": {"name": "git-clone"}}
 	expected := {{"taskRef": {"name": "git-clone"}}}
-	lib.assert_equal(expected, tekton.tasks({"kind": "Pipeline", "spec": {"tasks": [git_clone]}}))
-	lib.assert_equal(expected, tekton.tasks({"kind": "Pipeline", "spec": {"finally": [git_clone]}}))
+	assertions.assert_equal(expected, tekton.tasks({"kind": "Pipeline", "spec": {"tasks": [git_clone]}}))
+	assertions.assert_equal(expected, tekton.tasks({"kind": "Pipeline", "spec": {"finally": [git_clone]}}))
 }
 
 test_tasks_not_found if {
-	lib.assert_empty(tekton.tasks({}))
+	assertions.assert_empty(tekton.tasks({}))
 }
 
 test_task_param if {
 	task := {"params": [{"name": "NETWORK", "value": "none"}]}
-	lib.assert_equal("none", tekton.task_param(task, "NETWORK"))
+	assertions.assert_equal("none", tekton.task_param(task, "NETWORK"))
 	not tekton.task_param(task, "missing")
 }
 
 test_task_result if {
 	task := {"results": [{"name": "SPAM", "value": "maps"}]}
-	lib.assert_equal("maps", tekton.task_result(task, "SPAM"))
+	assertions.assert_equal("maps", tekton.task_result(task, "SPAM"))
 	not tekton.task_result(task, "missing")
 
 	slsav1_task := resolved_slsav1_task("task-name", [], [{"name": "SPAM", "value": "maps"}])
-	lib.assert_equal("maps", tekton.task_result(slsav1_task, "SPAM"))
+	assertions.assert_equal("maps", tekton.task_result(slsav1_task, "SPAM"))
 	not tekton.task_result(slsav1_task, "missing")
 }
 
@@ -139,9 +140,9 @@ test_tasks_from_attestation_with_spam if {
 		},
 		{"ref": {"name": "summary", "kind": "Task", "bundle": _bundle}},
 	}
-	lib.assert_equal(expected_tasks, tekton.tasks(attestation))
+	assertions.assert_equal(expected_tasks, tekton.tasks(attestation))
 	expected_names := {"git-clone", "buildah", "buildah[HERMETIC=true]", "weird", "weird[SPAM=MAPS]", "summary"}
-	lib.assert_equal(expected_names, tekton.tasks_names(attestation))
+	assertions.assert_equal(expected_names, tekton.tasks_names(attestation))
 }
 
 # regal ignore:rule-length
@@ -177,15 +178,15 @@ test_tasks_from_pipeline_with_spam if {
 		},
 		{"taskRef": {"name": "summary", "kind": "Task", "bundle": _bundle}},
 	}
-	lib.assert_equal(expected_tasks, tekton.tasks(pipeline))
+	assertions.assert_equal(expected_tasks, tekton.tasks(pipeline))
 
 	expected_names := {"git-clone", "buildah", "buildah[NETWORK=none]", "weird", "weird[SPAM=MAPS]", "summary"}
-	lib.assert_equal(expected_names, tekton.tasks_names(pipeline))
+	assertions.assert_equal(expected_names, tekton.tasks_names(pipeline))
 }
 
 test_build_task if {
 	expected := [_good_build_task, _good_source_build_task]
-	lib.assert_equal(expected, tekton.build_tasks(_good_attestation))
+	assertions.assert_equal(expected, tekton.build_tasks(_good_attestation))
 }
 
 test_build_task_with_artifact_uri if {
@@ -282,7 +283,7 @@ test_build_task_not_found if {
 
 test_pre_build_tasks if {
 	expected := [_pre_build_task]
-	lib.assert_equal(expected, tekton.pre_build_tasks(_good_attestation))
+	assertions.assert_equal(expected, tekton.pre_build_tasks(_good_attestation))
 }
 
 test_multiple_build_tasks if {
@@ -327,7 +328,7 @@ test_multiple_build_tasks if {
 
 test_git_clone_task if {
 	expected := _good_git_clone_task
-	lib.assert_equal([expected], tekton.git_clone_tasks(_good_attestation))
+	assertions.assert_equal([expected], tekton.git_clone_tasks(_good_attestation))
 }
 
 test_git_clone_task_not_found if {
@@ -391,7 +392,7 @@ test_multiple_git_clone_tasks if {
 
 test_source_build_task if {
 	expected := _good_source_build_task
-	lib.assert_equal([expected], tekton.source_build_tasks(_good_attestation))
+	assertions.assert_equal([expected], tekton.source_build_tasks(_good_attestation))
 }
 
 test_source_build_task_not_found if {
@@ -454,7 +455,7 @@ test_multiple_source_build_tasks if {
 }
 
 test_task_data_bundle_ref if {
-	lib.assert_equal(
+	assertions.assert_equal(
 		{
 			"bundle": "bundle",
 			"name": "ref-name",
@@ -489,24 +490,24 @@ test_task_names_local if {
 		"buildah[IMAGE=quay.io/jstuart/hacbs-docker-build]",
 	}
 
-	lib.assert_equal(expected, tekton.task_names(task))
+	assertions.assert_equal(expected, tekton.task_names(task))
 }
 
 test_task_data_no_bundle_ref if {
-	lib.assert_equal({"name": "name"}, tekton.task_data({"ref": {"name": "name"}}))
+	assertions.assert_equal({"name": "name"}, tekton.task_data({"ref": {"name": "name"}}))
 }
 
 test_missing_required_tasks_data if {
-	lib.assert_equal(tekton.missing_required_tasks_data, true) with data["required-tasks"] as []
-	lib.assert_equal(tekton.missing_required_tasks_data, false) with data["required-tasks"] as _time_based_required_tasks
+	assertions.assert_equal(tekton.missing_required_tasks_data, true) with data["required-tasks"] as []
+	assertions.assert_equal(tekton.missing_required_tasks_data, false) with data["required-tasks"] as _time_based_required_tasks
 }
 
 test_task_step_image_ref if {
-	lib.assert_equal(
+	assertions.assert_equal(
 		"redhat.io/openshift/rhel8@sha256:af7dd5b3b",
 		tekton.task_step_image_ref({"name": "mystep", "imageID": "redhat.io/openshift/rhel8@sha256:af7dd5b3b"}),
 	)
-	lib.assert_equal(
+	assertions.assert_equal(
 		"redhat.io/openshift/rhel8@sha256:af7dd5b3b",
 		tekton.task_step_image_ref({"environment": {"image": "redhat.io/openshift/rhel8@sha256:af7dd5b3b"}}),
 	)
@@ -525,8 +526,8 @@ test_pipeline_task_slsav1 if {
 			"tekton.dev/task": "buildah",
 		},
 	}}
-	lib.assert_equal(tekton.pipeline_task_name(slsav1_task_spec), "build-push")
-	lib.assert_equal(tekton.pipeline_task_name(slsav1_task("my-pipeline")), "my-pipeline")
+	assertions.assert_equal(tekton.pipeline_task_name(slsav1_task_spec), "build-push")
+	assertions.assert_equal(tekton.pipeline_task_name(slsav1_task("my-pipeline")), "my-pipeline")
 }
 
 test_pipeline_task_slsav02 if {
@@ -535,10 +536,10 @@ test_pipeline_task_slsav02 if {
 		"after": ["clone-repository"],
 		"ref": {},
 	}
-	lib.assert_equal(tekton.pipeline_task_name(slsav02_inline_task_spec), "copy-settings")
+	assertions.assert_equal(tekton.pipeline_task_name(slsav02_inline_task_spec), "copy-settings")
 
 	task := {"name": "git-clone-p", "ref": {"name": "git-clone"}}
-	lib.assert_equal(tekton.pipeline_task_name(task), "git-clone-p")
+	assertions.assert_equal(tekton.pipeline_task_name(task), "git-clone-p")
 }
 
 test_taskrun_labels_slsa02 if {
@@ -546,7 +547,7 @@ test_taskrun_labels_slsa02 if {
 		"l1": "v1",
 		"l2": "v2",
 	}}}}
-	lib.assert_equal(tekton.task_labels(task), {"l1": "v1", "l2": "v2"})
+	assertions.assert_equal(tekton.task_labels(task), {"l1": "v1", "l2": "v2"})
 }
 
 test_taskrun_annotations_slsa02 if {
@@ -554,7 +555,7 @@ test_taskrun_annotations_slsa02 if {
 		"a1": "v1",
 		"a2": "v2",
 	}}}}
-	lib.assert_equal(tekton.task_annotations(task), {"a1": "v1", "a2": "v2"})
+	assertions.assert_equal(tekton.task_annotations(task), {"a1": "v1", "a2": "v2"})
 }
 
 test_taskrun_labels_slsa1 if {
@@ -562,7 +563,7 @@ test_taskrun_labels_slsa1 if {
 		"l1": "v1",
 		"l2": "v2",
 	}}}
-	lib.assert_equal(tekton.task_labels(task), {"l1": "v1", "l2": "v2"})
+	assertions.assert_equal(tekton.task_labels(task), {"l1": "v1", "l2": "v2"})
 }
 
 test_taskrun_annotations_slsa1 if {
@@ -570,7 +571,7 @@ test_taskrun_annotations_slsa1 if {
 		"a1": "v1",
 		"a2": "v2",
 	}}}
-	lib.assert_equal(tekton.task_annotations(task), {"a1": "v1", "a2": "v2"})
+	assertions.assert_equal(tekton.task_annotations(task), {"a1": "v1", "a2": "v2"})
 }
 
 test_task_result_endswith if {
@@ -593,7 +594,7 @@ test_task_result_endswith if {
 		},
 	]
 	task1 := resolved_slsav1_task("task1", [], results)
-	lib.assert_equal(["1234-image1", "image1"], tekton.task_result_endswith(task1, "ARTIFACT_URI"))
+	assertions.assert_equal(["1234-image1", "image1"], tekton.task_result_endswith(task1, "ARTIFACT_URI"))
 }
 
 _expected_latest := {

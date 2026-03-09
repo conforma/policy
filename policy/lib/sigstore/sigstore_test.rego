@@ -1,11 +1,12 @@
-package lib_test
+package lib.sigstore_test
 
 import rego.v1
 
-import data.lib
+import data.lib.assertions
+import data.lib.sigstore
 
 test_sigstore_opts if {
-	lib.assert_equal(lib.sigstore_opts, {
+	assertions.assert_equal(sigstore.opts, {
 		"certificate_identity": "",
 		"certificate_identity_regexp": "",
 		"certificate_oidc_issuer": "",
@@ -24,5 +25,5 @@ test_sigstore_opts if {
 		"public_key": "public-key",
 		"rekor_url": "https://rekor.local",
 	}
-	lib.assert_equal(lib.sigstore_opts, opts) with data.config.default_sigstore_opts as opts
+	assertions.assert_equal(sigstore.opts, opts) with data.config.default_sigstore_opts as opts
 }

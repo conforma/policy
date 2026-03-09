@@ -2,11 +2,12 @@ package results_test
 
 import rego.v1
 
-import data.lib
+import data.lib.assertions
+
 import data.results
 
 test_all_good if {
-	lib.assert_empty(results.deny) with input as _mock_task
+	assertions.assert_empty(results.deny) with input as _mock_task
 		with data.rule_data as _rule_data
 }
 
@@ -37,11 +38,11 @@ test_different_versions_different_results_required_all_good if {
 		{"task": "task", "version": "2", "result": "T2_RESULT"},
 	]}
 
-	lib.assert_empty(results.deny) with input as task_v1
+	assertions.assert_empty(results.deny) with input as task_v1
 		with data.rule_data as rule_data
-	lib.assert_empty(results.deny) with input as task_v2
+	assertions.assert_empty(results.deny) with input as task_v2
 		with data.rule_data as rule_data
-	lib.assert_empty(results.deny) with input as task_v3
+	assertions.assert_empty(results.deny) with input as task_v3
 		with data.rule_data as rule_data
 }
 
@@ -65,13 +66,13 @@ test_different_versions_different_results_required_missing if {
 		{"task": "task", "version": "2", "result": "MISSING_RESULT"},
 	]}
 
-	lib.assert_equal_results(results.deny, {{
+	assertions.assert_equal_results(results.deny, {{
 		"code": "results.required",
 		"msg": `"MISSING_RESULT" result not found in "task" Task/v1 (all versions)`,
 	}}) with input as task_v1
 		with data.rule_data as rule_data
 
-	lib.assert_equal_results(results.deny, {{
+	assertions.assert_equal_results(results.deny, {{
 		"code": "results.required",
 		"msg": `"MISSING_RESULT" result not found in "task" Task/v2`,
 	}}) with input as task_v2
@@ -84,17 +85,17 @@ test_required_result_defined if {
 		"msg": `"GRILLED" result not found in "bacon" Task (all versions)`,
 	}}
 
-	lib.assert_equal_results(results.deny, expected) with data.rule_data as _rule_data
+	assertions.assert_equal_results(results.deny, expected) with data.rule_data as _rule_data
 		with input as json.patch(_mock_task, [{
 			"op": "add",
 			"path": "spec/results",
 			"value": [],
 		}])
 
-	lib.assert_equal_results(results.deny, expected) with data.rule_data as _rule_data
+	assertions.assert_equal_results(results.deny, expected) with data.rule_data as _rule_data
 		with input as json.remove(_mock_task, ["spec/results"])
 
-	lib.assert_equal_results(results.deny, expected) with data.rule_data as _rule_data
+	assertions.assert_equal_results(results.deny, expected) with data.rule_data as _rule_data
 		with input as json.remove(_mock_task, ["spec/results/0"])
 }
 
@@ -143,7 +144,7 @@ test_rule_data_provided if {
 		},
 	}
 
-	lib.assert_equal_results(results.deny, expected) with input as _mock_task
+	assertions.assert_equal_results(results.deny, expected) with input as _mock_task
 		with data.rule_data as d
 }
 

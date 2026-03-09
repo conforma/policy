@@ -14,7 +14,8 @@ package task_bundle
 
 import rego.v1
 
-import data.lib
+import data.lib.metadata
+
 import data.lib.tekton
 
 # METADATA
@@ -28,7 +29,7 @@ import data.lib.tekton
 #
 warn contains result if {
 	some task in tekton.unpinned_task_bundle(input.spec.tasks)
-	result := lib.result_helper(rego.metadata.chain(), [task.name, tekton.bundle(task)])
+	result := metadata.result_helper(rego.metadata.chain(), [task.name, tekton.bundle(task)])
 }
 
 # METADATA
@@ -50,7 +51,7 @@ warn contains result if {
 	some task in input.spec.tasks
 	expiry := tekton.expiry_of(task)
 	bundle := tekton.bundle(task)
-	result := lib.result_helper(rego.metadata.chain(), [task.name, bundle, time.format(expiry)])
+	result := metadata.result_helper(rego.metadata.chain(), [task.name, bundle, time.format(expiry)])
 }
 
 # METADATA
@@ -64,7 +65,7 @@ warn contains result if {
 #
 deny contains result if {
 	some task in tekton.disallowed_task_reference(input.spec.tasks)
-	result := lib.result_helper(rego.metadata.chain(), [task.name])
+	result := metadata.result_helper(rego.metadata.chain(), [task.name])
 }
 
 # METADATA
@@ -77,7 +78,7 @@ deny contains result if {
 #
 deny contains result if {
 	some task in tekton.empty_task_bundle_reference(input.spec.tasks)
-	result := lib.result_helper(rego.metadata.chain(), [task.name])
+	result := metadata.result_helper(rego.metadata.chain(), [task.name])
 }
 
 # METADATA
@@ -92,7 +93,7 @@ deny contains result if {
 	some task in tekton.untrusted_task_refs(input.spec.tasks)
 	bundle := tekton.bundle(task)
 	bundle != ""
-	result := lib.result_helper(rego.metadata.chain(), [task.name, bundle])
+	result := metadata.result_helper(rego.metadata.chain(), [task.name, bundle])
 }
 
 # METADATA
@@ -105,5 +106,5 @@ deny contains result if {
 #   failure_msg: Missing required trusted_tasks data
 deny contains result if {
 	tekton.missing_all_trusted_tasks_data
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }

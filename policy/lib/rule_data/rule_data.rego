@@ -1,11 +1,11 @@
-package lib
+package lib.rule_data
 
 import rego.v1
 
 # Values in data.rule_data_custom or data.rule_data
 # will take precedence over these defaults.
 #
-rule_data_defaults := {
+defaults := {
 	#
 	# Used in release/attestation_type
 	"known_attestation_types": [
@@ -146,11 +146,11 @@ rule_data_defaults := {
 #   data.rule_data__configuration__[key_name]
 #   data.rule_data_custom[key_name]
 #   data.rule_data[key_name]
-#   rule_data_defaults[key_name]
+#   defaults[key_name]
 #
 # And falls back to an empty list if the key is not found anywhere.
 #
-rule_data(key_name) := value if {
+get(key_name) := value if {
 	# Expected to be defined under `configuration.rule_data` in the
 	# ECP configuration data being used when EC is run.
 	value := data.rule_data__configuration__[key_name]
@@ -164,7 +164,7 @@ rule_data(key_name) := value if {
 	value := data.rule_data[key_name]
 } else := value if {
 	# Default values defined in this file. See above.
-	value := rule_data_defaults[key_name]
+	value := defaults[key_name]
 } else := value if {
 	# If the key is not found, default to an empty list
 	value := []

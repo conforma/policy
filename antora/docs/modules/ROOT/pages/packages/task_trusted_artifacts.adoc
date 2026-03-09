@@ -16,7 +16,7 @@ Trusted Artifact parameters follow the expected naming convention.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The parameter %q of the Task %q does not use the _ARTIFACT suffix`
 * Code: `trusted_artifacts.parameter`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/trusted_artifacts/trusted_artifacts.rego#L15[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/trusted_artifacts/trusted_artifacts.rego#L17[Source, window="_blank"]
 
 [#trusted_artifacts__result]
 === link:#trusted_artifacts__result[Result]
@@ -26,7 +26,7 @@ Trusted Artifact results follow the expected naming convention.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The result %q of the Task %q does not use the _ARTIFACT suffix`
 * Code: `trusted_artifacts.result`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/trusted_artifacts/trusted_artifacts.rego#L28[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/trusted_artifacts/trusted_artifacts.rego#L30[Source, window="_blank"]
 
 [#trusted_artifacts__workspace]
 === link:#trusted_artifacts__workspace[Workspace]
@@ -37,4 +37,4 @@ Tasks that implement the Trusted Artifacts pattern should not allow general purp
 * FAILURE message: `General purpose workspace %q is not allowed`
 * Code: `trusted_artifacts.workspace`
 * Effective from: `2024-07-07T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/trusted_artifacts/trusted_artifacts.rego#L41[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/trusted_artifacts/trusted_artifacts.rego#L43[Source, window="_blank"]

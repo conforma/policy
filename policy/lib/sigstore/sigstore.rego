@@ -1,10 +1,10 @@
-package lib
+package lib.sigstore
 
 import rego.v1
 
-# sigstore_opts provides a safe way to access the default sigstore opts. It ensures policy rules
+# opts provides a safe way to access the default sigstore opts. It ensures policy rules
 # don't accidentally evaluate to passing if the default values are not in the config.
-default sigstore_opts := {
+default opts := {
 	"certificate_identity": "",
 	"certificate_identity_regexp": "",
 	"certificate_oidc_issuer": "",
@@ -14,4 +14,4 @@ default sigstore_opts := {
 	"rekor_url": "",
 }
 
-sigstore_opts := data.config.default_sigstore_opts
+opts := data.config.default_sigstore_opts

@@ -9,7 +9,9 @@ package trusted_artifacts
 
 import rego.v1
 
-import data.lib
+import data.lib.metadata
+import data.lib.rule_data
+
 import data.lib.k8s
 
 # METADATA
@@ -22,7 +24,7 @@ import data.lib.k8s
 deny contains result if {
 	some param_name in _ta_parameters
 	not _has_ta_suffix(param_name)
-	result := lib.result_helper(rego.metadata.chain(), [param_name, k8s.name_version(input)])
+	result := metadata.result_helper(rego.metadata.chain(), [param_name, k8s.name_version(input)])
 }
 
 # METADATA
@@ -35,7 +37,7 @@ deny contains result if {
 deny contains result if {
 	some result_name in _ta_results
 	not _has_ta_suffix(result_name)
-	result := lib.result_helper(rego.metadata.chain(), [result_name, k8s.name_version(input)])
+	result := metadata.result_helper(rego.metadata.chain(), [result_name, k8s.name_version(input)])
 }
 
 # METADATA
@@ -54,8 +56,8 @@ deny contains result if {
 deny contains result if {
 	_uses_trusted_artifacts(input)
 	some workspace in input.spec.workspaces
-	not workspace.name in lib.rule_data("allowed_trusted_artifacts_workspaces")
-	result := lib.result_helper(rego.metadata.chain(), [workspace.name])
+	not workspace.name in rule_data.get("allowed_trusted_artifacts_workspaces")
+	result := metadata.result_helper(rego.metadata.chain(), [workspace.name])
 }
 
 _ta_parameters contains param_name if {

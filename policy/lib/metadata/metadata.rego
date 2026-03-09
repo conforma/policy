@@ -1,7 +1,8 @@
-package lib
+package lib.metadata
 
 import rego.v1
 
+import data.lib.rule_data
 import data.lib.time as time_lib
 
 # The first entry in the chain always points to the active rule, even if it has
@@ -11,7 +12,7 @@ import data.lib.time as time_lib
 _rule_annotations(chain) := chain[0].annotations
 
 pipeline_intention_match(chain) if {
-	rule_data("pipeline_intention") in _rule_annotations(chain).custom.pipeline_intention
+	rule_data.get("pipeline_intention") in _rule_annotations(chain).custom.pipeline_intention
 } else := false
 
 result_helper(chain, failure_sprintf_params) := result if {

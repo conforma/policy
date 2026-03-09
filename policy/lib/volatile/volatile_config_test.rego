@@ -14,12 +14,13 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-package lib_test
+package lib.volatile_test
 
 import rego.v1
 
-import data.lib
+import data.lib.assertions
 import data.lib.time as time_lib
+import data.lib.volatile
 
 # Use a fixed "now" time for deterministic tests: 2024-06-15T12:00:00Z
 _now_ns := 1718452800000000000
@@ -29,12 +30,12 @@ _now_ns := 1718452800000000000
 # =============================================================================
 
 test_warning_threshold_days_default if {
-	lib.assert_equal(lib.warning_threshold_days, 30)
+	assertions.assert_equal(volatile.warning_threshold_days, 30)
 }
 
 test_warning_threshold_days_custom if {
 	# regal ignore:line-length
-	lib.assert_equal(lib.warning_threshold_days, 14) with data.rule_data__configuration__.volatile_config_warning_threshold_days as 14
+	assertions.assert_equal(volatile.warning_threshold_days, 14) with data.rule_data__configuration__.volatile_config_warning_threshold_days as 14
 }
 
 # =============================================================================
@@ -44,34 +45,34 @@ test_warning_threshold_days_custom if {
 test_days_until_expiration_positive if {
 	# 10 days in the future
 	rule := {"effectiveUntil": "2024-06-25T12:00:00Z"}
-	lib.assert_equal(lib.days_until_expiration(rule), 10) with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.days_until_expiration(rule), 10) with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_days_until_expiration_negative if {
 	# 5 days in the past
 	rule := {"effectiveUntil": "2024-06-10T12:00:00Z"}
-	lib.assert_equal(lib.days_until_expiration(rule), -5) with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.days_until_expiration(rule), -5) with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_days_until_expiration_zero if {
 	# Same day (less than 24 hours)
 	rule := {"effectiveUntil": "2024-06-15T23:59:59Z"}
-	lib.assert_equal(lib.days_until_expiration(rule), 0) with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.days_until_expiration(rule), 0) with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_days_until_expiration_no_date if {
 	rule := {"value": "some.rule"}
-	not lib.days_until_expiration(rule)
+	not volatile.days_until_expiration(rule)
 }
 
 test_days_until_expiration_empty_date if {
 	rule := {"effectiveUntil": ""}
-	not lib.days_until_expiration(rule)
+	not volatile.days_until_expiration(rule)
 }
 
 test_days_until_expiration_invalid_date if {
 	rule := {"effectiveUntil": "not-a-date"}
-	not lib.days_until_expiration(rule)
+	not volatile.days_until_expiration(rule)
 }
 
 # =============================================================================
@@ -85,7 +86,7 @@ test_is_rule_applicable_global if {
 		"imageDigest": "sha256:abc123",
 		"componentName": "my-component",
 	}
-	lib.is_rule_applicable(rule, context)
+	volatile.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_global_explicit_empty if {
@@ -101,7 +102,7 @@ test_is_rule_applicable_global_explicit_empty if {
 		"imageDigest": "sha256:abc123",
 		"componentName": "my-component",
 	}
-	lib.is_rule_applicable(rule, context)
+	volatile.is_rule_applicable(rule, context)
 }
 
 # =============================================================================
@@ -115,7 +116,7 @@ test_is_rule_applicable_image_digest_match if {
 		"imageDigest": "sha256:abc123def456",
 		"componentName": "my-component",
 	}
-	lib.is_rule_applicable(rule, context)
+	volatile.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_image_digest_no_match if {
@@ -125,7 +126,7 @@ test_is_rule_applicable_image_digest_no_match if {
 		"imageDigest": "sha256:different",
 		"componentName": "my-component",
 	}
-	not lib.is_rule_applicable(rule, context)
+	not volatile.is_rule_applicable(rule, context)
 }
 
 # =============================================================================
@@ -139,7 +140,7 @@ test_is_rule_applicable_image_ref_match if {
 		"imageDigest": "sha256:abc123def456",
 		"componentName": "my-component",
 	}
-	lib.is_rule_applicable(rule, context)
+	volatile.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_image_ref_no_match if {
@@ -149,7 +150,7 @@ test_is_rule_applicable_image_ref_no_match if {
 		"imageDigest": "sha256:different",
 		"componentName": "my-component",
 	}
-	not lib.is_rule_applicable(rule, context)
+	not volatile.is_rule_applicable(rule, context)
 }
 
 # =============================================================================
@@ -163,7 +164,7 @@ test_is_rule_applicable_image_url_exact_match if {
 		"imageDigest": "sha256:abc123",
 		"componentName": "my-component",
 	}
-	lib.is_rule_applicable(rule, context)
+	volatile.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_image_url_prefix_match if {
@@ -173,7 +174,7 @@ test_is_rule_applicable_image_url_prefix_match if {
 		"imageDigest": "sha256:abc123",
 		"componentName": "my-component",
 	}
-	lib.is_rule_applicable(rule, context)
+	volatile.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_image_url_no_match if {
@@ -183,7 +184,7 @@ test_is_rule_applicable_image_url_no_match if {
 		"imageDigest": "sha256:abc123",
 		"componentName": "my-component",
 	}
-	not lib.is_rule_applicable(rule, context)
+	not volatile.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_image_url_with_tag_only if {
@@ -193,7 +194,7 @@ test_is_rule_applicable_image_url_with_tag_only if {
 		"imageDigest": "",
 		"componentName": "my-component",
 	}
-	lib.is_rule_applicable(rule, context)
+	volatile.is_rule_applicable(rule, context)
 }
 
 # =============================================================================
@@ -207,7 +208,7 @@ test_is_rule_applicable_component_name_match if {
 		"imageDigest": "sha256:abc123",
 		"componentName": "my-component",
 	}
-	lib.is_rule_applicable(rule, context)
+	volatile.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_component_name_no_match if {
@@ -217,7 +218,7 @@ test_is_rule_applicable_component_name_no_match if {
 		"imageDigest": "sha256:abc123",
 		"componentName": "my-component",
 	}
-	not lib.is_rule_applicable(rule, context)
+	not volatile.is_rule_applicable(rule, context)
 }
 
 test_is_rule_applicable_component_name_empty_list if {
@@ -228,7 +229,7 @@ test_is_rule_applicable_component_name_empty_list if {
 		"imageDigest": "sha256:abc123",
 		"componentName": "my-component",
 	}
-	not lib.is_rule_applicable(rule, context)
+	not volatile.is_rule_applicable(rule, context)
 }
 
 # =============================================================================
@@ -237,12 +238,12 @@ test_is_rule_applicable_component_name_empty_list if {
 
 test_warning_category_invalid_effective_on if {
 	rule := {"value": "some.rule", "effectiveOn": "not-a-date"}
-	lib.assert_equal(lib.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_invalid_effective_until if {
 	rule := {"value": "some.rule", "effectiveUntil": "also-not-a-date"}
-	lib.assert_equal(lib.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_empty_strings_not_invalid if {
@@ -250,7 +251,7 @@ test_warning_category_empty_strings_not_invalid if {
 	rule := {"value": "some.rule", "effectiveOn": "", "effectiveUntil": ""}
 
 	# Should not be "invalid" - empty strings are valid (not set)
-	not lib.warning_category(rule) == "invalid" with time_lib.effective_current_time_ns as _now_ns
+	not volatile.warning_category(rule) == "invalid" with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_invalid_on_valid_until if {
@@ -260,7 +261,7 @@ test_warning_category_invalid_on_valid_until if {
 		"effectiveOn": "not-a-date",
 		"effectiveUntil": "2024-06-25T12:00:00Z",
 	}
-	lib.assert_equal(lib.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_valid_on_invalid_until if {
@@ -270,7 +271,7 @@ test_warning_category_valid_on_invalid_until if {
 		"effectiveOn": "2024-06-01T12:00:00Z",
 		"effectiveUntil": "not-a-date",
 	}
-	lib.assert_equal(lib.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_both_dates_invalid if {
@@ -280,7 +281,7 @@ test_warning_category_both_dates_invalid if {
 		"effectiveOn": "not-a-date",
 		"effectiveUntil": "also-not-a-date",
 	}
-	lib.assert_equal(lib.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "invalid") with time_lib.effective_current_time_ns as _now_ns
 }
 
 # =============================================================================
@@ -290,7 +291,7 @@ test_warning_category_both_dates_invalid if {
 test_warning_category_pending if {
 	# effectiveOn is 30 days in the future
 	rule := {"value": "some.rule", "effectiveOn": "2024-07-15T12:00:00Z"}
-	lib.assert_equal(lib.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_not_pending_when_active if {
@@ -298,7 +299,7 @@ test_warning_category_not_pending_when_active if {
 	rule := {"value": "some.rule", "effectiveOn": "2024-06-01T12:00:00Z"}
 
 	# Should not be "pending" - it should be "no_expiration" since no effectiveUntil
-	lib.assert_equal(lib.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
 }
 
 # =============================================================================
@@ -308,7 +309,7 @@ test_warning_category_not_pending_when_active if {
 test_warning_category_expired if {
 	# effectiveUntil is 10 days in the past
 	rule := {"value": "some.rule", "effectiveUntil": "2024-06-05T12:00:00Z"}
-	lib.assert_equal(lib.warning_category(rule), "expired") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "expired") with time_lib.effective_current_time_ns as _now_ns
 }
 
 # =============================================================================
@@ -318,13 +319,13 @@ test_warning_category_expired if {
 test_warning_category_expiring_within_threshold if {
 	# effectiveUntil is 15 days in the future (within 30-day threshold)
 	rule := {"value": "some.rule", "effectiveUntil": "2024-06-30T12:00:00Z"}
-	lib.assert_equal(lib.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_expiring_at_threshold if {
 	# effectiveUntil is exactly 30 days in the future
 	rule := {"value": "some.rule", "effectiveUntil": "2024-07-15T12:00:00Z"}
-	lib.assert_equal(lib.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_not_expiring_beyond_threshold if {
@@ -332,7 +333,7 @@ test_warning_category_not_expiring_beyond_threshold if {
 	rule := {"value": "some.rule", "effectiveUntil": "2024-08-14T12:00:00Z"}
 
 	# Should not produce a category (no warning needed)
-	not lib.warning_category(rule) with time_lib.effective_current_time_ns as _now_ns
+	not volatile.warning_category(rule) with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_expiring_custom_threshold if {
@@ -340,7 +341,7 @@ test_warning_category_expiring_custom_threshold if {
 	rule := {"value": "some.rule", "effectiveUntil": "2024-06-25T12:00:00Z"}
 
 	# 10 days > 7 day threshold, so no warning
-	not lib.warning_category(rule) with time_lib.effective_current_time_ns as _now_ns
+	not volatile.warning_category(rule) with time_lib.effective_current_time_ns as _now_ns
 		with data.rule_data__configuration__.volatile_config_warning_threshold_days as 7
 }
 
@@ -350,18 +351,18 @@ test_warning_category_expiring_custom_threshold if {
 
 test_warning_category_no_expiration_no_dates if {
 	rule := {"value": "some.rule"}
-	lib.assert_equal(lib.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_no_expiration_with_past_effective_on if {
 	# effectiveOn in past, no effectiveUntil
 	rule := {"value": "some.rule", "effectiveOn": "2024-06-01T12:00:00Z"}
-	lib.assert_equal(lib.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_no_expiration_empty_strings if {
 	rule := {"value": "some.rule", "effectiveOn": "", "effectiveUntil": ""}
-	lib.assert_equal(lib.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "no_expiration") with time_lib.effective_current_time_ns as _now_ns
 }
 
 # =============================================================================
@@ -371,7 +372,7 @@ test_warning_category_no_expiration_empty_strings if {
 test_warning_category_pending_takes_precedence_over_no_expiration if {
 	# effectiveOn in future, no effectiveUntil - should be "pending", not "no_expiration"
 	rule := {"value": "some.rule", "effectiveOn": "2024-07-15T12:00:00Z"}
-	lib.assert_equal(lib.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_with_both_dates_active_and_expiring if {
@@ -381,7 +382,7 @@ test_warning_category_with_both_dates_active_and_expiring if {
 		"effectiveOn": "2024-06-01T12:00:00Z",
 		"effectiveUntil": "2024-06-25T12:00:00Z",
 	}
-	lib.assert_equal(lib.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "expiring") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_pending_with_expired_until if {
@@ -391,7 +392,7 @@ test_warning_category_pending_with_expired_until if {
 		"effectiveOn": "2024-07-15T12:00:00Z",
 		"effectiveUntil": "2024-06-05T12:00:00Z",
 	}
-	lib.assert_equal(lib.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_pending_with_expiring_until if {
@@ -401,7 +402,7 @@ test_warning_category_pending_with_expiring_until if {
 		"effectiveOn": "2024-07-15T12:00:00Z",
 		"effectiveUntil": "2024-06-25T12:00:00Z",
 	}
-	lib.assert_equal(lib.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_pending_with_future_until_beyond_threshold if {
@@ -411,7 +412,7 @@ test_warning_category_pending_with_future_until_beyond_threshold if {
 		"effectiveOn": "2024-07-15T12:00:00Z",
 		"effectiveUntil": "2024-08-14T12:00:00Z",
 	}
-	lib.assert_equal(lib.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "pending") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_active_with_expired_until if {
@@ -421,7 +422,7 @@ test_warning_category_active_with_expired_until if {
 		"effectiveOn": "2024-06-01T12:00:00Z",
 		"effectiveUntil": "2024-06-05T12:00:00Z",
 	}
-	lib.assert_equal(lib.warning_category(rule), "expired") with time_lib.effective_current_time_ns as _now_ns
+	assertions.assert_equal(volatile.warning_category(rule), "expired") with time_lib.effective_current_time_ns as _now_ns
 }
 
 test_warning_category_active_with_future_until_beyond_threshold if {
@@ -433,5 +434,5 @@ test_warning_category_active_with_future_until_beyond_threshold if {
 	}
 
 	# Should not produce a category (no warning needed)
-	not lib.warning_category(rule) with time_lib.effective_current_time_ns as _now_ns
+	not volatile.warning_category(rule) with time_lib.effective_current_time_ns as _now_ns
 }

@@ -3,7 +3,9 @@ package base_image_registries_test
 import rego.v1
 
 import data.base_image_registries
+
 import data.lib
+import data.lib.assertions
 
 # There are two formats of SBOM supported, CycloneDX and SPDX. In these tests,
 # the mocked CycloneDX SBOMS are generally defined inline in the test, while
@@ -33,7 +35,7 @@ test_allowed_base_images if {
 		}]},
 	]}]
 
-	lib.assert_empty(base_image_registries.deny) with lib.sbom.cyclonedx_sboms as sboms
+	assertions.assert_empty(base_image_registries.deny) with lib.sbom.cyclonedx_sboms as sboms
 		with lib.sbom.spdx_sboms as _spdx_sbom
 }
 
@@ -64,14 +66,14 @@ test_allowed_base_images_from_snapshot if {
 		{"containerImage": "ignored.dev/ignore:ignore@sha256:bcd"},
 	]}
 
-	lib.assert_empty(base_image_registries.deny) with lib.sbom.cyclonedx_sboms as sboms
+	assertions.assert_empty(base_image_registries.deny) with lib.sbom.cyclonedx_sboms as sboms
 		with lib.sbom.spdx_sboms as _spdx_sbom
 		with data.rule_data.allowed_registry_prefixes as ["another.registry.io"]
 		with input.snapshot as snapshot
 }
 
 test_empty_base_images_result if {
-	lib.assert_empty(base_image_registries.deny) with lib.sbom.cyclonedx_sboms as [{}] with lib.sbom.spdx_sboms as [{}]
+	assertions.assert_empty(base_image_registries.deny) with lib.sbom.cyclonedx_sboms as [{}] with lib.sbom.spdx_sboms as [{}]
 }
 
 test_disallowed_base_images if {
@@ -143,7 +145,7 @@ test_disallowed_base_images if {
 			"term": "registry.redhat.whatever/ubi7/3",
 		},
 	}
-	lib.assert_equal_results(base_image_registries.deny, expected) with lib.sbom.cyclonedx_sboms as sboms
+	assertions.assert_equal_results(base_image_registries.deny, expected) with lib.sbom.cyclonedx_sboms as sboms
 		with lib.sbom.spdx_sboms as bad_spdx_sbom
 }
 
@@ -208,7 +210,7 @@ test_disallowed_base_images_with_snapshot if {
 		},
 	}
 
-	lib.assert_equal_results(base_image_registries.deny, expected) with lib.sbom.cyclonedx_sboms as sboms
+	assertions.assert_equal_results(base_image_registries.deny, expected) with lib.sbom.cyclonedx_sboms as sboms
 		with lib.sbom.spdx_sboms as bad_spdx_sbom
 		with data.rule_data.allowed_registry_prefixes as ["another.registry.io"]
 		with input.snapshot as snapshot
@@ -279,7 +281,7 @@ test_sbom_base_image_selection if {
 		}]},
 	]}]
 
-	lib.assert_empty(base_image_registries.deny) with lib.sbom.cyclonedx_sboms as sboms
+	assertions.assert_empty(base_image_registries.deny) with lib.sbom.cyclonedx_sboms as sboms
 		with lib.sbom.spdx_sboms as []
 }
 
@@ -288,7 +290,7 @@ test_base_image_not_found if {
 		"code": "base_image_registries.base_image_info_found",
 		"msg": "Base images information is missing",
 	}}
-	lib.assert_equal_results(base_image_registries.deny, expected)
+	assertions.assert_equal_results(base_image_registries.deny, expected)
 }
 
 test_base_image_not_found_image_index if {
@@ -318,10 +320,10 @@ test_base_image_not_found_image_index if {
 		"msg": "Base images information is missing",
 	}}
 
-	lib.assert_equal_results(base_image_registries.deny, expected) with input.attestations as [att]
+	assertions.assert_equal_results(base_image_registries.deny, expected) with input.attestations as [att]
 		with input.image.ref as "registry.local/ham@sha256:fff"
 
-	lib.assert_equal_results(base_image_registries.deny, expected) with input.attestations as [att]
+	assertions.assert_equal_results(base_image_registries.deny, expected) with input.attestations as [att]
 		with input.image.ref as "registry.local/ham@sha256:aaa"
 }
 
@@ -331,7 +333,7 @@ test_allowed_registries_provided if {
 		"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): Array must have at least 1 items",
 		"severity": "failure",
 	}}
-	lib.assert_equal_results(expected, base_image_registries.deny) with data.rule_data as {}
+	assertions.assert_equal_results(expected, base_image_registries.deny) with data.rule_data as {}
 		with lib.sbom.cyclonedx_sboms as [{}]
 		with lib.sbom.spdx_sboms as [{}]
 }
@@ -359,7 +361,7 @@ test_rule_data_validation if {
 		},
 	}
 
-	lib.assert_equal_results(base_image_registries.deny, expected) with data.rule_data as d
+	assertions.assert_equal_results(base_image_registries.deny, expected) with data.rule_data as d
 		with lib.sbom.cyclonedx_sboms as [{}]
 		with lib.sbom.spdx_sboms as [{}]
 }

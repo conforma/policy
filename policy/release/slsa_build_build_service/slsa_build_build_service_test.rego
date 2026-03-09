@@ -3,13 +3,15 @@ package slsa_build_build_service_test
 import rego.v1
 
 import data.lib
+import data.lib.assertions
+import data.lib.rule_data
 import data.slsa_build_build_service
 
 test_all_good if {
-	builder_id := lib.rule_data("allowed_builder_ids")[0]
-	lib.assert_empty(slsa_build_build_service.deny) with input.attestations as [_mock_slsa_v02_attestation(builder_id)]
+	builder_id := rule_data.get("allowed_builder_ids")[0]
+	assertions.assert_empty(slsa_build_build_service.deny) with input.attestations as [_mock_slsa_v02_attestation(builder_id)]
 
-	lib.assert_empty(slsa_build_build_service.deny) with input.attestations as [_mock_slsa_v1_attestation(builder_id)]
+	assertions.assert_empty(slsa_build_build_service.deny) with input.attestations as [_mock_slsa_v1_attestation(builder_id)]
 }
 
 test_slsa_builder_id_found_v02_missing_id if {
@@ -22,7 +24,7 @@ test_slsa_builder_id_found_v02_missing_id if {
 		"code": "slsa_build_build_service.slsa_builder_id_found",
 		"msg": "Builder ID not set in attestation",
 	}}
-	lib.assert_equal_results(expected, slsa_build_build_service.deny) with input.attestations as [attestation]
+	assertions.assert_equal_results(expected, slsa_build_build_service.deny) with input.attestations as [attestation]
 }
 
 test_slsa_builder_id_found_v02_missing_builder if {
@@ -32,7 +34,7 @@ test_slsa_builder_id_found_v02_missing_builder if {
 		"code": "slsa_build_build_service.slsa_builder_id_found",
 		"msg": "Builder ID not set in attestation",
 	}}
-	lib.assert_equal_results(expected, slsa_build_build_service.deny) with input.attestations as [attestation]
+	assertions.assert_equal_results(expected, slsa_build_build_service.deny) with input.attestations as [attestation]
 }
 
 test_slsa_builder_id_found_v1_missing_id if {
@@ -51,7 +53,7 @@ test_slsa_builder_id_found_v1_missing_id if {
 		"code": "slsa_build_build_service.slsa_builder_id_found",
 		"msg": "Builder ID not set in attestation",
 	}}
-	lib.assert_equal_results(expected, slsa_build_build_service.deny) with input.attestations as [attestation]
+	assertions.assert_equal_results(expected, slsa_build_build_service.deny) with input.attestations as [attestation]
 }
 
 test_slsa_builder_id_found_v1_missing_builder if {
@@ -70,7 +72,7 @@ test_slsa_builder_id_found_v1_missing_builder if {
 		"code": "slsa_build_build_service.slsa_builder_id_found",
 		"msg": "Builder ID not set in attestation",
 	}}
-	lib.assert_equal_results(expected, slsa_build_build_service.deny) with input.attestations as [attestation]
+	assertions.assert_equal_results(expected, slsa_build_build_service.deny) with input.attestations as [attestation]
 }
 
 test_accepted_slsa_builder_id if {
@@ -79,12 +81,12 @@ test_accepted_slsa_builder_id if {
 		"code": "slsa_build_build_service.slsa_builder_id_accepted",
 		"msg": "Builder ID \"https://notket.ved/sniahc/2v\" is unexpected",
 	}}
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_build_build_service.deny,
 	) with input.attestations as [_mock_slsa_v02_attestation(builder_id)]
 
-	lib.assert_equal_results(
+	assertions.assert_equal_results(
 		expected,
 		slsa_build_build_service.deny,
 	) with input.attestations as [_mock_slsa_v1_attestation(builder_id)]
@@ -112,7 +114,7 @@ test_rule_data_format if {
 		},
 	}
 
-	lib.assert_equal_results(slsa_build_build_service.deny, expected) with data.rule_data as d
+	assertions.assert_equal_results(slsa_build_build_service.deny, expected) with data.rule_data as d
 		with input.attestations as [_mock_slsa_v02_attestation("foo")]
 }
 

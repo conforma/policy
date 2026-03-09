@@ -3,7 +3,7 @@ package checks_test
 import rego.v1
 
 import data.checks
-import data.lib
+import data.lib.assertions
 
 opa_inspect_valid := {
 	"namespaces": {
@@ -70,7 +70,7 @@ opa_inspect_valid := {
 }
 
 test_required_annotations_valid if {
-	lib.assert_empty(checks.violation) with input as opa_inspect_valid
+	assertions.assert_empty(checks.violation) with input as opa_inspect_valid
 }
 
 opa_inspect_missing_annotations := {
@@ -204,13 +204,13 @@ opa_inspect_effective_on := {
 
 test_required_annotations_invalid if {
 	err = "ERROR: Missing annotation(s) custom.failure_msg, title at policy/release/attestation_task_bundle.rego:13"
-	lib.assert_equal({err}, checks.violation) with input as opa_inspect_missing_annotations
+	assertions.assert_equal({err}, checks.violation) with input as opa_inspect_missing_annotations
 }
 
 test_missing_dependency_invalid if {
 	# regal ignore:line-length
 	err = `ERROR: Missing dependency rule "data.policy.release.attestation_type.known_attestation_type" at policy/release/attestation_task_bundle.rego:71`
-	lib.assert_equal({err}, checks.violation) with input as opa_inspect_missing_dependency
+	assertions.assert_equal({err}, checks.violation) with input as opa_inspect_missing_dependency
 }
 
 test_duplicate_rules if {
@@ -219,10 +219,10 @@ test_duplicate_rules if {
 
 	# regal ignore:line-length
 	err2 = `ERROR: Found non-unique code "data.policy.release.attestation_type.known_attestation_type" at policy/release/attestation_type.rego:50`
-	lib.assert_equal({err1, err2}, checks.violation) with input as opa_inspect_duplicate
+	assertions.assert_equal({err1, err2}, checks.violation) with input as opa_inspect_duplicate
 }
 
 test_effective_on if {
 	err := `ERROR: wrong syntax of effective_on value "wubba lubba dub dub" at policy/release/effective_on.rego:10`
-	lib.assert_equal({err}, checks.violation) with input as opa_inspect_effective_on
+	assertions.assert_equal({err}, checks.violation) with input as opa_inspect_effective_on
 }

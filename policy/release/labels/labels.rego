@@ -12,9 +12,10 @@ package labels
 
 import rego.v1
 
-import data.lib
 import data.lib.image
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.rule_data
 
 # METADATA
 # title: Optional labels
@@ -38,7 +39,7 @@ warn contains result if {
 	not name in found_labels
 	description := optional_label.description
 	result := _with_effective_on(
-		lib.result_helper_with_term(rego.metadata.chain(), [name, description], name),
+		metadata.result_helper_with_term(rego.metadata.chain(), [name, description], name),
 		optional_label,
 	)
 }
@@ -59,7 +60,7 @@ warn contains result if {
 deny contains result if {
 	manifest := ec.oci.image_manifest(input.image.ref)
 	is_null(manifest)
-	result := lib.result_helper(rego.metadata.chain(), [input.image.ref])
+	result := metadata.result_helper(rego.metadata.chain(), [input.image.ref])
 }
 
 # METADATA
@@ -81,7 +82,7 @@ deny contains result if {
 	ref := image.parse(input.image.ref)
 	config := ec.oci.blob(sprintf("%s@%s", [ref.repo, digest]))
 	is_null(config)
-	result := lib.result_helper(rego.metadata.chain(), [input.image.ref])
+	result := metadata.result_helper(rego.metadata.chain(), [input.image.ref])
 }
 
 # METADATA
@@ -100,10 +101,10 @@ deny contains result if {
 #
 deny contains result if {
 	some label in _image_labels
-	some deprecated_label in lib.rule_data("deprecated_labels")
+	some deprecated_label in rule_data.get("deprecated_labels")
 	label.name == deprecated_label.name
 	result := _with_effective_on(
-		lib.result_helper_with_term(
+		metadata.result_helper_with_term(
 			rego.metadata.chain(),
 			[label.name, deprecated_label.replacement],
 			label.name,
@@ -130,7 +131,7 @@ deny contains result if {
 	is_set(_image_labels)
 
 	some err in _required_labels_errors
-	result := object.union(lib.result_helper(rego.metadata.chain(), []), err)
+	result := object.union(metadata.result_helper(rego.metadata.chain(), []), err)
 }
 
 # METADATA
@@ -154,7 +155,7 @@ deny contains result if {
 	name := inherited_label.name
 	_value(_image_labels, name) == _value(_parent_labels, name)
 	result := _with_effective_on(
-		lib.result_helper_with_term(rego.metadata.chain(), [name], name),
+		metadata.result_helper_with_term(rego.metadata.chain(), [name], name),
 		inherited_label,
 	)
 }
@@ -175,7 +176,7 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 # METADATA
@@ -194,7 +195,7 @@ deny contains result if {
 deny contains result if {
 	_has_parent
 	is_null(_parent.manifest)
-	result := lib.result_helper(rego.metadata.chain(), [_parent.ref, input.image.ref])
+	result := metadata.result_helper(rego.metadata.chain(), [_parent.ref, input.image.ref])
 }
 
 # METADATA
@@ -214,7 +215,7 @@ deny contains result if {
 	_has_parent
 	parent_ref := image.parse(_parent.ref)
 	is_null(_config(parent_ref.repo, _parent.manifest))
-	result := lib.result_helper(rego.metadata.chain(), [_parent.ref, input.image.ref])
+	result := metadata.result_helper(rego.metadata.chain(), [_parent.ref, input.image.ref])
 }
 
 _config(repository, manifest) := config if {
@@ -281,17 +282,17 @@ _value(labels, name) := [label.value |
 
 _strip_digest(ref_with_digest_maybe) := regex.replace(ref_with_digest_maybe, `@[^@]+$`, "")
 
-required_labels := lib.rule_data("required_labels") if {
+required_labels := rule_data.get("required_labels") if {
 	not is_fbc
-} else := lib.rule_data("fbc_required_labels")
+} else := rule_data.get("fbc_required_labels")
 
-optional_labels := lib.rule_data("optional_labels") if {
+optional_labels := rule_data.get("optional_labels") if {
 	not is_fbc
-} else := lib.rule_data("fbc_optional_labels")
+} else := rule_data.get("fbc_optional_labels")
 
-disallowed_inherited_labels := lib.rule_data("disallowed_inherited_labels") if {
+disallowed_inherited_labels := rule_data.get("disallowed_inherited_labels") if {
 	not is_fbc
-} else := lib.rule_data("fbc_disallowed_inherited_labels")
+} else := rule_data.get("fbc_disallowed_inherited_labels")
 
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does
 # not have the attribute, result is returned unmodified.
@@ -428,7 +429,7 @@ _rule_data_errors contains error if {
 	schema := item[1]
 
 	some e in j.validate_schema(
-		lib.rule_data(key),
+		rule_data.get(key),
 		schema,
 	)
 	error := {

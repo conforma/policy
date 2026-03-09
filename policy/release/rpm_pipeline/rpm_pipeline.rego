@@ -9,6 +9,8 @@ package rpm_pipeline
 import rego.v1
 
 import data.lib
+import data.lib.metadata
+import data.lib.rule_data
 import data.lib.tekton
 
 _pipeline_key := "build.appstudio.redhat.com/pipeline"
@@ -36,11 +38,11 @@ deny contains result if {
 
 	labels := tekton.task_labels(task)
 	pipeline := labels[_pipeline_key]
-	allowed_pipelines := lib.rule_data(_rule_data_key)
+	allowed_pipelines := rule_data.get(_rule_data_key)
 
 	not pipeline in allowed_pipelines
 
-	result := lib.result_helper(
+	result := metadata.result_helper(
 		rego.metadata.chain(),
 		[tekton.pipeline_task_name(task), pipeline, concat(",", allowed_pipelines)],
 	)

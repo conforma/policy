@@ -9,7 +9,7 @@ package step_images
 
 import rego.v1
 
-import data.lib
+import data.lib.metadata
 
 # METADATA
 # title: Step images are valid
@@ -30,7 +30,7 @@ deny contains result if {
 	image_ref := step.image
 	not ec.oci.image_manifest(image_ref)
 
-	result := lib.result_helper_with_term(
+	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[step_index, image_ref],
 		image_ref,

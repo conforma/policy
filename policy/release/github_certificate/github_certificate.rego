@@ -9,8 +9,9 @@ package github_certificate
 
 import rego.v1
 
-import data.lib
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.rule_data
 
 # METADATA
 # title: GitHub Workflow Certificate Extensions
@@ -27,7 +28,7 @@ import data.lib.json as j
 warn contains result if {
 	some extension in [_TRIGGER, _SHA, _NAME, _REPOSITORY, _REF]
 	not _fulcio_extension_value(extension)
-	result := lib.result_helper(rego.metadata.chain(), [extension.name])
+	result := metadata.result_helper(rego.metadata.chain(), [extension.name])
 }
 
 # METADATA
@@ -106,15 +107,15 @@ deny contains _check_extension(rego.metadata.chain(), "allowed_gh_workflow_trigg
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 _check_extension(chain, key, extension) := result if {
 	value := _fulcio_extension_value(extension)
-	allowed := lib.rule_data(key)
+	allowed := rule_data.get(key)
 	count(allowed) > 0
 	not value in allowed
-	result := lib.result_helper(chain, [value, allowed])
+	result := metadata.result_helper(chain, [value, allowed])
 }
 
 _certs contains cert if {
@@ -157,7 +158,7 @@ _rule_data_errors contains error if {
 	some key in keys
 
 	some e in j.validate_schema(
-		lib.rule_data(key),
+		rule_data.get(key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

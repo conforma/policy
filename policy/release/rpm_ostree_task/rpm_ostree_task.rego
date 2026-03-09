@@ -11,6 +11,8 @@ import rego.v1
 
 import data.lib
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.rule_data
 import data.lib.tekton
 
 # METADATA
@@ -31,7 +33,7 @@ import data.lib.tekton
 #
 deny contains result if {
 	some error in builder_image_param_errors
-	result := _with_effective_on(lib.result_helper(rego.metadata.chain(), [error.msg]), error)
+	result := _with_effective_on(metadata.result_helper(rego.metadata.chain(), [error.msg]), error)
 }
 
 # METADATA
@@ -50,7 +52,7 @@ deny contains result if {
 #
 deny contains result if {
 	some e in rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 # Detect when an image reference is not pinned to a digest.
@@ -112,7 +114,7 @@ rule_data_errors contains error if {
 		"uniqueItems": true,
 	}
 
-	some e in j.validate_schema(lib.rule_data(_rule_data_key), schema)
+	some e in j.validate_schema(rule_data.get(_rule_data_key), schema)
 
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
@@ -132,7 +134,7 @@ _builder_images contains image if {
 # _allowed_prefixes is a set of objects. Each object is guaranteed to contains a `value` attribute.
 # If there are no items in the underlying rule data, this rules does not produce a result.
 _allowed_prefixes := prefixes if {
-	allowed_prefixes := lib.rule_data(_rule_data_key)
+	allowed_prefixes := rule_data.get(_rule_data_key)
 	count(allowed_prefixes) > 0
 	prefixes := [_prefix_obj(prefix) | some prefix in allowed_prefixes]
 }

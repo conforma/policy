@@ -2,7 +2,8 @@ package lib.tekton_test
 
 import rego.v1
 
-import data.lib
+import data.lib.assertions
+import data.lib.sets
 import data.lib.tekton
 
 test_disallowed_task_reference if {
@@ -11,8 +12,8 @@ test_disallowed_task_reference if {
 		{"name": "my-task-2", "ref": {}},
 	]
 
-	expected := lib.to_set(tasks)
-	lib.assert_equal(tekton.disallowed_task_reference(tasks), expected)
+	expected := sets.to_set(tasks)
+	assertions.assert_equal(tekton.disallowed_task_reference(tasks), expected)
 }
 
 test_empty_task_bundle_reference if {
@@ -21,8 +22,8 @@ test_empty_task_bundle_reference if {
 		{"name": "my-task-2", "ref": {"bundle": ""}},
 	]
 
-	expected := lib.to_set(tasks)
-	lib.assert_equal(tekton.empty_task_bundle_reference(tasks), expected)
+	expected := sets.to_set(tasks)
+	assertions.assert_equal(tekton.empty_task_bundle_reference(tasks), expected)
 }
 
 test_unpinned_task_bundle if {
@@ -37,6 +38,6 @@ test_unpinned_task_bundle if {
 		},
 	]
 
-	expected := lib.to_set(tasks)
-	lib.assert_equal(tekton.unpinned_task_bundle(tasks), expected) with data["task-bundles"] as []
+	expected := sets.to_set(tasks)
+	assertions.assert_equal(tekton.unpinned_task_bundle(tasks), expected) with data["task-bundles"] as []
 }

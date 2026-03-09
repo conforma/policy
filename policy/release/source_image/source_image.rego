@@ -10,6 +10,8 @@ package source_image
 import rego.v1
 
 import data.lib
+import data.lib.metadata
+import data.lib.sigstore
 import data.lib.tekton
 
 # METADATA
@@ -24,7 +26,7 @@ import data.lib.tekton
 #
 deny contains result if {
 	some error in _source_image_errors
-	result := lib.result_helper(rego.metadata.chain(), [error])
+	result := metadata.result_helper(rego.metadata.chain(), [error])
 }
 
 # METADATA
@@ -41,7 +43,7 @@ deny contains result if {
 #
 deny contains result if {
 	some error in _source_image_sig_errors
-	result := lib.result_helper(rego.metadata.chain(), [error])
+	result := metadata.result_helper(rego.metadata.chain(), [error])
 }
 
 _source_image_errors contains error if {
@@ -65,7 +67,7 @@ _source_image_errors contains error if {
 
 _source_image_sig_errors contains error if {
 	some img in _source_images
-	info := ec.sigstore.verify_image(img, lib.sigstore_opts)
+	info := ec.sigstore.verify_image(img, sigstore.opts)
 	some raw_error in info.errors
 	error := sprintf("Image signature verification failed for %s: %s", [img, raw_error])
 }

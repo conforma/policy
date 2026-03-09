@@ -9,7 +9,9 @@ package stepaction_image
 
 import rego.v1
 
-import data.lib
+import data.lib.metadata
+import data.lib.rule_data
+
 import data.lib.json as j
 import data.lib.k8s
 
@@ -28,7 +30,7 @@ deny contains result if {
 	image_ref := input.spec.image
 	not ec.oci.image_manifest(image_ref)
 
-	result := lib.result_helper_with_term(
+	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[image_ref],
 		image_ref,
@@ -49,10 +51,10 @@ deny contains result if {
 #
 deny contains result if {
 	image_ref := input.spec.image
-	allowed_registry_prefixes := lib.rule_data(_rule_data_key)
+	allowed_registry_prefixes := rule_data.get(_rule_data_key)
 	not ref_permitted(image_ref, allowed_registry_prefixes)
 
-	result := lib.result_helper_with_term(
+	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[image_ref],
 		k8s.name_version(input),
@@ -72,7 +74,7 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 ref_permitted(image_ref, allowed_prefixes) if {
@@ -82,7 +84,7 @@ ref_permitted(image_ref, allowed_prefixes) if {
 
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		lib.rule_data(_rule_data_key),
+		rule_data.get(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

@@ -9,9 +9,10 @@ package base_image_registries
 
 import rego.v1
 
-import data.lib
 import data.lib.image
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.rule_data
 import data.lib.sbom
 
 # METADATA
@@ -41,7 +42,7 @@ deny contains result if {
 	some image_ref in _base_images
 	not _image_ref_permitted(image_ref)
 	repo := image.parse(image_ref).repo
-	result := lib.result_helper_with_term(rego.metadata.chain(), [image_ref], repo)
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [image_ref], repo)
 }
 
 # METADATA
@@ -67,7 +68,7 @@ deny contains result if {
 	# is attached to the image.
 	count(sbom.all_sboms) == 0
 
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -88,11 +89,11 @@ deny contains result if {
 #
 deny contains result if {
 	some error in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
 }
 
 _image_ref_permitted(image_ref) if {
-	allowed_prefixes := lib.rule_data(_rule_data_key)
+	allowed_prefixes := rule_data.get(_rule_data_key)
 	some allowed_prefix in allowed_prefixes
 	startswith(image_ref, allowed_prefix)
 } else if {
@@ -169,7 +170,7 @@ _cyclonedx_image_ref(component) := image_ref if {
 # Verify allowed_registry_prefixes is a non-empty list of strings
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		lib.rule_data(_rule_data_key),
+		rule_data.get(_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

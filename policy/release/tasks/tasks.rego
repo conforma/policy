@@ -29,6 +29,8 @@ import rego.v1
 
 import data.lib
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.sets
 import data.lib.tekton
 
 # METADATA
@@ -49,7 +51,7 @@ import data.lib.tekton
 #
 warn contains result if {
 	not required_pipeline_task_data
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -75,7 +77,7 @@ warn contains result if {
 	# If the required_task is also part of the current_required_tasks, do
 	# not proceed with a warning since that's clearly a violation.
 	not required_task in current_required_tasks.tasks
-	result := lib.result_helper_with_term(
+	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[_format_missing(required_task, true), latest_required_tasks.effective_on],
 		required_task,
@@ -104,7 +106,7 @@ warn contains result if {
 deny contains result if {
 	some att in lib.pipelinerun_attestations
 	count(tekton.tasks(att)) == 0
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -131,7 +133,7 @@ deny contains result if {
 	some task in tekton.tasks(att)
 	some status in _status(task)
 	status != "Succeeded"
-	result := lib.result_helper_with_term(
+	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[tekton.pipeline_task_name(task), status], tekton.pipeline_task_name(task),
 	)
@@ -158,7 +160,11 @@ deny contains result if {
 
 	# Don't report an error if a task is required now, but not in the future
 	required_task in latest_required_tasks.tasks
-	result := lib.result_helper_with_term(rego.metadata.chain(), [_format_missing(required_task, false)], required_task)
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[_format_missing(required_task, false)],
+		required_task,
+	)
 }
 
 # METADATA
@@ -191,7 +197,7 @@ deny contains result if {
 	some untrusted_task_name in tekton.task_names(untrusted_task)
 
 	untrusted_task_name == required_task_name
-	result := lib.result_helper_with_term(
+	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[_format_missing(untrusted_task_name, false)],
 		untrusted_task_name,
@@ -219,7 +225,7 @@ deny contains result if {
 deny contains result if {
 	tekton.missing_required_tasks_data
 	not required_pipeline_task_data
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -242,7 +248,7 @@ deny contains result if {
 	some att in lib.pipelinerun_attestations
 	some task in tekton.tasks(att)
 	not tekton.task_ref(task).pinned
-	result := lib.result_helper_with_term(
+	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[tekton.task_name(task), tekton.pipeline_task_name(task)],
 		tekton.task_name(task),
@@ -279,7 +285,7 @@ deny contains result if {
 	)
 
 	result := object.union(
-		lib.result_helper_with_term(
+		metadata.result_helper_with_term(
 			rego.metadata.chain(),
 			[tekton.task_name(task), tekton.pipeline_task_name(task), expires_on, expiry_message],
 			tekton.task_name(task),
@@ -304,7 +310,7 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 # _missing_tasks returns a set of task names that are in the given
@@ -330,8 +336,8 @@ _any_missing(required, tasks) := missing if {
 	is_array(required)
 
 	# convert arrays to sets so we can intersect below
-	req := lib.to_set(required)
-	tsk := lib.to_set(tasks)
+	req := sets.to_set(required)
+	tsk := sets.to_set(tasks)
 	count(req & tsk) == 0
 
 	# no required tasks are in tasks

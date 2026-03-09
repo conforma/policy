@@ -18,4 +18,4 @@ Verify the task in the PipelineRun attestation was invoked with the proper param
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task '%s' was not invoked with the hermetic parameter set`
 * Code: `hermetic_task.hermetic`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L16[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L18[Source, window="_blank"]

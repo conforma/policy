@@ -10,6 +10,9 @@ import rego.v1
 
 import data.lib
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.rule_data
+import data.lib.tekton
 
 # METADATA
 # title: Buildah task uses a local Dockerfile
@@ -29,7 +32,7 @@ import data.lib.json as j
 deny contains result if {
 	some dockerfile_param in _dockerfile_params
 	_not_allowed_prefix(dockerfile_param)
-	result := lib.result_helper(rego.metadata.chain(), [dockerfile_param])
+	result := metadata.result_helper(rego.metadata.chain(), [dockerfile_param])
 }
 
 # METADATA
@@ -52,7 +55,7 @@ deny contains result if {
 deny contains result if {
 	some param in _add_capabilities_params
 	trim_space(param) != ""
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -73,9 +76,9 @@ deny contains result if {
 #
 deny contains result if {
 	some param in _platform_params
-	some pattern in lib.rule_data(_plat_patterns_rule_data_key)
+	some pattern in rule_data.get(_plat_patterns_rule_data_key)
 	regex.match(pattern, param)
-	result := lib.result_helper(rego.metadata.chain(), [param, pattern])
+	result := metadata.result_helper(rego.metadata.chain(), [param, pattern])
 }
 
 # METADATA
@@ -91,7 +94,7 @@ deny contains result if {
 #
 deny contains result if {
 	some error in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
 }
 
 # METADATA
@@ -113,7 +116,7 @@ deny contains result if {
 deny contains result if {
 	some param in _privileged_nested_params
 	trim_space(param) == "true"
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 _not_allowed_prefix(search) if {
@@ -124,33 +127,33 @@ _not_allowed_prefix(search) if {
 
 _buildah_tasks contains task if {
 	some att in lib.pipelinerun_attestations
-	some task in lib.tekton.build_tasks(att)
+	some task in tekton.build_tasks(att)
 }
 
 _dockerfile_params contains param if {
 	some buildah_task in _buildah_tasks
-	param := lib.tekton.task_param(buildah_task, "DOCKERFILE")
+	param := tekton.task_param(buildah_task, "DOCKERFILE")
 }
 
 _add_capabilities_params contains param if {
 	some buildah_task in _buildah_tasks
-	param := lib.tekton.task_param(buildah_task, "ADD_CAPABILITIES")
+	param := tekton.task_param(buildah_task, "ADD_CAPABILITIES")
 }
 
 _platform_params contains param if {
 	some buildah_task in _buildah_tasks
-	param := lib.tekton.task_param(buildah_task, "PLATFORM")
+	param := tekton.task_param(buildah_task, "PLATFORM")
 }
 
 _privileged_nested_params contains param if {
 	some buildah_task in _buildah_tasks
-	param := lib.tekton.task_param(buildah_task, "PRIVILEGED_NESTED")
+	param := tekton.task_param(buildah_task, "PRIVILEGED_NESTED")
 }
 
 # Verify disallowed_platform_patterns is a list of strings. Empty list is fine.
 _rule_data_errors contains error if {
 	some e in j.validate_schema(
-		lib.rule_data(_plat_patterns_rule_data_key),
+		rule_data.get(_plat_patterns_rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",
@@ -168,7 +171,7 @@ _rule_data_errors contains error if {
 _rule_data_errors contains error if {
 	# We could use `"pattern": "regex"` in the JSON schema. However, rego doesn't fully support all
 	# regex features. This ensures that the regexes provides are valid within the context of rego.
-	some r in lib.rule_data(_plat_patterns_rule_data_key)
+	some r in rule_data.get(_plat_patterns_rule_data_key)
 	not regex.is_valid(r)
 	error := {
 		"message": sprintf("%q is not a valid regular expression in rego", [r]),

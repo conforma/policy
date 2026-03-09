@@ -3,7 +3,8 @@ package labels_test
 import rego.v1
 
 import data.labels
-import data.lib
+
+import data.lib.assertions
 
 # For these tests builtin functions ec.oci.image_manifest and ec.oci.blob need
 # to be mocked. Both take a single parameter -- the image reference, for which
@@ -20,7 +21,7 @@ import data.lib
 # starts with "fail" or contains "#fail".
 
 test_all_good if {
-	lib.assert_empty(labels.deny | labels.warn) with input.image.ref as _test_ref_with_labels({
+	assertions.assert_empty(labels.deny | labels.warn) with input.image.ref as _test_ref_with_labels({
 		"name": "test-image",
 		"description": "test image",
 		"summary": "test",
@@ -30,7 +31,7 @@ test_all_good if {
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
 
-	lib.assert_empty(labels.deny | labels.warn) with input.image.ref as _test_ref_with_labels({
+	assertions.assert_empty(labels.deny | labels.warn) with input.image.ref as _test_ref_with_labels({
 		"fbc.name": "test-image",
 		"fbc.description": "test image",
 		"fbc.summary": "test",
@@ -57,7 +58,7 @@ test_deprecated_image_labels if {
 		"vendor": "Acme, Inc.",
 	})
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -81,7 +82,7 @@ test_required_image_labels if {
 		"vendor": "Acme, Inc.",
 	})
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -106,7 +107,7 @@ test_fbc_required_image_labels if {
 		"operators.operatorframework.io.index.configs.v1": "/config",
 	})
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -131,7 +132,7 @@ test_required_image_labels_with_values if {
 		"vendor": "DeVille, Inc.",
 	})
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -158,7 +159,7 @@ test_fbc_required_image_labels_with_values if {
 		"operators.operatorframework.io.index.configs.v1": "/config",
 	})
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -182,7 +183,7 @@ test_optional_image_labels if {
 		"vendor": "Acme, Inc.",
 	})
 
-	lib.assert_equal_results(labels.warn, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.warn, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -207,7 +208,7 @@ test_fbc_optional_image_labels if {
 		"operators.operatorframework.io.index.configs.v1": "/config",
 	})
 
-	lib.assert_equal_results(labels.warn, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.warn, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -242,7 +243,7 @@ test_disallowed_inherited_image_labels if {
 		},
 	)
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -253,7 +254,7 @@ test_disallowed_inherited_image_labels if {
 		with data.rule_data as _rule_data_with_date
 
 	# A missing label on either image does not trigger a violation.
-	lib.assert_empty(labels.deny) with input.image.ref as _test_ref_with_labels_and_parent_labels(
+	assertions.assert_empty(labels.deny) with input.image.ref as _test_ref_with_labels_and_parent_labels(
 		{
 			"name": "test-image",
 			"description": "test image",
@@ -272,7 +273,7 @@ test_disallowed_inherited_image_labels if {
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
 
-	lib.assert_empty(labels.deny) with input.image.ref as _test_ref_with_labels_and_parent_labels(
+	assertions.assert_empty(labels.deny) with input.image.ref as _test_ref_with_labels_and_parent_labels(
 		{
 			"name": "test-image",
 			"description": "test image",
@@ -317,7 +318,7 @@ test_fbc_disallowed_inherited_image_labels if {
 		},
 	)
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -328,7 +329,7 @@ test_fbc_disallowed_inherited_image_labels if {
 		with data.rule_data as _rule_data_with_date
 
 	# A missing label on either image does not trigger a violation.
-	lib.assert_empty(labels.deny) with input.image.ref as _test_ref_with_labels_and_parent_labels(
+	assertions.assert_empty(labels.deny) with input.image.ref as _test_ref_with_labels_and_parent_labels(
 		{
 			"fbc.name": "test-image",
 			"fbc.description": "test image",
@@ -348,7 +349,7 @@ test_fbc_disallowed_inherited_image_labels if {
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
 
-	lib.assert_empty(labels.deny) with input.image.ref as _test_ref_with_labels_and_parent_labels(
+	assertions.assert_empty(labels.deny) with input.image.ref as _test_ref_with_labels_and_parent_labels(
 		{
 			"fbc.name": "test-image",
 			"fbc.description": "test image",
@@ -375,7 +376,7 @@ test_image_manifest_inaccessible if {
 		"msg": `Manifest of the image "fail@" is inaccessible`,
 	}}
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as "fail@"
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as "fail@"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -393,7 +394,7 @@ test_image_config_inaccessible if {
 		"msg": sprintf(`Image config of the image %q is inaccessible`, [ref]),
 	}}
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -418,7 +419,7 @@ test_parent_image_manifest_inaccessible if {
 		"msg": sprintf(`Manifest of the image "fail@fake_digest", parent of image %q is inaccessible`, [ref]),
 	}}
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -449,7 +450,7 @@ test_parent_image_config_inaccessible if {
 		"msg": sprintf(`Image config of the image %q, parent of image %q is inaccessible`, [parent_ref, ref]),
 	}}
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as _rule_data
@@ -567,7 +568,7 @@ test_rule_data_provided if {
 		},
 	}
 
-	lib.assert_equal_results(labels.deny, expected) with input.image.ref as _test_ref_with_labels({
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as _test_ref_with_labels({
 		"name": "test-image",
 		"description": "test image",
 		"summary": "test",
@@ -579,10 +580,10 @@ test_rule_data_provided if {
 }
 
 test_strip_digest if {
-	lib.assert_equal("foo", labels._strip_digest("foo"))
-	lib.assert_equal("foo", labels._strip_digest("foo@bar"))
-	lib.assert_equal("foo:latest", labels._strip_digest("foo:latest@bar"))
-	lib.assert_equal("registry.io/registry/image", labels._strip_digest("registry.io/registry/image@sha256:ace0fba5e"))
+	assertions.assert_equal("foo", labels._strip_digest("foo"))
+	assertions.assert_equal("foo", labels._strip_digest("foo@bar"))
+	assertions.assert_equal("foo:latest", labels._strip_digest("foo:latest@bar"))
+	assertions.assert_equal("registry.io/registry/image", labels._strip_digest("registry.io/registry/image@sha256:ace0fba5e"))
 }
 
 _default_manifest := {
@@ -685,5 +686,5 @@ _assert_effective_on_date(violations) if {
 		some violation in violations
 		date := object.get(violation, "effective_on", "")
 	}
-	lib.assert_equal(got_effective_on, {_mock_effective_on})
+	assertions.assert_equal(got_effective_on, {_mock_effective_on})
 }

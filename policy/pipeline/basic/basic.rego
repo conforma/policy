@@ -8,7 +8,7 @@ package basic
 
 import rego.v1
 
-import data.lib
+import data.lib.metadata
 
 expected_kind := "Pipeline"
 
@@ -26,5 +26,5 @@ expected_kind := "Pipeline"
 #
 deny contains result if {
 	expected_kind != input.kind
-	result := lib.result_helper(rego.metadata.chain(), [input.kind])
+	result := metadata.result_helper(rego.metadata.chain(), [input.kind])
 }

@@ -2,11 +2,12 @@ package trusted_artifacts_test
 
 import rego.v1
 
-import data.lib
+import data.lib.assertions
+
 import data.trusted_artifacts
 
 test_all_good if {
-	lib.assert_empty(trusted_artifacts.deny) with input as _task
+	assertions.assert_empty(trusted_artifacts.deny) with input as _task
 }
 
 test_bad_ta_param if {
@@ -14,7 +15,7 @@ test_bad_ta_param if {
 		"code": "trusted_artifacts.parameter",
 		"msg": "The parameter \"I3_ARTIFACTO\" of the Task \"spam-oci-ta/0.1\" does not use the _ARTIFACT suffix",
 	}}
-	lib.assert_equal_results(trusted_artifacts.deny, expected) with input as _task_bad_ta_param
+	assertions.assert_equal_results(trusted_artifacts.deny, expected) with input as _task_bad_ta_param
 }
 
 test_bad_ta_result if {
@@ -22,7 +23,7 @@ test_bad_ta_result if {
 		"code": "trusted_artifacts.result",
 		"msg": "The result \"O3_ARTIFACTO\" of the Task \"spam-oci-ta/0.1\" does not use the _ARTIFACT suffix",
 	}}
-	lib.assert_equal_results(trusted_artifacts.deny, expected) with input as _task_bad_ta_result
+	assertions.assert_equal_results(trusted_artifacts.deny, expected) with input as _task_bad_ta_result
 }
 
 test_ignore_non_ta_tasks if {
@@ -30,13 +31,13 @@ test_ignore_non_ta_tasks if {
 		_task_bad_ta_param,
 		[{"op": "add", "path": "/spec/steps/0/image", "value": "registry.local/spam:1.0"}],
 	)
-	lib.assert_empty(trusted_artifacts.deny) with input as task_not_ta_param
+	assertions.assert_empty(trusted_artifacts.deny) with input as task_not_ta_param
 
 	task_not_ta_result := json.patch(
 		_task_bad_ta_result,
 		[{"op": "add", "path": "/spec/steps/2/image", "value": "registry.local/spam:1.0"}],
 	)
-	lib.assert_empty(trusted_artifacts.deny) with input as task_not_ta_result
+	assertions.assert_empty(trusted_artifacts.deny) with input as task_not_ta_result
 }
 
 test_workspaces if {
@@ -46,13 +47,13 @@ test_workspaces if {
 		"code": "trusted_artifacts.workspace",
 		"msg": "General purpose workspace \"spam\" is not allowed",
 	}}
-	lib.assert_equal_results(trusted_artifacts.deny, expected) with input as ta_task_with_workspace
+	assertions.assert_equal_results(trusted_artifacts.deny, expected) with input as ta_task_with_workspace
 
-	lib.assert_empty(trusted_artifacts.deny) with input as ta_task_with_workspace
+	assertions.assert_empty(trusted_artifacts.deny) with input as ta_task_with_workspace
 		with data.rule_data.allowed_trusted_artifacts_workspaces as ["spam"]
 
-	lib.assert_empty(trusted_artifacts.deny) with input as _non_ta_task
-	lib.assert_empty(trusted_artifacts.deny) with input as json.patch(_non_ta_task, [add_workspace])
+	assertions.assert_empty(trusted_artifacts.deny) with input as _non_ta_task
+	assertions.assert_empty(trusted_artifacts.deny) with input as json.patch(_non_ta_task, [add_workspace])
 }
 
 _task := {

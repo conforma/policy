@@ -11,6 +11,8 @@ import rego.v1
 import data.lib
 import data.lib.image
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.rule_data
 
 manifestv1 := "operators.operatorframework.io.bundle.manifests.v1"
 
@@ -32,7 +34,7 @@ deny contains result if {
 	some manifest in _csv_manifests
 	version := object.get(manifest, ["spec", "version"], "<MISSING>")
 	not semver.is_valid(version)
-	result := lib.result_helper(rego.metadata.chain(), [version])
+	result := metadata.result_helper(rego.metadata.chain(), [version])
 }
 
 # METADATA
@@ -58,7 +60,7 @@ deny contains result if {
 	some i in all_image_ref(manifest)
 	i.ref.digest == "" # unpinned image references have no digest
 
-	result := lib.result_helper_with_term(rego.metadata.chain(), [image.str(i.ref), i.path], image.str(i.ref))
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [image.str(i.ref), i.path], image.str(i.ref))
 }
 
 # METADATA
@@ -79,10 +81,10 @@ deny contains result if {
 #
 deny contains result if {
 	some manifest in _csv_manifests
-	some annotation in lib.rule_data("required_olm_features_annotations")
+	some annotation in rule_data.get("required_olm_features_annotations")
 	value := object.get(manifest.metadata.annotations, annotation, "")
 	not value in {"true", "false"}
-	result := lib.result_helper_with_term(rego.metadata.chain(), [annotation], annotation)
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [annotation], annotation)
 }
 
 # METADATA
@@ -103,7 +105,7 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _subscriptions_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 # METADATA
@@ -120,7 +122,7 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 # METADATA
@@ -145,7 +147,7 @@ deny contains result if {
 #   effective_on: 2024-08-15T00:00:00Z
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
+	metadata.pipeline_intention_match(rego.metadata.chain())
 
 	input_image = image.parse(input.image.ref)
 	components := input.snapshot.components
@@ -154,7 +156,7 @@ deny contains result if {
 	parsed_image.repo == input_image.repo
 	parsed_image.digest == "" # unpinned image references have no digest
 
-	result := lib.result_helper_with_term(rego.metadata.chain(), [image.str(parsed_image)], image.str(parsed_image))
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [image.str(parsed_image)], image.str(parsed_image))
 }
 
 # METADATA
@@ -176,7 +178,7 @@ deny contains result if {
 #   - redhat
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
+	metadata.pipeline_intention_match(rego.metadata.chain())
 
 	unpinned_related_images := [related |
 		some related in _related_images_not_in_snapshot
@@ -190,7 +192,7 @@ deny contains result if {
 
 	unpinned_refs := [_image_ref(r) | some r in unpinned_related_images]
 
-	result := lib.result_helper(rego.metadata.chain(), [count(unpinned_related_images), concat(", ", unpinned_refs)])
+	result := metadata.result_helper(rego.metadata.chain(), [count(unpinned_related_images), concat(", ", unpinned_refs)])
 }
 
 # METADATA
@@ -214,7 +216,7 @@ deny contains result if {
 #   effective_on: 2025-03-10T00:00:00Z
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
+	metadata.pipeline_intention_match(rego.metadata.chain())
 
 	some unmatched_image in _related_images_not_in_snapshot
 	unmatched_ref := _image_ref(unmatched_image)
@@ -224,7 +226,7 @@ deny contains result if {
 
 	not ec.oci.descriptor(unmatched_ref)
 
-	result := lib.result_helper_with_term(rego.metadata.chain(), [unmatched_ref], unmatched_ref)
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [unmatched_ref], unmatched_ref)
 }
 
 # METADATA
@@ -244,7 +246,7 @@ deny contains result if {
 #
 deny contains result if {
 	# The presence of expected rule_data verified in _rule_data_errors
-	allowed_olm_image_registry_prefixes := lib.rule_data("allowed_olm_image_registry_prefixes")
+	allowed_olm_image_registry_prefixes := rule_data.get("allowed_olm_image_registry_prefixes")
 
 	# Parse manifests from snapshot
 	some related_images in _related_images(input.image)
@@ -254,7 +256,7 @@ deny contains result if {
 
 	img_str := image.str(img)
 
-	result := lib.result_helper_with_term(rego.metadata.chain(), [img_str], img.repo)
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [img_str], img.repo)
 }
 
 # METADATA
@@ -279,7 +281,7 @@ deny contains result if {
 #   - redhat
 #   effective_on: 2024-08-15T00:00:00Z
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
+	metadata.pipeline_intention_match(rego.metadata.chain())
 
 	snapshot_components := input.snapshot.components
 	component_images_digests := [component_image.digest |
@@ -298,7 +300,7 @@ deny contains result if {
 	not ec.oci.image_manifest(image.str(unmatched_image.ref))
 
 	# regal ignore:line-length
-	result := lib.result_helper_with_term(rego.metadata.chain(), [image.str(unmatched_image.ref)], image.str(unmatched_image.ref))
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [image.str(unmatched_image.ref)], image.str(unmatched_image.ref))
 }
 
 # METADATA
@@ -318,7 +320,7 @@ deny contains result if {
 #
 deny contains result if {
 	# The presence of expected rule_data verified in _rule_data_errors
-	allowed_olm_image_registry_prefixes := lib.rule_data("allowed_olm_image_registry_prefixes")
+	allowed_olm_image_registry_prefixes := rule_data.get("allowed_olm_image_registry_prefixes")
 
 	# Parse manifests from snapshot
 	some csv_manifest in _csv_manifests
@@ -331,7 +333,7 @@ deny contains result if {
 
 	img_str := image.str(img.ref)
 
-	result := lib.result_helper_with_term(rego.metadata.chain(), [img_str], img.ref.repo)
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [img_str], img.ref.repo)
 }
 
 # METADATA
@@ -353,7 +355,7 @@ deny contains result if {
 	count(_csv_manifests) > 0
 	image.is_image_index(input.image.ref)
 
-	result := lib.result_helper_with_term(rego.metadata.chain(), [input.image.ref], input.image.ref)
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [input.image.ref], input.image.ref)
 }
 
 # METADATA
@@ -375,9 +377,9 @@ deny contains result if {
 	manifest_dir := input.image.config.Labels[manifestv1]
 	startswith(path, manifest_dir)
 
-	not manifest.kind in lib.rule_data("allowed_olm_resource_kinds")
+	not manifest.kind in rule_data.get("allowed_olm_resource_kinds")
 
-	result := lib.result_helper_with_term(rego.metadata.chain(), [manifest.kind], manifest.kind)
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [manifest.kind], manifest.kind)
 }
 
 _name(o) := n if {
@@ -546,7 +548,7 @@ _csv_manifests contains manifest if {
 _rule_data_errors contains error if {
 	some rule_data_key in _rule_data_keys
 	some e in j.validate_schema(
-		lib.rule_data(rule_data_key),
+		rule_data.get(rule_data_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

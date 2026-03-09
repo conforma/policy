@@ -11,6 +11,8 @@ import rego.v1
 
 import data.lib
 import data.lib.image
+import data.lib.metadata
+import data.lib.rule_data
 import data.lib.sbom
 import data.lib.tekton
 
@@ -41,7 +43,7 @@ deny contains result if {
 	image_ref := tekton.task_param(task, _pre_build_script_runner_image_param)
 	not _image_ref_permitted(image_ref)
 	repo := image.parse(image_ref).repo
-	result := lib.result_helper_with_term(rego.metadata.chain(), [image_ref], repo)
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [image_ref], repo)
 }
 
 # METADATA
@@ -64,7 +66,7 @@ deny contains result if {
 	some attestation in lib.pipelinerun_attestations
 	some task in tekton.pre_build_tasks(attestation)
 	not tekton.task_result(task, _pre_build_run_script_runner_image_result)
-	result := lib.result_helper(rego.metadata.chain(), [tekton.task_name(task)])
+	result := metadata.result_helper(rego.metadata.chain(), [tekton.task_name(task)])
 }
 
 # METADATA
@@ -88,7 +90,7 @@ deny contains result if {
 	some task in tekton.pre_build_tasks(attestation)
 	ref := tekton.task_result(task, _pre_build_run_script_runner_image_result)
 	not image.parse(ref)
-	result := lib.result_helper(rego.metadata.chain(), [ref])
+	result := metadata.result_helper(rego.metadata.chain(), [ref])
 }
 
 # METADATA
@@ -112,13 +114,13 @@ deny contains result if {
 	some pre_build_image in _script_runner_image_refs
 	image.parse(pre_build_image)
 	not _is_image_in_sbom(pre_build_image)
-	result := lib.result_helper(rego.metadata.chain(), [pre_build_image])
+	result := metadata.result_helper(rego.metadata.chain(), [pre_build_image])
 }
 
 _pre_build_script_runner_image_param := "SCRIPT_RUNNER_IMAGE"
 
 _image_ref_permitted(image_ref) if {
-	allowed_prefixes := lib.rule_data(_rule_data_allowed_registries_key)
+	allowed_prefixes := rule_data.get(_rule_data_allowed_registries_key)
 	some allowed_prefix in allowed_prefixes
 	startswith(image_ref, allowed_prefix)
 }

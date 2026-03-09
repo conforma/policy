@@ -1,4 +1,4 @@
-package lib
+package lib.assertions
 
 import rego.v1
 

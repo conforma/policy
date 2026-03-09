@@ -3,6 +3,7 @@ package test_test
 import rego.v1
 
 import data.lib
+import data.lib.assertions
 import data.lib.tekton_test
 import data.lib_test
 import data.test
@@ -19,7 +20,7 @@ test_needs_non_empty_data if {
 		lib_test.att_mock_helper_ref("NOT_TEST_OUTPUT", {}, "task1", _bundle),
 		tekton_test.slsav1_attestation([slsav1_task]),
 	]
-	lib.assert_equal_results(test.deny, {{
+	assertions.assert_equal_results(test.deny, {{
 		"code": "test.test_data_found",
 		"msg": "No test data found",
 	}}) with input.attestations as attestations
@@ -43,7 +44,7 @@ test_needs_tests_with_results if {
 		),
 		tekton_test.slsav1_attestation([slsav1_task]),
 	]
-	lib.assert_equal_results(test.deny, {{
+	assertions.assert_equal_results(test.deny, {{
 		"code": "test.test_results_found",
 		"msg": "Found tests without results",
 	}}) with input.attestations as attestations
@@ -73,7 +74,7 @@ test_needs_tests_with_results_mixed if {
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"rezult": "SUCCESS"}, "task2", _bundle),
 		tekton_test.slsav1_attestation([slsav1_good_task, slsav1_bad_task]),
 	]
-	lib.assert_equal_results(test.deny, {{
+	assertions.assert_equal_results(test.deny, {{
 		"code": "test.test_results_found",
 		"msg": "Found tests without results",
 	}}) with input.attestations as attestations
@@ -93,7 +94,7 @@ test_success_data if {
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SUCCESS"}, "task1", _bundle),
 		tekton_test.slsav1_attestation([slsav1_good_task]),
 	]
-	lib.assert_empty(test.deny) with input.attestations as attestations
+	assertions.assert_empty(test.deny) with input.attestations as attestations
 }
 
 mock_a_failing_test := lib_test.att_mock_helper_ref(
@@ -119,8 +120,8 @@ test_failure_data if {
 		tekton_test.slsav1_attestation([slsav1_task]),
 	]
 
-	lib.assert_empty(test.warn) with input.attestations as attestations
-	lib.assert_equal_results(test.deny, {
+	assertions.assert_empty(test.warn) with input.attestations as attestations
+	assertions.assert_equal_results(test.deny, {
 		{
 			"code": "test.no_failed_tests",
 			"msg": "The Task \"failed_1\" from the build Pipeline reports a failed test",
@@ -134,9 +135,9 @@ test_failure_data if {
 	}) with input.attestations as attestations
 
 	# Failed informative tests cause warnings, not violations
-	lib.assert_empty(test.deny) with input.attestations as attestations
+	assertions.assert_empty(test.deny) with input.attestations as attestations
 		with data.rule_data.informative_tests as ["task1", "failed_1"]
-	lib.assert_equal_results(test.warn, {
+	assertions.assert_equal_results(test.warn, {
 		{
 			"code": "test.no_failed_informative_tests",
 			"msg": "The Task \"failed_1\" from the build Pipeline reports a failed informative test",
@@ -173,7 +174,7 @@ test_error_data if {
 		),
 		tekton_test.slsav1_attestation([slsav1_task]),
 	]
-	lib.assert_equal_results(test.deny, {
+	assertions.assert_equal_results(test.deny, {
 		{
 			"code": "test.no_erred_tests",
 			"msg": "The Task \"errored_1\" from the build Pipeline reports a test erred",
@@ -222,7 +223,7 @@ test_mix_data if {
 
 	attestations := [v02_attestation, v1_attestation]
 
-	lib.assert_equal_results(test.deny, {
+	assertions.assert_equal_results(test.deny, {
 		{
 			"code": "test.no_failed_tests",
 			"msg": "The Task \"failed_1\" from the build Pipeline reports a failed test",
@@ -263,7 +264,7 @@ test_skipped_is_not_warning if {
 		),
 		tekton_test.slsav1_attestation([slsav1_task]),
 	]
-	lib.assert_empty(test.warn) with input.attestations as attestations
+	assertions.assert_empty(test.warn) with input.attestations as attestations
 }
 
 test_skipped_is_deny if {
@@ -283,7 +284,7 @@ test_skipped_is_deny if {
 		),
 		tekton_test.slsav1_attestation([slsav1_task]),
 	]
-	lib.assert_equal_results(test.deny, {
+	assertions.assert_equal_results(test.deny, {
 		{
 			"code": "test.no_skipped_tests",
 			"msg": "The Task \"skipped_1\" from the build Pipeline reports a test was skipped",
@@ -314,7 +315,7 @@ test_warning_is_warning if {
 		),
 		tekton_test.slsav1_attestation([slsav1_task]),
 	]
-	lib.assert_equal_results(test.warn, {
+	assertions.assert_equal_results(test.warn, {
 		{
 			"code": "test.no_test_warnings",
 			"msg": "The Task \"warning_1\" from the build Pipeline reports a test contains warnings",
@@ -408,7 +409,7 @@ test_mixed_statuses if {
 
 	attestations := [v02_attestation, v1_attestation]
 
-	lib.assert_equal_results(test.deny, {
+	assertions.assert_equal_results(test.deny, {
 		{
 			"code": "test.no_erred_tests",
 			"msg": "The Task \"error_1\" from the build Pipeline reports a test erred",
@@ -456,7 +457,7 @@ test_mixed_statuses if {
 		},
 	}) with input.attestations as attestations
 
-	lib.assert_equal_results(test.warn, {
+	assertions.assert_equal_results(test.warn, {
 		{
 			"code": "test.no_test_warnings",
 			"msg": "The Task \"warning_1\" from the build Pipeline reports a test contains warnings",
@@ -511,7 +512,7 @@ test_unsupported_test_result if {
 
 	attestations := [v02_attestation, v1_attestation]
 
-	lib.assert_equal_results(test.deny, {
+	assertions.assert_equal_results(test.deny, {
 		{
 			"code": "test.test_results_known",
 			"msg": "The Task \"error_1\" from the build Pipeline has an unsupported test result \"EROR\"",
@@ -556,7 +557,7 @@ test_missing_wrong_attestation_type if {
 		{"statement": {"predicate": {"buildDefinition": {"buildType": lib.tekton_task_run}}}},
 	)
 
-	lib.assert_empty(test.deny) with input.attestations as [tr, tr_slsav1]
+	assertions.assert_empty(test.deny) with input.attestations as [tr, tr_slsav1]
 }
 
 test_wrong_attestation_type if {
@@ -574,7 +575,7 @@ test_wrong_attestation_type if {
 		pr_slsav1,
 		{"statement": {"predicate": {"buildDefinition": {"buildType": lib.tekton_task_run}}}},
 	)
-	lib.assert_empty(test.deny) with input.attestations as [tr, tr_slsav1]
+	assertions.assert_empty(test.deny) with input.attestations as [tr, tr_slsav1]
 }
 
 test_all_image_processed if {
@@ -586,7 +587,7 @@ test_all_image_processed if {
 		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SUCCESS"}, "errored_1", _bundle),
 	]
 
-	lib.assert_empty(test.deny) with input.attestations as attestations
+	assertions.assert_empty(test.deny) with input.attestations as attestations
 		with input.image.ref as _bundle
 }
 
@@ -606,7 +607,7 @@ test_all_images_not_processed if {
 		}],
 	)
 
-	lib.assert_equal_results(test.deny, {{
+	assertions.assert_equal_results(test.deny, {{
 		"code": "test.test_all_images",
 		# regal ignore:line-length
 		"msg": "Test 'success_23' did not process image with digest 'sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb'.",
@@ -630,7 +631,7 @@ test_all_images_matrix_tasks if {
 	]
 
 	# Should pass because the grouped results combine digests from both matrix task instances
-	lib.assert_empty(test.deny) with input.attestations as attestations
+	assertions.assert_empty(test.deny) with input.attestations as attestations
 		with input.image.ref as _bundle
 }
 
@@ -704,7 +705,7 @@ test_rule_data_provided if {
 		},
 	}
 
-	lib.assert_equal_results(test.deny, expected) with data.rule_data as d
+	assertions.assert_equal_results(test.deny, expected) with data.rule_data as d
 }
 
 test_results_and_counts if {
@@ -736,7 +737,7 @@ test_results_and_counts if {
 	)
 
 	attestations := [tekton_test.slsav1_attestation([task1, task2, task3])]
-	lib.assert_equal_results(test.deny, {
+	assertions.assert_equal_results(test.deny, {
 		{
 			"code": "test.no_erred_tests",
 			"msg": `The Task "task1" from the build Pipeline reports a test erred`,
@@ -753,7 +754,7 @@ test_results_and_counts if {
 			"term": "task2",
 		},
 	}) with input.attestations as attestations
-	lib.assert_equal_results(test.warn, {
+	assertions.assert_equal_results(test.warn, {
 		{
 			"code": "test.no_test_warnings",
 			"msg": `The Task "task1" from the build Pipeline reports a test contains warnings`,

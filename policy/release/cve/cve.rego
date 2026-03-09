@@ -54,6 +54,8 @@ import rego.v1
 import data.lib
 import data.lib.image
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.rule_data
 
 # METADATA
 # title: Non-blocking CVE check
@@ -80,7 +82,7 @@ warn contains result if {
 	some vuln in vulns
 
 	name := _name(vuln)
-	result := lib.result_helper_with_term(rego.metadata.chain(), [name, level], name)
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [name, level], name)
 }
 
 # METADATA
@@ -108,7 +110,7 @@ warn contains result if {
 	some vuln in vulns
 
 	name := _name(vuln)
-	result := lib.result_helper_with_term(rego.metadata.chain(), [name, level], name)
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [name, level], name)
 }
 
 # METADATA
@@ -140,7 +142,7 @@ deny contains result if {
 	name := _name(vuln)
 
 	result := _with_effective_on(
-		lib.result_helper_with_term(rego.metadata.chain(), [name, level], name),
+		metadata.result_helper_with_term(rego.metadata.chain(), [name, level], name),
 		leeway,
 	)
 }
@@ -177,7 +179,7 @@ deny contains result if {
 	name := _name(vuln)
 
 	result := _with_effective_on(
-		lib.result_helper_with_term(rego.metadata.chain(), [name, level], name),
+		metadata.result_helper_with_term(rego.metadata.chain(), [name, level], name),
 		leeway,
 	)
 }
@@ -205,7 +207,7 @@ deny contains result if {
 	# Index Images don't get a CVE scan report since it's just a reference to Image Manifests. The
 	# report is only expected to be found on each of the individual Image Manifests.
 	not image.is_image_index(input.image.ref)
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -226,7 +228,7 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 # Create a data structure that represents the different vulnerabilities sorted in different
@@ -242,7 +244,7 @@ deny contains result if {
 # }
 _grouped_vulns[key][level] contains vuln if {
 	some key, patched in _levels_keys_patched
-	levels := lib.rule_data(key)
+	levels := rule_data.get(key)
 	some vuln in _clair_report.vulnerabilities
 	level := lower(object.get(vuln, "normalized_severity", "unknown"))
 
@@ -300,7 +302,7 @@ _compute_leeway(vuln, severity) := effective_on if {
 	issued := object.get(vuln, "issued", null)
 	ns := time.parse_rfc3339_ns(issued)
 
-	leeway := lib.rule_data("cve_leeway")
+	leeway := rule_data.get("cve_leeway")
 	years := 0
 	months := 0
 	days := leeway[severity]
@@ -319,7 +321,7 @@ _rule_data_errors contains error if {
 	some key in keys
 
 	some e in j.validate_schema(
-		lib.rule_data(key),
+		rule_data.get(key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",
@@ -339,7 +341,7 @@ _rule_data_errors contains error if {
 		"minimum": 0,
 	}
 	some e in j.validate_schema(
-		lib.rule_data("cve_leeway"),
+		rule_data.get("cve_leeway"),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "object",

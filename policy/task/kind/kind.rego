@@ -9,7 +9,7 @@ package kind
 
 import rego.v1
 
-import data.lib
+import data.lib.metadata
 
 expected_kind := "Task"
 
@@ -23,7 +23,7 @@ expected_kind := "Task"
 #
 deny contains result if {
 	expected_kind != input.kind
-	result := lib.result_helper(rego.metadata.chain(), [input.kind])
+	result := metadata.result_helper(rego.metadata.chain(), [input.kind])
 }
 
 # METADATA
@@ -36,5 +36,5 @@ deny contains result if {
 #
 deny contains result if {
 	not input.kind
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }

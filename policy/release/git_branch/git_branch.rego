@@ -9,6 +9,8 @@
 package git_branch
 
 import data.lib
+import data.lib.metadata
+import data.lib.rule_data
 import rego.v1
 
 # METADATA
@@ -27,10 +29,10 @@ deny contains result if {
 	# This will not produce a violation if the annotation is missing
 	branch := task.invocation.environment.annotations["build.appstudio.redhat.com/target_branch"]
 	not matches_any(branch)
-	result := lib.result_helper(rego.metadata.chain(), [branch])
+	result := metadata.result_helper(rego.metadata.chain(), [branch])
 }
 
 matches_any(branch) if {
-	some pattern in lib.rule_data("allowed_target_branch_patterns")
+	some pattern in rule_data.get("allowed_target_branch_patterns")
 	regex.match(pattern, branch)
 }

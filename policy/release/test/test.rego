@@ -13,6 +13,8 @@ import rego.v1
 import data.lib
 import data.lib.image
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.rule_data
 
 # METADATA
 # title: No informative tests failed
@@ -33,9 +35,9 @@ import data.lib.json as j
 #   - test.test_data_found
 #
 warn contains result if {
-	some test in _resulted_in(lib.rule_data("failed_tests_results"), "failures")
-	test in lib.rule_data("informative_tests")
-	result := lib.result_helper_with_term(rego.metadata.chain(), [test], test)
+	some test in _resulted_in(rule_data.get("failed_tests_results"), "failures")
+	test in rule_data.get("informative_tests")
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [test], test)
 }
 
 # METADATA
@@ -57,8 +59,8 @@ warn contains result if {
 #   - test.test_data_found
 #
 warn contains result if {
-	some test in _resulted_in(lib.rule_data("warned_tests_results"), "warnings")
-	result := lib.result_helper_with_term(rego.metadata.chain(), [test], test)
+	some test in _resulted_in(rule_data.get("warned_tests_results"), "warnings")
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [test], test)
 }
 
 # METADATA
@@ -82,7 +84,7 @@ deny contains result if {
 	results := lib.results_from_tests
 	count(results) == 0 # there are none at all
 
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -105,7 +107,7 @@ deny contains result if {
 deny contains result if {
 	with_results := [r.value.result | some r in lib.results_from_tests]
 	count(with_results) != count(lib.results_from_tests)
-	result := lib.result_helper(rego.metadata.chain(), [])
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -128,13 +130,13 @@ deny contains result if {
 	all_unsupported := [u |
 		some result in lib.results_from_tests
 		test := result.value
-		not test.result in lib.rule_data("supported_tests_results")
+		not test.result in rule_data.get("supported_tests_results")
 		u := {"task": result.name, "result": test.result}
 	]
 
 	count(all_unsupported) > 0
 	some unsupported in all_unsupported
-	result := lib.result_helper_with_term(
+	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[unsupported.task, unsupported.result],
 		unsupported.task,
@@ -161,9 +163,9 @@ deny contains result if {
 #   - test.test_data_found
 #
 deny contains result if {
-	some test in _resulted_in(lib.rule_data("failed_tests_results"), "failures")
-	not test in lib.rule_data("informative_tests")
-	result := lib.result_helper_with_term(rego.metadata.chain(), [test], test)
+	some test in _resulted_in(rule_data.get("failed_tests_results"), "failures")
+	not test in rule_data.get("informative_tests")
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [test], test)
 }
 
 # METADATA
@@ -185,8 +187,8 @@ deny contains result if {
 #   - test.test_data_found
 #
 deny contains result if {
-	some test in _resulted_in(lib.rule_data("erred_tests_results"), "n/a")
-	result := lib.result_helper_with_term(rego.metadata.chain(), [test], test)
+	some test in _resulted_in(rule_data.get("erred_tests_results"), "n/a")
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [test], test)
 }
 
 # METADATA
@@ -212,8 +214,8 @@ deny contains result if {
 #   effective_on: 2023-12-08T00:00:00Z
 #
 deny contains result if {
-	some test in _resulted_in(lib.rule_data("skipped_tests_results"), "n/a")
-	result := lib.result_helper_with_term(rego.metadata.chain(), [test], test)
+	some test in _resulted_in(rule_data.get("skipped_tests_results"), "n/a")
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [test], test)
 }
 
 # METADATA
@@ -233,7 +235,7 @@ deny contains result if {
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 # METADATA
@@ -260,7 +262,7 @@ deny contains result if {
 	some task in _grouped_processed_results_from_tests
 
 	not img_digest in object.get(task.value, ["image", "digests"], [])
-	result := lib.result_helper_with_term(
+	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[task.name, img_digest],
 		task.name,
@@ -341,7 +343,7 @@ _rule_data_errors contains error if {
 	key := item[0]
 	schema := item[1]
 
-	some e in j.validate_schema(lib.rule_data(key), schema)
+	some e in j.validate_schema(rule_data.get(key), schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
 		"severity": e.severity,

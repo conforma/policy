@@ -9,9 +9,11 @@ package rpm_repos
 
 import rego.v1
 
-import data.lib
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.rule_data
 import data.lib.sbom
+import data.lib.sets
 
 # METADATA
 # title: Known repo id list provided
@@ -32,7 +34,7 @@ import data.lib.sbom
 #
 deny contains result if {
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [_rule_data_key, e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [_rule_data_key, e.message], e.severity)
 }
 
 # METADATA
@@ -57,7 +59,7 @@ deny contains result if {
 	count(_rule_data_errors) == 0
 
 	some bad_purl, msg in _repo_id_errors
-	result := lib.result_helper_with_term(rego.metadata.chain(), [msg], bad_purl)
+	result := metadata.result_helper_with_term(rego.metadata.chain(), [msg], bad_purl)
 }
 
 _rule_data_errors contains error if {
@@ -128,11 +130,11 @@ all_c2_rpm_purls contains purl if {
 }
 
 _known_repo_ids := combined if {
-	extra := lib.rule_data(_rule_data_extras_key)
-	known := lib.rule_data(_rule_data_key)
+	extra := rule_data.get(_rule_data_extras_key)
+	known := rule_data.get(_rule_data_key)
 	combined := array.concat(extra, known)
 } else := known if {
-	known := lib.rule_data(_rule_data_key)
+	known := rule_data.get(_rule_data_key)
 }
 
 _rule_data_key := "known_rpm_repositories"
@@ -164,7 +166,7 @@ _min_remainder_count := 4
 _truncate(collection) := {"values": truncated, "remainder": remainder_count} if {
 	remainder_count := count(collection) - _truncate_threshold
 	remainder_count >= _min_remainder_count
-	truncated := array.slice(lib.to_array(collection), 0, _truncate_threshold)
+	truncated := array.slice(sets.to_array(collection), 0, _truncate_threshold)
 } else := {"values": collection, "remainder": 0}
 
 _truncated_msg(remainder) := msg if {

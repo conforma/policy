@@ -1,4 +1,4 @@
-package lib
+package lib.sets
 
 import rego.v1
 

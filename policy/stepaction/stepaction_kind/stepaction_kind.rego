@@ -9,7 +9,7 @@ package stepaction_kind
 
 import rego.v1
 
-import data.lib
+import data.lib.metadata
 
 # METADATA
 # title: StepAction definition has expected kind
@@ -22,5 +22,5 @@ import data.lib
 deny contains result if {
 	k := object.get(input, "kind", "")
 	k != "StepAction"
-	result := lib.result_helper(rego.metadata.chain(), [k])
+	result := metadata.result_helper(rego.metadata.chain(), [k])
 }

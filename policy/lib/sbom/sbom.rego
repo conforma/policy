@@ -1,6 +1,8 @@
 package lib.sbom
 
 import data.lib
+import data.lib.rule_data
+
 import data.lib.image
 import data.lib.json as j
 import data.lib.tekton
@@ -136,7 +138,7 @@ image_ref_from_purl(raw_purl) := image_ref if {
 
 # Verify disallowed_packages is an array of objects
 rule_data_errors contains error if {
-	some e in j.validate_schema(lib.rule_data(rule_data_packages_key), {
+	some e in j.validate_schema(rule_data.get(rule_data_packages_key), {
 		"$schema": "http://json-schema.org/draft-07/schema#",
 		"type": "array",
 		"uniqueItems": true,
@@ -171,7 +173,7 @@ rule_data_errors contains error if {
 
 # Verify each item in disallowed_packages has a parseable PURL
 rule_data_errors contains error if {
-	some index, pkg in lib.rule_data(rule_data_packages_key)
+	some index, pkg in rule_data.get(rule_data_packages_key)
 	purl := pkg.purl
 	not ec.purl.is_valid(purl)
 	error := {
@@ -182,7 +184,7 @@ rule_data_errors contains error if {
 
 # Verify each item in disallowed_packages has a parseable min/max semver
 rule_data_errors contains error if {
-	some index, pkg in lib.rule_data(rule_data_packages_key)
+	some index, pkg in rule_data.get(rule_data_packages_key)
 	pkg.format in {"semver", "semverv"}
 	some attr in ["min", "max"]
 
@@ -202,7 +204,7 @@ rule_data_errors contains error if {
 
 # Verify disallowed_attributes is an array of name value pairs
 rule_data_errors contains error if {
-	some e in j.validate_schema(lib.rule_data(rule_data_attributes_key), {
+	some e in j.validate_schema(rule_data.get(rule_data_attributes_key), {
 		"$schema": "http://json-schema.org/draft-07/schema#",
 		"type": "array",
 		"uniqueItems": true,
@@ -225,7 +227,7 @@ rule_data_errors contains error if {
 
 # Verify allowed_external_references is an array of type/url pairs
 rule_data_errors contains error if {
-	some e in j.validate_schema(lib.rule_data(rule_data_allowed_external_references_key), {
+	some e in j.validate_schema(rule_data.get(rule_data_allowed_external_references_key), {
 		"$schema": "http://json-schema.org/draft-07/schema#",
 		"type": "array",
 		"uniqueItems": true,
@@ -247,7 +249,7 @@ rule_data_errors contains error if {
 
 # Verify disallowed_external_references is an array of type/url pairs
 rule_data_errors contains error if {
-	some e in j.validate_schema(lib.rule_data(rule_data_disallowed_external_references_key), {
+	some e in j.validate_schema(rule_data.get(rule_data_disallowed_external_references_key), {
 		"$schema": "http://json-schema.org/draft-07/schema#",
 		"type": "array",
 		"uniqueItems": true,
@@ -272,7 +274,7 @@ rule_data_errors contains error if {
 # Verify allowed_package_sources is array of purl/regex list pairs
 rule_data_errors contains error if {
 	some e in j.validate_schema(
-		lib.rule_data(rule_data_allowed_package_sources_key),
+		rule_data.get(rule_data_allowed_package_sources_key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",

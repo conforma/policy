@@ -10,6 +10,8 @@ import rego.v1
 
 import data.lib
 import data.lib.json as j
+import data.lib.metadata
+import data.lib.rule_data
 
 # METADATA
 # title: Weekday Restriction
@@ -29,12 +31,12 @@ import data.lib.json as j
 #   - redhat
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
+	metadata.pipeline_intention_match(rego.metadata.chain())
 	today := lower(time.weekday(lib.time.effective_current_time_ns))
-	disallowed := {lower(w) | some w in lib.rule_data("disallowed_weekdays")}
+	disallowed := {lower(w) | some w in rule_data.get("disallowed_weekdays")}
 	count(disallowed) > 0
 	today in disallowed
-	result := lib.result_helper(rego.metadata.chain(), [today, concat(", ", disallowed)])
+	result := metadata.result_helper(rego.metadata.chain(), [today, concat(", ", disallowed)])
 }
 
 # METADATA
@@ -56,11 +58,11 @@ deny contains result if {
 #   - redhat
 #
 deny contains result if {
-	lib.pipeline_intention_match(rego.metadata.chain())
+	metadata.pipeline_intention_match(rego.metadata.chain())
 	today := time.format([lib.time.effective_current_time_ns, "UTC", "2006-01-02"])
-	disallowed := lib.rule_data("disallowed_dates")
+	disallowed := rule_data.get("disallowed_dates")
 	today in disallowed
-	result := lib.result_helper(rego.metadata.chain(), [today, concat(", ", disallowed)])
+	result := metadata.result_helper(rego.metadata.chain(), [today, concat(", ", disallowed)])
 }
 
 # METADATA
@@ -79,7 +81,7 @@ deny contains result if {
 deny contains result if {
 	# (For this one let's do it always)
 	some e in _rule_data_errors
-	result := lib.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
 _rule_data_errors contains error if {
@@ -97,7 +99,7 @@ _rule_data_errors contains error if {
 	)
 
 	some e in j.validate_schema(
-		lib.rule_data(key),
+		rule_data.get(key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",
@@ -118,7 +120,7 @@ _rule_data_errors contains error if {
 	key := "disallowed_dates"
 
 	some e in j.validate_schema(
-		lib.rule_data(key),
+		rule_data.get(key),
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "array",
@@ -134,7 +136,7 @@ _rule_data_errors contains error if {
 
 _rule_data_errors contains error if {
 	key := "disallowed_dates"
-	some index, date in lib.rule_data(key)
+	some index, date in rule_data.get(key)
 	not time.parse_ns("2006-01-02", date)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %d: Invalid date %q", [key, index, date]),

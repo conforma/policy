@@ -9,7 +9,7 @@ package annotations
 
 import rego.v1
 
-import data.lib
+import data.lib.metadata
 
 # METADATA
 # title: Task definition uses expires-on annotation in RFC3339 format
@@ -26,7 +26,7 @@ deny contains result if {
 
 	not time.parse_rfc3339_ns(expires_on)
 
-	result := lib.result_helper(rego.metadata.chain(), [expires_on])
+	result := metadata.result_helper(rego.metadata.chain(), [expires_on])
 }
 
 _expires_on_annotation := "build.appstudio.redhat.com/expires-on"

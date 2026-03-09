@@ -33,7 +33,7 @@ Ensure each entry in the predicate.materials array with a SHA-1 digest includes 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Material URI %q is not a git URI`
 * Code: `slsa_source_version_controlled.materials_uri_is_git_repo`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L58[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L59[Source, window="_blank"]
 
 [#slsa_source_version_controlled__materials_format_okay]
 === link:#slsa_source_version_controlled__materials_format_okay[Materials have uri and digest]
@@ -45,7 +45,7 @@ Confirm at least one entry in the predicate.materials array of the attestation c
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `No materials match expected format`
 * Code: `slsa_source_version_controlled.materials_format_okay`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L33[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L34[Source, window="_blank"]
 
 [#slsa_source_version_controlled__materials_include_git_sha]
 === link:#slsa_source_version_controlled__materials_include_git_sha[Materials include git commit shas]
@@ -57,4 +57,4 @@ Ensure that each entry in the predicate.materials array with a SHA-1 digest incl
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Material digest %q is not a git commit sha`
 * Code: `slsa_source_version_controlled.materials_include_git_sha`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L84[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L85[Source, window="_blank"]

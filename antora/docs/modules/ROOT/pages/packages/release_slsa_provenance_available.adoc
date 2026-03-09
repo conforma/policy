@@ -18,7 +18,7 @@ Confirm the `allowed_predicate_types` rule data was provided, since it is requir
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `slsa_provenance_available.allowed_predicate_types_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_provenance_available/slsa_provenance_available.rego#L49[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_provenance_available/slsa_provenance_available.rego#L51[Source, window="_blank"]
 
 [#slsa_provenance_available__attestation_predicate_type_accepted]
 === link:#slsa_provenance_available__attestation_predicate_type_accepted[Expected attestation predicate type found]
@@ -30,4 +30,4 @@ Verify that the predicateType field of the attestation indicates the in-toto SLS
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Attestation predicate type %q is not an expected type (%s)`
 * Code: `slsa_provenance_available.attestation_predicate_type_accepted`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_provenance_available/slsa_provenance_available.rego#L20[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_provenance_available/slsa_provenance_available.rego#L22[Source, window="_blank"]

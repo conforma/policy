@@ -1,8 +1,9 @@
-package lib_test
+package lib.metadata_test
 
 import rego.v1
 
-import data.lib
+import data.lib.assertions
+import data.lib.metadata
 
 test_rule_annotations_with_annotations if {
 	rule_annotations := {"custom": {
@@ -16,7 +17,7 @@ test_rule_annotations_with_annotations if {
 		{"annotations": {}, "path": ["ignored", "path"]},
 	]
 
-	lib.assert_equal(rule_annotations, lib._rule_annotations(chain))
+	assertions.assert_equal(rule_annotations, metadata._rule_annotations(chain))
 }
 
 test_rule_annotations_empty_annotations if {
@@ -27,7 +28,7 @@ test_rule_annotations_empty_annotations if {
 		{"annotations": {"some": "other"}, "path": ["ignored", "path"]},
 	]
 
-	lib.assert_equal(empty_annotations, lib._rule_annotations(chain))
+	assertions.assert_equal(empty_annotations, metadata._rule_annotations(chain))
 }
 
 test_rule_annotations_only_first_entry if {
@@ -40,7 +41,7 @@ test_rule_annotations_only_first_entry if {
 	]
 
 	# Should only return annotations from the first entry
-	lib.assert_equal(first_rule_annotations, lib._rule_annotations(chain))
+	assertions.assert_equal(first_rule_annotations, metadata._rule_annotations(chain))
 }
 
 test_rule_annotations_single_entry_chain if {
@@ -48,7 +49,7 @@ test_rule_annotations_single_entry_chain if {
 
 	chain := [{"annotations": rule_annotations, "path": ["data", "single", "deny"]}]
 
-	lib.assert_equal(rule_annotations, lib._rule_annotations(chain))
+	assertions.assert_equal(rule_annotations, metadata._rule_annotations(chain))
 }
 
 test_pipeline_intention_match_with_matching_intention if {
@@ -60,7 +61,7 @@ test_pipeline_intention_match_with_matching_intention if {
 	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
 
 	# When rule_data("pipeline_intention") matches one of the pipeline_intention values
-	lib.assert_equal(true, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_equal(true, metadata.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
 }
 
 test_pipeline_intention_match_with_non_matching_intention if {
@@ -72,7 +73,7 @@ test_pipeline_intention_match_with_non_matching_intention if {
 	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
 
 	# When rule_data("pipeline_intention") doesn't match any of the pipeline_intention values
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_equal(false, metadata.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
 }
 
 test_pipeline_intention_match_with_empty_pipeline_intention if {
@@ -84,7 +85,7 @@ test_pipeline_intention_match_with_empty_pipeline_intention if {
 	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
 
 	# When pipeline_intention is an empty list, should return false
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_equal(false, metadata.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
 }
 
 test_pipeline_intention_match_without_pipeline_intention_field if {
@@ -96,7 +97,7 @@ test_pipeline_intention_match_without_pipeline_intention_field if {
 	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
 
 	# When pipeline_intention field is missing, should return false
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_equal(false, metadata.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
 }
 
 test_pipeline_intention_match_without_custom_field if {
@@ -105,7 +106,7 @@ test_pipeline_intention_match_without_custom_field if {
 	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
 
 	# When custom field is missing, should return false
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_equal(false, metadata.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
 }
 
 test_pipeline_intention_match_with_null_rule_data if {
@@ -117,7 +118,7 @@ test_pipeline_intention_match_with_null_rule_data if {
 	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
 
 	# When rule_data("pipeline_intention") is null, should return false
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as null
+	assertions.assert_equal(false, metadata.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as null
 }
 
 test_pipeline_intention_match_with_multiple_matching_intentions if {
@@ -129,7 +130,7 @@ test_pipeline_intention_match_with_multiple_matching_intentions if {
 	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
 
 	# When rule_data("pipeline_intention") matches one of multiple pipeline_intention values
-	lib.assert_equal(true, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "production"
+	assertions.assert_equal(true, metadata.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "production"
 }
 
 test_pipeline_intention_match_case_sensitivity if {
@@ -141,8 +142,8 @@ test_pipeline_intention_match_case_sensitivity if {
 	chain := [{"annotations": rule_annotations, "path": ["data", "test", "deny"]}]
 
 	# Case sensitivity should be preserved
-	lib.assert_equal(false, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
-	lib.assert_equal(true, lib.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "Release"
+	assertions.assert_equal(false, metadata.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "release"
+	assertions.assert_equal(true, metadata.pipeline_intention_match(chain)) with data.rule_data.pipeline_intention as "Release"
 }
 
 test_result_helper if {
@@ -162,7 +163,7 @@ test_result_helper if {
 		{"annotations": {}, "path": ["ignored", "ignored"]}, # Actually not needed any more
 	]
 
-	lib.assert_equal(expected_result, lib.result_helper(chain, ["foo"]))
+	assertions.assert_equal(expected_result, metadata.result_helper(chain, ["foo"]))
 }
 
 test_result_helper_without_package_annotation if {
@@ -179,7 +180,7 @@ test_result_helper_without_package_annotation if {
 
 	chain := [{"annotations": rule_annotations, "path": ["package_name", "deny"]}]
 
-	lib.assert_equal(expected_result, lib.result_helper(chain, ["foo"]))
+	assertions.assert_equal(expected_result, metadata.result_helper(chain, ["foo"]))
 }
 
 test_result_helper_with_collections if {
@@ -201,7 +202,7 @@ test_result_helper_with_collections if {
 		{"annotations": {}, "path": ["ignored", "ignored"]}, # Actually not needed any more
 	]
 
-	lib.assert_equal(expected, lib.result_helper(chain, ["foo"]))
+	assertions.assert_equal(expected, metadata.result_helper(chain, ["foo"]))
 }
 
 test_result_helper_with_term if {
@@ -222,29 +223,29 @@ test_result_helper_with_term if {
 		{"annotations": {}, "path": ["ignored", "also_ignored"]},
 	]
 
-	lib.assert_equal(expected, lib.result_helper_with_term(chain, ["foo"], "ola"))
+	assertions.assert_equal(expected, metadata.result_helper_with_term(chain, ["foo"], "ola"))
 }
 
 test_result_helper_pkg_name if {
 	# "Normal" for policy repo
-	lib.assert_equal("foo", lib._pkg_name(["data", "foo", "deny"]))
-	lib.assert_equal("foo", lib._pkg_name(["data", "foo", "warn"]))
+	assertions.assert_equal("foo", metadata._pkg_name(["data", "foo", "deny"]))
+	assertions.assert_equal("foo", metadata._pkg_name(["data", "foo", "warn"]))
 
 	# Long package paths are retained
-	lib.assert_equal("another.foo.bar", lib._pkg_name(["data", "another", "foo", "bar", "deny"]))
-	lib.assert_equal("another.foo.bar", lib._pkg_name(["data", "another", "foo", "bar", "warn"]))
+	assertions.assert_equal("another.foo.bar", metadata._pkg_name(["data", "another", "foo", "bar", "deny"]))
+	assertions.assert_equal("another.foo.bar", metadata._pkg_name(["data", "another", "foo", "bar", "warn"]))
 
 	# Unlikely edge case: No deny or warn
-	lib.assert_equal("foo", lib._pkg_name(["data", "foo"]))
-	lib.assert_equal("foo.bar", lib._pkg_name(["data", "foo", "bar"]))
+	assertions.assert_equal("foo", metadata._pkg_name(["data", "foo"]))
+	assertions.assert_equal("foo.bar", metadata._pkg_name(["data", "foo", "bar"]))
 
 	# Unlikely edge case: No data
-	lib.assert_equal("foo", lib._pkg_name(["foo", "deny"]))
-	lib.assert_equal("foo.bar", lib._pkg_name(["foo", "bar", "warn"]))
+	assertions.assert_equal("foo", metadata._pkg_name(["foo", "deny"]))
+	assertions.assert_equal("foo.bar", metadata._pkg_name(["foo", "bar", "warn"]))
 
 	# Very unlikely edge case: Just to illustrate how deny/warn/data are stripped once
-	lib.assert_equal("foo", lib._pkg_name(["data", "foo", "warn", "deny"]))
-	lib.assert_equal("foo.deny", lib._pkg_name(["data", "foo", "deny", "warn"]))
-	lib.assert_equal("foo.warn", lib._pkg_name(["data", "foo", "warn", "warn"]))
-	lib.assert_equal("data.foo.warn.deny", lib._pkg_name(["data", "data", "foo", "warn", "deny", "warn"]))
+	assertions.assert_equal("foo", metadata._pkg_name(["data", "foo", "warn", "deny"]))
+	assertions.assert_equal("foo.deny", metadata._pkg_name(["data", "foo", "deny", "warn"]))
+	assertions.assert_equal("foo.warn", metadata._pkg_name(["data", "foo", "warn", "warn"]))
+	assertions.assert_equal("data.foo.warn.deny", metadata._pkg_name(["data", "data", "foo", "warn", "deny", "warn"]))
 }
