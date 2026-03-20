@@ -22,8 +22,10 @@ current_required_pipeline_tasks(pipeline) := pipeline_tasks if {
 # required task list FOR that pipeline
 required_task_list(pipeline) := pipeline_data if {
 	pipeline_selector := pipeline_label_selector(pipeline)
-	pipeline_data := data["pipeline-required-tasks"][pipeline_selector]
+	pipeline_data := _pipeline_required_tasks_data[pipeline_selector]
 }
+
+_pipeline_required_tasks_data := data.lib.rule_data("pipeline-required-tasks")
 
 # pipeline_label_selector is a specialized function that returns the name of the
 # required tasks list that should be used.

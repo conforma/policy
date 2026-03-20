@@ -11,15 +11,17 @@ slsa_provenance_predicate_type_v02 := "https://slsa.dev/provenance/v0.2"
 default missing_required_tasks_data := false
 
 missing_required_tasks_data if {
-	count(data["required-tasks"]) == 0
+	count(_required_tasks_data) == 0
 }
 
 # The latest set of required tasks. Tasks here are not required right now
 # but will be required in the future.
-latest_required_default_tasks := ectime.newest(data["required-tasks"])
+latest_required_default_tasks := ectime.newest(_required_tasks_data)
 
 # The set of required tasks that are required right now.
-current_required_default_tasks := ectime.most_current(data["required-tasks"])
+current_required_default_tasks := ectime.most_current(_required_tasks_data)
+
+_required_tasks_data := data.lib.rule_data("required-tasks")
 
 # tasks returns the set of tasks found in the object.
 tasks(obj) := {task |
