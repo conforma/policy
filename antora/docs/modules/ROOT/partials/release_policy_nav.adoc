@@ -20,6 +20,8 @@
 *** xref:packages/release_buildah_build_task.adoc[Buildah build task]
 **** xref:packages/release_buildah_build_task.adoc#buildah_build_task__add_capabilities_param[ADD_CAPABILITIES parameter]
 **** xref:packages/release_buildah_build_task.adoc#buildah_build_task__buildah_uses_local_dockerfile[Buildah task uses a local Dockerfile]
+**** xref:packages/release_buildah_build_task.adoc#buildah_build_task__include_prefetch_sbom_param[INCLUDE_PREFETCH_SBOM parameter]
+**** xref:packages/release_buildah_build_task.adoc#buildah_build_task__include_source_sbom_param[INCLUDE_SOURCE_SBOM parameter]
 **** xref:packages/release_buildah_build_task.adoc#buildah_build_task__platform_param[PLATFORM parameter]
 **** xref:packages/release_buildah_build_task.adoc#buildah_build_task__privileged_nested_param[PRIVILEGED_NESTED parameter]
 **** xref:packages/release_buildah_build_task.adoc#buildah_build_task__disallowed_platform_patterns_pattern[disallowed_platform_patterns format]
