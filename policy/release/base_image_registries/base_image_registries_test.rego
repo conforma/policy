@@ -334,9 +334,13 @@ test_base_image_not_found_image_index if {
 
 	lib.assert_equal_results(base_image_registries.deny, expected) with input.attestations as [att]
 		with input.image.ref as "registry.local/ham@sha256:fff0000000000000000000000000000000000000000000000000000000000fff"
+		with lib.sbom.cyclonedx_sboms as []
+		with lib.sbom.spdx_sboms as []
 
 	lib.assert_equal_results(base_image_registries.deny, expected) with input.attestations as [att]
 		with input.image.ref as "registry.local/ham@sha256:aaa0000000000000000000000000000000000000000000000000000000000aaa"
+		with lib.sbom.cyclonedx_sboms as []
+		with lib.sbom.spdx_sboms as []
 }
 
 test_allowed_registries_provided if {
