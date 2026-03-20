@@ -165,13 +165,14 @@ deny contains result if {
 # description: >-
 #   Confirm certain parameters provided to each builder Task have come from trusted Tasks.
 #   Trust can be defined using pattern-based rules (trusted_task_rules) or an explicit allow
-#   list with expiry dates (trusted_tasks).
+#   list with expiry dates (trusted_tasks). Additionally, images from registries listed in the
+#   `trusted_build_image_registries` rule data key are implicitly trusted.
 # custom:
 #   short_name: trusted_parameters
 #   failure_msg: 'The %q parameter of the %q PipelineTask includes an untrusted digest: %s'
 #   solution: >-
 #     Update your build Pipeline to ensure all the parameters provided to your builder Tasks come
-#     from trusted Tasks.
+#     from trusted Tasks, or add the image registry to the trusted_build_image_registries rule data.
 #   collections:
 #   - redhat
 #   effective_on: 2021-07-04T00:00:00Z
@@ -394,7 +395,26 @@ _trusted_build_digests contains digest if {
 	some digest in _digests_from_values({runner_image_result_value})
 }
 
+# Digests from images in trusted registries are considered trustworthy.
+# Trusted registries are configured via the `trusted_build_image_registries` rule data key.
+_trusted_build_digests contains digest if {
+	some attestation in lib.pipelinerun_attestations
+	some build_task in tekton.build_tasks(attestation)
+	some param_name, param_value in tekton.task_params(build_task)
+	not endswith(param_name, "_ARTIFACT")
+	some value in lib.param_values(param_value)
+	_from_trusted_registry(value)
+	some digest in _digests_from_values({value})
+}
+
 _pre_build_run_script_runner_image_result := "SCRIPT_RUNNER_IMAGE_REFERENCE"
+
+# Returns true if the given value is an image reference from a trusted registry.
+_from_trusted_registry(value) if {
+	parsed := image.parse(value)
+	some registry in lib.rule_data("trusted_build_image_registries")
+	startswith(parsed.repo, registry)
+}
 
 # Extracts SHA256 digests from a set of values using regex patterns
 _digests_from_values(values) := {digest |
@@ -454,6 +474,11 @@ _format_denial_reason(reason) := msg if {
 
 	pattern_lines := [sprintf("  - %s", [pattern]) | some pattern in reason.pattern]
 	msg := sprintf("%s\n%s", [reason.type, concat("\n", pattern_lines)])
+} else := msg if {
+	reason.type == "signature_verification_failed"
+	count(reason.messages) > 0
+	message_lines := [sprintf("  - %s", [m]) | some m in reason.messages]
+	msg := sprintf("%s\n%s", [reason.type, concat("\n", message_lines)])
 } else := reason.type
 
 # Format error for rules system with Trusted Artifacts
