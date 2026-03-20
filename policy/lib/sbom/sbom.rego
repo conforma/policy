@@ -10,37 +10,57 @@ import rego.v1
 # It will first try to find them as references in the SLSA Provenance attestation and as an SBOM
 # attestation.
 
+_sbom_artifact_types := {
+	"application/spdx+json",
+	"application/vnd.cyclonedx+json",
+}
+
 all_sboms := array.concat(cyclonedx_sboms, spdx_sboms)
 
-cyclonedx_sboms := array.concat(_cyclonedx_sboms_from_attestations, _cyclonedx_sboms_from_oci)
+cyclonedx_sboms := [s | some s in _cyclonedx_sboms]
 
-_cyclonedx_sboms_from_attestations := [statement.predicate |
+spdx_sboms := [s | some s in _spdx_sboms]
+
+# Private set rules for deduplication. Sets naturally eliminate duplicates when the
+# same SBOM is discovered via multiple methods (attestation, OCI blob, referrer, tag).
+_cyclonedx_sboms := (_cyclonedx_sboms_from_attestations | _cyclonedx_sboms_from_oci) | _cyclonedx_sboms_from_image
+_spdx_sboms := (_spdx_sboms_from_attestations | _spdx_sboms_from_oci) | _spdx_sboms_from_image
+
+_cyclonedx_sboms_from_attestations contains statement.predicate if {
 	some att in input.attestations
 	statement := att.statement
 
 	# https://cyclonedx.org/specification/overview/#recognized-predicate-type
 	statement.predicateType == "https://cyclonedx.org/bom"
-]
+}
 
-_cyclonedx_sboms_from_oci := [sbom |
+_cyclonedx_sboms_from_oci contains sbom if {
 	some sbom in _fetch_oci_sbom
 	sbom.bomFormat == "CycloneDX"
-]
+}
 
-spdx_sboms := array.concat(_spdx_sboms_from_attestations, _spdx_sboms_from_oci)
+_cyclonedx_sboms_from_image contains sbom if {
+	some sbom in _fetch_sboms_from_image
+	sbom.bomFormat == "CycloneDX"
+}
 
-_spdx_sboms_from_attestations := [statement.predicate |
+_spdx_sboms_from_attestations contains statement.predicate if {
 	some att in input.attestations
 	statement := att.statement
 	statement.predicateType == "https://spdx.dev/Document"
-]
+}
 
-_spdx_sboms_from_oci := [sbom |
+_spdx_sboms_from_oci contains sbom if {
 	some sbom in _fetch_oci_sbom
 	sbom.SPDXID == "SPDXRef-DOCUMENT"
-]
+}
 
-_fetch_oci_sbom := [sbom |
+_spdx_sboms_from_image contains sbom if {
+	some sbom in _fetch_sboms_from_image
+	sbom.SPDXID == "SPDXRef-DOCUMENT"
+}
+
+_fetch_oci_sbom contains sbom if {
 	some attestation in lib.pipelinerun_attestations
 	some task in tekton.build_tasks(attestation)
 
@@ -53,7 +73,28 @@ _fetch_oci_sbom := [sbom |
 	blob_ref := tekton.task_result(task, "SBOM_BLOB_URL")
 	blob := ec.oci.blob(blob_ref)
 	sbom := json.unmarshal(blob)
-]
+}
+
+# _fetch_sboms_from_image discovers SBOMs attached directly to the image being validated,
+# using the OCI Referrers API and legacy tag-based discovery.
+_fetch_sboms_from_image := _sboms_from_referrers | _sboms_from_tag_refs
+
+# Discover SBOMs via OCI Referrers API. Referrers with recognized SBOM artifact types
+# have their content fetched and parsed.
+_sboms_from_referrers contains sbom if {
+	some referrer in ec.oci.image_referrers(input.image.ref)
+	referrer.artifactType in _sbom_artifact_types
+	blob := ec.oci.blob(referrer.ref)
+	sbom := json.unmarshal(blob)
+}
+
+# Discover SBOMs via legacy cosign tag-based conventions (.sbom suffix).
+_sboms_from_tag_refs contains sbom if {
+	some ref in ec.oci.image_tag_refs(input.image.ref)
+	endswith(ref, ".sbom")
+	blob := ec.oci.blob(ref)
+	sbom := json.unmarshal(blob)
+}
 
 has_item(needle, haystack) if {
 	needle_purl := ec.purl.parse(needle)

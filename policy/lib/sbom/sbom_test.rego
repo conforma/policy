@@ -30,7 +30,7 @@ test_cyclonedx_sboms if {
 					{
 						"name": "IMAGE_DIGEST",
 						"type": "string",
-						"value": "sha256:284e302900000000000000000000000000000000000000000000000284e3029",
+						"value": "sha256:284e3029000000000000000000000000000000000000000000000000284e3029",
 					},
 					{
 						"name": "IMAGE_URL",
@@ -51,6 +51,8 @@ test_cyclonedx_sboms if {
 		with input.image as _cyclonedx_image
 		with ec.oci.blob as mock_ec_oci_cyclonedx_blob
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
 }
 
 # test from attestation and fallback to oci image
@@ -72,7 +74,7 @@ test_spdx_sboms if {
 					{
 						"name": "IMAGE_DIGEST",
 						"type": "string",
-						"value": "sha256:284e302900000000000000000000000000000000000000000000000284e3029",
+						"value": "sha256:284e3029000000000000000000000000000000000000000000000000284e3029",
 					},
 					{
 						"name": "IMAGE_URL",
@@ -93,6 +95,8 @@ test_spdx_sboms if {
 		with input.image as _spdx_image
 		with ec.oci.blob as mock_ec_oci_spdx_blob
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
 }
 
 test_ignore_unrelated_sboms if {
@@ -141,9 +145,11 @@ test_ignore_unrelated_sboms if {
 
 	lib.assert_equal(sbom.all_sboms, []) with input.attestations as attestations
 		# regal ignore:line-length
-with 		input.image as {"ref": "registry.io/repository/image@sha256:284e302900000000000000000000000000000000000000000000000284e3029"}
+with 		input.image as {"ref": "registry.io/repository/image@sha256:284e3029000000000000000000000000000000000000000000000000284e3029"}
 		with ec.oci.blob as ""
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
 }
 
 test_image_ref_from_purl if {
@@ -160,11 +166,114 @@ mock_ec_oci_cyclonedx_blob := `{"sbom": "from oci blob", "bomFormat": "CycloneDX
 mock_ec_oci_spdx_blob := `{"sbom": "from oci blob", "SPDXID": "SPDXRef-DOCUMENT"}`
 
 _cyclonedx_image := {
-	"ref": "registry.io/repository/image@sha256:284e302900000000000000000000000000000000000000000000000284e3029",
+	"ref": "registry.io/repository/image@sha256:284e3029000000000000000000000000000000000000000000000000284e3029",
 	"config": {"Labels": {"vendor": "Red Hat, Inc."}},
 }
 
 _spdx_image := {
-	"ref": "registry.io/repository/image@sha256:284e302900000000000000000000000000000000000000000000000284e3029",
+	"ref": "registry.io/repository/image@sha256:284e3029000000000000000000000000000000000000000000000000284e3029",
 	"config": {"Labels": {"vendor": "Red Hat, Inc."}},
+}
+
+# Test CycloneDX SBOM discovery via OCI Referrers API
+test_cyclonedx_sboms_from_referrers if {
+	mock_referrers := [
+		{
+			"mediaType": "application/vnd.oci.image.manifest.v1+json",
+			"size": 100,
+			# regal ignore:line-length
+			"digest": "sha256:a1b2c3d400000000000000000000000000000000000000000000000a1b2c3d4",
+			"artifactType": "application/vnd.cyclonedx+json",
+			# regal ignore:line-length
+			"ref": "registry.io/repository/image@sha256:a1b2c3d400000000000000000000000000000000000000000000000a1b2c3d4",
+		},
+		{
+			"mediaType": "application/vnd.oci.image.manifest.v1+json",
+			"size": 200,
+			# regal ignore:line-length
+			"digest": "sha256:e5f6a7b800000000000000000000000000000000000000000000000e5f6a7b8",
+			"artifactType": "application/vnd.dev.cosign.simplesigning.v1+json",
+			# regal ignore:line-length
+			"ref": "registry.io/repository/image@sha256:e5f6a7b800000000000000000000000000000000000000000000000e5f6a7b8",
+		},
+	]
+	expected := [{"sbom": "from oci blob", "bomFormat": "CycloneDX"}]
+	lib.assert_equal(sbom.cyclonedx_sboms, expected) with input.attestations as []
+		with input.image as _cyclonedx_image
+		with ec.oci.image_referrers as mock_referrers
+		with ec.oci.image_tag_refs as []
+		with ec.oci.blob as mock_ec_oci_cyclonedx_blob
+}
+
+# Test SPDX SBOM discovery via OCI Referrers API
+test_spdx_sboms_from_referrers if {
+	mock_referrers := [{
+		"mediaType": "application/vnd.oci.image.manifest.v1+json",
+		"size": 100,
+		# regal ignore:line-length
+		"digest": "sha256:a1b2c3d400000000000000000000000000000000000000000000000a1b2c3d4",
+		"artifactType": "application/spdx+json",
+		# regal ignore:line-length
+		"ref": "registry.io/repository/image@sha256:a1b2c3d400000000000000000000000000000000000000000000000a1b2c3d4",
+	}]
+	expected := [{"sbom": "from oci blob", "SPDXID": "SPDXRef-DOCUMENT"}]
+	lib.assert_equal(sbom.spdx_sboms, expected) with input.attestations as []
+		with input.image as _spdx_image
+		with ec.oci.image_referrers as mock_referrers
+		with ec.oci.image_tag_refs as []
+		with ec.oci.blob as mock_ec_oci_spdx_blob
+}
+
+# Test CycloneDX SBOM discovery via legacy tag-based conventions (.sbom suffix)
+test_cyclonedx_sboms_from_tag_refs if {
+	mock_tag_refs := [
+		"registry.io/repository/image:sha256-284e3029.sig",
+		"registry.io/repository/image:sha256-284e3029.sbom",
+	]
+	expected := [{"sbom": "from oci blob", "bomFormat": "CycloneDX"}]
+	lib.assert_equal(sbom.cyclonedx_sboms, expected) with input.attestations as []
+		with input.image as _cyclonedx_image
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as mock_tag_refs
+		with ec.oci.blob as mock_ec_oci_cyclonedx_blob
+}
+
+# Test SPDX SBOM discovery via legacy tag-based conventions (.sbom suffix)
+test_spdx_sboms_from_tag_refs if {
+	mock_tag_refs := ["registry.io/repository/image:sha256-284e3029.sbom"]
+	expected := [{"sbom": "from oci blob", "SPDXID": "SPDXRef-DOCUMENT"}]
+	lib.assert_equal(sbom.spdx_sboms, expected) with input.attestations as []
+		with input.image as _spdx_image
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as mock_tag_refs
+		with ec.oci.blob as mock_ec_oci_spdx_blob
+}
+
+# Test no SBOMs from referrers when artifact types don't match
+test_no_sboms_from_unrelated_referrers if {
+	mock_referrers := [{
+		"mediaType": "application/vnd.oci.image.manifest.v1+json",
+		"size": 200,
+		# regal ignore:line-length
+		"digest": "sha256:e5f6a7b800000000000000000000000000000000000000000000000e5f6a7b8",
+		"artifactType": "application/vnd.dev.cosign.simplesigning.v1+json",
+		# regal ignore:line-length
+		"ref": "registry.io/repository/image@sha256:e5f6a7b800000000000000000000000000000000000000000000000e5f6a7b8",
+	}]
+	lib.assert_equal(sbom.all_sboms, []) with input.attestations as []
+		with input.image as _cyclonedx_image
+		with ec.oci.image_referrers as mock_referrers
+		with ec.oci.image_tag_refs as []
+}
+
+# Test no SBOMs from tag refs when no .sbom suffix present
+test_no_sboms_from_non_sbom_tag_refs if {
+	mock_tag_refs := [
+		"registry.io/repository/image:sha256-284e3029.sig",
+		"registry.io/repository/image:sha256-284e3029.att",
+	]
+	lib.assert_equal(sbom.all_sboms, []) with input.attestations as []
+		with input.image as _cyclonedx_image
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as mock_tag_refs
 }
