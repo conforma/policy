@@ -71,6 +71,7 @@ a| Include policy rules responsible for validating rule data.
 
 Rules included:
         
+* xref:packages/release_maven_repos.adoc#maven_repos__policy_data_missing[All maven artifacts have known repository URLs: Policy data validation]        
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_types_provided[Attestation type: Known attestation types provided]        
 * xref:packages/release_base_image_registries.adoc#base_image_registries__allowed_registries_provided[Base image checks: Allowed base image registry prefixes list was provided]        
 * xref:packages/release_buildah_build_task.adoc#buildah_build_task__disallowed_platform_patterns_pattern[Buildah build task: disallowed_platform_patterns format]        

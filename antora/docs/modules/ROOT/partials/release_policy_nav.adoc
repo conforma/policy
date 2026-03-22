@@ -11,7 +11,7 @@
 ** Release Rules
 *** xref:packages/release_maven_repos.adoc[All maven artifacts have known repository URLs]
 **** xref:packages/release_maven_repos.adoc#maven_repos__deny_unpermitted_urls[Known Repository URLs]
-**** xref:packages/release_maven_repos.adoc#maven_repos__policy_data_missing[Missing Policy Data]
+**** xref:packages/release_maven_repos.adoc#maven_repos__policy_data_missing[Policy data validation]
 *** xref:packages/release_attestation_type.adoc[Attestation type]
 **** xref:packages/release_attestation_type.adoc#attestation_type__deprecated_policy_attestation_format[Deprecated policy attestation format]
 **** xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type[Known attestation type found]

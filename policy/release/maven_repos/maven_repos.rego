@@ -17,15 +17,21 @@ import future.keywords.if
 import future.keywords.in
 
 import data.lib
-import data.lib.sbom.maven
+import data.lib.sbom
 
 # METADATA
-# title: Missing Policy Data
-# scope: rule
+# title: Policy data validation
+# description: Ensures the required allowed_maven_repositories list is provided.
 # custom:
-#    short_name: policy_data_missing
-#    failure_msg: 'Policy data is missing the required %q list'
-#    effective_on: 2026-05-10T00:00:00Z
+#   short_name: policy_data_missing
+#   failure_msg: Policy data is missing the required "%s" list
+#   solution: >-
+#     Ensure that 'allowed_maven_repositories' is defined in the rule_data
+#     provided to the policy, and that it contains a list of authorized
+#     repository URLs.
+#   collections:
+#     - policy_data
+#   severity: failure
 deny contains result if {
 	some key in _rule_data_errors
 	result := lib.result_helper(rego.metadata.chain(), [key])
@@ -33,6 +39,11 @@ deny contains result if {
 
 # METADATA
 # title: Known Repository URLs
+# description: >-
+#   Each Maven package listed in an SBOM must specify the repository URL that it
+#   comes from, and that URL must be present in the list of known and permitted
+#   Maven repositories. If no URL is specified, the package is assumed to come
+#   from Maven Central.
 # scope: rule
 # custom:
 #    short_name: deny_unpermitted_urls
@@ -45,7 +56,7 @@ deny contains result if {
 }
 
 _repo_url_errors[purl] := msg if {
-	some pkg in maven.packages
+	some pkg in sbom.packages
 	purl := pkg.purl
 	source := _get_effective_url(pkg.repository_url)
 	not _url_is_permitted(source)
