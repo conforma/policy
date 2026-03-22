@@ -1,11 +1,13 @@
-package release.maven_repos
+package release.maven_repos_test
 
 import data.lib
+import data.lib.sbom
+import data.release.maven_repos
 import future.keywords.if
 
 mock_data := {"allowed_maven_repositories": [
 	"https://repo.maven.apache.org/maven2/",
-	"https://maven.repository.redhat.com/ga/",
+	"https://repo.clojars.org/",
 ]}
 
 test_cyclonedx_permitted if {
@@ -15,8 +17,8 @@ test_cyclonedx_permitted if {
 		"externalRefs": [{"type": "distribution", "url": "https://repo.maven.apache.org/maven2/"}],
 	}]}
 
-	lib.assert_empty(deny) with data.rule_data as mock_data
-		with data.lib.cyclonedx.packages as cdx_input.components
+	lib.assert_empty(maven_repos.deny) with data.rule_data as mock_data
+		with sbom.cyclonedx_sboms as [cdx_input]
 }
 
 test_spdx_permitted if {
@@ -25,12 +27,12 @@ test_spdx_permitted if {
 		"name": "example",
 		"externalRefs": [{
 			"referenceType": "distribution",
-			"referenceLocator": "https://maven.repository.redhat.com/ga/",
+			"referenceLocator": "https://repo.clojars.org/",
 		}],
 	}]}
 
-	lib.assert_empty(deny) with data.rule_data as mock_data
-		with data.lib.spdx.packages as spdx_input.packages
+	lib.assert_empty(maven_repos.deny) with data.rule_data as mock_data
+		with sbom.spdx_sboms as [spdx_input]
 }
 
 test_default_maven_central_pass if {
@@ -40,38 +42,43 @@ test_default_maven_central_pass if {
 		"externalRefs": [],
 	}]}
 
-	lib.assert_empty(deny) with data.rule_data as mock_data
-		with data.lib.cyclonedx.packages as cdx_input
+	lib.assert_empty(maven_repos.deny) with data.rule_data as mock_data
+		with sbom.cyclonedx_sboms as [cdx_input]
 }
 
 test_default_cdx_fail if {
 	restricted_data := {"allowed_maven_repositories": ["https://internal.repo/"]}
 
-	cdx_input := {"components": [{
+	mock_cdx := {"components": [{
 		"purl": "pkg:maven/org.base/no-url@1.0",
 		"name": "no-url",
 		"externalRefs": [],
 	}]}
 
+	expected_msg := sprintf("Package %q (source: %q) is not in the permitted list", [
+		"pkg:maven/org.base/no-url@1.0",
+		"https://repo.maven.apache.org/maven2/",
+	])
+
 	expected := {{
 		"code": "release.maven_repos.deny_unpermitted_urls",
-		"msg": "Package \"pkg:maven/org.base/no-url@1.0\" (source: \"https://repo.maven.apache.org/maven2/\") is not in the permitted list",
+		"msg": expected_msg,
 		"effective_on": "2026-05-10T00:00:00Z",
 		"term": "pkg:maven/org.base/no-url@1.0",
 	}}
 
-	lib.assert_equal(deny, expected) with data.rule_data as restricted_data
-		with data.lib.cyclonedx.packages as cdx_input.components
+	lib.assert_equal(maven_repos.deny, expected) with data.rule_data as restricted_data
+		with sbom.cyclonedx_sboms as [mock_cdx]
 }
 
 test_spdx_default_fail if {
-	spdx_input := {"packages": [{
+	mock_spdx := {"packages": [{
 		"name": "no-url",
 		"purl": "pkg:maven/org.base/no-url@1.0",
 		"externalRefs": [{"referenceType": "purl", "referenceLocator": "pkg:maven/org.base/no-url@1.0"}],
 		"downloadLocation": "NOASSERTION",
 	}]}
-	result := deny with data.lib.spdx.packages as spdx_input.packages
+	result := maven_repos.deny with sbom.spdx_sboms as [mock_spdx]
 		with data.rule_data as {"allowed_maven_repositories": ["https://internal.repo/"]}
 	count(result) > 0
 }
@@ -79,32 +86,69 @@ test_spdx_default_fail if {
 test_missing_rule_data if {
 	expected := {{
 		"code": "release.maven_repos.policy_data_missing",
-		"effective_on": "2026-05-10T00:00:00Z",
+		"collections": ["policy_data"],
+		"effective_on": "2022-01-01T00:00:00Z",
 		"msg": "Policy data is missing the required \"allowed_maven_repositories\" list",
 	}}
-	lib.assert_equal(deny, expected) with data.rule_data as {}
+	lib.assert_equal(maven_repos.deny, expected) with data.rule_data as {}
 }
 
 test_get_effective_url_provided if {
 	url := "https://repo1.maven.org/maven2/"
-	data.release.maven_repos._get_effective_url(url) == url
+	maven_repos._get_effective_url(url) == url
 }
 
 test_url_is_permitted_true if {
 	mock_allowed := ["https://repo.maven.apache.org/maven2/", "https://internal.repo/"]
 
-	data.release.maven_repos._url_is_permitted("https://internal.repo/") with data.rule_data.allowed_maven_repositories as mock_allowed
+	maven_repos._url_is_permitted("https://internal.repo/") with data.rule_data.allowed_maven_repositories as mock_allowed
 }
 
 test_url_is_permitted_false if {
 	mock_allowed := ["https://internal.repo/"]
-	not data.release.maven_repos._url_is_permitted("https://repo.maven.apache.org/maven2/") with data.rule_data.allowed_maven_repositories as mock_allowed
+	target_url := "https://repo.maven.apache.org/maven2/"
+
+	not maven_repos._url_is_permitted(target_url) with data.rule_data.allowed_maven_repositories as mock_allowed
 }
 
 test_rule_data_errors_when_empty_array if {
 	mock_data := {"allowed_maven_repositories": []}
 
-	errors := data.release.maven_repos._rule_data_errors with data.rule_data as mock_data
+	errors := maven_repos._rule_data_errors with data.rule_data as mock_data
 
 	count(errors) == 1
+}
+
+test_cyclonedx_multiple_refs_behavior if {
+	mock_cdx := {"components": [{
+		"name": "multi-ref-lib",
+		"purl": "pkg:maven/org.example/multi@1.0",
+		"externalRefs": [
+			{"type": "distribution", "url": "https://first.repo.com"},
+			{"type": "artifact-repository", "url": "https://second.repo.com"},
+		],
+	}]}
+
+	pkg_list := sbom.packages with sbom.cyclonedx_sboms as [mock_cdx]
+
+	count(pkg_list) == 2
+	urls := {p.repository_url | some p in pkg_list}
+	urls == {"https://first.repo.com", "https://second.repo.com"}
+}
+
+test_spdx_multiple_refs_behavior if {
+	mock_spdx := {"packages": [{
+		"name": "multi-ref-spdx",
+		"purl": "pkg:maven/org.example/spdx@1.0",
+		"externalRefs": [
+			{"referenceType": "repository", "referenceLocator": "https://primary.repo.com"},
+			{"referenceType": "distribution", "referenceLocator": "https://mirror.repo.com"},
+		],
+	}]}
+
+	pkg_list := sbom.packages with sbom.spdx_sboms as [mock_spdx]
+
+	count(pkg_list) == 2
+	urls := {p.repository_url | some p in pkg_list}
+	urls == {"https://primary.repo.com", "https://mirror.repo.com"}
 }

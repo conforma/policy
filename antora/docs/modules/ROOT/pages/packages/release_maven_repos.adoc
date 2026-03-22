@@ -11,21 +11,22 @@ Each Maven package listed in an SBOM must specify the repository URL that it com
 [#maven_repos__deny_unpermitted_urls]
 === link:#maven_repos__deny_unpermitted_urls[Known Repository URLs]
 
-
+Each Maven package listed in an SBOM must specify the repository URL that it comes from, and that URL must be present in the list of known and permitted Maven repositories. If no URL is specified, the package is assumed to come from Maven Central.
 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `maven_repos.deny_unpermitted_urls`
 * Effective from: `2026-05-10T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/maven_repos/maven_repos.rego#L34[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/maven_repos/maven_repos.rego#L40[Source, window="_blank"]
 
 [#maven_repos__policy_data_missing]
-=== link:#maven_repos__policy_data_missing[Missing Policy Data]
+=== link:#maven_repos__policy_data_missing[Policy data validation]
 
+Ensures the required allowed_maven_repositories list is provided.
 
+*Solution*: Ensure that 'allowed_maven_repositories' is defined in the rule_data provided to the policy, and that it contains a list of authorized repository URLs.
 
 * Rule type: [rule-type-indicator failure]#FAILURE#
-* FAILURE message: `Policy data is missing the required %q list`
+* FAILURE message: `Policy data is missing the required "%s" list`
 * Code: `maven_repos.policy_data_missing`
-* Effective from: `2026-05-10T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/maven_repos/maven_repos.rego#L22[Source, window="_blank"]
