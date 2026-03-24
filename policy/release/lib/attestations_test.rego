@@ -483,7 +483,6 @@ test_pipelinerun_attestations_multiple_v1_missing_timestamp if {
 		_task_base,
 		[
 			{"name": "IMAGE_URL", "type": "string", "value": "quay.io/test/image:tag"},
-			# regal ignore:line-length
 			{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc1230000000000000000000000000000000000000000000000000000abc123"},
 		],
 	)
@@ -506,7 +505,6 @@ test_pipelinerun_attestations_mixed_formats if {
 		_task_base,
 		[
 			{"name": "IMAGE_URL", "type": "string", "value": "quay.io/test/image:tag"},
-			# regal ignore:line-length
 			{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc1230000000000000000000000000000000000000000000000000000abc123"},
 		],
 	)
@@ -563,7 +561,6 @@ test_pipelinerun_attestations_v1_single_no_timestamp if {
 		_task_base,
 		[
 			{"name": "IMAGE_URL", "type": "string", "value": "quay.io/test/image:tag"},
-			# regal ignore:line-length
 			{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc1230000000000000000000000000000000000000000000000000000abc123"},
 		],
 	)

@@ -263,7 +263,6 @@ rule_data_errors contains error if {
 	})
 
 	error := {
-		# regal ignore:line-length
 		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_disallowed_external_references_key, e.message]),
 		"severity": e.severity,
 	}
@@ -295,7 +294,6 @@ rule_data_errors contains error if {
 	)
 
 	error := {
-		# regal ignore:line-length
 		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_allowed_package_sources_key, e.message]),
 		"severity": e.severity,
 	}

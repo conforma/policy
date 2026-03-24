@@ -33,7 +33,6 @@ test_warning_threshold_days_default if {
 }
 
 test_warning_threshold_days_custom if {
-	# regal ignore:line-length
 	lib.assert_equal(lib.warning_threshold_days, 14) with data.rule_data__configuration__.volatile_config_warning_threshold_days as 14
 }
 

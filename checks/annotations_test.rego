@@ -208,16 +208,13 @@ test_required_annotations_invalid if {
 }
 
 test_missing_dependency_invalid if {
-	# regal ignore:line-length
 	err = `ERROR: Missing dependency rule "data.attestation_type.known_attestation_type" at policy/release/attestation_task_bundle.rego:71`
 	lib.assert_equal({err}, checks.violation) with input as opa_inspect_missing_dependency
 }
 
 test_duplicate_rules if {
-	# regal ignore:line-length
 	err1 = `ERROR: Found non-unique code "data.attestation_type.known_attestation_type" at policy/release/attestation_type.rego:30`
 
-	# regal ignore:line-length
 	err2 = `ERROR: Found non-unique code "data.attestation_type.known_attestation_type" at policy/release/attestation_type.rego:50`
 	lib.assert_equal({err1, err2}, checks.violation) with input as opa_inspect_duplicate
 }

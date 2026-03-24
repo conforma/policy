@@ -155,7 +155,6 @@ test_build_script_used_many_build_tasks if {
 	# none of the build tasks produced the expected results
 	expected_results := {{
 		"code": "slsa_build_scripted_build.subject_build_task_matches",
-		# regal ignore:line-length
 		"msg": `The attestation subject, "some.image/foo:bar@sha256:1230000000000000000000000000000000000000000000000000000000000123", does not match any of the images built`,
 	}}
 	lib.assert_equal_results(
@@ -276,7 +275,6 @@ test_subject_mismatch if {
 
 	expected := {{
 		"code": "slsa_build_scripted_build.subject_build_task_matches",
-		# regal ignore:line-length
 		"msg": `The attestation subject, "some.image/foo:bar@sha256:1230000000000000000000000000000000000000000000000000000000000123", does not match any of the images built`,
 	}}
 
@@ -346,7 +344,6 @@ test_subject_with_tag_and_digest_mismatch_digest_fails if {
 
 	expected := {{
 		"code": "slsa_build_scripted_build.subject_build_task_matches",
-		# regal ignore:line-length
 		"msg": `The attestation subject, "registry.io/repository/image@sha256:00e0ec7ed000000000000000000000000000000000000000000000e0ec7ed0", does not match any of the images built`,
 	}}
 
@@ -385,7 +382,6 @@ test_image_built_by_trusted_task_no_build_task if {
 
 	expected := {{
 		"code": "slsa_build_scripted_build.image_built_by_trusted_task",
-		# regal ignore:line-length
 		"msg": "Image \"some.image/foo:bar@sha256:1230000000000000000000000000000000000000000000000000000000000123\" not built by a trusted task: No Pipeline Tasks built the image",
 	}}
 
@@ -415,7 +411,6 @@ test_image_built_by_trusted_task_not_trusted if {
 
 	expected := {{
 		"code": "slsa_build_scripted_build.image_built_by_trusted_task",
-		# regal ignore:line-length
 		"msg": `Image "some.image/foo:bar@sha256:1230000000000000000000000000000000000000000000000000000000000123" not built by a trusted task: Build Task(s) "buildah" are not trusted`,
 	}}
 
@@ -462,7 +457,6 @@ test_image_built_by_multiple_not_trusted_tasks if {
 
 	expected := {{
 		"code": "slsa_build_scripted_build.image_built_by_trusted_task",
-		# regal ignore:line-length
 		"msg": `Image "some.image/foo:bar@sha256:1230000000000000000000000000000000000000000000000000000000000123" not built by a trusted task: Build Task(s) "buildah-1,buildah-2" are not trusted`,
 	}}
 

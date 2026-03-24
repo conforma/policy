@@ -196,7 +196,6 @@ test_allowed_package_sources if {
 				"externalRefs": [{
 					"referenceCategory": "PACKAGE-MANAGER",
 					"referenceType": "purl",
-					# regal ignore:line-length
 					"referenceLocator": "pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1?type=pom&download_url=https://repo.maven.apache.org/maven2/org/apache/xmlgraphics/batik-anim/1.9.1/batik-anim-1.9.1.pom",
 				}],
 				"annotations": [{
@@ -247,9 +246,7 @@ test_allowed_package_sources if {
 test_attributes_not_allowed_pair if {
 	expected := {{
 		"code": "sbom_spdx.disallowed_package_attributes",
-		# regal ignore:line-length
 		"term": "pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98",
-		# regal ignore:line-length
 		"msg": `Package pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98 has the attribute "attr1" set`,
 	}}
 
@@ -261,9 +258,7 @@ test_attributes_not_allowed_pair if {
 test_attributes_not_allowed_value if {
 	expected := {{
 		"code": "sbom_spdx.disallowed_package_attributes",
-		# regal ignore:line-length
 		"term": "pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98",
-		# regal ignore:line-length
 		"msg": `Package pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98 has the attribute "attr2" set to "value2"`,
 	}}
 
@@ -276,17 +271,13 @@ test_attributes_not_allowed_effective_on if {
 	expected := {
 		{
 			"code": "sbom_spdx.disallowed_package_attributes",
-			# regal ignore:line-length
 			"term": "pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98",
-			# regal ignore:line-length
 			"msg": `Package pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98 has the attribute "attr1" set`,
 			"effective_on": "2025-01-01T00:00:00Z",
 		},
 		{
 			"code": "sbom_spdx.disallowed_package_attributes",
-			# regal ignore:line-length
 			"term": "pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98",
-			# regal ignore:line-length
 			"msg": `Package pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98 has the attribute "attr2" set to "value2"`,
 			"effective_on": "2025-02-04T00:00:00Z",
 		},
@@ -326,9 +317,7 @@ test_attributes_multiple_external_refs if {
 		},
 		{
 			"code": "sbom_spdx.disallowed_package_attributes",
-			# regal ignore:line-length
 			"term": "pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98",
-			# regal ignore:line-length
 			"msg": `Package pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98 has the attribute "attr2" set to "value2"`,
 		},
 	}
@@ -360,7 +349,6 @@ _sbom_attestation := {"statement": {
 			"externalRefs": [{
 				"referenceCategory": "PACKAGE-MANAGER",
 				"referenceType": "purl",
-				# regal ignore:line-length
 				"referenceLocator": "pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98",
 			}],
 			"annotations": [

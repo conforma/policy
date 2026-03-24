@@ -5,10 +5,8 @@ import rego.v1
 import data.lib
 import data.step_image_registries
 
-# regal ignore:line-length
 good_image := "registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b"
 
-# regal ignore:line-length
 bad_image := "hackz.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b"
 
 test_step_images_permitted_success if {
@@ -30,13 +28,11 @@ test_step_images_permitted_failure if {
 	expected := {
 		{
 			"code": "step_image_registries.step_images_permitted",
-			# regal ignore:line-length
 			"msg": "Step 0 uses disallowed image ref 'hackz.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b'",
 			"term": "git-clone/1.0",
 		},
 		{
 			"code": "step_image_registries.step_images_permitted",
-			# regal ignore:line-length
 			"msg": "Step 2 uses disallowed image ref 'hackz.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b'",
 			"term": "git-clone/1.0",
 		},
@@ -54,7 +50,6 @@ test_step_images_missing_name_version if {
 
 	lib.assert_equal_results(step_image_registries.deny, {{
 		"code": "step_image_registries.step_images_permitted",
-		# regal ignore:line-length
 		"msg": "Step 0 uses disallowed image ref 'hackz.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b'",
 		"term": "noname/1.0",
 	}}) with input as task_no_name
@@ -67,7 +62,6 @@ test_step_images_missing_name_version if {
 
 	lib.assert_equal_results(step_image_registries.deny, {{
 		"code": "step_image_registries.step_images_permitted",
-		# regal ignore:line-length
 		"msg": "Step 0 uses disallowed image ref 'hackz.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b'",
 		"term": "git-clone/noversion",
 	}}) with input as task_no_version
@@ -79,7 +73,6 @@ test_step_images_missing_name_version if {
 
 	lib.assert_equal_results(step_image_registries.deny, {{
 		"code": "step_image_registries.step_images_permitted",
-		# regal ignore:line-length
 		"msg": "Step 0 uses disallowed image ref 'hackz.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b'",
 		"term": "noname/noversion",
 	}}) with input as task_no_name_no_version
@@ -104,13 +97,11 @@ test_step_images_permitted_prefix_list_empty if {
 	expected := {
 		{
 			"code": "step_image_registries.step_image_registry_prefix_list_provided",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_step_image_registry_prefixes has unexpected format: (Root): Array must have at least 1 items",
 			"severity": "failure",
 		},
 		{
 			"code": "step_image_registries.step_images_permitted",
-			# regal ignore:line-length
 			"msg": "Step 0 uses disallowed image ref 'registry.redhat.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b'",
 			"term": "git-clone/1.0",
 		},
@@ -132,13 +123,11 @@ test_step_image_registry_prefix_list_format if {
 	expected := {
 		{
 			"code": "step_image_registries.step_image_registry_prefix_list_provided",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_step_image_registry_prefixes has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
 		{
 			"code": "step_image_registries.step_image_registry_prefix_list_provided",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_step_image_registry_prefixes has unexpected format: (Root): array items[1,2] must be unique",
 			"severity": "failure",
 		},

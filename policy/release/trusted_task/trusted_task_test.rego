@@ -38,12 +38,10 @@ test_pinned_warning if {
 	expected := {
 		{
 			"code": "trusted_task.pinned",
-			# regal ignore:line-length
 			"msg": `Pipeline task "unpinned-honest-abe-p" uses an unpinned task reference, git+git.local/repo.git//tasks/honest-abe.yaml@`, "term": "honest-abe",
 		},
 		{
 			"code": "trusted_task.pinned",
-			# regal ignore:line-length
 			"msg": `Pipeline task "unpinned-trusty-p" uses an unpinned task reference, oci://registry.local/trusty:1.0@`, "term": "trusty",
 		},
 	}
@@ -66,7 +64,6 @@ test_tagged_warning if {
 
 	expected := {{
 		"code": "trusted_task.tagged",
-		# regal ignore:line-length
 		"msg": "Pipeline task \"untagged-trusty-p\" uses an untagged task reference, oci://registry.local/trusty@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700", "term": "trusty",
 	}}
 
@@ -130,7 +127,6 @@ test_trusted_violation if {
 	expected := {
 		{
 			"code": "trusted_task.trusted",
-			# regal ignore:line-length
 			"msg": `PipelineTask "crook-p" uses an untrusted task reference: oci://registry.local/crook:1.0@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700`,
 			"term": "crook",
 		},
@@ -147,13 +143,11 @@ test_trusted_violation if {
 			"term": "trusty",
 		},
 		{
-			# regal ignore:line-length
 			"code": "trusted_task.trusted", "msg": `PipelineTask "inlined-p" uses an untrusted task reference: <UNKNOWN>@<INLINED>`,
 			"term": "<NAMELESS>",
 		},
 		{
 			"code": "trusted_task.trusted",
-			# regal ignore:line-length
 			"msg": `PipelineTask "untrusted-lawless-p" uses an untrusted task reference: git+git.local/repo.git//tasks/lawless.yaml@37ef630394794f28142224295851a45eea5c63ae`,
 			"term": "lawless",
 		},
@@ -173,13 +167,11 @@ test_trusted_artifact_tampering if {
 	expected := {
 		{
 			"code": "trusted_task.trusted",
-			# regal ignore:line-length
 			"msg": `Code tampering detected, untrusted PipelineTask "task_b" (Task "TaskB") was included in build chain comprised of: task_a, task_b, task_c`,
 			"term": "TaskB",
 		},
 		{
 			"code": "trusted_task.trusted",
-			# regal ignore:line-length
 			"msg": `Code tampering detected, untrusted PipelineTask "task_b" (Task "TaskB") was included in build chain comprised of: task_b, task_c, task_test_a`,
 			"term": "TaskB",
 		},
@@ -279,7 +271,6 @@ test_trusted_artifact_denied_by_rules if {
 		},
 		{
 			"code": "trusted_task.trusted_parameters",
-			# regal ignore:line-length
 			"msg": "The \"image\" parameter of the \"task_image_index\" PipelineTask includes an untrusted digest: sha256:49a6fd43239ae41643426daefc5239857a1cc1a6f2c1595f88965d7de88efcb9",
 		},
 	}
@@ -312,7 +303,6 @@ test_future_deny_rule_warning if {
 
 	expected := {{
 		"code": "trusted_task.future_deny_rule",
-		# regal ignore:line-length
 		"msg": `Task "trusty-p" will be denied by rule pattern "oci://registry.local/trusty:1.0*" starting on 2099-01-01.`,
 		"term": "trusty",
 	}}
@@ -389,7 +379,6 @@ test_trusted_artifact_inputs_from_parameters if {
 		"param1": "value1",
 		"SOME_ARTIFACT": "value2",
 		"SOURCE_ARTIFACT": artifact_a,
-		# regal ignore:line-length
 		"UNEXPECTED_ARTIFACT": "oci:registry.io/repository/image@sha256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 	}}}
 
@@ -440,13 +429,11 @@ test_trusted_parameters if {
 
 	lib.assert_equal_results(trusted_task.deny, {{
 		"code": "trusted_task.trusted_parameters",
-		# regal ignore:line-length
 		"msg": `The "image" parameter of the "task_image_index" PipelineTask includes an untrusted digest: sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff`,
 	}}) with data.trusted_tasks as trusted_tasks_data
 		with input.attestations as [evil_attestation]
 		with ec.oci.image_manifests as _mock_image_manifests
 
-	# regal ignore:line-length
 	fake_component := {"containerImage": "registry.io/repository/image@sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"}
 
 	# If that same digest was found in the snapshot then we assume that it's not actually evil and therefore permit it
@@ -501,7 +488,6 @@ test_trusted_build_digests_from_run_script_result if {
 	# A digest from the SCRIPT_RUNNER_IMAGE_REFERENCE task result in the run-script-oci-ta
 	# task appears in _trusted_build_digests if the task is considered a trusted task
 	attestation := _mock_att_with_task({
-		# regal ignore:line-length
 		"ref": {"name": "run-script-oci-ta", "bundle": "registry.local/trusty:1.0@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
 		"results": [_mock_run_script_result],
 	})
@@ -515,7 +501,6 @@ test_trusted_build_digests_from_run_script_untrusted if {
 	# A digest from the SCRIPT_RUNNER_IMAGE_REFERENCE task result in the run-script-oci-ta
 	# task does not appear in _trusted_build_digests if the task is not considered a trusted task
 	attestation := _mock_att_with_task({
-		# regal ignore:line-length
 		"ref": {"name": "run-script-oci-ta", "bundle": "registry.local/unknown:1.0@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
 		"results": [_mock_run_script_result],
 	})
@@ -529,7 +514,6 @@ test_trusted_build_digests_from_run_script_no_result if {
 	# in _trusted_build_digests even if the task is not considered a trusted task
 	results := json.patch(_mock_run_script_result, [{"op": "add", "path": "/name", "value": "SOME_OTHER_NAME"}])
 	attestation := _mock_att_with_task({
-		# regal ignore:line-length
 		"ref": {"name": "run-script-oci-ta", "bundle": "registry.local/trusty:1.0@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
 		"results": [results],
 	})
@@ -542,11 +526,9 @@ test_trusted_build_digests_from_build_task_results if {
 	# A digest from the the IMAGE_DIGEST build task result appears in _trusted_build_digests
 	# if the build task is considered a trusted task
 	attestation := _mock_att_with_task({
-		# regal ignore:line-length
 		"ref": {"name": "some-task", "bundle": "registry.local/trusty:1.0@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
 		"results": [
 			{"name": "SOME_IMAGE_URL", "value": "registry.io/whatever/image", "type": "string"},
-			# regal ignore:line-length
 			{"name": "SOME_IMAGE_DIGEST", "value": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "type": "string"},
 		],
 	})
@@ -559,9 +541,7 @@ test_trusted_build_digests_from_build_task_results if {
 test_trusted_build_digests_from_snapshot_components if {
 	# Digests present in the snapshot components should appear in _trusted_build_digests
 	components := [
-		# regal ignore:line-length
 		{"containerImage": "registry.io/repository/image1@sha256:3333333333333333333333333333333333333333333333333333333333333333"},
-		# regal ignore:line-length
 		{"containerImage": "registry.io/repository/image2@sha256:4444444444444444444444444444444444444444444444444444444444444444"},
 	]
 	expected := {
@@ -578,7 +558,6 @@ test_trusted_build_digests_from_snapshot_components if {
 trusted_bundle_pipeline_task := {
 	"name": "trusty-p",
 	"ref": {"resolver": "bundles", "params": [
-		# regal ignore:line-length
 		{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
 		{"name": "name", "value": "trusty"},
 		{"name": "kind", "value": "task"},
@@ -590,7 +569,6 @@ newest_bundle_pipeline_task := trusted_bundle_pipeline_task
 outdated_bundle_pipeline_task := {
 	"name": "outdated-trusty-p",
 	"ref": {"resolver": "bundles", "params": [
-		# regal ignore:line-length
 		{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:007da7edd19e5700000000000000000000000000000000007da7edd19e57"},
 		{"name": "name", "value": "trusty"},
 		{"name": "kind", "value": "task"},
@@ -600,7 +578,6 @@ outdated_bundle_pipeline_task := {
 expired_bundle_pipeline_task := {
 	"name": "expired-trusty-p",
 	"ref": {"resolver": "bundles", "params": [
-		# regal ignore:line-length
 		{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:e001edd19e5700000000000000000000000000000000000000e001edd19e57"},
 		{"name": "name", "value": "trusty"},
 		{"name": "kind", "value": "task"},
@@ -619,7 +596,6 @@ unpinned_bundle_pipeline_task := {
 untagged_bundle_pipeline_task := {
 	"name": "untagged-trusty-p",
 	"ref": {"resolver": "bundles", "params": [
-		# regal ignore:line-length
 		{"name": "bundle", "value": "registry.local/trusty@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
 		{"name": "name", "value": "trusty"},
 		{"name": "kind", "value": "task"},
@@ -629,7 +605,6 @@ untagged_bundle_pipeline_task := {
 unknown_bundle_pipeline_task := {
 	"name": "crook-p",
 	"ref": {"resolver": "bundles", "params": [
-		# regal ignore:line-length
 		{"name": "bundle", "value": "registry.local/crook:1.0@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
 		{"name": "name", "value": "crook"},
 		{"name": "kind", "value": "task"},
@@ -858,7 +833,6 @@ trusted_tasks_data := {
 # A1 — On trusted_tasks, no rules → trusted
 # Task is in trusted_tasks, trusted_task_rules is empty → should be trusted via legacy fallback
 test_on_trusted_tasks_no_rules_trusted if {
-	# regal ignore:line-length
 	rules_trusted_tasks_data := {"oci://quay.io/konflux-ci/tekton-catalog/task-buildah:0.4": [{"ref": "sha256:abc1230000000000000000000000000000000000000000000000000000abc123"}]}
 
 	trusted_task_rules_data := {
@@ -868,7 +842,6 @@ test_on_trusted_tasks_no_rules_trusted if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"buildah-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-buildah",
 	)])
@@ -894,7 +867,6 @@ test_on_trusted_tasks_expired_untrusted if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"buildah-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-buildah",
 	)])
@@ -957,7 +929,6 @@ test_allow_by_location if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"buildah-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-buildah",
 	)])
@@ -1023,7 +994,6 @@ test_deny_takes_precedence_over_allow if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"buildah-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-buildah",
 	)])
@@ -1060,7 +1030,6 @@ test_allow_rule_not_yet_effective if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"buildah-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-buildah",
 	)])
@@ -1093,7 +1062,6 @@ test_allow_rule_effective_trusted if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"buildah-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-buildah",
 	)])
@@ -1123,7 +1091,6 @@ test_deny_rule_not_yet_effective if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"buildah-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-buildah",
 	)])
@@ -1153,7 +1120,6 @@ test_deny_rule_becomes_effective if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"buildah-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-buildah",
 	)])
@@ -1195,7 +1161,6 @@ test_multiple_allow_rules if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"buildah-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-buildah",
 	)])
@@ -1229,7 +1194,6 @@ test_deny_with_message if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"manifest-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-build-image-manifest:1.0@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-build-image-manifest",
 	)])
@@ -1272,7 +1236,6 @@ test_rules_allow_trusted_tasks_expiry_ignored if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"buildah-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-buildah",
 	)])
@@ -1303,7 +1266,6 @@ test_unknown_fields_ignored if {
 
 	att := _rules_make_attestation([_rules_make_task(
 		"buildah-task",
-		# regal ignore:line-length
 		"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 		"task-buildah",
 	)])
@@ -1334,7 +1296,6 @@ test_mixed_trusted_and_untrusted_tasks if {
 	att := _rules_make_attestation([
 		_rules_make_task(
 			"trusted-task",
-			# regal ignore:line-length
 			"quay.io/konflux-ci/tekton-catalog/task-buildah:0.4@sha256:abc1230000000000000000000000000000000000000000000000000000abc123",
 			"task-buildah",
 		),

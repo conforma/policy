@@ -291,7 +291,6 @@ test_platform_param_disallowed if {
 	)
 	task2 = tekton_test.with_results(_task2_w_params, _results)
 
-	# regal ignore:line-length
 	lib.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [tekton_test.slsav1_attestation([task1])]
 		with data.rule_data.disallowed_platform_patterns as [".*root.*"]
 
@@ -313,7 +312,6 @@ test_plat_patterns_rule_data_validation if {
 	expected := {
 		{
 			"code": "buildah_build_task.disallowed_platform_patterns_pattern",
-			# regal ignore:line-length
 			"msg": "Rule data disallowed_platform_patterns has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
@@ -454,7 +452,6 @@ _results := [
 	},
 	{
 		"name": "IMAGE_URL",
-		# regal ignore:line-length
 		"value": "quay.io/jstuart/hacbs-docker-build:tag@sha256:0a50000000000000000000000000000000000000000000000000000000000a50",
 	},
 ]

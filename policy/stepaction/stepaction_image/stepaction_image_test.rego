@@ -55,7 +55,6 @@ test_image_not_permitted if {
 test_rule_data_list_empty if {
 	expected := {{
 		"code": "stepaction_image.rule_data",
-		# regal ignore:line-length
 		"msg": "Rule data allowed_step_image_registry_prefixes has unexpected format: (Root): Array must have at least 1 items",
 		"severity": "failure",
 	}}
@@ -75,13 +74,11 @@ test_rule_data_list_format if {
 	expected := {
 		{
 			"code": "stepaction_image.rule_data",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_step_image_registry_prefixes has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
 		{
 			"code": "stepaction_image.rule_data",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_step_image_registry_prefixes has unexpected format: (Root): array items[1,2] must be unique",
 			"severity": "failure",
 		},

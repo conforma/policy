@@ -234,7 +234,6 @@ test_build_task_with_images if {
 		{
 			"op": "replace",
 			"path": "/statement/predicate/buildConfig/tasks/0/results/0/value",
-			# regal ignore:line-length
 			"value": "img1@sha256:d19e5701000000000000000000000000000000000000000000000000d19e5701, img2@sha256:d19e5702000000000000000000000000000000000000000000000000d19e5702",
 		},
 		{
@@ -505,12 +504,10 @@ test_missing_required_tasks_data if {
 test_task_step_image_ref if {
 	lib.assert_equal(
 		"redhat.io/openshift/rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b",
-		# regal ignore:line-length
 		tekton.task_step_image_ref({"name": "mystep", "imageID": "redhat.io/openshift/rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b"}),
 	)
 	lib.assert_equal(
 		"redhat.io/openshift/rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b",
-		# regal ignore:line-length
 		tekton.task_step_image_ref({"environment": {"image": "redhat.io/openshift/rhel8@sha256:af7dd5b3b0000000000000000000000000000000000000000000000af7dd5b3b"}}),
 	)
 }
@@ -736,7 +733,6 @@ with_params(task, task_params) := json.patch(
 )
 
 # Helper to set results on an existing task
-# regal ignore:line-length
 # Usage: with_results(slsav1_task("build"), [{"name": "IMAGE_DIGEST", "value": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc"}])
 with_results(task, task_results) := json.patch(
 	task,
@@ -768,7 +764,6 @@ with_annotations(task, annotations) := json.patch(
 )
 
 # Helper to set the bundle reference on an existing task
-# regal ignore:line-length
 # Usage: with_bundle(slsav1_task("build"), "quay.io/konflux/task-buildah:0.1@sha256:abc0000000000000000000000000000000000000000000000000000000000abc")
 with_bundle(task, bundle) := json.patch(
 	task,

@@ -6,7 +6,6 @@ import data.build_labels
 import data.lib
 
 test_build_label_found if {
-	# regal ignore:line-length
 	lib.assert_empty(build_labels.deny) with input as {"metadata": {"labels": {"build.appstudio.redhat.com/build_type": "docker"}}}
 }
 

@@ -191,7 +191,6 @@ test_warn_invalid_config_effective_on if {
 
 	expected := {{
 		"code": "volatile_config.invalid_config",
-		# regal ignore:line-length
 		"msg": "Volatile include rule 'broken.rule' has invalid date configuration (effectiveOn: not-a-date, effectiveUntil: )",
 	}}
 
@@ -452,8 +451,7 @@ test_warn_with_malformed_image_ref_multiple_at if {
 	# Global rules apply with malformed image ref containing multiple @ symbols
 	# This tests the case where split("@") doesn't produce exactly 2 parts
 	lib.assert_equal_results(volatile_config.warn, expected) with input.policy_spec as policy_spec
-		# regal ignore:line-length
-with 		input.image.ref as "quay.io/repo/image@sha256:abc123@sha256:def4560000000000000000000000000000000000000000000000000000def456"
+		with input.image.ref as "quay.io/repo/image@sha256:abc123@sha256:def4560000000000000000000000000000000000000000000000000000def456"
 		with input.component_name as _component_name
 		with time_lib.effective_current_time_ns as _now_ns
 }

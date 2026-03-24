@@ -466,7 +466,6 @@ _format_trust_error_rules_ta(task, dependency_chain) := error if {
 
 	error := {
 		"msg": sprintf(
-			# regal ignore:line-length
 			"Untrusted version of PipelineTask %q (Task %q) was included in build chain comprised of: %s. The denial reason is: %s",
 			[untrusted_pipeline_task_name, untrusted_task_name, concat(", ", dependency_chain), reason_msg],
 		),
@@ -485,7 +484,6 @@ _format_trust_error_rules(task) := error if {
 
 	error := {
 		"msg": sprintf(
-			# regal ignore:line-length
 			"PipelineTask %q uses an untrusted task reference: %s. The denial reason is: %s",
 			[untrusted_pipeline_task_name, untrusted_task_info, reason_msg],
 		),
@@ -536,7 +534,6 @@ _format_trust_error_legacy_ta(task, dependency_chain) := error if {
 
 	error := {
 		"msg": sprintf(
-			# regal ignore:line-length
 			"Untrusted version of PipelineTask %q (Task %q) was included in build chain comprised of: %s. Please upgrade the task version to: %s",
 			[untrusted_pipeline_task_name, untrusted_task_name, concat(", ", dependency_chain), latest_trusted_ref],
 		),
@@ -564,7 +561,6 @@ _format_trust_error_legacy(task) := error if {
 
 	error := {
 		"msg": sprintf(
-			# regal ignore:line-length
 			"PipelineTask %q uses an untrusted task reference: %s. Please upgrade the task version to: %s",
 			[untrusted_pipeline_task_name, untrusted_task_info, latest_trusted_ref],
 		),

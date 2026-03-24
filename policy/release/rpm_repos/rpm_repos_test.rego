@@ -123,7 +123,6 @@ test_repo_id_purls_missing_repo_ids if {
 test_repo_id_purls_missing_repo_ids_truncated if {
 	expected := {{
 		"code": "rpm_repos.ids_known",
-		# regal ignore:line-length
 		"msg": "RPM repo id check failed: An RPM component in the SBOM did not specify a repository_id value in its purl: pkg:rpm/borken (1 additional similar violations not separately listed)",
 		"term": "pkg:rpm/borken",
 	}}
@@ -279,5 +278,4 @@ p5 := "pkg:rpm/borken"
 
 p6 := "pkg:golang/gitplanet.com/bacon@1.2.3?arch=amd64"
 
-# regal ignore:line-length
 p7 := "pkg:rpmmod/redhat/squid@4%3A8040020210420090912%3A522a0ee4?arch=ppc64le&repository_id=rhel-8-for-x86_64-appstream-eus-rpms__8_DOT_6"
