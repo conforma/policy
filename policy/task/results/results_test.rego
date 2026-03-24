@@ -131,13 +131,11 @@ test_rule_data_provided if {
 		},
 		{
 			"code": "results.rule_data_provided",
-			# regal ignore:line-length
 			"msg": "Rule data required_task_results has unexpected format: 4.task: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
 		{
 			"code": "results.rule_data_provided",
-			# regal ignore:line-length
 			"msg": "Rule data required_task_results has unexpected format: 5.result: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},

@@ -20,7 +20,6 @@ test_allowed_base_images if {
 				"name": "konflux:container:is_base_image",
 				"value": "true",
 			}],
-			# regal ignore:line-length
 			"purl": "pkg:oci/ubi@sha256:abc0000000000000000000000000000000000000000000000000000000000abc?repository_url=registry.redhat.io/ubi7",
 		}]},
 		{"components": [{
@@ -30,7 +29,6 @@ test_allowed_base_images if {
 				"name": "konflux:container:is_builder_image:for_stage",
 				"value": "0",
 			}],
-			# regal ignore:line-length
 			"purl": "pkg:oci/registry@sha256:bcd0000000000000000000000000000000000000000000000000000000000bcd?repository_url=docker.io/library/registry",
 		}]},
 	]}]
@@ -48,7 +46,6 @@ test_allowed_base_images_from_snapshot if {
 				"name": "konflux:container:is_base_image",
 				"value": "true",
 			}],
-			# regal ignore:line-length
 			"purl": "pkg:oci/ubi@sha256:abc0000000000000000000000000000000000000000000000000000000000abc?repository_url=registry.redhat.io/ubi7",
 		}]},
 		{"components": [{
@@ -58,14 +55,12 @@ test_allowed_base_images_from_snapshot if {
 				"name": "konflux:container:is_builder_image:for_stage",
 				"value": "0",
 			}],
-			# regal ignore:line-length
 			"purl": "pkg:oci/registry@sha256:bcd0000000000000000000000000000000000000000000000000000000000bcd?repository_url=docker.io/library/registry",
 		}]},
 	]}]
 
 	snapshot := {"components": [
 		{"containerImage": "ignored.io/ignore@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
-		# regal ignore:line-length
 		{"containerImage": "ignored.dev/ignore:ignore@sha256:bcd0000000000000000000000000000000000000000000000000000000000bcd"},
 	]}
 
@@ -114,7 +109,6 @@ test_disallowed_base_images if {
 		# Tweak the repository_url so they're no longer allowed
 		# regal ignore:line-length
 		{"op": "replace", "path": "/0/packages/0/externalRefs/0/referenceLocator", "value": "pkg:oci/ignored@sha256:1230000000000000000000000000000000000000000000000000000000000123?repository_url=registry.redhat.blah/ubi7/3"},
-		# regal ignore:line-length
 		{"op": "replace", "path": "/0/packages/1/externalRefs/0/referenceLocator", "value": "pkg:oci/ignored@sha256:456?repository_url=registry.redhat.whatever/ubi7/3"},
 		# Actually these two won't matter, but let's change them anyhow so the name and repository_url are consistent
 		{"op": "replace", "path": "/0/packages/0/name", "value": "registry.redhat.blah/ubi7/3"},
@@ -139,7 +133,6 @@ test_disallowed_base_images if {
 		},
 		{
 			"code": "base_image_registries.base_image_permitted",
-			# regal ignore:line-length
 			"msg": "Base image \"registry.redhat.blah/ubi7/3@sha256:1230000000000000000000000000000000000000000000000000000000000123\" is from a disallowed registry",
 			"term": "registry.redhat.blah/ubi7/3",
 		},
@@ -162,7 +155,6 @@ test_disallowed_base_images_with_snapshot if {
 				"name": "konflux:container:is_base_image",
 				"value": "true",
 			}],
-			# regal ignore:line-length
 			"purl": "pkg:oci/ubi@sha256:abc0000000000000000000000000000000000000000000000000000000000abc?repository_url=registry.redhat.io/ubi7",
 		}]},
 		{"components": [{
@@ -172,7 +164,6 @@ test_disallowed_base_images_with_snapshot if {
 				"name": "konflux:container:is_builder_image:for_stage",
 				"value": "0",
 			}],
-			# regal ignore:line-length
 			"purl": "pkg:oci/registry@sha256:bcd0000000000000000000000000000000000000000000000000000000000bcd?repository_url=docker.io/library/registry",
 		}]},
 	]}]
@@ -190,32 +181,27 @@ test_disallowed_base_images_with_snapshot if {
 
 	snapshot := {"components": [
 		{"containerImage": "ignored.io/ignore@sha256:cba0000000000000000000000000000000000000000000000000000000000cba"},
-		# regal ignore:line-length
 		{"containerImage": "ignored.dev/ignore:ignore@sha256:dcb0000000000000000000000000000000000000000000000000000000000dcb"},
 	]}
 
 	expected := {
 		{
 			"code": "base_image_registries.base_image_permitted",
-			# regal ignore:line-length
 			"msg": "Base image \"docker.io/library/registry@sha256:bcd0000000000000000000000000000000000000000000000000000000000bcd\" is from a disallowed registry",
 			"term": "docker.io/library/registry",
 		},
 		{
 			"code": "base_image_registries.base_image_permitted",
-			# regal ignore:line-length
 			"msg": "Base image \"registry.redhat.io/ubi7@sha256:abc0000000000000000000000000000000000000000000000000000000000abc\" is from a disallowed registry",
 			"term": "registry.redhat.io/ubi7",
 		},
 		{
 			"code": "base_image_registries.base_image_permitted",
-			# regal ignore:line-length
 			"msg": "Base image \"registry.redhat.blah/ubi7/3@sha256:ccc0000000000000000000000000000000000000000000000000000000000ccc\" is from a disallowed registry",
 			"term": "registry.redhat.blah/ubi7/3",
 		},
 		{
 			"code": "base_image_registries.base_image_permitted",
-			# regal ignore:line-length
 			"msg": "Base image \"registry.redhat.whatever/ubi7/3@sha256:ddd0000000000000000000000000000000000000000000000000000000000ddd\" is from a disallowed registry",
 			"term": "registry.redhat.whatever/ubi7/3",
 		},
@@ -367,7 +353,6 @@ test_rule_data_validation if {
 		},
 		{
 			"code": "base_image_registries.allowed_registries_provided",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_registry_prefixes has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
@@ -380,14 +365,12 @@ test_rule_data_validation if {
 
 _spdx_sbom := [{"packages": [
 	{
-		# regal ignore:line-length
 		"SPDXID": "SPDXRef-image-registry.redhat.io/single-container-app-9520a72cbb69edfca5cac88ea2a9e0e09142ec934952b9420d686e77765f002c",
 		"name": "single-container-app",
 		"downloadLocation": "NOASSERTION",
 		"externalRefs": [{
 			"referenceCategory": "PACKAGE-MANAGER",
 			"referenceType": "purl",
-			# regal ignore:line-length
 			"referenceLocator": "pkg:oci/single-container-app@sha256:abc0000000000000000000000000000000000000000000000000000000000abc?repository_url=registry.redhat.io/single-container-app",
 		}],
 		"annotations": [{
@@ -398,14 +381,12 @@ _spdx_sbom := [{"packages": [
 		}],
 	},
 	{
-		# regal ignore:line-length
 		"SPDXID": "SPDXRef-image-docker.io/single-container-app-9520a72cbb69edfca5cac88ea2a9e0e09142ec934952b9420d686e77765f002c",
 		"name": "single-container-app",
 		"downloadLocation": "NOASSERTION",
 		"externalRefs": [{
 			"referenceCategory": "PACKAGE-MANAGER",
 			"referenceType": "purl",
-			# regal ignore:line-length
 			"referenceLocator": "pkg:oci/single-container-app@sha256:bcd0000000000000000000000000000000000000000000000000000000000bcd?repository_url=docker.io/single-container-app",
 		}],
 		"annotations": [{

@@ -115,7 +115,6 @@ test_rule_data_validation if {
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
-			# regal ignore:line-length
 			"msg": "Rule data disallowed_packages has unexpected format: 2.format: 2.format must be one of the following: \"semver\", \"semverv\"",
 			"severity": "failure",
 		},
@@ -166,13 +165,11 @@ test_rule_data_validation if {
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
-			# regal ignore:line-length
 			"msg": "Rule data disallowed_attributes has unexpected format: 4.name: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
-			# regal ignore:line-length
 			"msg": "Rule data disallowed_attributes has unexpected format: 4.value: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
@@ -223,7 +220,6 @@ test_rule_data_validation if {
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
-			# regal ignore:line-length
 			"msg": "Rule data disallowed_external_references has unexpected format: 1: Additional property invalid is not allowed",
 			"severity": "warning",
 		},
@@ -239,7 +235,6 @@ test_rule_data_validation if {
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
-			# regal ignore:line-length
 			"msg": "Rule data disallowed_packages has unexpected format: 2.exceptions.0.subpath: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
@@ -283,7 +278,6 @@ _spdx_sbom_attestation := {"statement": {
 			"externalRefs": [{
 				"referenceCategory": "PACKAGE-MANAGER",
 				"referenceType": "purl",
-				# regal ignore:line-length
 				"referenceLocator": "pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98",
 			}],
 			"checksums": [{
@@ -324,7 +318,6 @@ _cyclonedx_sbom_attestation := {"statement": {
 			},
 		},
 		"components": [{
-			# regal ignore:line-length
 			"bom-ref": "pkg:rpm/rhel/coreutils-single@8.32-34.el9?arch=x86_64&upstream=coreutils-8.32-34.el9.src.rpm&distro=rhel-9.3&package-id=f4f4e3cc2a6d9c37",
 			"type": "library",
 			"publisher": "Red Hat, Inc.",
@@ -332,7 +325,6 @@ _cyclonedx_sbom_attestation := {"statement": {
 			"version": "8.32-34.el9",
 			"licenses": [{"license": {"name": "GPLv3+"}}],
 			"cpe": "cpe:2.3:a:coreutils-single:coreutils-single:8.32-34.el9:*:*:*:*:*:*:*",
-			# regal ignore:line-length
 			"purl": "pkg:rpm/rhel/coreutils-single@8.32-34.el9?arch=x86_64&upstream=coreutils-8.32-34.el9.src.rpm&distro=rhel-9.3",
 			"properties": [
 				{"name": "attr1"},

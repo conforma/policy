@@ -45,6 +45,7 @@ rules:
           # schemas can be quite large.
           - "*_schema.rego"
     line-length:
+      max-line-length: 200
       ignore:
         files:
           # schemas can have very long attribute values, e.g. description.

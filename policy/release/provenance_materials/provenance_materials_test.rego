@@ -121,7 +121,6 @@ test_commit_mismatch if {
 
 	expected := {{
 		"code": "provenance_materials.git_clone_source_matches_provenance",
-		# regal ignore:line-length
 		"msg": `Entry in materials for the git repo "git+https://gitforge/repo.git" and commit "b10a8c637a91f427576eb0a4f39f1766c7987385" not found`,
 	}}
 	lib.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
@@ -166,7 +165,6 @@ test_commit_and_url_mismatch if {
 
 	expected := {{
 		"code": "provenance_materials.git_clone_source_matches_provenance",
-		# regal ignore:line-length
 		"msg": `Entry in materials for the git repo "git+https://shady/repo.git" and commit "b10a8c637a91f427576eb0a4f39f1766c7987385" not found`,
 	}}
 	lib.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [_mock_attestation_v02(tasks)]
@@ -206,12 +204,10 @@ test_provenance_many_git_clone_tasks if {
 	# one task's cloned digest doesn't match
 	expected := {{
 		"code": "provenance_materials.git_clone_source_matches_provenance",
-		# regal ignore:line-length
 		"msg": `Entry in materials for the git repo "git+https://gitforge/repo.git" and commit "big-bada-boom" not found`,
 	}}
 
 	# v0.2: patch buildConfig/tasks
-	# regal ignore:line-length
 	lib.assert_equal_results(expected, provenance_materials.deny) with input.attestations as [json.patch(attestation_v02, [{
 		"op": "replace",
 		"path": "/statement/predicate/buildConfig/tasks/0/results/1/value",

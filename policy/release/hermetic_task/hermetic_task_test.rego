@@ -38,7 +38,6 @@ test_not_hermetic_task if {
 	lib.assert_equal_results(expected, hermetic_task.deny) with input.attestations as [hermetic_not_true]
 		with data.rule_data.required_hermetic_tasks as ["buildah", "run-script-oci-ta"]
 
-	# regal ignore:line-length
 	hermetic_missing := json.remove(_good_attestation, ["/statement/predicate/buildConfig/tasks/0/invocation/parameters/HERMETIC"])
 	lib.assert_equal_results(expected, hermetic_task.deny) with input.attestations as [hermetic_missing]
 		with data.rule_data.required_hermetic_tasks as ["buildah", "run-script-oci-ta"]
@@ -68,7 +67,6 @@ test_many_hermetic_tasks if {
 			{"name": "IMAGE_URL", "value": "registry/repo"},
 			{"name": "IMAGE_DIGEST", "value": "digest"},
 		],
-		# regal ignore:line-length
 		"ref": {"kind": "Task", "name": "buildah", "bundle": "reg.img/spam@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
 		"invocation": {"parameters": {"HERMETIC": "true"}},
 	}
@@ -78,7 +76,6 @@ test_many_hermetic_tasks if {
 			{"name": "IMAGE_URL", "value": "registry/repo"},
 			{"name": "IMAGE_DIGEST", "value": "digest"},
 		],
-		# regal ignore:line-length
 		"ref": {"kind": "Task", "name": "run-script-oci-ta", "bundle": "reg.img/spam@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
 		"invocation": {"parameters": {"HERMETIC": "true"}},
 	}
@@ -134,7 +131,6 @@ test_many_hermetic_tasks if {
 		"msg": "Task 'buildah' was not invoked with the hermetic parameter set",
 	}}
 
-	# regal ignore:line-length
 	lib.assert_equal_results(expected_mixed_hermetic_1, hermetic_task.deny) with input.attestations as [attestation_mixed_hermetic_1]
 		with data.rule_data.required_hermetic_tasks as ["buildah", "run-script-oci-ta"]
 
@@ -157,7 +153,6 @@ test_many_hermetic_tasks if {
 		"msg": "Task 'run-script-oci-ta' was not invoked with the hermetic parameter set",
 	}}
 
-	# regal ignore:line-length
 	lib.assert_equal_results(expected_mixed_hermetic_2, hermetic_task.deny) with input.attestations as [attestation_mixed_hermetic_2]
 		with data.rule_data.required_hermetic_tasks as ["buildah", "run-script-oci-ta"]
 
@@ -181,7 +176,6 @@ test_many_hermetic_tasks if {
 
 	slsav1_attestation_mixed_hermetic := tekton_test.slsav1_attestation([slsav1_task1_mixed, slsav1_task2_mixed])
 
-	# regal ignore:line-length
 	lib.assert_equal_results(expected_mixed_hermetic_2, hermetic_task.deny) with input.attestations as [slsav1_attestation_mixed_hermetic]
 		with data.rule_data.required_hermetic_tasks as ["buildah", "run-script-oci-ta"]
 
@@ -217,7 +211,6 @@ test_many_hermetic_tasks if {
 		},
 	}
 
-	# regal ignore:line-length
 	lib.assert_equal_results(expected_non_hermetic, hermetic_task.deny) with input.attestations as [attestation_non_hermetic]
 		with data.rule_data.required_hermetic_tasks as ["buildah", "run-script-oci-ta"]
 
@@ -244,7 +237,6 @@ test_many_hermetic_tasks if {
 		slsav1_task2_non_hermetic,
 	])
 
-	# regal ignore:line-length
 	lib.assert_equal_results(expected_non_hermetic, hermetic_task.deny) with input.attestations as [slsav1_attestation_non_hermetic]
 		with data.rule_data.required_hermetic_tasks as ["buildah", "run-script-oci-ta"]
 }
@@ -276,7 +268,6 @@ _good_attestation := {"statement": {
 				{"name": "IMAGE_URL", "value": "registry/repo"},
 				{"name": "IMAGE_DIGEST", "value": "digest"},
 			],
-			# regal ignore:line-length
 			"ref": {"kind": "Task", "name": "buildah", "bundle": "reg.img/spam@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
 			"invocation": {"parameters": {"HERMETIC": "true"}},
 		}]},

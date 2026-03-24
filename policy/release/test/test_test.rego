@@ -362,26 +362,19 @@ test_mixed_statuses if {
 
 	v02_att_error_1 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "ERROR"}, "error_1", _bundle)
 
-	# regal ignore:line-length
 	v02_att_success_1 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SUCCESS"}, "success_1", _bundle)
 
-	# regal ignore:line-length
 	v02_att_failure_1 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "FAILURE"}, "failure_1", _bundle)
 
-	# regal ignore:line-length
 	v02_att_skipped_1 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SKIPPED"}, "skipped_1", _bundle)
 
-	# regal ignore:line-length
 	v02_att_failure_2 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "FAILURE"}, "failure_2", _bundle)
 
-	# regal ignore:line-length
 	v02_att_skipped_2 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SKIPPED"}, "skipped_2", _bundle)
 
-	# regal ignore:line-length
 	v02_att_warning_1 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "WARNING"}, "warning_1", _bundle)
 	v02_att_error_2 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "ERROR"}, "error_2", _bundle)
 
-	# regal ignore:line-length
 	v02_att_warning_2 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "WARNING"}, "warning_2", _bundle)
 
 	v02_tasks := [
@@ -478,11 +471,9 @@ test_mixed_statuses if {
 test_unsupported_test_result if {
 	v02_att_error_1 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "EROR"}, "error_1", _bundle)
 
-	# regal ignore:line-length
 	v02_att_success_1 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SUCESS"}, "success_1", _bundle)
 	v02_att_failure_1 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "FAIL"}, "failure_1", _bundle)
 
-	# regal ignore:line-length
 	v02_att_skipped_1 := lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SKIPED"}, "skipped_1", _bundle)
 
 	v02_tasks := [
@@ -578,7 +569,6 @@ test_wrong_attestation_type if {
 }
 
 test_all_image_processed if {
-	# regal ignore:line-length
 	digests_processed := {"image": {"digests": ["sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"]}}
 	pipeline_run := lib_test.att_mock_helper_ref("IMAGES_PROCESSED", digests_processed, "success_23", _bundle)
 	attestations := [
@@ -608,7 +598,6 @@ test_all_images_not_processed if {
 
 	lib.assert_equal_results(test.deny, {{
 		"code": "test.test_all_images",
-		# regal ignore:line-length
 		"msg": "Test 'success_23' did not process image with digest 'sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb'.",
 		"term": "success_23",
 	}}) with input.attestations as [attestation]
@@ -659,13 +648,11 @@ test_rule_data_provided if {
 	expected := {
 		{
 			"code": "test.rule_data_provided",
-			# regal ignore:line-length
 			"msg": `Rule data erred_tests_results has unexpected format: 0: 0 must be one of the following: "SUCCESS", "FAILURE", "WARNING", "SKIPPED", "ERROR"`,
 			"severity": "failure",
 		},
 		{
 			"code": "test.rule_data_provided",
-			# regal ignore:line-length
 			"msg": `Rule data failed_tests_results has unexpected format: 0: 0 must be one of the following: "SUCCESS", "FAILURE", "WARNING", "SKIPPED", "ERROR"`,
 			"severity": "failure",
 		},
@@ -681,7 +668,6 @@ test_rule_data_provided if {
 		},
 		{
 			"code": "test.rule_data_provided",
-			# regal ignore:line-length
 			"msg": `Rule data skipped_tests_results has unexpected format: 0: 0 must be one of the following: "SUCCESS", "FAILURE", "WARNING", "SKIPPED", "ERROR"`,
 			"severity": "failure",
 		},
@@ -692,13 +678,11 @@ test_rule_data_provided if {
 		},
 		{
 			"code": "test.rule_data_provided",
-			# regal ignore:line-length
 			"msg": `Rule data supported_tests_results has unexpected format: 0: 0 must be one of the following: "SUCCESS", "FAILURE", "WARNING", "SKIPPED", "ERROR"`,
 			"severity": "failure",
 		},
 		{
 			"code": "test.rule_data_provided",
-			# regal ignore:line-length
 			"msg": `Rule data warned_tests_results has unexpected format: 0: 0 must be one of the following: "SUCCESS", "FAILURE", "WARNING", "SKIPPED", "ERROR"`,
 			"severity": "failure",
 		},

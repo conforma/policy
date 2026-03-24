@@ -10,11 +10,9 @@ test_success if {
 }
 
 test_pipeline_run_params_missing_params if {
-	# regal ignore:line-length
 	provenance := json.remove(good_provenance, ["/statement/predicate/buildDefinition/externalParameters/runSpec/params/0"])
 	expected := {{
 		"code": "external_parameters.pipeline_run_params",
-		# regal ignore:line-length
 		"msg": `PipelineRun params, {"git-revision", "output-image"}, do not match expectation, {"git-repo", "git-revision", "output-image"}.`,
 	}}
 	lib.assert_equal_results(external_parameters.deny, expected) with input.attestations as [provenance]
@@ -28,7 +26,6 @@ test_pipeline_run_params_empty_values if {
 	}])
 	expected := {{
 		"code": "external_parameters.pipeline_run_params",
-		# regal ignore:line-length
 		"msg": `PipelineRun params, {"git-revision", "output-image"}, do not match expectation, {"git-repo", "git-revision", "output-image"}.`,
 	}}
 	lib.assert_equal_results(external_parameters.deny, expected) with input.attestations as [provenance]

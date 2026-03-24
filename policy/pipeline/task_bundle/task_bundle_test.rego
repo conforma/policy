@@ -57,7 +57,6 @@ test_bundle_reference_valid if {
 
 # All good when the most recent bundle is used.
 test_trusted_bundle_up_to_date if {
-	# regal ignore:line-length
 	tasks := [{"name": "my-task", "taskRef": {"bundle": "reg.com/repo:v2@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"}}]
 
 	lib.assert_empty(task_bundle.warn) with input.spec.tasks as tasks
@@ -71,7 +70,6 @@ test_trusted_bundle_up_to_date if {
 
 # All good when the most recent bundle is used for a version that is still maintained
 test_trusted_bundle_up_to_date_maintained_version if {
-	# regal ignore:line-length
 	tasks := [{"name": "my-task", "taskRef": {"bundle": "reg.com/repo:v3@sha256:0000000000000000000000000000000000000000000000000000000000000901"}}]
 
 	lib.assert_empty(task_bundle.warn) with input.spec.tasks as tasks
@@ -85,7 +83,6 @@ test_trusted_bundle_up_to_date_maintained_version if {
 
 # Warn about out of date bundles that are still trusted.
 test_trusted_bundle_out_of_date_past if {
-	# regal ignore:line-length
 	tasks := [{"name": "my-task-1", "taskRef": {"bundle": "reg.com/repo:v2@sha256:bcd0000000000000000000000000000000000000000000000000000000000bcd"}}]
 
 	lib.assert_equal_results(task_bundle.warn, {{
@@ -105,7 +102,6 @@ test_trusted_bundle_out_of_date_past if {
 
 # Deny bundles that are no longer active.
 test_trusted_bundle_expired if {
-	# regal ignore:line-length
 	tasks := [{"name": "my-task", "taskRef": {"bundle": "reg.com/repo@sha256:def0000000000000000000000000000000000000000000000000000000000def"}}]
 
 	lib.assert_empty(task_bundle.warn) with input.spec.tasks as tasks
@@ -114,7 +110,6 @@ test_trusted_bundle_expired if {
 
 	lib.assert_equal_results(task_bundle.deny, {{
 		"code": "task_bundle.untrusted_task_bundle",
-		# regal ignore:line-length
 		"msg": "Pipeline task 'my-task' uses an untrusted task bundle 'reg.com/repo@sha256:def0000000000000000000000000000000000000000000000000000000000def'",
 	}}) with input.spec.tasks as tasks
 		with data.trusted_tasks as trusted_tasks
@@ -124,21 +119,15 @@ test_trusted_bundle_expired if {
 test_ec316 if {
 	tasks := [{
 		"name": "my-task",
-		# regal ignore:line-length
 		"taskRef": {"bundle": "registry.io/repository/image:0.3@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
 	}]
 
 	trusted_tasks := {
-		# regal ignore:line-length
 		"oci://registry.io/repository/image:0.1": [{"ref": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc", "effective_on": "2024-02-02T00:00:00Z"}],
-		# regal ignore:line-length
 		"oci://registry.io/repository/image:0.2": [{"ref": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc", "effective_on": "2024-02-02T00:00:00Z"}],
 		"oci://registry.io/repository/image:0.3": [
-			# regal ignore:line-length
 			{"ref": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc", "effective_on": "2024-02-02T00:00:00Z"},
-			# regal ignore:line-length
 			{"ref": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc", "effective_on": "2024-01-21T00:00:00Z"},
-			# regal ignore:line-length
 			{"ref": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc", "effective_on": "2024-01-21T00:00:00Z"},
 		],
 	}
@@ -161,22 +150,17 @@ test_missing_required_data if {
 }
 
 trusted_tasks := {
-	# regal ignore:line-length
 	"oci://reg.com/repo:v3": [{"ref": "sha256:0000000000000000000000000000000000000000000000000000000000000901", "effective_on": "2022-04-11T00:00:00Z"}],
 	"oci://reg.com/repo:v2": [
 		# Latest v2
-		# regal ignore:line-length
 		{"ref": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc", "effective_on": "2022-04-11T00:00:00Z"},
 		# Older v2
-		# regal ignore:line-length
 		{"ref": "sha256:bcd0000000000000000000000000000000000000000000000000000000000bcd", "effective_on": "2022-03-11T00:00:00Z", "expires_on": "2022-04-11T00:00:00Z"},
 	],
 	"oci://reg.com/repo:v1": [
 		# Latest v1
-		# regal ignore:line-length
 		{"ref": "sha256:cde0000000000000000000000000000000000000000000000000000000000cde", "effective_on": "2022-02-01T00:00:00Z"},
 		# Older v1
-		# regal ignore:line-length
 		{"ref": "sha256:def0000000000000000000000000000000000000000000000000000000000def", "effective_on": "2021-01-01T00:00:00Z", "expires_on": "2022-02-01T00:00:00Z"},
 	],
 }

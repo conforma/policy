@@ -19,10 +19,8 @@ pinned2 := "registry.io/repository/image2@sha256:7ea0000000000000000000000000000
 
 pinned3 := "registry.io/repository/image3@sha256:c0ffee0000000000000000000000000000000000000000000000000000c0ffee"
 
-# regal ignore:line-length
 pinned_ref := {"digest": "sha256:cafe000000000000000000000000000000000000000000000000000000cafe00", "repo": "registry.io/repository/image", "tag": ""}
 
-# regal ignore:line-length
 pinned_ref2 := {"digest": "sha256:7ea0000000000000000000000000000000000000000000000000000000007ea0", "repo": "registry.io/repository/image2", "tag": ""}
 
 component0 := {
@@ -70,7 +68,6 @@ manifest := {
 		"features.operators.openshift.io/token-auth-gcp": "false",
 		"operators.openshift.io/valid-subscription": `["spam"]`,
 		"alm-examples": `"endpoint": "http://example:4317" spam`,
-		# regal ignore:line-length
 		"features.operators.image": `{"kind":"Namespace","apiVersion":"v1","metadata":{"name":"openshift-workload-availability","annotations":{"openshift.io/node-selector":""}}}`,
 	}},
 	"spec": {
@@ -130,17 +127,14 @@ test_all_image_ref if {
 				"ref": pinned_ref,
 			},
 			{
-				# regal ignore:line-length
 				"path": `spec.install.spec.deployments[0 ("unnamed")].spec.template.spec.initContainers[0 ("i1")].image`,
 				"ref": pinned_ref,
 			},
 			{
-				# regal ignore:line-length
 				"path": `spec.install.spec.deployments[0 ("unnamed")].spec.template.spec.containers[0 ("c1")].env["RELATED_IMAGE_C1"]`,
 				"ref": pinned_ref,
 			},
 			{
-				# regal ignore:line-length
 				"path": `spec.install.spec.deployments[0 ("unnamed")].spec.template.spec.initContainers[0 ("i1")].env["RELATED_IMAGE_E1"]`,
 				"ref": pinned_ref,
 			},
@@ -172,7 +166,6 @@ test_related_img_unpinned if {
 
 	expected = {{
 		"code": "olm.unpinned_references",
-		# regal ignore:line-length
 		"msg": `The "registry.io/repository:tag" image reference is not pinned at spec.install.spec.deployments[0 ("unnamed")].spec.template.spec.containers[0 ("c1")].env["RELATED_IMAGE_C1"].`,
 		"term": "registry.io/repository:tag",
 	}}
@@ -194,13 +187,11 @@ test_feature_annotations_format if {
 	expected := {
 		{
 			"code": "olm.feature_annotations_format",
-			# regal ignore:line-length
 			"msg": "The annotation \"features.operators.openshift.io/disconnected\" is either missing or has an unexpected value",
 			"term": "features.operators.openshift.io/disconnected",
 		},
 		{
 			"code": "olm.feature_annotations_format",
-			# regal ignore:line-length
 			"msg": "The annotation \"features.operators.openshift.io/fips-compliant\" is either missing or has an unexpected value",
 			"term": "features.operators.openshift.io/fips-compliant",
 		},
@@ -211,7 +202,6 @@ test_feature_annotations_format if {
 		},
 		{
 			"code": "olm.feature_annotations_format",
-			# regal ignore:line-length
 			"msg": "The annotation \"features.operators.openshift.io/tls-profiles\" is either missing or has an unexpected value",
 			"term": "features.operators.openshift.io/tls-profiles",
 		},
@@ -244,7 +234,6 @@ test_feature_annotations_format_custom_rule_data if {
 test_required_olm_features_annotations_provided if {
 	expected_empty := {{
 		"code": "olm.required_olm_features_annotations_provided",
-		# regal ignore:line-length
 		"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Array must have at least 1 items",
 		"severity": "failure",
 	}}
@@ -280,7 +269,6 @@ test_required_olm_features_annotations_provided if {
 		},
 		{
 			"code": "olm.required_olm_features_annotations_provided",
-			# regal ignore:line-length
 			"msg": "Rule data required_olm_features_annotations has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
@@ -344,19 +332,16 @@ test_subscriptions_annotation_format if {
 		},
 		{
 			"code": "olm.subscriptions_annotation_format",
-			# regal ignore:line-length
 			"msg": "Value of operators.openshift.io/valid-subscription annotation is invalid: (Root): Array must have at least 1 items",
 			"severity": "failure",
 		},
 		{
 			"code": "olm.subscriptions_annotation_format",
-			# regal ignore:line-length
 			"msg": "Value of operators.openshift.io/valid-subscription annotation is invalid: (Root): array items[0,1] must be unique",
 			"severity": "failure",
 		},
 		{
 			"code": "olm.subscriptions_annotation_format",
-			# regal ignore:line-length
 			"msg": "Value of operators.openshift.io/valid-subscription annotation is invalid: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
@@ -377,8 +362,7 @@ test_unpinned_snapshot_references_operator if {
 	lib.assert_equal_results(olm.deny, expected) with input.snapshot.components as [unpinned_component, component1]
 		with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
-		# regal ignore:line-length
-with 		ec.oci.image_manifest as `{"config": {"digest": "sha256:90a7000000000000000000000000000000000000000000000000000000090a70"}}`
+		with ec.oci.image_manifest as `{"config": {"digest": "sha256:90a7000000000000000000000000000000000000000000000000000000090a70"}}`
 		with input.image.ref as unpinned_component.containerImage
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
 }
@@ -387,15 +371,13 @@ test_unpinned_snapshot_references_different_input if {
 	lib.assert_empty(olm.deny) with input.snapshot.components as [unpinned_component]
 		with data.rule_data.pipeline_intention as "release"
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
-		# regal ignore:line-length
-with 		ec.oci.image_manifest as `{"config": {"digest": "sha256:90a7000000000000000000000000000000000000000000000000000000090a70"}}`
+		with ec.oci.image_manifest as `{"config": {"digest": "sha256:90a7000000000000000000000000000000000000000000000000000000090a70"}}`
 		with input.image.ref as pinned2
 }
 
 test_unmapped_references_in_operator if {
 	expected := {{
 		"code": "olm.unmapped_references",
-		# regal ignore:line-length
 		"msg": "The \"registry.io/repository/image2@sha256:7ea0000000000000000000000000000000000000000000000000000000007ea0\" CSV image reference is not in the snapshot or accessible.",
 		"term": "registry.io/repository/image2@sha256:7ea0000000000000000000000000000000000000000000000000000000007ea0",
 	}}
@@ -419,8 +401,7 @@ test_unpinned_related_images if {
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with input.snapshot.components as [component0]
 		with input.attestations as _with_related_images
-		# regal ignore:line-length
-with 		input.image.ref as "registry.io/repository/image@sha256:14a9ed19e570000000000000000000000000000000000000000014a9ed19e57"
+		with input.image.ref as "registry.io/repository/image@sha256:14a9ed19e570000000000000000000000000000000000000000014a9ed19e57"
 		with ec.oci.image_manifest as _mock_unpinned_image_partial
 		with ec.oci.blob as _mock_unpinned_blob
 		with ec.oci.descriptor as mock_ec_oci_image_descriptor
@@ -429,7 +410,6 @@ with 		input.image.ref as "registry.io/repository/image@sha256:14a9ed19e57000000
 test_inaccessible_related_images if {
 	expected_deny := {{
 		"code": "olm.inaccessible_related_images",
-		# regal ignore:line-length
 		"msg": "The \"registry.io/repository/image2@sha256:7ea0000000000000000000000000000000000000000000000000000000007ea0\" related image reference is not accessible.",
 		"term": "registry.io/repository/image2@sha256:7ea0000000000000000000000000000000000000000000000000000000007ea0",
 	}}
@@ -438,8 +418,7 @@ test_inaccessible_related_images if {
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with input.snapshot.components as [component1]
 		with input.attestations as _with_related_images
-		# regal ignore:line-length
-with 		input.image.ref as "registry.io/repository/image@sha256:14a9ed19e570000000000000000000000000000000000000000014a9ed19e57"
+		with input.image.ref as "registry.io/repository/image@sha256:14a9ed19e570000000000000000000000000000000000000000014a9ed19e57"
 		with ec.oci.image_manifest as _mock_image_partial
 		with ec.oci.blob as _mock_blob
 		with ec.oci.descriptor as mock_ec_oci_image_descriptor
@@ -451,14 +430,12 @@ mock_ec_oci_image_descriptor("registry.io/repository/image@sha256:cafe0000000000
 # regal ignore:line-length
 mock_ec_oci_image_descriptor("registry.io/repository/image3@sha256:c0ffee0000000000000000000000000000000000000000000000000000c0ffee") := `{"config": {"digest": "sha256:c0ffee0000000000000000000000000000000000000000000000000000c0ffee"}}`
 
-# regal ignore:line-length
 mock_ec_oci_image_descriptor("registry.io/repository/image2@sha256:7ea0000000000000000000000000000000000000000000000000000000007ea0") := false
 
 mock_ec_oci_image_descriptor("registry.io/repo/msd:latest") := `{"config": {"digest": ""}}`
 
 test_olm_ci_pipeline if {
 	# Make sure no violations are thrown if it isn't a release pipeline
-	# regal ignore:line-length
 	lib.assert_equal(false, lib.pipeline_intention_match(rego.metadata.chain())) with data.rule_data as {"pipeline_intention": null}
 }
 
@@ -466,7 +443,6 @@ test_mock_cafe_descriptor if {
 	# Test case that uses the mock_ec_oci_image_descriptor for cafe image
 	expected := `{"config": {"digest": "sha256:cafe000000000000000000000000000000000000000000000000000000cafe00"}}`
 
-	# regal ignore:line-length
 	lib.assert_equal(mock_ec_oci_image_descriptor("registry.io/repository/image@sha256:cafe000000000000000000000000000000000000000000000000000000cafe00"), expected)
 }
 
@@ -492,7 +468,6 @@ test_bundle_image_index if {
 
 	expected_deny := {{
 		"code": "olm.olm_bundle_multi_arch",
-		# regal ignore:line-length
 		"msg": "The \"registry.io/repository/image@sha256:cafe000000000000000000000000000000000000000000000000000000cafe00\" bundle image is a multi-arch reference.",
 		"term": "registry.io/repository/image@sha256:cafe000000000000000000000000000000000000000000000000000000cafe00",
 	}}
@@ -510,13 +485,11 @@ test_unallowed_registries if {
 	expected := {
 		{
 			"code": "olm.allowed_registries",
-			# regal ignore:line-length
 			"msg": "The \"registry.io/repository/image@sha256:cafe000000000000000000000000000000000000000000000000000000cafe00\" CSV image reference is not from an allowed registry.",
 			"term": "registry.io/repository/image",
 		},
 		{
 			"code": "olm.allowed_registries",
-			# regal ignore:line-length
 			"msg": "The \"registry.io/repository/image2@sha256:7ea0000000000000000000000000000000000000000000000000000000007ea0\" CSV image reference is not from an allowed registry.",
 			"term": "registry.io/repository/image2",
 		},
@@ -534,19 +507,16 @@ test_allowed_registries_related if {
 	expected_deny := {
 		{
 			"code": "olm.allowed_registries_related",
-			# regal ignore:line-length
 			"msg": "The \"registry.io/repository/image@sha256:cafe000000000000000000000000000000000000000000000000000000cafe00\" related image reference is not from an allowed registry.",
 			"term": "registry.io/repository/image",
 		},
 		{
 			"code": "olm.allowed_registries_related",
-			# regal ignore:line-length
 			"msg": "The \"registry.io/repository/image2@sha256:7ea0000000000000000000000000000000000000000000000000000000007ea0\" related image reference is not from an allowed registry.",
 			"term": "registry.io/repository/image2",
 		},
 		{
 			"code": "olm.allowed_registries_related",
-			# regal ignore:line-length
 			"msg": "The \"registry.io/repository/image3@sha256:c0ffee0000000000000000000000000000000000000000000000000000c0ffee\" related image reference is not from an allowed registry.",
 			"term": "registry.io/repository/image3",
 		},
@@ -556,8 +526,7 @@ test_allowed_registries_related if {
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.access.redhat.com", "registry.redhat.io"]
 		with input.snapshot.components as [component1, component2, component3]
 		with input.attestations as _with_related_images
-		# regal ignore:line-length
-with 		input.image.ref as "registry.io/repository/image@sha256:14a9ed19e570000000000000000000000000000000000000000014a9ed19e57"
+		with input.image.ref as "registry.io/repository/image@sha256:14a9ed19e570000000000000000000000000000000000000000014a9ed19e57"
 		with ec.oci.image_manifest as _mock_image_all
 		with ec.oci.blob as _mock_blob
 		with ec.oci.descriptor as mock_ec_oci_image_descriptor
@@ -598,7 +567,6 @@ _manifests_unpinned := {
 	"registry.io/repository/image@sha256:d05a000000000000000000000000000000000000000000000000000000d05a00": {"config": {"digest": "sha256:d05a000000000000000000000000000000000000000000000000000000d05a00"}},
 }
 
-# regal ignore:line-length
 _blobs := {"registry.io/repository/image@sha256:4e1a7edb10bd19e57000000000000000000000004e1a7edb10bd19e57": json.marshal(_related_images)}
 
 unpinned_blob_key := "registry.io/repository/image@sha256:4e1a7ed00100b10bd19e57000000004e1a7ed00100b10bd19e57"
@@ -617,7 +585,6 @@ _mock_unpinned_blob(ref) := _unpinned_blobs[ref]
 
 _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
 
-# regal ignore:line-length
 _with_related_images := _attestations_with_attachment("sha256:4e1a7edd19e5700000000000000000000000000000004e1a7edd19e57")
 
 _attestations_with_attachment(attachment) := attestations if {
@@ -644,7 +611,6 @@ _attestations_with_attachment(attachment) := attestations if {
 }
 
 test_image_ref_with_digest if {
-	# regal ignore:line-length
 	img := {"repo": "registry.io/repo", "digest": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc", "tag": "latest"}
 	expected := "registry.io/repo@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"
 	lib.assert_equal(olm._image_ref(img), expected)

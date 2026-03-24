@@ -14,7 +14,6 @@ test_success if {
 			"buildConfig": {"tasks": [{
 				"name": "rpm-ostree-p",
 				"ref": {"kind": "Task", "name": "rpm-ostree"},
-				# regal ignore:line-length
 				"invocation": {"parameters": {"BUILDER_IMAGE": "registry.local/builder:v0.2@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"}},
 			}]},
 		},
@@ -52,7 +51,6 @@ test_builder_image_param_failures if {
 				{
 					"name": "rpm-ostree-2",
 					"ref": {"kind": "Task", "name": "rpm-ostree"},
-					# regal ignore:line-length
 					"invocation": {"parameters": {"BUILDER_IMAGE": "registry.local/deprecated:v0.2@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"}},
 				},
 			]},
@@ -101,13 +99,11 @@ test_builder_image_param_failures if {
 		# Prefix not allowed
 		{
 			"code": "rpm_ostree_task.builder_image_param",
-			# regal ignore:line-length
 			"msg": "BUILDER_IMAGE \"registry.local/spam:v0.2\" does not start with a pre-approved prefix: registry.local/builder, registry.local/deprecated",
 			"effective_on": "2024-03-20T00:00:00Z",
 		},
 		{
 			"code": "rpm_ostree_task.builder_image_param",
-			# regal ignore:line-length
 			"msg": "BUILDER_IMAGE \"registry.local/spam:v1.0\" does not start with a pre-approved prefix: registry.local/builder, registry.local/deprecated",
 			"effective_on": "2024-03-20T00:00:00Z",
 		},
@@ -148,13 +144,11 @@ test_rule_data_failures if {
 	expected := {
 		{
 			"code": "rpm_ostree_task.rule_data",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_rpm_ostree_builder_image_prefixes has unexpected format: 0: Invalid type. Expected: object, given: array",
 			"severity": "failure",
 		},
 		{
 			"code": "rpm_ostree_task.rule_data",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_rpm_ostree_builder_image_prefixes has unexpected format: 0: Must validate at least one schema (anyOf)",
 			"severity": "failure",
 		},
@@ -165,37 +159,31 @@ test_rule_data_failures if {
 		},
 		{
 			"code": "rpm_ostree_task.rule_data",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_rpm_ostree_builder_image_prefixes has unexpected format: 1: Must validate at least one schema (anyOf)",
 			"severity": "failure",
 		},
 		{
 			"code": "rpm_ostree_task.rule_data",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_rpm_ostree_builder_image_prefixes has unexpected format: 2: Additional property spam is not allowed",
 			"severity": "warning",
 		},
 		{
 			"code": "rpm_ostree_task.rule_data",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_rpm_ostree_builder_image_prefixes has unexpected format: 2: Must validate at least one schema (anyOf)",
 			"severity": "failure",
 		},
 		{
 			"code": "rpm_ostree_task.rule_data",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_rpm_ostree_builder_image_prefixes has unexpected format: 3.expires_on: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
 		{
 			"code": "rpm_ostree_task.rule_data",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_rpm_ostree_builder_image_prefixes has unexpected format: 3.value: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
 		{
 			"code": "rpm_ostree_task.rule_data",
-			# regal ignore:line-length
 			"msg": "Rule data allowed_rpm_ostree_builder_image_prefixes has unexpected format: 3: Must validate at least one schema (anyOf)",
 			"severity": "failure",
 		},

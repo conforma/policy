@@ -43,7 +43,7 @@ Each image referenced by the OLM bundle should match an entry in the list of pre
 * FAILURE message: `The %q CSV image reference is not from an allowed registry.`
 * Code: `olm.allowed_registries`
 * Effective from: `2024-09-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L304[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L303[Source, window="_blank"]
 
 [#olm__allowed_resource_kinds]
 === link:#olm__allowed_resource_kinds[OLM bundle image manifests contain only allowed resource kinds]
@@ -55,7 +55,7 @@ Every manifest in an OLM bundle must be of an allowed resource kind, as defined 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The %q manifest kind is not in the list of OLM allowed resource kinds.`
 * Code: `olm.allowed_resource_kinds`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L359[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L358[Source, window="_blank"]
 
 [#olm__olm_bundle_multi_arch]
 === link:#olm__olm_bundle_multi_arch[OLM bundle images are not multi-arch]
@@ -68,7 +68,7 @@ OLM bundle images should be built for a single architecture. They should not be 
 * FAILURE message: `The %q bundle image is a multi-arch reference.`
 * Code: `olm.olm_bundle_multi_arch`
 * Effective from: `2025-05-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L337[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L336[Source, window="_blank"]
 
 [#olm__allowed_registries_related]
 === link:#olm__allowed_registries_related[Related images references are from allowed registries]

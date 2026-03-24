@@ -297,7 +297,6 @@ deny contains result if {
 	some unmatched_image in unmatched_image_refs
 	not ec.oci.image_manifest(image.str(unmatched_image.ref))
 
-	# regal ignore:line-length
 	result := lib.result_helper_with_term(rego.metadata.chain(), [image.str(unmatched_image.ref)], image.str(unmatched_image.ref))
 }
 
@@ -427,7 +426,6 @@ _related_images(tested_image) := [e |
 
 # Finds all image references and their locations (paths). Returns all image
 # references (parsed into components) found in locations as specified by:
-# regal ignore:line-length
 # https://github.com/containerbuildsystem/operator-manifest/blob/f24cd9374f5ad9fed04f47701acffa16837d940e/README.md#pull-specifications
 # and https://osbs.readthedocs.io/en/latest/users.html#pullspec-locations
 all_image_ref(manifest) := [e |

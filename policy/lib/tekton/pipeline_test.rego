@@ -30,7 +30,6 @@ test_pipeline_label_selector_build_task_slsa_v0_2 if {
 		"ref": {"name": "build-container", "kind": "Task"},
 		"results": [
 			{"name": "IMAGE_URL", "type": "string", "value": "localhost:5000/repo:latest"},
-			# regal ignore:line-length
 			{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
 		],
 		"invocation": {"environment": {"labels": {tekton.task_label: "generic"}}},
@@ -65,7 +64,6 @@ test_pipeline_label_selector_pipeline_run_slsa_v0_2 if {
 		"ref": {"name": "build-container", "kind": "Task"},
 		"results": [
 			{"name": "IMAGE_URL", "type": "string", "value": "localhost:5000/repo:latest"},
-			# regal ignore:line-length
 			{"name": "IMAGE_DIGEST", "type": "string", "value": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
 		],
 	}

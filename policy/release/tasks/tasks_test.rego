@@ -261,7 +261,6 @@ test_extra_tasks_ignored if {
 		{},
 	)]
 
-	# regal ignore:line-length
 	lib.assert_empty(tasks.deny) with data["pipeline-required-tasks"] as _required_pipeline_tasks
 		with data.trusted_tasks as _trusted_tasks
 		with ec.oci.image_manifests as _mock_image_manifests
@@ -751,7 +750,6 @@ test_deprecated_slsa_v0_2 if {
 
 	expected := {{
 		"code": "tasks.unsupported",
-		# regal ignore:line-length
 		"msg": `Task "task" is used by pipeline task "task" is or will be unsupported as of 2200-01-01T00:00:00Z. Upgrade to a newer version of the Task.`,
 		"term": "task",
 	}}
@@ -769,7 +767,6 @@ test_expired_slsa_v0_2 if {
 
 	expected := {{
 		"code": "tasks.unsupported",
-		# regal ignore:line-length
 		"msg": `Task "task" is used by pipeline task "task" is or will be unsupported as of 2000-01-01T00:00:00Z. Upgrade to a newer version of the Task.`,
 		"term": "task",
 	}}
@@ -792,7 +789,6 @@ test_deprecated_slsa_v1 if {
 
 	expected := {{
 		"code": "tasks.unsupported",
-		# regal ignore:line-length
 		"msg": `Task "task" is used by pipeline task "task" is or will be unsupported as of 2200-01-01T00:00:00Z. Upgrade to a newer version of the Task.`,
 		"term": "task",
 	}}
@@ -815,7 +811,6 @@ test_expired_slsa_v1 if {
 
 	expected := {{
 		"code": "tasks.unsupported",
-		# regal ignore:line-length
 		"msg": `Task "task" is used by pipeline task "task" is or will be unsupported as of 2000-01-01T00:00:00Z. Upgrade to a newer version of the Task.`,
 		"term": "task",
 	}}
@@ -841,7 +836,6 @@ test_expired_with_custom_message if {
 
 	expected := {{
 		"code": "tasks.unsupported",
-		# regal ignore:line-length
 		"msg": `Task "task" is used by pipeline task "task" is or will be unsupported as of 2000-01-01T00:00:00Z. The Task has been discontinued.`,
 		"term": "task",
 	}}
@@ -984,7 +978,6 @@ test_data_errors_on_pipeline_required_tasks if {
 		},
 		{
 			"code": "tasks.data_provided",
-			# regal ignore:line-length
 			"msg": `pipeline-required-tasks.spam[0].effective_on is not valid RFC3339 format: "bad-datetime-format"`,
 			"severity": "failure",
 		},
@@ -1250,7 +1243,6 @@ _time_based_required_tasks := [
 
 _bundle := "registry.img/spam:0.1@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
 
-# regal ignore:line-length
 _untrusted_bundle := "registry.io/repository/unacceptable:0.1@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
 
 _trusted_tasks := {"oci://registry.img/spam:0.1": [{

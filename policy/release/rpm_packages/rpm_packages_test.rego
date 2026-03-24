@@ -161,14 +161,12 @@ test_mismatch_detected_with_lockfile_noise if {
 }
 
 # CycloneDX mock blobs - purls must have distro= qualifier to be considered installed
-# regal ignore:line-length
 _mock_blob(`registry.local/cyclonedx-1@sha256:c0c101e01d19e5700000000000000000000000c0c101e01d19e57`) := json.marshal({"components": [
 	{"purl": "pkg:rpm/redhat/spam@1.0.0-1?distro=rhel-10.0"},
 	{"purl": "pkg:rpm/redhat/bacon@1.0.0-2?distro=rhel-10.0"},
 	{"purl": "pkg:rpm/redhat/ham@4.2.0-0?distro=rhel-10.0"},
 ]})
 
-# regal ignore:line-length
 _mock_blob(`registry.local/cyclonedx-2@sha256:c0c102e02d19e5700000000000000000000000c0c102e02d19e57`) := json.marshal({"components": [
 	{"purl": "pkg:rpm/redhat/spam@1.0.0-2?distro=rhel-10.0"},
 	{"purl": "pkg:rpm/redhat/bacon@1.0.0-2?distro=rhel-10.0"},
@@ -176,7 +174,6 @@ _mock_blob(`registry.local/cyclonedx-2@sha256:c0c102e02d19e570000000000000000000
 ]})
 
 # SPDX mock blobs - purls must have distro= qualifier to be considered installed
-# regal ignore:line-length
 _mock_blob(`registry.local/spdx-1@sha256:50d01d19e57000000000000000000000000000000000000050d01d19e57`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
@@ -196,7 +193,6 @@ _mock_blob(`registry.local/spdx-1@sha256:50d01d19e570000000000000000000000000000
 	}]},
 ]})
 
-# regal ignore:line-length
 _mock_blob(`registry.local/spdx-2@sha256:50d02d19e57000000000000000000000000000000000000050d02d19e57`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
@@ -217,7 +213,6 @@ _mock_blob(`registry.local/spdx-2@sha256:50d02d19e570000000000000000000000000000
 ]})
 
 # Mock blob with multiple versions of spam (both 1.0.0-1 and 1.0.0-2)
-# regal ignore:line-length
 _mock_blob(`registry.local/multi-spam@sha256:4017150a4d19e5700000000000000000000000004017150a4d19e57`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
@@ -237,7 +232,6 @@ _mock_blob(`registry.local/multi-spam@sha256:4017150a4d19e5700000000000000000000
 ]})
 
 # Mock blob with only one version of spam (1.0.0-1) - for mismatch testing
-# regal ignore:line-length
 _mock_blob(`registry.local/single-spam@sha256:5109150a4d19e5700000000000000000000000005109150a4d19e57`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
@@ -252,7 +246,6 @@ _mock_blob(`registry.local/single-spam@sha256:5109150a4d19e570000000000000000000
 ]})
 
 # Mock blob with spam version 1.0.0-3 - for grouping test
-# regal ignore:line-length
 _mock_blob(`registry.local/spam-v3@sha256:50a43d19e57000000000000000000000000000000000050a43d19e57`) := json.marshal({"packages": [
 	{"externalRefs": [{
 		"referenceType": "purl",
@@ -269,7 +262,6 @@ _mock_blob(`registry.local/spam-v3@sha256:50a43d19e57000000000000000000000000000
 # Mock blob simulating amd64 SBOM with lockfile entries for all arches
 # The installed package (with distro=) is spam-1.0.0-1
 # Lockfile entries (with repository_id=) show spam-1.0.0-2 for arm64 - should be ignored
-# regal ignore:line-length
 _mock_blob(`registry.local/sbom-lockfile-amd64@sha256:5b0410cfa4d64d19e5700000000000005b0410cfa4d64d19e57`) := json.marshal({"packages": [
 	# Installed package on this platform
 	{"externalRefs": [{
@@ -286,7 +278,6 @@ _mock_blob(`registry.local/sbom-lockfile-amd64@sha256:5b0410cfa4d64d19e570000000
 ]})
 
 # Mock blob simulating arm64 SBOM with lockfile entries - installed version matches amd64
-# regal ignore:line-length
 _mock_blob(`registry.local/sbom-lockfile-arm64@sha256:5b0410cfa4464d19e5700000000000005b0410cfa4464d19e57`) := json.marshal({"packages": [
 	# Installed package on this platform - same version as amd64
 	{"externalRefs": [{
@@ -303,7 +294,6 @@ _mock_blob(`registry.local/sbom-lockfile-arm64@sha256:5b0410cfa4464d19e570000000
 ]})
 
 # Mock blob simulating arm64 SBOM with different installed version than amd64
-# regal ignore:line-length
 _mock_blob(`registry.local/sbom-lockfile-arm64-diff@sha256:5b0410cfa46d1ffd19e570005b0410cfa46d1ffd19e57`) := json.marshal({"packages": [
 	# Installed package on this platform - DIFFERENT version than amd64
 	{"externalRefs": [{
@@ -319,13 +309,10 @@ _mock_blob(`registry.local/sbom-lockfile-arm64-diff@sha256:5b0410cfa46d1ffd19e57
 	}]},
 ]})
 
-# regal ignore:line-length
 _sbom_with_lockfile_amd64 := "registry.local/sbom-lockfile-amd64@sha256:5b0410cfa4d64d19e5700000000000005b0410cfa4d64d19e57"
 
-# regal ignore:line-length
 _sbom_with_lockfile_arm64 := "registry.local/sbom-lockfile-arm64@sha256:5b0410cfa4464d19e5700000000000005b0410cfa4464d19e57"
 
-# regal ignore:line-length
 _sbom_with_lockfile_arm64_different := "registry.local/sbom-lockfile-arm64-diff@sha256:5b0410cfa46d1ffd19e570005b0410cfa46d1ffd19e57"
 
 _cyclonedx_url_1 := "registry.local/cyclonedx-1@sha256:c0c101e01d19e5700000000000000000000000c0c101e01d19e57"

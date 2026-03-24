@@ -5,7 +5,6 @@ import data.lib
 import rego.v1
 
 single_test_case(branch, expected_results) if {
-	# regal ignore:line-length
 	mock_input := {"attestations": [{"statement": {"predicate": {"buildConfig": {"tasks": [{"invocation": {"environment": {"annotations": {"build.appstudio.redhat.com/target_branch": branch}}}}]}}}}]}
 
 	mock_rule_data := [

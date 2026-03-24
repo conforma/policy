@@ -11,7 +11,6 @@ import data.lib
 # mock implementations: _mock_image_manifest and _mock_blob return the data the
 # test requires the image reference is constructed such that it contains a
 # serialized array of JSON patches following the # sign in the image reference,
-# regal ignore:line-length
 # e.g.: registry.io/repository/image@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700#[{"op": ...}].
 # There are several helper functions to allow for readability and somewhat for
 # maintainability of the tests:
@@ -146,7 +145,6 @@ test_required_image_labels_with_values if {
 test_fbc_required_image_labels_with_values if {
 	expected := {{
 		"code": "labels.required_labels",
-		# regal ignore:line-length
 		"msg": "The \"fbc.vendor\" label has an unexpected \"DeVille, Inc.\" value. Must be one of: Acme, Inc., Goodfellas, Inc.",
 		"term": "fbc.vendor",
 	}}
@@ -516,7 +514,6 @@ test_rule_data_provided if {
 		},
 		{
 			"code": "labels.rule_data_provided",
-			# regal ignore:line-length
 			"msg": "Rule data disallowed_inherited_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
 			"severity": "failure",
 		},
@@ -527,7 +524,6 @@ test_rule_data_provided if {
 		},
 		{
 			"code": "labels.rule_data_provided",
-			# regal ignore:line-length
 			"msg": "Rule data fbc_disallowed_inherited_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
 			"severity": "failure",
 		},
@@ -584,7 +580,6 @@ test_strip_digest if {
 	lib.assert_equal("foo", labels._strip_digest("foo@bar"))
 	lib.assert_equal("foo:latest", labels._strip_digest("foo:latest@bar"))
 
-	# regal ignore:line-length
 	lib.assert_equal("registry.io/registry/image", labels._strip_digest("registry.io/registry/image@sha256:ace0fba5e0000000000000000000000000000000000000000000000ace0fba5e"))
 }
 
@@ -635,7 +630,6 @@ _test_ref_patches(patches) := sprintf("%s@%s", [
 	_test_digest(patches),
 ])
 
-# regal ignore:line-length
 _test_digest(patches) := sprintf("sha256:14a9ed19e570000000000000000000000000000000000000000014a9ed19e57#%s", [json.marshal(patches)])
 
 _config(patches) := {

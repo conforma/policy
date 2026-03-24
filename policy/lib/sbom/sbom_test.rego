@@ -140,17 +140,14 @@ test_ignore_unrelated_sboms if {
 	]
 
 	lib.assert_equal(sbom.all_sboms, []) with input.attestations as attestations
-		# regal ignore:line-length
-with 		input.image as {"ref": "registry.io/repository/image@sha256:284e302900000000000000000000000000000000000000000000000284e3029"}
+		with input.image as {"ref": "registry.io/repository/image@sha256:284e302900000000000000000000000000000000000000000000000284e3029"}
 		with ec.oci.blob as ""
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 }
 
 test_image_ref_from_purl if {
-	# regal ignore:line-length
 	purl := "pkg:oci/ubi-minimal@sha256:92b1d5747a93608b6adb64dfd54515c3c5a360802db4706765ff3d8470df6290?repository_url=registry.access.redhat.com/ubi9/ubi-minimal"
 
-	# regal ignore:line-length
 	image_ref := "registry.access.redhat.com/ubi9/ubi-minimal@sha256:92b1d5747a93608b6adb64dfd54515c3c5a360802db4706765ff3d8470df6290"
 	lib.assert_equal(sbom.image_ref_from_purl(purl), image_ref)
 }

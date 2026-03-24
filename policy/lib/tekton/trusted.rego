@@ -420,7 +420,6 @@ _trusted_task_rules_schema := {
 					"effective_on": {
 						"type": "string",
 						"format": "date",
-						# regal ignore:line-length
 						"description": "Date when this rule becomes effective (e.g., '2025-02-01'). Rules with future effective_on dates are not considered. If omitted, rule is effective immediately.",
 					},
 					"versions": {
@@ -456,7 +455,6 @@ _trusted_task_rules_schema := {
 					"effective_on": {
 						"type": "string",
 						"format": "date",
-						# regal ignore:line-length
 						"description": "Date when this rule becomes effective (e.g., '2025-11-15'). Rules with future effective_on dates are not considered. If omitted, rule is effective immediately.",
 					},
 					"message": {

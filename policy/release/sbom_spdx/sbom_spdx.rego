@@ -98,7 +98,6 @@ deny contains result if {
 
 	msg := regex.replace(object.get(allowed, "url", ""), `(.+)`, ` by pattern "$1"`)
 
-	# regal ignore:line-length
 	result := lib.result_helper(rego.metadata.chain(), [pkg.name, reference.referenceLocator, reference.referenceType, msg])
 }
 
@@ -130,7 +129,6 @@ deny contains result if {
 
 	msg := regex.replace(object.get(disallowed, "url", ""), `(.+)`, ` by pattern "$1"`)
 
-	# regal ignore:line-length
 	result := lib.result_helper(rego.metadata.chain(), [pkg.name, reference.referenceLocator, reference.referenceType, msg])
 }
 

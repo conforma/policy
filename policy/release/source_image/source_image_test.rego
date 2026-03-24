@@ -212,13 +212,11 @@ test_missing_signature if {
 	expected := {
 		{
 			"code": "source_image.signed",
-			# regal ignore:line-length
 			"msg": "Image signature verification failed for registry.local/repo:v0.2@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb: kaboom!",
 		},
 		{
 			"code": "source_image.signed",
 			"effective_on": "2022-01-01T00:00:00Z",
-			# regal ignore:line-length
 			"msg": "Image signature verification failed for registry.local/repo:v1.0@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb: kaboom!",
 		},
 	}
