@@ -5,9 +5,7 @@
 #   and SPDX SBOM formats.
 package lib.sbom
 
-import future.keywords.contains
-import future.keywords.if
-import future.keywords.in
+import rego.v1
 
 packages contains pkg if {
 	some pkg in _cyclonedx_maven_packages
@@ -25,7 +23,7 @@ _cyclonedx_maven_packages contains pkg if {
 
 	repos := {ref.url |
 		some ref in component.externalRefs
-		ref.type in ["distribution", "artifact-repository"]
+		ref.type in {"distribution", "artifact-repository"}
 	}
 
 	final_repos := _empty_to_default(repos)
@@ -46,7 +44,7 @@ _spdx_maven_packages contains pkg if {
 
 	repos := {ref.referenceLocator |
 		some ref in item.externalRefs
-		ref.referenceType in ["distribution", "repository"]
+		ref.referenceType in {"distribution", "repository"}
 	}
 
 	final_repos := _empty_to_default(repos)
@@ -59,6 +57,10 @@ _spdx_maven_packages contains pkg if {
 	}
 }
 
+# _empty_to_default ensures that packages without explicit repository URLs
+# are still processed. If the input repo_set is empty, it returns {""}.
+# In the context of this policy, a blank repository URL is considered
+# to be Maven Central (https://repo.maven.apache.org/maven2/).
 _empty_to_default(repo_set) := repo_set if {
 	count(repo_set) > 0
 } else := {""}

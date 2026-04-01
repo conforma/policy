@@ -1,5 +1,6 @@
 package lib.sbom_test
 
+import data.lib
 import data.lib.sbom
 import future.keywords.if
 import future.keywords.in
@@ -11,21 +12,21 @@ test_cyclonedx_maven_extraction if {
 		"externalRefs": [{"type": "distribution", "url": "https://repo.maven.apache.org/maven2/"}],
 	}]
 
-	res := sbom.packages with sbom.cyclonedx_sboms as [_cyclonedx_sbom(mock_components)]
-
-	res == {{
+	expected := {{
 		"name": "auth-lib",
 		"purl": "pkg:maven/org.example/auth@1.0",
 		"repository_url": "https://repo.maven.apache.org/maven2/",
 	}}
+
+	result := sbom.packages with sbom.cyclonedx_sboms as [_cyclonedx_sbom(mock_components)]
+
+	lib.assert_equal(expected, result)
 }
 
 test_cyclonedx_ignores_non_maven if {
 	mock_components := [{"name": "react", "purl": "pkg:npm/react@18.2.0"}]
 
-	res := sbom.packages with sbom.cyclonedx_sboms as [_cyclonedx_sbom(mock_components)]
-
-	count(res) == 0
+	lib.assert_empty(sbom.packages) with sbom.cyclonedx_sboms as [_cyclonedx_sbom(mock_components)]
 }
 
 test_cyclonedx_empty_repo_url if {
@@ -35,10 +36,15 @@ test_cyclonedx_empty_repo_url if {
 		"externalRefs": [],
 	}]
 
-	res := sbom.packages with sbom.cyclonedx_sboms as [_cyclonedx_sbom(mock_components)]
+	expected := {{
+		"name": "no-repo",
+		"purl": "pkg:maven/org.example/no-repo@1.0",
+		"repository_url": "",
+	}}
 
-	some pkg in res
-	pkg.repository_url == ""
+	result := sbom.packages with sbom.cyclonedx_sboms as [_cyclonedx_sbom(mock_components)]
+
+	lib.assert_equal(expected, result)
 }
 
 test_spdx_maven_extraction if {
@@ -51,13 +57,15 @@ test_spdx_maven_extraction if {
 		}],
 	}]
 
-	res := sbom.packages with sbom.spdx_sboms as [_spdx_sbom(mock_packages)]
-
-	res == {{
+	expected := {{
 		"name": "data-service",
 		"purl": "pkg:maven/org.example/data@2.5",
 		"repository_url": "https://internal.jfrog.io/artifactory",
 	}}
+
+	result := sbom.packages with sbom.spdx_sboms as [_spdx_sbom(mock_packages)]
+
+	lib.assert_equal(expected, result)
 }
 
 test_combined_sources if {
@@ -76,10 +84,24 @@ test_combined_sources if {
 		}],
 	}]
 
-	res := sbom.packages with sbom.cyclonedx_sboms as [_cyclonedx_sbom(mock_cdx)]
+	expected := {
+		{
+			"name": "cdx-pkg",
+			"purl": "pkg:maven/cdx/pkg@1",
+			"repository_url": "url1",
+		},
+		{
+			"name": "spdx-pkg",
+			"purl": "pkg:maven/spdx/pkg@1",
+			"repository_url": "url2",
+		},
+	}
+
+	result := sbom.packages
+		with sbom.cyclonedx_sboms as [_cyclonedx_sbom(mock_cdx)]
 		with sbom.spdx_sboms as [_spdx_sbom(mock_spdx)]
 
-	count(res) == 2
+	lib.assert_equal(expected, result)
 }
 
 test_cyclonedx_multiple_repo_capture if {
@@ -92,11 +114,22 @@ test_cyclonedx_multiple_repo_capture if {
 		],
 	}]
 
-	pkg_list := sbom.packages with sbom.cyclonedx_sboms as [_cyclonedx_sbom(mock_components)]
+	expected := {
+		{
+			"name": "multi-repo-lib",
+			"purl": "pkg:maven/org.example/multi@1.0",
+			"repository_url": "https://repo-a.com",
+		},
+		{
+			"name": "multi-repo-lib",
+			"purl": "pkg:maven/org.example/multi@1.0",
+			"repository_url": "https://repo-b.com",
+		},
+	}
 
-	count(pkg_list) == 2
-	urls := {p.repository_url | some p in pkg_list}
-	urls == {"https://repo-a.com", "https://repo-b.com"}
+	result := sbom.packages with sbom.cyclonedx_sboms as [_cyclonedx_sbom(mock_components)]
+
+	lib.assert_equal(expected, result)
 }
 
 _cyclonedx_sbom(components) := {"components": components}
