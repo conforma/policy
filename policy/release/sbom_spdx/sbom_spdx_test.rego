@@ -422,3 +422,81 @@ _sbom_attestation := {"statement": {
 		}],
 	},
 }}
+
+test_proxy_url_spdx_allowed if {
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_proxy_package(
+			"pkg:npm/example-lib@2.0",
+			"https://proxy.example.com/npm/example-lib-2.0.tgz",
+		),
+	}])
+
+	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+}
+
+test_proxy_url_spdx_denied if {
+	expected := {{
+		"code": "sbom_spdx.allowed_proxy_urls",
+		"term": "pkg:npm/example-lib@2.0",
+		# regal ignore:line-length
+		"msg": `Package pkg:npm/example-lib@2.0 has proxy URL "https://evil.com/example-lib-2.0.tgz" which does not match any allowed pattern for PURL type "npm"`,
+	}}
+
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_proxy_package(
+			"pkg:npm/example-lib@2.0",
+			"https://evil.com/example-lib-2.0.tgz",
+		),
+	}])
+
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+}
+
+test_proxy_url_spdx_noassertion_skipped if {
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_proxy_package(
+			"pkg:maven/org.example/lib@1.0",
+			"NOASSERTION",
+		),
+	}])
+
+	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+}
+
+_spdx_proxy_package(purl, download_location) := {
+	"name": "proxy-package",
+	"SPDXID": "SPDXRef-proxy-package",
+	"downloadLocation": download_location,
+	"externalRefs": [{
+		"referenceCategory": "PACKAGE-MANAGER",
+		"referenceType": "purl",
+		"referenceLocator": purl,
+	}],
+	"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
+}
+
+_spdx_proxy_rule_data := {
+	"proxy_enabled_purl_types": ["maven", "npm"],
+	"allowed_proxy_url_patterns": {
+		"maven": ["^https://proxy\\.example\\.com/maven/.*"],
+		"npm": ["^https://proxy\\.example\\.com/npm/.*"],
+	},
+}
