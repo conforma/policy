@@ -18,7 +18,7 @@ Verify that hermetic build tasks have the enable-hermeto-proxy parameter set to 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task '%s' is hermetic but does not have the enable-hermeto-proxy parameter set to true`
 * Code: `hermetic_task.hermeto_proxy_enabled`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L55[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L41[Source, window="_blank"]
 
 [#hermetic_task__hermetic]
 === link:#hermetic_task__hermetic[Task called with hermetic param set]
