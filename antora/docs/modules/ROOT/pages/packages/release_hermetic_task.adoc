@@ -40,4 +40,4 @@ Confirm the `proxy_enabled_purl_types` and `allowed_proxy_url_patterns` rule dat
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `hermetic_task.proxy_rule_data_format`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L41[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L65[Source, window="_blank"]
