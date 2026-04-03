@@ -38,20 +38,6 @@ deny contains result if {
 	result := metadata.result_helper(rego.metadata.chain(), [tekton.task_name(not_hermetic_task)])
 }
 
-_not_hermetic_tasks contains task if {
-	required_hermetic_tasks := rule_data.get("required_hermetic_tasks")
-	some attestation in lib.pipelinerun_attestations
-	some task in tekton.tasks(attestation)
-	some required_hermetic_task in required_hermetic_tasks
-	tekton.task_name(task) == required_hermetic_task
-	not _task_is_hermetic(task)
-}
-
-_task_is_hermetic(task) if {
-	tekton.task_param(task, "HERMETIC")
-	tekton.task_param(task, "HERMETIC") == "true"
-}
-
 # METADATA
 # title: proxy_enabled_purl_types format
 # description: >-
@@ -67,6 +53,20 @@ _task_is_hermetic(task) if {
 deny contains result if {
 	some error in _rule_data_errors
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
+}
+
+_not_hermetic_tasks contains task if {
+	required_hermetic_tasks := rule_data.get("required_hermetic_tasks")
+	some attestation in lib.pipelinerun_attestations
+	some task in tekton.tasks(attestation)
+	some required_hermetic_task in required_hermetic_tasks
+	tekton.task_name(task) == required_hermetic_task
+	not _task_is_hermetic(task)
+}
+
+_task_is_hermetic(task) if {
+	tekton.task_param(task, "HERMETIC")
+	tekton.task_param(task, "HERMETIC") == "true"
 }
 
 # Verify proxy_enabled_purl_types is a list of unique strings.
