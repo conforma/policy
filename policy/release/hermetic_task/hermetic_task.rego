@@ -11,6 +11,7 @@ package hermetic_task
 import rego.v1
 
 import data.lib
+import data.lib.json as j
 import data.lib.metadata
 import data.lib.rule_data
 import data.lib.tekton
@@ -49,4 +50,69 @@ _not_hermetic_tasks contains task if {
 _task_is_hermetic(task) if {
 	tekton.task_param(task, "HERMETIC")
 	tekton.task_param(task, "HERMETIC") == "true"
+}
+
+# METADATA
+# title: proxy_enabled_purl_types format
+# description: >-
+#   Confirm the `proxy_enabled_purl_types` and `allowed_proxy_url_patterns`
+#   rule data match the expected format.
+# custom:
+#   short_name: proxy_rule_data_format
+#   failure_msg: "%s"
+#   collections:
+#   - redhat
+#   - policy_data
+#
+deny contains result if {
+	some error in _rule_data_errors
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
+}
+
+# Verify proxy_enabled_purl_types is a list of unique strings.
+_rule_data_errors contains error if {
+	some e in j.validate_schema(
+		rule_data.get("proxy_enabled_purl_types"),
+		{
+			"$schema": "http://json-schema.org/draft-07/schema#",
+			"type": "array",
+			"items": {"type": "string"},
+			"uniqueItems": true,
+		},
+	)
+	error := {
+		"message": sprintf("Rule data proxy_enabled_purl_types has unexpected format: %s", [e.message]),
+		"severity": e.severity,
+	}
+}
+
+# Verify allowed_proxy_url_patterns is an object mapping strings to arrays of strings.
+_rule_data_errors contains error if {
+	some e in j.validate_schema(
+		rule_data.get("allowed_proxy_url_patterns"),
+		{
+			"$schema": "http://json-schema.org/draft-07/schema#",
+			"type": "object",
+			"additionalProperties": {
+				"type": "array",
+				"items": {"type": "string"},
+				"uniqueItems": true,
+			},
+		},
+	)
+	error := {
+		"message": sprintf("Rule data allowed_proxy_url_patterns has unexpected format: %s", [e.message]),
+		"severity": e.severity,
+	}
+}
+
+# Verify items in allowed_proxy_url_patterns are valid regular expressions.
+_rule_data_errors contains error if {
+	some purl_type, patterns in rule_data.get("allowed_proxy_url_patterns")
+	some pattern in patterns
+	not regex.is_valid(pattern)
+	error := {
+		"message": sprintf("%q is not a valid regular expression for PURL type %q", [pattern, purl_type]),
+		"severity": "failure",
+	}
 }

@@ -269,6 +269,60 @@ test_task_is_hermetic if {
 	not hermetic_task._task_is_hermetic(task_hermetic_param_not_present)
 }
 
+test_proxy_rule_data_validation if {
+	# Valid data - no errors
+	assertions.assert_empty(hermetic_task.deny) with data.rule_data as {
+		"proxy_enabled_purl_types": ["maven", "npm"],
+		"allowed_proxy_url_patterns": {"maven": ["^https://proxy\\.example\\.com/.*"]},
+	}
+
+	# Invalid proxy_enabled_purl_types: wrong type
+	d_bad_purl_types := {
+		"proxy_enabled_purl_types": [1, "maven", "maven"],
+		"allowed_proxy_url_patterns": {},
+	}
+	expected_bad_purl_types := {
+		{
+			"code": "hermetic_task.proxy_rule_data_format",
+			# regal ignore:line-length
+			"msg": "Rule data proxy_enabled_purl_types has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "hermetic_task.proxy_rule_data_format",
+			# regal ignore:line-length
+			"msg": "Rule data proxy_enabled_purl_types has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal_results(expected_bad_purl_types, hermetic_task.deny) with data.rule_data as d_bad_purl_types
+
+	# Invalid allowed_proxy_url_patterns: wrong value type
+	d_bad_patterns := {
+		"proxy_enabled_purl_types": [],
+		"allowed_proxy_url_patterns": {"maven": "not-an-array"},
+	}
+	expected_bad_patterns := {{
+		"code": "hermetic_task.proxy_rule_data_format",
+		# regal ignore:line-length
+		"msg": "Rule data allowed_proxy_url_patterns has unexpected format: maven: Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(expected_bad_patterns, hermetic_task.deny) with data.rule_data as d_bad_patterns
+
+	# Invalid regex in allowed_proxy_url_patterns
+	d_bad_regex := {
+		"proxy_enabled_purl_types": [],
+		"allowed_proxy_url_patterns": {"maven": ["(?=a)?b"]},
+	}
+	expected_bad_regex := {{
+		"code": "hermetic_task.proxy_rule_data_format",
+		"msg": "\"(?=a)?b\" is not a valid regular expression for PURL type \"maven\"",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(expected_bad_regex, hermetic_task.deny) with data.rule_data as d_bad_regex
+}
+
 _good_attestation := {"statement": {
 	"predicateType": "https://slsa.dev/provenance/v0.2",
 	"predicate": {

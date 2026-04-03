@@ -140,6 +140,13 @@ defaults := {
 	"volatile_config_warning_threshold_days": 30,
 	# The gpg-pubkey RPM does not abide to the rule of a single RPM name being installed.
 	"non_unique_rpm_names": ["gpg-pubkey"],
+	#
+	# Used in release/hermetic_task/hermetic_task.rego
+	# PURL types that require proxy enforcement (e.g., "maven", "npm", "pypi")
+	"proxy_enabled_purl_types": [],
+	# Allowed proxy URL regex patterns per PURL type
+	# e.g., {"maven": ["^https://maven-proxy\\.example\\.com/.*"]}
+	"allowed_proxy_url_patterns": {},
 }
 
 # Returns the "first found" of the following:

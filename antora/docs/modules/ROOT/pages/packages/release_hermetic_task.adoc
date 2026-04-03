@@ -18,4 +18,14 @@ Verify the task in the PipelineRun attestation was invoked with the proper param
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task '%s' was not invoked with the hermetic parameter set`
 * Code: `hermetic_task.hermetic`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L18[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L19[Source, window="_blank"]
+
+[#hermetic_task__proxy_rule_data_format]
+=== link:#hermetic_task__proxy_rule_data_format[proxy_enabled_purl_types format]
+
+Confirm the `proxy_enabled_purl_types` and `allowed_proxy_url_patterns` rule data match the expected format.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `hermetic_task.proxy_rule_data_format`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L55[Source, window="_blank"]
