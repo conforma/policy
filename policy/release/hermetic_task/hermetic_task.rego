@@ -4,7 +4,8 @@
 # description: >-
 #   This package verifies that all the tasks in the attestation that
 #   are required to be hermetic were invoked with the proper
-#   parameters to perform a hermetic execution.
+#   parameters to perform a hermetic execution, including enabling
+#   the Sonatype proxy when required.
 #
 package hermetic_task
 
@@ -39,6 +40,29 @@ deny contains result if {
 }
 
 # METADATA
+# title: Hermetic build task has Sonatype proxy enabled
+# description: >-
+#   Verify that hermetic build tasks have the enable-hermeto-proxy
+#   parameter set to true. This ensures that hermetic builds use
+#   the Sonatype proxy for dependency resolution.
+# custom:
+#   short_name: hermeto_proxy_enabled
+#   failure_msg: >-
+#     Task '%s' is hermetic but does not have the enable-hermeto-proxy parameter set to true
+#   solution: >-
+#     Make sure the task has the input parameter 'enable-hermeto-proxy'
+#     set to 'true'.
+#   collections:
+#   - redhat
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+deny contains result if {
+	some task in _hermetic_tasks_without_proxy
+	result := metadata.result_helper(rego.metadata.chain(), [tekton.task_name(task)])
+}
+
+# METADATA
 # title: proxy_enabled_purl_types format
 # description: >-
 #   Confirm the `proxy_enabled_purl_types` and `allowed_proxy_url_patterns`
@@ -56,17 +80,32 @@ deny contains result if {
 }
 
 _not_hermetic_tasks contains task if {
+	some task in _required_hermetic_build_tasks
+	not _task_is_hermetic(task)
+}
+
+_hermetic_tasks_without_proxy contains task if {
+	some task in _required_hermetic_build_tasks
+	_task_is_hermetic(task)
+	not _task_has_proxy_enabled(task)
+}
+
+_required_hermetic_build_tasks contains task if {
 	required_hermetic_tasks := rule_data.get("required_hermetic_tasks")
 	some attestation in lib.pipelinerun_attestations
 	some task in tekton.tasks(attestation)
 	some required_hermetic_task in required_hermetic_tasks
 	tekton.task_name(task) == required_hermetic_task
-	not _task_is_hermetic(task)
 }
 
 _task_is_hermetic(task) if {
 	tekton.task_param(task, "HERMETIC")
 	tekton.task_param(task, "HERMETIC") == "true"
+}
+
+_task_has_proxy_enabled(task) if {
+	tekton.task_param(task, "enable-hermeto-proxy")
+	tekton.task_param(task, "enable-hermeto-proxy") == "true"
 }
 
 # Verify proxy_enabled_purl_types is a list of unique strings.

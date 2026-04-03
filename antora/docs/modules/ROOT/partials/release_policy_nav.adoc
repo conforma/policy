@@ -44,6 +44,7 @@
 **** xref:packages/release_github_certificate.adoc#github_certificate__gh_workflow_trigger[GitHub Workflow Trigger]
 **** xref:packages/release_github_certificate.adoc#github_certificate__rule_data_provided[Rule data provided]
 *** xref:packages/release_hermetic_task.adoc[Hermetic task]
+**** xref:packages/release_hermetic_task.adoc#hermetic_task__hermeto_proxy_enabled[Hermetic build task has Sonatype proxy enabled]
 **** xref:packages/release_hermetic_task.adoc#hermetic_task__hermetic[Task called with hermetic param set]
 **** xref:packages/release_hermetic_task.adoc#hermetic_task__proxy_rule_data_format[proxy_enabled_purl_types format]
 *** xref:packages/release_labels.adoc[Labels]
