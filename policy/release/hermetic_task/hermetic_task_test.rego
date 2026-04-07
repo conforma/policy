@@ -285,7 +285,7 @@ test_hermetic_task_with_proxy_enabled if {
 		with data.rule_data.required_hermetic_tasks as ["buildah"]
 
 	# v0.2 attestation
-	assertions.assert_empty(hermetic_task.deny) with input.attestations as [_good_attestation_with_proxy]
+	assertions.assert_empty(hermetic_task.deny) with input.attestations as [_good_attestation]
 		with data.rule_data.required_hermetic_tasks as ["buildah"]
 }
 
@@ -437,22 +437,6 @@ _has_proxy_violation(results) if {
 	some result in results
 	result.code == "hermetic_task.hermeto_proxy_enabled"
 }
-
-_good_attestation_with_proxy := {"statement": {
-	"predicateType": "https://slsa.dev/provenance/v0.2",
-	"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [{
-			"results": [
-				{"name": "IMAGE_URL", "value": "registry/repo"},
-				{"name": "IMAGE_DIGEST", "value": "digest"},
-			],
-			# regal ignore:line-length
-			"ref": {"kind": "Task", "name": "buildah", "bundle": "reg.img/spam@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
-			"invocation": {"parameters": {"HERMETIC": "true", "enable-hermeto-proxy": "true"}},
-		}]},
-	},
-}}
 
 _good_attestation := {"statement": {
 	"predicateType": "https://slsa.dev/provenance/v0.2",

@@ -257,6 +257,7 @@ deny contains result if {
 # description: >-
 #   For packages with a PURL type listed in proxy_enabled_purl_types, verify the
 #   downloadLocation matches at least one pattern from allowed_proxy_url_patterns.
+#   Packages with downloadLocation set to NOASSERTION are skipped.
 # custom:
 #   short_name: allowed_proxy_urls
 #   failure_msg: >-
@@ -266,6 +267,8 @@ deny contains result if {
 #     allowed_proxy_url_patterns rule data for the given PURL type.
 #   collections:
 #   - redhat
+#   - redhat_rpms
+#   - policy_data
 #
 deny contains result if {
 	proxy_enabled := {t | some t in rule_data.get("proxy_enabled_purl_types")}
