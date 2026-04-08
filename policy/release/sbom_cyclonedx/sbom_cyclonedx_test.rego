@@ -700,6 +700,23 @@ test_proxy_url_cyclonedx_denied if {
 		with data.rule_data as _proxy_rule_data
 }
 
+test_proxy_url_cyclonedx_noassertion_skipped if {
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": _cdx_proxy_component(
+			"pkg:maven/org.example/lib@1.0",
+			"NOASSERTION",
+		),
+	}])
+
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+}
+
 test_proxy_url_cyclonedx_non_proxy_purl_type if {
 	att := json.patch(_sbom_1_5_attestation, [{
 		"op": "add",

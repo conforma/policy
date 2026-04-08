@@ -299,6 +299,7 @@ deny contains result if {
 	parsed_purl.type in proxy_enabled
 
 	distribution_url := object.get(reference, "url", "")
+	distribution_url != "NOASSERTION"
 	patterns := object.get(allowed_patterns, parsed_purl.type, [])
 	not sbom.url_matches_any_pattern(distribution_url, patterns)
 
