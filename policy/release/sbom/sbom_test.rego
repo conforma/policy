@@ -267,6 +267,64 @@ test_rule_data_validation if {
 		}
 }
 
+test_proxy_rule_data_validation if {
+	# Valid data - no errors
+	assertions.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
+		with data.rule_data as {
+			"proxy_enabled_purl_types": ["maven", "npm"],
+			"allowed_proxy_url_patterns": {"maven": ["^https://proxy\\.example\\.com/.*"]},
+		}
+
+	# Invalid proxy_enabled_purl_types: wrong type
+	d_bad_purl_types := {
+		"proxy_enabled_purl_types": [1, "maven", "maven"],
+		"allowed_proxy_url_patterns": {},
+	}
+	expected_bad_purl_types := {
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Rule data proxy_enabled_purl_types has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Rule data proxy_enabled_purl_types has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal_results(expected_bad_purl_types, sbom.deny) with input.attestations as _sbom_attestation
+		with data.rule_data as d_bad_purl_types
+
+	# Invalid allowed_proxy_url_patterns: wrong value type
+	d_bad_patterns := {
+		"proxy_enabled_purl_types": [],
+		"allowed_proxy_url_patterns": {"maven": "not-an-array"},
+	}
+	expected_bad_patterns := {{
+		"code": "sbom.disallowed_packages_provided",
+		# regal ignore:line-length
+		"msg": "Rule data allowed_proxy_url_patterns has unexpected format: maven: Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(expected_bad_patterns, sbom.deny) with input.attestations as _sbom_attestation
+		with data.rule_data as d_bad_patterns
+
+	# Invalid regex in allowed_proxy_url_patterns
+	d_bad_regex := {
+		"proxy_enabled_purl_types": [],
+		"allowed_proxy_url_patterns": {"maven": ["(?=a)?b"]},
+	}
+	expected_bad_regex := {{
+		"code": "sbom.disallowed_packages_provided",
+		"msg": "\"(?=a)?b\" is not a valid regular expression for PURL type \"maven\"",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(expected_bad_regex, sbom.deny) with input.attestations as _sbom_attestation
+		with data.rule_data as d_bad_regex
+}
+
 _sbom_attestation := [_spdx_sbom_attestation, _cyclonedx_sbom_attestation]
 
 _spdx_sbom_attestation := {"statement": {
