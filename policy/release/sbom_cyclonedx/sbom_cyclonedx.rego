@@ -266,6 +266,50 @@ deny contains result if {
 	result := metadata.result_helper_with_term(rego.metadata.chain(), [purl, distribution_url], purl)
 }
 
+# METADATA
+# title: Allowed proxy URLs
+# description: >-
+#   For components with externalReferences of type distribution, verify proxy URLs
+#   match at least one pattern from allowed_proxy_url_patterns for the component's
+#   PURL type. Only PURL types listed in proxy_enabled_purl_types are checked.
+# custom:
+#   short_name: allowed_proxy_urls
+#   failure_msg: >-
+#     Package %s has proxy URL %q which does not match any allowed pattern for PURL type %q
+#   solution: >-
+#     Ensure the proxy URL matches one of the patterns defined in the
+#     allowed_proxy_url_patterns rule data for the given PURL type.
+#   collections:
+#   - redhat
+#   - redhat_rpms
+#   - policy_data
+#
+deny contains result if {
+	proxy_enabled := {t | some t in rule_data.get("proxy_enabled_purl_types")}
+	allowed_patterns := rule_data.get("allowed_proxy_url_patterns")
+
+	some s in sbom.cyclonedx_sboms
+	some component in s.components
+
+	some reference in component.externalReferences
+	reference.type == "distribution"
+
+	purl := component.purl
+	parsed_purl := ec.purl.parse(purl)
+	parsed_purl.type in proxy_enabled
+
+	distribution_url := object.get(reference, "url", "")
+	distribution_url != "NOASSERTION"
+	patterns := object.get(allowed_patterns, parsed_purl.type, [])
+	not sbom.url_matches_any_pattern(distribution_url, patterns)
+
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[purl, distribution_url, parsed_purl.type],
+		purl,
+	)
+}
+
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does
 # not have the attribute, result is returned unmodified.
 _with_effective_on(result, item) := new_result if {

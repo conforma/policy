@@ -347,6 +347,54 @@ rule_data_errors contains error if {
 	}
 }
 
+# Verify proxy_enabled_purl_types is a list of unique strings.
+rule_data_errors contains error if {
+	some e in j.validate_schema(
+		rule_data.get("proxy_enabled_purl_types"),
+		{
+			"$schema": "http://json-schema.org/draft-07/schema#",
+			"type": "array",
+			"items": {"type": "string"},
+			"uniqueItems": true,
+		},
+	)
+	error := {
+		"message": sprintf("Rule data proxy_enabled_purl_types has unexpected format: %s", [e.message]),
+		"severity": e.severity,
+	}
+}
+
+# Verify allowed_proxy_url_patterns is an object mapping strings to arrays of strings.
+rule_data_errors contains error if {
+	some e in j.validate_schema(
+		rule_data.get("allowed_proxy_url_patterns"),
+		{
+			"$schema": "http://json-schema.org/draft-07/schema#",
+			"type": "object",
+			"additionalProperties": {
+				"type": "array",
+				"items": {"type": "string"},
+				"uniqueItems": true,
+			},
+		},
+	)
+	error := {
+		"message": sprintf("Rule data allowed_proxy_url_patterns has unexpected format: %s", [e.message]),
+		"severity": e.severity,
+	}
+}
+
+# Verify items in allowed_proxy_url_patterns are valid regular expressions.
+rule_data_errors contains error if {
+	some purl_type, patterns in rule_data.get("allowed_proxy_url_patterns")
+	some pattern in patterns
+	not regex.is_valid(pattern)
+	error := {
+		"message": sprintf("%q is not a valid regular expression for PURL type %q", [pattern, purl_type]),
+		"severity": "failure",
+	}
+}
+
 rule_data_packages_key := "disallowed_packages"
 
 rule_data_attributes_key := "disallowed_attributes"

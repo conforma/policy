@@ -15,10 +15,10 @@ test_hermetic_task if {
 	_task_base := tekton_test.slsav1_task("buildah")
 	slsav1_task = tekton_test.with_params(
 		_task_base,
-		[{
-			"name": "HERMETIC",
-			"value": "true",
-		}],
+		[
+			{"name": "HERMETIC", "value": "true"},
+			{"name": "enable-hermeto-proxy", "value": "true"},
+		],
 	)
 
 	slsav1_attestation := tekton_test.slsav1_attestation([slsav1_task])
@@ -72,7 +72,7 @@ test_many_hermetic_tasks if {
 		],
 		# regal ignore:line-length
 		"ref": {"kind": "Task", "name": "buildah", "bundle": "reg.img/spam@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
-		"invocation": {"parameters": {"HERMETIC": "true"}},
+		"invocation": {"parameters": {"HERMETIC": "true", "enable-hermeto-proxy": "true"}},
 	}
 
 	task2 := {
@@ -82,7 +82,7 @@ test_many_hermetic_tasks if {
 		],
 		# regal ignore:line-length
 		"ref": {"kind": "Task", "name": "run-script-oci-ta", "bundle": "reg.img/spam@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
-		"invocation": {"parameters": {"HERMETIC": "true"}},
+		"invocation": {"parameters": {"HERMETIC": "true", "enable-hermeto-proxy": "true"}},
 	}
 
 	attestation := {"statement": {
@@ -98,19 +98,19 @@ test_many_hermetic_tasks if {
 	_task_base_1 := tekton_test.slsav1_task("buildah")
 	slsav1_task1 = tekton_test.with_params(
 		_task_base_1,
-		[{
-			"name": "HERMETIC",
-			"value": "true",
-		}],
+		[
+			{"name": "HERMETIC", "value": "true"},
+			{"name": "enable-hermeto-proxy", "value": "true"},
+		],
 	)
 
 	_task_base_2 := tekton_test.slsav1_task("run-script-oci-ta")
 	slsav1_task2 = tekton_test.with_params(
 		_task_base_2,
-		[{
-			"name": "HERMETIC",
-			"value": "true",
-		}],
+		[
+			{"name": "HERMETIC", "value": "true"},
+			{"name": "enable-hermeto-proxy", "value": "true"},
+		],
 	)
 
 	slsav1_attestation := tekton_test.slsav1_attestation([slsav1_task1, slsav1_task2])
@@ -166,10 +166,10 @@ test_many_hermetic_tasks if {
 	_base_mixed_1 := tekton_test.slsav1_task("buildah")
 	slsav1_task1_mixed = tekton_test.with_params(
 		_base_mixed_1,
-		[{
-			"name": "HERMETIC",
-			"value": "true",
-		}],
+		[
+			{"name": "HERMETIC", "value": "true"},
+			{"name": "enable-hermeto-proxy", "value": "true"},
+		],
 	)
 
 	_base_mixed_2 := tekton_test.slsav1_task("run-script-oci-ta")
@@ -269,58 +269,119 @@ test_task_is_hermetic if {
 	not hermetic_task._task_is_hermetic(task_hermetic_param_not_present)
 }
 
-test_proxy_rule_data_validation if {
-	# Valid data - no errors
-	assertions.assert_empty(hermetic_task.deny) with data.rule_data as {
-		"proxy_enabled_purl_types": ["maven", "npm"],
-		"allowed_proxy_url_patterns": {"maven": ["^https://proxy\\.example\\.com/.*"]},
-	}
+test_hermetic_task_with_proxy_enabled if {
+	# Hermetic task with proxy enabled - should pass
+	_task_base := tekton_test.slsav1_task("buildah")
+	slsav1_task = tekton_test.with_params(
+		_task_base,
+		[
+			{"name": "HERMETIC", "value": "true"},
+			{"name": "enable-hermeto-proxy", "value": "true"},
+		],
+	)
 
-	# Invalid proxy_enabled_purl_types: wrong type
-	d_bad_purl_types := {
-		"proxy_enabled_purl_types": [1, "maven", "maven"],
-		"allowed_proxy_url_patterns": {},
-	}
-	expected_bad_purl_types := {
-		{
-			"code": "hermetic_task.proxy_rule_data_format",
-			# regal ignore:line-length
-			"msg": "Rule data proxy_enabled_purl_types has unexpected format: 0: Invalid type. Expected: string, given: integer",
-			"severity": "failure",
-		},
-		{
-			"code": "hermetic_task.proxy_rule_data_format",
-			# regal ignore:line-length
-			"msg": "Rule data proxy_enabled_purl_types has unexpected format: (Root): array items[1,2] must be unique",
-			"severity": "failure",
-		},
-	}
-	assertions.assert_equal_results(expected_bad_purl_types, hermetic_task.deny) with data.rule_data as d_bad_purl_types
+	slsav1_attestation := tekton_test.slsav1_attestation([slsav1_task])
+	assertions.assert_empty(hermetic_task.deny) with input.attestations as [slsav1_attestation]
+		with data.rule_data.required_hermetic_tasks as ["buildah"]
 
-	# Invalid allowed_proxy_url_patterns: wrong value type
-	d_bad_patterns := {
-		"proxy_enabled_purl_types": [],
-		"allowed_proxy_url_patterns": {"maven": "not-an-array"},
-	}
-	expected_bad_patterns := {{
-		"code": "hermetic_task.proxy_rule_data_format",
-		# regal ignore:line-length
-		"msg": "Rule data allowed_proxy_url_patterns has unexpected format: maven: Invalid type. Expected: array, given: string",
-		"severity": "failure",
+	# v0.2 attestation
+	assertions.assert_empty(hermetic_task.deny) with input.attestations as [_good_attestation]
+		with data.rule_data.required_hermetic_tasks as ["buildah"]
+}
+
+test_hermetic_task_without_proxy if {
+	expected := {{
+		"code": "hermetic_task.hermeto_proxy_enabled",
+		"msg": "Task 'buildah' is hermetic but does not have the enable-hermeto-proxy parameter set to true",
 	}}
-	assertions.assert_equal_results(expected_bad_patterns, hermetic_task.deny) with data.rule_data as d_bad_patterns
 
-	# Invalid regex in allowed_proxy_url_patterns
-	d_bad_regex := {
-		"proxy_enabled_purl_types": [],
-		"allowed_proxy_url_patterns": {"maven": ["(?=a)?b"]},
-	}
-	expected_bad_regex := {{
-		"code": "hermetic_task.proxy_rule_data_format",
-		"msg": "\"(?=a)?b\" is not a valid regular expression for PURL type \"maven\"",
-		"severity": "failure",
-	}}
-	assertions.assert_equal_results(expected_bad_regex, hermetic_task.deny) with data.rule_data as d_bad_regex
+	# v0.2: hermetic but no proxy param
+	# regal ignore:line-length
+	no_proxy := json.remove(_good_attestation, ["/statement/predicate/buildConfig/tasks/0/invocation/parameters/enable-hermeto-proxy"])
+	assertions.assert_equal_results(expected, hermetic_task.deny) with input.attestations as [no_proxy]
+		with data.rule_data.required_hermetic_tasks as ["buildah"]
+
+	# v0.2: hermetic with proxy set to false
+	proxy_false := json.patch(_good_attestation, [{
+		"op": "replace",
+		"path": "/statement/predicate/buildConfig/tasks/0/invocation/parameters/enable-hermeto-proxy",
+		"value": "false",
+	}])
+	assertions.assert_equal_results(expected, hermetic_task.deny) with input.attestations as [proxy_false]
+		with data.rule_data.required_hermetic_tasks as ["buildah"]
+
+	# slsa v1: hermetic but no proxy param
+	_task_base := tekton_test.slsav1_task("buildah")
+	slsav1_task = tekton_test.with_params(
+		_task_base,
+		[{"name": "HERMETIC", "value": "true"}],
+	)
+	slsav1_attestation := tekton_test.slsav1_attestation([slsav1_task])
+	assertions.assert_equal_results(expected, hermetic_task.deny) with input.attestations as [slsav1_attestation]
+		with data.rule_data.required_hermetic_tasks as ["buildah"]
+
+	# slsa v1: hermetic with proxy set to false
+	slsav1_task_proxy_false = tekton_test.with_params(
+		_task_base,
+		[
+			{"name": "HERMETIC", "value": "true"},
+			{"name": "enable-hermeto-proxy", "value": "false"},
+		],
+	)
+	slsav1_att_proxy_false := tekton_test.slsav1_attestation([slsav1_task_proxy_false])
+	assertions.assert_equal_results(expected, hermetic_task.deny) with input.attestations as [slsav1_att_proxy_false]
+		with data.rule_data.required_hermetic_tasks as ["buildah"]
+}
+
+test_non_hermetic_task_no_proxy_required if {
+	# Non-hermetic task without proxy - should pass (no proxy violation)
+	_task_base := tekton_test.slsav1_task("buildah")
+	slsav1_task_not_hermetic = tekton_test.with_params(
+		_task_base,
+		[{"name": "HERMETIC", "value": "false"}],
+	)
+	slsav1_attestation := tekton_test.slsav1_attestation([slsav1_task_not_hermetic])
+
+	# The hermetic rule will fire, but the proxy rule should not
+	results_no_proxy := hermetic_task.deny with input.attestations as [slsav1_attestation]
+		with data.rule_data.required_hermetic_tasks as ["buildah"]
+
+	not _has_proxy_violation(results_no_proxy)
+
+	# Hermetic task without proxy - proxy violation should be present
+	slsav1_task_hermetic = tekton_test.with_params(
+		_task_base,
+		[{"name": "HERMETIC", "value": "true"}],
+	)
+	slsav1_attestation_hermetic := tekton_test.slsav1_attestation([slsav1_task_hermetic])
+	results_with_proxy := hermetic_task.deny with input.attestations as [slsav1_attestation_hermetic]
+		with data.rule_data.required_hermetic_tasks as ["buildah"]
+
+	_has_proxy_violation(results_with_proxy)
+}
+
+test_task_has_proxy_enabled if {
+	task_with_proxy := tekton_test.resolved_slsav1_task(
+		"some-task",
+		[{"name": "enable-hermeto-proxy", "value": "true"}],
+		[],
+	)
+	hermetic_task._task_has_proxy_enabled(task_with_proxy)
+
+	task_proxy_false := tekton_test.resolved_slsav1_task(
+		"some-task",
+		[{"name": "enable-hermeto-proxy", "value": "false"}],
+		[],
+	)
+	not hermetic_task._task_has_proxy_enabled(task_proxy_false)
+
+	task_no_proxy := tekton_test.resolved_slsav1_task("some-task", [], [])
+	not hermetic_task._task_has_proxy_enabled(task_no_proxy)
+}
+
+_has_proxy_violation(results) if {
+	some result in results
+	result.code == "hermetic_task.hermeto_proxy_enabled"
 }
 
 _good_attestation := {"statement": {
@@ -334,7 +395,7 @@ _good_attestation := {"statement": {
 			],
 			# regal ignore:line-length
 			"ref": {"kind": "Task", "name": "buildah", "bundle": "reg.img/spam@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
-			"invocation": {"parameters": {"HERMETIC": "true"}},
+			"invocation": {"parameters": {"HERMETIC": "true", "enable-hermeto-proxy": "true"}},
 		}]},
 	},
 }}

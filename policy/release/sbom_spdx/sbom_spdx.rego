@@ -252,6 +252,51 @@ deny contains result if {
 	)
 }
 
+# METADATA
+# title: Allowed proxy URLs
+# description: >-
+#   For packages with a PURL type listed in proxy_enabled_purl_types, verify the
+#   downloadLocation matches at least one pattern from allowed_proxy_url_patterns.
+#   Packages with downloadLocation set to NOASSERTION are skipped.
+# custom:
+#   short_name: allowed_proxy_urls
+#   failure_msg: >-
+#     Package %s has proxy URL %q which does not match any allowed pattern for PURL type %q
+#   solution: >-
+#     Ensure the proxy URL matches one of the patterns defined in the
+#     allowed_proxy_url_patterns rule data for the given PURL type.
+#   collections:
+#   - redhat
+#   - redhat_rpms
+#   - policy_data
+#
+deny contains result if {
+	proxy_enabled := {t | some t in rule_data.get("proxy_enabled_purl_types")}
+	allowed_patterns := rule_data.get("allowed_proxy_url_patterns")
+
+	some s in sbom.spdx_sboms
+	some pkg in s.packages
+
+	some externalref in pkg.externalRefs
+	externalref.referenceType == "purl"
+
+	purl := externalref.referenceLocator
+	parsed_purl := ec.purl.parse(purl)
+	parsed_purl.type in proxy_enabled
+
+	download_location := object.get(pkg, "downloadLocation", "")
+	download_location != "NOASSERTION"
+
+	patterns := object.get(allowed_patterns, parsed_purl.type, [])
+	not sbom.url_matches_any_pattern(download_location, patterns)
+
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[purl, download_location, parsed_purl.type],
+		purl,
+	)
+}
+
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does
 # not have the attribute, result is returned unmodified.
 _with_effective_on(result, item) := new_result if {

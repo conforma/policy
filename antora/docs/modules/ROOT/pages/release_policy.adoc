@@ -77,13 +77,13 @@ Rules included:
 * xref:packages/release_cve.adoc#cve__rule_data_provided[CVE checks: Rule data provided]        
 * xref:packages/release_external_parameters.adoc#external_parameters__pipeline_run_params_provided[External parameters: PipelineRun params provided]        
 * xref:packages/release_github_certificate.adoc#github_certificate__rule_data_provided[GitHub Certificate Checks: Rule data provided]        
-* xref:packages/release_hermetic_task.adoc#hermetic_task__proxy_rule_data_format[Hermetic task: proxy_enabled_purl_types format]        
 * xref:packages/release_labels.adoc#labels__rule_data_provided[Labels: Rule data provided]        
 * xref:packages/release_olm.adoc#olm__required_olm_features_annotations_provided[OLM: Required OLM feature annotations list provided]        
 * xref:packages/release_rpm_repos.adoc#rpm_repos__rule_data_provided[RPM Repos: Known repo id list provided]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__rule_data_provided[RPM Signature: Rule data provided]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_external_references[SBOM CycloneDX: Allowed package external references]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_sources[SBOM CycloneDX: Allowed package sources]        
+* xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_proxy_urls[SBOM CycloneDX: Allowed proxy URLs]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__disallowed_package_attributes[SBOM CycloneDX: Disallowed package attributes]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__disallowed_package_external_references[SBOM CycloneDX: Disallowed package external references]        
 * xref:packages/release_sbom.adoc#sbom__disallowed_packages_provided[SBOM: Disallowed packages list is provided]        
@@ -92,6 +92,7 @@ Rules included:
 * xref:packages/release_slsa_source_correlated.adoc#slsa_source_correlated__rule_data_provided[SLSA - Verification model - Source: Rule data provided]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__allowed_package_external_references[SPDX SBOM: Allowed package external references]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__allowed_package_sources[SPDX SBOM: Allowed package sources]        
+* xref:packages/release_sbom_spdx.adoc#sbom_spdx__allowed_proxy_urls[SPDX SBOM: Allowed proxy URLs]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__disallowed_package_attributes[SPDX SBOM: Disallowed package attributes]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__disallowed_package_external_references[SPDX SBOM: Disallowed package external references]        
 * xref:packages/release_schedule.adoc#schedule__rule_data_provided[Schedule related checks: Rule data provided]        
@@ -122,8 +123,8 @@ Rules included:
 * xref:packages/release_cve.adoc#cve__cve_warnings[CVE checks: Non-blocking CVE check]        
 * xref:packages/release_cve.adoc#cve__unpatched_cve_warnings[CVE checks: Non-blocking unpatched CVE check]        
 * xref:packages/release_cve.adoc#cve__rule_data_provided[CVE checks: Rule data provided]        
+* xref:packages/release_hermetic_task.adoc#hermetic_task__hermeto_proxy_enabled[Hermetic task: Hermetic build task has Sonatype proxy enabled]        
 * xref:packages/release_hermetic_task.adoc#hermetic_task__hermetic[Hermetic task: Task called with hermetic param set]        
-* xref:packages/release_hermetic_task.adoc#hermetic_task__proxy_rule_data_format[Hermetic task: proxy_enabled_purl_types format]        
 * xref:packages/release_labels.adoc#labels__deprecated_labels[Labels: Deprecated labels]        
 * xref:packages/release_labels.adoc#labels__disallowed_inherited_labels[Labels: Disallowed inherited labels]        
 * xref:packages/release_labels.adoc#labels__inaccessible_config[Labels: Inaccessible image config]        
@@ -163,6 +164,7 @@ Rules included:
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed[SBOM CycloneDX: Allowed]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_external_references[SBOM CycloneDX: Allowed package external references]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_sources[SBOM CycloneDX: Allowed package sources]        
+* xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_proxy_urls[SBOM CycloneDX: Allowed proxy URLs]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__disallowed_package_attributes[SBOM CycloneDX: Disallowed package attributes]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__disallowed_package_external_references[SBOM CycloneDX: Disallowed package external references]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__cdx_supported_version[SBOM CycloneDX: Supported Version]        
@@ -190,6 +192,7 @@ Rules included:
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__allowed[SPDX SBOM: Allowed]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__allowed_package_external_references[SPDX SBOM: Allowed package external references]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__allowed_package_sources[SPDX SBOM: Allowed package sources]        
+* xref:packages/release_sbom_spdx.adoc#sbom_spdx__allowed_proxy_urls[SPDX SBOM: Allowed proxy URLs]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__disallowed_package_attributes[SPDX SBOM: Disallowed package attributes]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__disallowed_package_external_references[SPDX SBOM: Disallowed package external references]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__valid[SPDX SBOM: Valid]        
@@ -257,6 +260,7 @@ Rules included:
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed[SBOM CycloneDX: Allowed]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_external_references[SBOM CycloneDX: Allowed package external references]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_sources[SBOM CycloneDX: Allowed package sources]        
+* xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_proxy_urls[SBOM CycloneDX: Allowed proxy URLs]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__disallowed_package_attributes[SBOM CycloneDX: Disallowed package attributes]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__disallowed_package_external_references[SBOM CycloneDX: Disallowed package external references]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__cdx_supported_version[SBOM CycloneDX: Supported Version]        
@@ -279,6 +283,7 @@ Rules included:
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__allowed[SPDX SBOM: Allowed]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__allowed_package_external_references[SPDX SBOM: Allowed package external references]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__allowed_package_sources[SPDX SBOM: Allowed package sources]        
+* xref:packages/release_sbom_spdx.adoc#sbom_spdx__allowed_proxy_urls[SPDX SBOM: Allowed proxy URLs]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__disallowed_package_attributes[SPDX SBOM: Disallowed package attributes]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__disallowed_package_external_references[SPDX SBOM: Disallowed package external references]        
 * xref:packages/release_sbom_spdx.adoc#sbom_spdx__valid[SPDX SBOM: Valid]        
@@ -383,7 +388,7 @@ a| Check that the build has an expected target git branch. The specific branches
 a| Verify attributes on the certificate involved in the image signature when using slsa-github-generator on GitHub Actions with Sigstore Fulcio
 
 | xref:packages/release_hermetic_task.adoc[hermetic_task]
-a| This package verifies that all the tasks in the attestation that are required to be hermetic were invoked with the proper parameters to perform a hermetic execution.
+a| This package verifies that all the tasks in the attestation that are required to be hermetic were invoked with the proper parameters to perform a hermetic execution, including enabling the Sonatype proxy when required.
 
 | xref:packages/release_labels.adoc[labels]
 a| Check if the image has the expected labels set. The rules in this package distinguish file-based catalog (FBC) images from all other images. When checking an FBC image, a policy rule may use a different set of rule data. An FBC image is detected by the presence of the operators.operatorframework.io.index.configs.v1 label.
