@@ -148,7 +148,7 @@ default _data_allow_array := []
 _data_allow_array := [entry |
 	is_object(data.trusted_task_rules)
 	is_object(data.trusted_task_rules.allow)
-	some _, entry in data.trusted_task_rules.allow
+	some _, entry in data.trusted_task_rules.allow # regal ignore:in-wildcard-key
 ] if {
 	is_object(data.trusted_task_rules)
 	is_object(data.trusted_task_rules.allow)
@@ -160,7 +160,7 @@ default _data_deny_array := []
 _data_deny_array := [entry |
 	is_object(data.trusted_task_rules)
 	is_object(data.trusted_task_rules.deny)
-	some _, entry in data.trusted_task_rules.deny
+	some _, entry in data.trusted_task_rules.deny # regal ignore:in-wildcard-key
 ] if {
 	is_object(data.trusted_task_rules)
 	is_object(data.trusted_task_rules.deny)
@@ -175,7 +175,7 @@ _rule_data_allow_array := [entry |
 	_rule_data_obj := lib_rule_data("trusted_task_rules")
 	is_object(_rule_data_obj)
 	is_object(_rule_data_obj.allow)
-	some _, entry in _rule_data_obj.allow
+	some _, entry in _rule_data_obj.allow # regal ignore:in-wildcard-key
 ] if {
 	_rule_data_obj := lib_rule_data("trusted_task_rules")
 	is_object(_rule_data_obj)
@@ -189,7 +189,7 @@ _rule_data_deny_array := [entry |
 	_rule_data_obj := lib_rule_data("trusted_task_rules")
 	is_object(_rule_data_obj)
 	is_object(_rule_data_obj.deny)
-	some _, entry in _rule_data_obj.deny
+	some _, entry in _rule_data_obj.deny # regal ignore:in-wildcard-key
 ] if {
 	_rule_data_obj := lib_rule_data("trusted_task_rules")
 	is_object(_rule_data_obj)
