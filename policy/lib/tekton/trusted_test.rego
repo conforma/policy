@@ -362,6 +362,41 @@ test_is_trusted_task_with_rules if {
 	# regal ignore:line-length
 	mismatch_manifests_2 := _mock_bundle_manifests("quay.io/konflux-ci/another-catalog/allow-task-constrained:1.2.3@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700", "1.5")
 	tekton.is_trusted_task(allow_constrained_task_denied_version_mismatching_2, mismatch_manifests_2) with data.rule_data.trusted_task_rules as trusted_task_rules # regal ignore:line-length
+
+	# Digest-only bundle reference (no tag). The key becomes "oci://repo" without tag or digest.
+	# Pattern must match the repo without tag/digest components.
+	digest_only_rules := {
+		"allow": [
+			{
+				"name": "Allow digest-only from registry.local",
+				"pattern": "oci://registry.local/*",
+			},
+		],
+		"deny": [
+			{
+				"name": "Deny crook digest-only",
+				"pattern": "oci://registry.local/crook",
+			},
+		],
+	}
+
+	# Digest-only task: key is "oci://registry.local/trusty" (no tag)
+	digest_only_allowed := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		# regal ignore:line-length
+		{"name": "bundle", "value": "registry.local/trusty@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
+		{"name": "name", "value": "trusty"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	tekton.is_trusted_task(digest_only_allowed, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as digest_only_rules
+
+	# Digest-only task matching deny: key is "oci://registry.local/crook" (no tag)
+	digest_only_denied := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		# regal ignore:line-length
+		{"name": "bundle", "value": "registry.local/crook@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
+		{"name": "name", "value": "crook"},
+		{"name": "kind", "value": "task"},
+	]}}}
+	not tekton.is_trusted_task(digest_only_denied, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as digest_only_rules
 }
 
 test_trusted_task_records if {
@@ -439,6 +474,24 @@ test_data_trusted_task_rules_extraction if {
 	# Should fall back to empty arrays, so task won't be trusted via rules
 	not tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.trusted_task_rules as null
 		with data.rule_data.trusted_task_rules as null
+
+	# Test object format (keyed by name) via data.trusted_task_rules
+	data_rules_obj := {
+		"allow": {
+			"Allow from data obj": {
+				"pattern": "oci://registry.local/*",
+			},
+		},
+		"deny": {
+			"Deny from data obj": {
+				"pattern": "oci://registry.local/crook:*",
+			},
+		},
+	}
+	tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.trusted_task_rules as data_rules_obj
+		with data.rule_data.trusted_task_rules as null
+	not tekton.is_trusted_task(denied_task, _empty_bundle_manifests) with data.trusted_task_rules as data_rules_obj
+		with data.rule_data.trusted_task_rules as null
 }
 
 test_rule_data_trusted_task_rules_extraction if {
@@ -478,6 +531,24 @@ test_rule_data_trusted_task_rules_extraction if {
 	# Test when lib_rule_data returns [] (not an object) - covers default cases
 	# When rule_data returns [], it's not an object, so defaults are used
 	not tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as []
+
+	# Test object format (keyed by name) - allow
+	rule_data_rules_obj := {
+		"allow": {
+			"Allow from rule_data": {
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+			},
+		},
+		"deny": {
+			"Deny from rule_data": {
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			},
+		},
+	}
+	tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rule_data_rules_obj
+
+	# regal ignore:line-length
+	not tekton.is_trusted_task(denied_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rule_data_rules_obj
 }
 
 test_data_errors if {
@@ -738,13 +809,13 @@ test_trusted_task_rules_data_errors if {
 			"message": "trusted_task_rules data has unexpected format: allow.0: pattern is required",
 			"severity": "failure",
 		},
+		{
+			# regal ignore:line-length
+			"message": "trusted_task_rules data has unexpected format: allow: Must validate one and only one schema (oneOf)",
+			"severity": "failure",
+		},
 	}
 	assertions.assert_equal(tekton.data_errors, expected) with data.rule_data.trusted_task_rules as invalid_rules
-
-	# Invalid pattern validation is not tested here because JSON schema
-	# pattern validation may not be enforced by the OPA json.match_schema
-	# function. Pattern validation should be implemented separately in the
-	# rule evaluation logic when trusted_task_rules is used.
 
 	# Invalid effective_on date format
 	invalid_date_rules := {"allow": [{
@@ -752,17 +823,24 @@ test_trusted_task_rules_data_errors if {
 		"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
 		"effective_on": "not-a-date",
 	}]}
-	expected_date := {{
-		# regal ignore:line-length
-		"message": "trusted_task_rules data has unexpected format: allow.0.effective_on: Does not match format 'date'",
-		"severity": "failure",
-	}}
+	expected_date := {
+		{
+			# regal ignore:line-length
+			"message": "trusted_task_rules data has unexpected format: allow.0.effective_on: Does not match format 'date'",
+			"severity": "failure",
+		},
+		{
+			# regal ignore:line-length
+			"message": "trusted_task_rules data has unexpected format: allow: Must validate one and only one schema (oneOf)",
+			"severity": "failure",
+		},
+	}
 	assertions.assert_equal(tekton.data_errors, expected_date) with data.rule_data.trusted_task_rules as invalid_date_rules
 
 	# Invalid structure - not an object
 	assertions.assert_empty(tekton.data_errors) with data.rule_data.trusted_task_rules as [] # Empty list is skipped
 
-	# Invalid allow/deny - not arrays
+	# Invalid allow/deny - not arrays or objects
 	invalid_structure := {
 		"allow": "not-an-array",
 		"deny": [{
@@ -770,10 +848,18 @@ test_trusted_task_rules_data_errors if {
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
 		}],
 	}
-	expected_structure := {{
-		"message": "trusted_task_rules data has unexpected format: allow: Invalid type. Expected: array, given: string",
-		"severity": "failure",
-	}}
+	expected_structure := {
+		{
+			# regal ignore:line-length
+			"message": "trusted_task_rules data has unexpected format: allow: Invalid type. Expected: array, given: string",
+			"severity": "failure",
+		},
+		{
+			# regal ignore:line-length
+			"message": "trusted_task_rules data has unexpected format: allow: Must validate one and only one schema (oneOf)",
+			"severity": "failure",
+		},
+	}
 	assertions.assert_equal(tekton.data_errors, expected_structure) with data.rule_data.trusted_task_rules as invalid_structure
 }
 
