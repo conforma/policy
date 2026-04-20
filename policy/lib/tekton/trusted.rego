@@ -142,14 +142,8 @@ _trusted_task_rules_data := {
 	),
 }
 
-# Safely extract allow from data.trusted_task_rules.
-# Supports both array and object formats.
+# Safely extract allow from data.trusted_task_rules (object format keyed by name).
 default _data_allow_array := []
-
-_data_allow_array := data.trusted_task_rules.allow if {
-	is_object(data.trusted_task_rules)
-	is_array(data.trusted_task_rules.allow)
-}
 
 _data_allow_array := [entry |
 	is_object(data.trusted_task_rules)
@@ -160,14 +154,8 @@ _data_allow_array := [entry |
 	is_object(data.trusted_task_rules.allow)
 }
 
-# Safely extract deny from data.trusted_task_rules.
-# Supports both array and object formats.
+# Safely extract deny from data.trusted_task_rules (object format keyed by name).
 default _data_deny_array := []
-
-_data_deny_array := data.trusted_task_rules.deny if {
-	is_object(data.trusted_task_rules)
-	is_array(data.trusted_task_rules.deny)
-}
 
 _data_deny_array := [entry |
 	is_object(data.trusted_task_rules)
@@ -178,19 +166,10 @@ _data_deny_array := [entry |
 	is_object(data.trusted_task_rules.deny)
 }
 
-# Safely extract allow from rule_data.
-# Supports two formats:
-#   Array format:  {"allow": [{"name": "...", "pattern": "..."}, ...]}
-#   Object format: {"allow": {"my-key": {"pattern": "..."}, ...}}
+# Safely extract allow from rule_data (object format keyed by name).
 # The object format enables multiple data sources with the same key to be
 # merged by OPA without conflicts, since each entry has a unique map key.
 default _rule_data_allow_array := []
-
-_rule_data_allow_array := _rule_data_obj.allow if {
-	_rule_data_obj := lib_rule_data("trusted_task_rules")
-	is_object(_rule_data_obj)
-	is_array(_rule_data_obj.allow)
-}
 
 _rule_data_allow_array := [entry |
 	_rule_data_obj := lib_rule_data("trusted_task_rules")
@@ -203,15 +182,8 @@ _rule_data_allow_array := [entry |
 	is_object(_rule_data_obj.allow)
 }
 
-# Safely extract deny from rule_data.
-# Supports both array and object formats (same as allow above).
+# Safely extract deny from rule_data (object format keyed by name).
 default _rule_data_deny_array := []
-
-_rule_data_deny_array := _rule_data_obj.deny if {
-	_rule_data_obj := lib_rule_data("trusted_task_rules")
-	is_object(_rule_data_obj)
-	is_array(_rule_data_obj.deny)
-}
 
 _rule_data_deny_array := [entry |
 	_rule_data_obj := lib_rule_data("trusted_task_rules")
@@ -293,8 +265,7 @@ data_errors contains error if {
 	)
 }
 
-# Validate trusted_task_rules data format using the schema defined in
-# trusted_tasks/trusted_task_rules.schema.json
+# Validate trusted_task_rules data format.
 # Skip validation if trusted_task_rules is not provided (null or empty list []).
 # lib_rule_data returns [] when a key is not found, so we only validate when
 # the value is actually an object (the expected type).
@@ -443,9 +414,7 @@ _pattern_matches(key, pattern) if {
 	regex.match(regex_pattern, key)
 }
 
-# Schema for trusted_task_rules as defined in trusted_tasks/trusted_task_rules.schema.json
-# This schema validates the rule-based trusted tasks configuration (ADR 53)
-# Schema definition for a single rule entry (used as object values in the object format)
+# Schema definition for a single rule entry (object values keyed by name)
 _trusted_task_rule_entry_schema := {
 	"type": "object",
 	"required": ["pattern"],
@@ -475,21 +444,6 @@ _trusted_task_rule_entry_schema := {
 	"additionalProperties": true,
 }
 
-# Array format item requires "name" since there is no map key to use
-_trusted_task_rule_array_item_schema := object.union(
-	_trusted_task_rule_entry_schema,
-	{
-		"required": ["name", "pattern"],
-		"properties": object.union(
-			_trusted_task_rule_entry_schema.properties,
-			{"name": {
-				"type": "string",
-				"description": "Human-readable name for the rule",
-			}},
-		),
-	},
-)
-
 _trusted_task_rules_schema := {
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"$id": "https://konflux.io/schemas/trusted_task_rules.json",
@@ -498,37 +452,15 @@ _trusted_task_rules_schema := {
 	"type": "object",
 	"properties": {
 		"allow": {
-			"oneOf": [
-				{
-					"type": "array",
-					"description": "Rules that allow tasks matching the pattern (array format)",
-					"items": _trusted_task_rule_array_item_schema,
-					"default": [],
-				},
-				{
-					"type": "object",
-					# regal ignore:line-length
-					"description": "Rules that allow tasks matching the pattern (object format, keyed by name)",
-					"additionalProperties": _trusted_task_rule_entry_schema,
-				},
-			],
+			"type": "object",
+			"description": "Rules that allow tasks matching the pattern, keyed by name",
+			"additionalProperties": _trusted_task_rule_entry_schema,
 		},
 		"deny": {
-			"oneOf": [
-				{
-					"type": "array",
-					# regal ignore:line-length
-					"description": "Rules that deny tasks matching the pattern (array format). Deny rules take precedence over allow rules.",
-					"items": _trusted_task_rule_array_item_schema,
-					"default": [],
-				},
-				{
-					"type": "object",
-					# regal ignore:line-length
-					"description": "Rules that deny tasks matching the pattern (object format, keyed by name). Deny rules take precedence over allow rules.",
-					"additionalProperties": _trusted_task_rule_entry_schema,
-				},
-			],
+			"type": "object",
+			# regal ignore:line-length
+			"description": "Rules that deny tasks matching the pattern, keyed by name. Deny rules take precedence over allow rules.",
+			"additionalProperties": _trusted_task_rule_entry_schema,
 		},
 	},
 	"additionalProperties": false,

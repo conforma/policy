@@ -170,8 +170,8 @@ test_untrusted_task_refs_routes_to_rules if {
 
 	# Allow trusted_bundle_task pattern, deny nothing
 	task_rules := {
-		"allow": [{"pattern": "oci://registry.local/trusty:*"}],
-		"deny": [],
+		"allow": {"Allow trusty": {"pattern": "oci://registry.local/trusty:*"}},
+		"deny": {},
 	}
 
 	# untrusted_bundle_task should be untrusted (doesn't match allow pattern)
@@ -201,32 +201,27 @@ test_is_trusted_task if {
 test_is_trusted_task_with_rules if {
 	# Test with trusted_task_rules using allow/deny patterns
 	trusted_task_rules := {
-		"allow": [
-			{
-				"name": "Allow konflux tasks",
+		"allow": {
+			"Allow konflux tasks": {
 				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
 			},
-			{
-				"name": "Allow registry.local tasks",
+			"Allow registry.local tasks": {
 				"pattern": "oci://registry.local/*",
 			},
-			{
-				"name": "Allow specific version range of a task",
+			"Allow specific version range of a task": {
 				"pattern": "oci://quay.io/konflux-ci/another-catalog/allow-task-constrained",
 				"versions": [">1.2.3", "<2"],
 			},
-		],
-		"deny": [
-			{
-				"name": "Deny old buildah",
+		},
+		"deny": {
+			"Deny old buildah": {
 				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
 			},
-			{
-				"name": "Constrain version of task",
+			"Constrain version of task": {
 				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/deny-task-constrained",
 				"versions": ["<=1", ">1.2.3"],
 			},
-		],
+		},
 	}
 
 	# Task that matches allow rule should be trusted
@@ -366,18 +361,16 @@ test_is_trusted_task_with_rules if {
 	# Digest-only bundle reference (no tag). The key becomes "oci://repo" without tag or digest.
 	# Pattern must match the repo without tag/digest components.
 	digest_only_rules := {
-		"allow": [
-			{
-				"name": "Allow digest-only from registry.local",
+		"allow": {
+			"Allow digest-only from registry.local": {
 				"pattern": "oci://registry.local/*",
 			},
-		],
-		"deny": [
-			{
-				"name": "Deny crook digest-only",
+		},
+		"deny": {
+			"Deny crook digest-only": {
 				"pattern": "oci://registry.local/crook",
 			},
-		],
+		},
 	}
 
 	# Digest-only task: key is "oci://registry.local/trusty" (no tag)
@@ -439,10 +432,11 @@ test_rule_data_merging if {
 test_data_trusted_task_rules_extraction if {
 	# Test extraction from data.trusted_task_rules (covers lines 144-156)
 	# Test when data.trusted_task_rules is provided with allow rules
-	data_rules_allow := {"allow": [{
-		"name": "Allow from data",
-		"pattern": "oci://registry.local/*",
-	}]}
+	data_rules_allow := {"allow": {
+		"Allow from data": {
+			"pattern": "oci://registry.local/*",
+		},
+	}}
 
 	# Task matching allow from data.trusted_task_rules should be trusted
 	allowed_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
@@ -455,10 +449,11 @@ test_data_trusted_task_rules_extraction if {
 		with data.rule_data.trusted_task_rules as null
 
 	# Test when data.trusted_task_rules is provided with deny rules
-	data_rules_deny := {"deny": [{
-		"name": "Deny from data",
-		"pattern": "oci://registry.local/crook/*",
-	}]}
+	data_rules_deny := {"deny": {
+		"Deny from data": {
+			"pattern": "oci://registry.local/crook/*",
+		},
+	}}
 
 	# Task matching deny from data.trusted_task_rules should not be trusted
 	denied_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
@@ -475,37 +470,22 @@ test_data_trusted_task_rules_extraction if {
 	not tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.trusted_task_rules as null
 		with data.rule_data.trusted_task_rules as null
 
-	# Test object format (keyed by name) via data.trusted_task_rules
-	data_rules_obj := {
-		"allow": {
-			"Allow from data obj": {
-				"pattern": "oci://registry.local/*",
-			},
-		},
-		"deny": {
-			"Deny from data obj": {
-				"pattern": "oci://registry.local/crook:*",
-			},
-		},
-	}
-	tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.trusted_task_rules as data_rules_obj
-		with data.rule_data.trusted_task_rules as null
-	not tekton.is_trusted_task(denied_task, _empty_bundle_manifests) with data.trusted_task_rules as data_rules_obj
-		with data.rule_data.trusted_task_rules as null
 }
 
 test_rule_data_trusted_task_rules_extraction if {
 	# Test extraction from lib_rule_data("trusted_task_rules") (covers lines 158-172)
 	# Test when lib_rule_data returns an object
 	rule_data_rules := {
-		"allow": [{
-			"name": "Allow from rule_data",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-		"deny": [{
-			"name": "Deny from rule_data",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
-		}],
+		"allow": {
+			"Allow from rule_data": {
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+			},
+		},
+		"deny": {
+			"Deny from rule_data": {
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			},
+		},
 	}
 
 	# Task matching allow from rule_data should be trusted
@@ -531,24 +511,6 @@ test_rule_data_trusted_task_rules_extraction if {
 	# Test when lib_rule_data returns [] (not an object) - covers default cases
 	# When rule_data returns [], it's not an object, so defaults are used
 	not tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as []
-
-	# Test object format (keyed by name) - allow
-	rule_data_rules_obj := {
-		"allow": {
-			"Allow from rule_data": {
-				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-			},
-		},
-		"deny": {
-			"Deny from rule_data": {
-				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
-			},
-		},
-	}
-	tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rule_data_rules_obj
-
-	# regal ignore:line-length
-	not tekton.is_trusted_task(denied_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rule_data_rules_obj
 }
 
 test_data_errors if {
@@ -623,11 +585,12 @@ test_task_expiry_warning_days_data if {
 test_denying_pattern if {
 	# Test that denying_pattern returns the pattern that denied a task
 	trusted_task_rules := {
-		"allow": [],
-		"deny": [{
-			"name": "Deny old buildah",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
-		}],
+		"allow": {},
+		"deny": {
+			"Deny old buildah": {
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+			},
+		},
 	}
 
 	# Create a task that matches the deny rule
@@ -659,17 +622,15 @@ test_denying_pattern if {
 test_denying_pattern_multiple_rules if {
 	# Test with multiple deny rules - should return one of the matching patterns
 	multiple_deny_rules := {
-		"allow": [],
-		"deny": [
-			{
-				"name": "Deny all konflux",
+		"allow": {},
+		"deny": {
+			"Deny all konflux": {
 				"pattern": "oci://quay.io/konflux-ci/*",
 			},
-			{
-				"name": "Deny buildah specifically",
+			"Deny buildah specifically": {
 				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
 			},
-		],
+		},
 	}
 
 	# Should match both patterns (both rules match this task)
@@ -696,15 +657,17 @@ test_denying_pattern_multiple_rules if {
 test_denial_reason if {
 	# Test denial_reason returns the correct reason for denied tasks
 	trusted_task_rules := {
-		"allow": [{
-			"name": "Allow konflux tasks",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-		"deny": [{
-			"name": "Deny old buildah",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
-			"message": "This version is deprecated",
-		}],
+		"allow": {
+			"Allow konflux tasks": {
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+			},
+		},
+		"deny": {
+			"Deny old buildah": {
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+				"message": "This version is deprecated",
+			},
+		},
 	}
 
 	# Case 1: Matches a deny rule (even though it also matches allow)
@@ -759,8 +722,8 @@ test_denial_reason if {
 test_denial_reason_no_allow_rules if {
 	# If there are no allow rules, we fall back to legacy, so "not_allowed" shouldn't apply
 	rules_no_allow := {
-		"allow": [],
-		"deny": [],
+		"allow": {},
+		"deny": {},
 	}
 
 	# Task not in legacy should return nothing (we fall back to legacy, which is empty, but denial_reason
@@ -785,81 +748,61 @@ test_trusted_task_rules_data_errors if {
 
 	# Valid trusted_task_rules should pass
 	valid_rules := {
-		"allow": [{
-			"name": "Allow all konflux tasks",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-		"deny": [{
-			"name": "Deny old buildah",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
-			"effective_on": "2025-11-15",
-			"message": "Deprecated",
-		}],
+		"allow": {
+			"Allow all konflux tasks": {
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+			},
+		},
+		"deny": {
+			"Deny old buildah": {
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
+				"effective_on": "2025-11-15",
+				"message": "Deprecated",
+			},
+		},
 	}
 	assertions.assert_empty(tekton.data_errors) with data.rule_data.trusted_task_rules as valid_rules
 
-	# Missing required fields
-	invalid_rules := {"allow": [{}]} # missing name and pattern
-	expected := {
-		{
-			"message": "trusted_task_rules data has unexpected format: allow.0: name is required",
-			"severity": "failure",
-		},
-		{
-			"message": "trusted_task_rules data has unexpected format: allow.0: pattern is required",
-			"severity": "failure",
-		},
-		{
-			# regal ignore:line-length
-			"message": "trusted_task_rules data has unexpected format: allow: Must validate one and only one schema (oneOf)",
-			"severity": "failure",
-		},
-	}
+	# Missing required fields - object entry without pattern
+	invalid_rules := {"allow": {"Bad entry": {}}}
+	expected := {{
+		# regal ignore:line-length
+		"message": "trusted_task_rules data has unexpected format: allow.Bad entry: pattern is required",
+		"severity": "failure",
+	}}
 	assertions.assert_equal(tekton.data_errors, expected) with data.rule_data.trusted_task_rules as invalid_rules
 
 	# Invalid effective_on date format
-	invalid_date_rules := {"allow": [{
-		"name": "Invalid date",
-		"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		"effective_on": "not-a-date",
-	}]}
-	expected_date := {
-		{
-			# regal ignore:line-length
-			"message": "trusted_task_rules data has unexpected format: allow.0.effective_on: Does not match format 'date'",
-			"severity": "failure",
+	invalid_date_rules := {"allow": {
+		"Invalid date": {
+			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+			"effective_on": "not-a-date",
 		},
-		{
-			# regal ignore:line-length
-			"message": "trusted_task_rules data has unexpected format: allow: Must validate one and only one schema (oneOf)",
-			"severity": "failure",
-		},
-	}
+	}}
+	expected_date := {{
+		# regal ignore:line-length
+		"message": "trusted_task_rules data has unexpected format: allow.Invalid date.effective_on: Does not match format 'date'",
+		"severity": "failure",
+	}}
 	assertions.assert_equal(tekton.data_errors, expected_date) with data.rule_data.trusted_task_rules as invalid_date_rules
 
 	# Invalid structure - not an object
 	assertions.assert_empty(tekton.data_errors) with data.rule_data.trusted_task_rules as [] # Empty list is skipped
 
-	# Invalid allow/deny - not arrays or objects
+	# Invalid allow/deny - not objects
 	invalid_structure := {
-		"allow": "not-an-array",
-		"deny": [{
-			"name": "Valid deny",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-	}
-	expected_structure := {
-		{
-			# regal ignore:line-length
-			"message": "trusted_task_rules data has unexpected format: allow: Invalid type. Expected: array, given: string",
-			"severity": "failure",
-		},
-		{
-			# regal ignore:line-length
-			"message": "trusted_task_rules data has unexpected format: allow: Must validate one and only one schema (oneOf)",
-			"severity": "failure",
+		"allow": "not-an-object",
+		"deny": {
+			"Valid deny": {
+				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+			},
 		},
 	}
+	expected_structure := {{
+		# regal ignore:line-length
+		"message": "trusted_task_rules data has unexpected format: allow: Invalid type. Expected: object, given: string",
+		"severity": "failure",
+	}}
 	assertions.assert_equal(tekton.data_errors, expected_structure) with data.rule_data.trusted_task_rules as invalid_structure
 }
 
@@ -870,11 +813,12 @@ test_denying_pattern_invalid_task if {
 
 	# Any rules - doesn't matter since task has no valid ref
 	rules := {
-		"allow": [],
-		"deny": [{
-			"name": "Deny something",
-			"pattern": "oci://quay.io/*",
-		}],
+		"allow": {},
+		"deny": {
+			"Deny something": {
+				"pattern": "oci://quay.io/*",
+			},
+		},
 	}
 
 	# Should return empty list (else branch) since task_ref fails
@@ -888,11 +832,12 @@ test_denying_pattern_invalid_task if {
 test_denying_rules_info_empty if {
 	# Rules with no deny rules
 	rules_no_deny := {
-		"allow": [{
-			"name": "Allow all",
-			"pattern": "oci://quay.io/*",
-		}],
-		"deny": [],
+		"allow": {
+			"Allow all": {
+				"pattern": "oci://quay.io/*",
+			},
+		},
+		"deny": {},
 	}
 
 	# Task that matches allow rule - denial_reason should be empty
