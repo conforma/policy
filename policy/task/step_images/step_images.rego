@@ -10,6 +10,7 @@ package step_images
 import rego.v1
 
 import data.lib.metadata
+import data.lib.tkn_bundle
 
 # METADATA
 # title: Step images are valid
@@ -24,9 +25,10 @@ import data.lib.metadata
 #   effective_on: 2025-02-10T00:00:00Z
 #
 deny contains result if {
-	input.kind == "Task"
+	some task in tkn_bundle.tasks
+	task.kind == "Task"
 
-	some step_index, step in input.spec.steps
+	some step_index, step in task.spec.steps
 	image_ref := step.image
 	not ec.oci.image_manifest(image_ref)
 

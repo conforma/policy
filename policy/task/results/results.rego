@@ -9,6 +9,7 @@ import rego.v1
 
 import data.lib.metadata
 import data.lib.rule_data
+import data.lib.tkn_bundle
 
 import data.lib.json as j
 
@@ -22,7 +23,8 @@ import data.lib.json as j
 #   failure_msg: '%s'
 #
 deny contains result if {
-	some err in errors
+	some task in tkn_bundle.tasks
+	some err in _errors(task)
 	result := metadata.result_helper(rego.metadata.chain(), [err])
 }
 
@@ -41,34 +43,32 @@ deny contains result if {
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
-errors contains err if {
-	version := object.get(input.metadata, ["labels", "app.kubernetes.io/version"], "")
+_errors(task) := {err |
+	version := object.get(task.metadata, ["labels", "app.kubernetes.io/version"], "")
 	version_constraints := {r.version | some r in rule_data.get(_rule_data_key)}
 	not version in version_constraints
 
 	some required in {r |
 		some r in rule_data.get(_rule_data_key)
-		input.metadata.name == r.task
+		task.metadata.name == r.task
 		not r.version
 	}
-	found := [result |
-		some result in input.spec.results
-		result.name == required.result
+	found := [r |
+		some r in task.spec.results
+		r.name == required.result
 	]
 	count(found) == 0
 	err := sprintf("%q result not found in %q Task%s (all versions)", [required.result, required.task, _vstr(version)])
-}
-
-errors contains err if {
-	version := object.get(input.metadata, ["labels", "app.kubernetes.io/version"], "")
+} | {err |
+	version := object.get(task.metadata, ["labels", "app.kubernetes.io/version"], "")
 	some required in {r |
 		some r in rule_data.get(_rule_data_key)
-		input.metadata.name == r.task
+		task.metadata.name == r.task
 		r.version == version
 	}
-	found := [result |
-		some result in input.spec.results
-		result.name == required.result
+	found := [r |
+		some r in task.spec.results
+		r.name == required.result
 	]
 	count(found) == 0
 	err := sprintf("%q result not found in %q Task/v%s", [required.result, required.task, version])

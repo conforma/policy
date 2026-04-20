@@ -16,7 +16,7 @@ Confirm the task definition includes the kind field.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Required field 'kind' not found`
 * Code: `kind.kind_present`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/kind/kind.rego#L29[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/kind/kind.rego#L31[Source, window="_blank"]
 
 [#kind__expected_kind]
 === link:#kind__expected_kind[Task definition has expected kind]
@@ -26,4 +26,4 @@ Confirm the task definition has the kind "Task".
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Unexpected kind '%s' for task definition`
 * Code: `kind.expected_kind`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/kind/kind.rego#L16[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/kind/kind.rego#L17[Source, window="_blank"]
