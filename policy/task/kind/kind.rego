@@ -22,6 +22,7 @@ expected_kind := "Task"
 #   failure_msg: Unexpected kind '%s' for task definition
 #
 deny contains result if {
+	input.apiVersion
 	expected_kind != input.kind
 	result := metadata.result_helper(rego.metadata.chain(), [input.kind])
 }
@@ -35,6 +36,7 @@ deny contains result if {
 #   failure_msg: Required field 'kind' not found
 #
 deny contains result if {
+	input.apiVersion
 	not input.kind
 	result := metadata.result_helper(rego.metadata.chain(), [])
 }
