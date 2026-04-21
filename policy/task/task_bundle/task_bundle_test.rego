@@ -1,10 +1,10 @@
-package task_bundle_test
+package tbundle_test
 
 import rego.v1
 
 import data.lib.assertions
 
-import data.task_bundle
+import data.tbundle
 
 # Mock manifest with Tekton task layers
 _mock_manifest := {"layers": [
@@ -52,17 +52,17 @@ _missing_image_task := {
 
 # Non-task-bundle input (regular container image)
 test_non_task_bundle if {
-	assertions.assert_empty(task_bundle.warn) with input.image.ref as "registry.example.com/image@sha256:abc"
+	assertions.assert_empty(tbundle.warn) with input.image.ref as "registry.example.com/image@sha256:abc"
 		with ec.oci.image_manifest as null
 
-	assertions.assert_empty(task_bundle.deny) with input.image.ref as "registry.example.com/image@sha256:abc"
+	assertions.assert_empty(tbundle.deny) with input.image.ref as "registry.example.com/image@sha256:abc"
 		with ec.oci.image_manifest as null
 }
 
 # Task bundle detection
 test_task_bundle_detected if {
-	assertions.assert_equal_results(task_bundle.warn, {{
-		"code": "task_bundle.detected",
+	assertions.assert_equal_results(tbundle.warn, {{
+		"code": "tbundle.detected",
 		"msg": "Detected task bundle with 1 task(s) extracted",
 	}}) with input.image.ref as "registry.example.com/bundle@sha256:aaa"
 		with ec.oci.image_manifest as _mock_manifest
@@ -71,19 +71,19 @@ test_task_bundle_detected if {
 
 # Delegation to kind policy: wrong kind triggers deny with prefixed code
 test_delegation_kind_deny if {
-	lib_result := task_bundle.deny with input.image.ref as "registry.example.com/bundle@sha256:aaa"
+	lib_result := tbundle.deny with input.image.ref as "registry.example.com/bundle@sha256:aaa"
 		with ec.oci.image_manifest as _mock_manifest
 		with ec.oci.blob_files as {"my-task": _bad_kind_task}
 
 	some result in lib_result
-	result.code == "task_bundle.kind.expected_kind"
+	result.code == "tbundle.kind.expected_kind"
 	contains(result.msg, "[bad-kind-task]")
 }
 
 # No tasks extracted
 test_no_tasks_extracted if {
-	assertions.assert_equal_results(task_bundle.deny, {{
-		"code": "task_bundle.no_tasks",
+	assertions.assert_equal_results(tbundle.deny, {{
+		"code": "tbundle.no_tasks",
 		"msg": "Task bundle detected but no tasks could be extracted from registry.example.com/bundle@sha256:aaa",
 	}}) with input.image.ref as "registry.example.com/bundle@sha256:aaa"
 		with ec.oci.image_manifest as _mock_manifest

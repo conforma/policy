@@ -5,7 +5,7 @@
 #   Policies to detect Tekton task bundles, extract task definitions
 #   from bundle layers, and delegate validation to existing task policies.
 #
-package task_bundle
+package tbundle
 
 import rego.v1
 
@@ -96,7 +96,7 @@ deny contains _delegate(task, r) if {
 }
 
 _delegate(task, r) := object.union(r, {
-	"code": sprintf("task_bundle.%s", [r.code]),
+	"code": sprintf("tbundle.%s", [r.code]),
 	"msg": sprintf("[%s] %s", [_task_name(task), r.msg]),
 })
 
@@ -115,7 +115,7 @@ warn contains result if {
 	_is_task_bundle
 	count(_task_definitions) > 0
 	result := {
-		"code": "task_bundle.detected",
+		"code": "tbundle.detected",
 		"msg": sprintf("Detected task bundle with %d task(s) extracted", [count(_task_definitions)]),
 	}
 }
@@ -132,7 +132,7 @@ deny contains result if {
 	_is_task_bundle
 	count(_task_definitions) == 0
 	result := {
-		"code": "task_bundle.no_tasks",
+		"code": "tbundle.no_tasks",
 		"msg": sprintf("Task bundle detected but no tasks could be extracted from %s", [input.image.ref]),
 	}
 }
