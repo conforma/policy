@@ -9,6 +9,7 @@ import rego.v1
 
 import data.lib.metadata
 import data.lib.rule_data
+import data.lib.tkn_bundle
 
 import data.lib.json as j
 
@@ -22,7 +23,8 @@ import data.lib.json as j
 #   failure_msg: '%s'
 #
 deny contains result if {
-	some err in errors
+	some task in tkn_bundle.tasks
+	some err in errors with input as task
 	result := metadata.result_helper(rego.metadata.chain(), [err])
 }
 
