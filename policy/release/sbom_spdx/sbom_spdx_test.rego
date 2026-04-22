@@ -534,10 +534,147 @@ _spdx_proxy_package(purl, download_location) := {
 	"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
 }
 
+_spdx_hermeto_package(purl, source_info) := {
+	"name": "hermeto-package",
+	"SPDXID": "SPDXRef-hermeto-package",
+	"downloadLocation": "NOASSERTION",
+	"sourceInfo": source_info,
+	"externalRefs": [{
+		"referenceCategory": "PACKAGE-MANAGER",
+		"referenceType": "purl",
+		"referenceLocator": purl,
+	}],
+	"annotations": [{
+		"annotator": "Tool: hermeto:jsonencoded",
+		"comment": "{\"name\":\"hermeto:found_by\",\"value\":\"hermeto\"}",
+		"annotationDate": "2024-12-09T12:00:00Z",
+		"annotationType": "OTHER",
+	}],
+	"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
+}
+
 _spdx_proxy_rule_data := {
 	"proxy_enabled_purl_types": ["maven", "npm"],
 	"allowed_proxy_url_patterns": {
 		"maven": ["^https://proxy\\.example\\.com/maven/.*"],
 		"npm": ["^https://proxy\\.example\\.com/npm/.*"],
 	},
+}
+
+# proxy_metadata_required tests
+
+test_proxy_metadata_required_spdx_denied if {
+	expected := {{
+		"code": "sbom_spdx.proxy_metadata_required",
+		"term": "pkg:maven/org.example/lib@1.0",
+		# regal ignore:line-length
+		"msg": `Package pkg:maven/org.example/lib@1.0 is missing proxy metadata (sourceInfo is empty or missing)`,
+	}}
+
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_hermeto_package("pkg:maven/org.example/lib@1.0", ""),
+	}])
+
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+}
+
+test_proxy_metadata_required_spdx_with_source_info_passes if {
+	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_hermeto_package(
+			"pkg:maven/org.example/lib@1.0",
+			"acquired package from proxy https://proxy.example.com/maven/",
+		),
+	}])]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_spdx.proxy_metadata_required"}) == 0
+}
+
+test_proxy_metadata_required_spdx_not_hermeto_passes if {
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": {
+			"name": "non-hermeto-package",
+			"SPDXID": "SPDXRef-non-hermeto",
+			"downloadLocation": "NOASSERTION",
+			"externalRefs": [{
+				"referenceCategory": "PACKAGE-MANAGER",
+				"referenceType": "purl",
+				"referenceLocator": "pkg:maven/org.example/lib@1.0",
+			}],
+			"annotations": [{
+				"annotator": "Tool: other:jsonencoded",
+				"comment": "{\"name\":\"other\",\"value\":\"other\"}",
+				"annotationDate": "2024-12-09T12:00:00Z",
+				"annotationType": "OTHER",
+			}],
+			"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
+		},
+	}])
+
+	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+}
+
+test_proxy_metadata_required_spdx_non_proxy_purl_type_passes if {
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_hermeto_package("pkg:golang/example.com/lib@1.0", ""),
+	}])
+
+	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+}
+
+test_proxy_metadata_required_spdx_download_url_passes if {
+	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_hermeto_package(
+			"pkg:maven/org.example/lib@1.0?download_url=https://example.com/lib.jar",
+			"",
+		),
+	}])]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_spdx.proxy_metadata_required"}) == 0
+}
+
+test_proxy_metadata_required_spdx_vcs_url_passes if {
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_hermeto_package(
+			"pkg:maven/org.example/lib@1.0?vcs_url=https://github.com/example/lib.git",
+			"",
+		),
+	}])
+
+	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
 }
