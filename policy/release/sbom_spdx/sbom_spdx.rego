@@ -255,7 +255,8 @@ deny contains result if {
 # METADATA
 # title: Allowed proxy URLs
 # description: >-
-#   For packages with a PURL type listed in proxy_enabled_purl_types, verify the
+#   For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_types
+#   that are registry dependencies (no download_url or vcs_url qualifier), verify the
 #   downloadLocation matches at least one pattern from allowed_proxy_url_patterns.
 #   The "proxy_enabled_purl_types" rule data key is a list of PURL type strings
 #   (e.g. ["maven", "npm"]). The "allowed_proxy_url_patterns" rule data key is an
@@ -284,12 +285,16 @@ deny contains result if {
 	some s in sbom.spdx_sboms
 	some pkg in s.packages
 
+	sbom.package_found_by_hermeto(pkg)
+
 	some externalref in pkg.externalRefs
 	externalref.referenceType == "purl"
 
 	purl := externalref.referenceLocator
 	parsed_purl := ec.purl.parse(purl)
 	parsed_purl.type in proxy_enabled
+
+	sbom.is_registry_dependency(parsed_purl)
 
 	download_location := object.get(pkg, "downloadLocation", "")
 	download_location != "NOASSERTION"

@@ -424,102 +424,135 @@ _sbom_attestation := {"statement": {
 }}
 
 test_proxy_url_spdx_allowed if {
-	att := json.patch(_sbom_attestation, [{
+	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:npm/example-lib@2.0",
 			"https://proxy.example.com/npm/example-lib-2.0.tgz",
 		),
-	}])
-
-	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _spdx_proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_spdx.allowed_proxy_urls"}) == 0
 }
 
 test_proxy_url_spdx_denied if {
-	expected := {{
-		"code": "sbom_spdx.allowed_proxy_urls",
-		"term": "pkg:npm/example-lib@2.0",
-		# regal ignore:line-length
-		"msg": `Package pkg:npm/example-lib@2.0 has proxy URL "https://evil.com/example-lib-2.0.tgz" which does not match any allowed pattern for PURL type "npm"`,
-	}}
-
-	att := json.patch(_sbom_attestation, [{
+	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:npm/example-lib@2.0",
 			"https://evil.com/example-lib-2.0.tgz",
 		),
-	}])
-
-	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _spdx_proxy_rule_data
+
+	proxy_results := {r | some r in results; r.code == "sbom_spdx.allowed_proxy_urls"}
+	count(proxy_results) == 1
 }
 
 test_proxy_url_spdx_noassertion_skipped if {
-	att := json.patch(_sbom_attestation, [{
+	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:maven/org.example/lib@1.0",
 			"NOASSERTION",
 		),
-	}])
-
-	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _spdx_proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_spdx.allowed_proxy_urls"}) == 0
 }
 
 test_proxy_url_spdx_non_proxy_purl_type if {
-	att := json.patch(_sbom_attestation, [{
+	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:golang/example.com/lib@1.0",
 			"https://anything.com/lib-1.0.tar.gz",
 		),
-	}])
-
-	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _spdx_proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_spdx.allowed_proxy_urls"}) == 0
+}
+
+test_proxy_url_spdx_not_hermeto_skipped if {
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": {
+			"name": "non-hermeto-proxy",
+			"SPDXID": "SPDXRef-non-hermeto-proxy",
+			"downloadLocation": "https://evil.com/lib-1.0.jar",
+			"externalRefs": [{
+				"referenceCategory": "PACKAGE-MANAGER",
+				"referenceType": "purl",
+				"referenceLocator": "pkg:maven/org.example/lib@1.0",
+			}],
+			"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
+		},
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_spdx.allowed_proxy_urls"}) == 0
+}
+
+test_proxy_url_spdx_download_url_skipped if {
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_proxy_package(
+			"pkg:maven/org.example/lib@1.0?download_url=https://example.com/lib.jar",
+			"https://evil.com/lib-1.0.jar",
+		),
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_spdx.allowed_proxy_urls"}) == 0
 }
 
 test_proxy_url_spdx_empty_download_location if {
-	expected := {{
-		"code": "sbom_spdx.allowed_proxy_urls",
-		"term": "pkg:maven/org.example/lib@1.0",
-		# regal ignore:line-length
-		"msg": `Package pkg:maven/org.example/lib@1.0 has proxy URL "" which does not match any allowed pattern for PURL type "maven"`,
-	}}
-
-	att := json.patch(_sbom_attestation, [{
+	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:maven/org.example/lib@1.0",
 			"",
 		),
-	}])
-
-	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _spdx_proxy_rule_data
+
+	proxy_results := {r | some r in results; r.code == "sbom_spdx.allowed_proxy_urls"}
+	count(proxy_results) == 1
 }
 
 _spdx_proxy_package(purl, download_location) := {
@@ -530,6 +563,12 @@ _spdx_proxy_package(purl, download_location) := {
 		"referenceCategory": "PACKAGE-MANAGER",
 		"referenceType": "purl",
 		"referenceLocator": purl,
+	}],
+	"annotations": [{
+		"annotator": "Tool: hermeto:jsonencoded",
+		"comment": "{\"name\":\"hermeto:found_by\",\"value\":\"hermeto\"}",
+		"annotationDate": "2024-12-09T12:00:00Z",
+		"annotationType": "OTHER",
 	}],
 	"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
 }

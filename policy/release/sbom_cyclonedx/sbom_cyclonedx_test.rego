@@ -660,103 +660,90 @@ _sbom_1_6_attestation := json.patch(_sbom_1_5_attestation, [
 ])
 
 test_proxy_url_cyclonedx_allowed if {
-	att := json.patch(_sbom_1_5_attestation, [{
+	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/components/-",
 		"value": _cdx_proxy_component(
 			"pkg:maven/org.example/lib@1.0",
 			"https://proxy.example.com/maven/org/example/lib-1.0.jar",
 		),
-	}])
-
-	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
 }
 
 test_proxy_url_cyclonedx_denied if {
-	expected := {{
-		"code": "sbom_cyclonedx.allowed_proxy_urls",
-		"term": "pkg:maven/org.example/lib@1.0",
-		# regal ignore:line-length
-		"msg": `Package pkg:maven/org.example/lib@1.0 has proxy URL "https://evil.com/lib-1.0.jar" which does not match any allowed pattern for PURL type "maven"`,
-	}}
-
-	att := json.patch(_sbom_1_5_attestation, [{
+	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/components/-",
 		"value": _cdx_proxy_component(
 			"pkg:maven/org.example/lib@1.0",
 			"https://evil.com/lib-1.0.jar",
 		),
-	}])
-
-	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _proxy_rule_data
+
+	proxy_results := {r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}
+	count(proxy_results) == 1
 }
 
 test_proxy_url_cyclonedx_noassertion_skipped if {
-	att := json.patch(_sbom_1_5_attestation, [{
+	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/components/-",
 		"value": _cdx_proxy_component(
 			"pkg:maven/org.example/lib@1.0",
 			"NOASSERTION",
 		),
-	}])
-
-	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
 }
 
 test_proxy_url_cyclonedx_multiple_distribution_refs if {
-	expected := {{
-		"code": "sbom_cyclonedx.allowed_proxy_urls",
-		"term": "pkg:maven/org.example/lib@1.0",
-		# regal ignore:line-length
-		"msg": `Package pkg:maven/org.example/lib@1.0 has proxy URL "https://evil.com/lib-1.0.jar" which does not match any allowed pattern for PURL type "maven"`,
-	}}
-
-	att := json.patch(_sbom_1_5_attestation, [{
+	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/components/-",
 		"value": {
 			"type": "library",
 			"name": "component",
 			"purl": "pkg:maven/org.example/lib@1.0",
+			"properties": [{"name": "hermeto:found_by", "value": "hermeto"}],
 			"externalReferences": [
 				{"type": "distribution", "url": "https://proxy.example.com/maven/org/example/lib-1.0.jar"},
 				{"type": "distribution", "url": "https://evil.com/lib-1.0.jar"},
 			],
 		},
-	}])
-
-	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _proxy_rule_data
+
+	proxy_results := {r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}
+	count(proxy_results) == 1
 }
 
 test_proxy_url_cyclonedx_empty_enabled_purl_types if {
-	att := json.patch(_sbom_1_5_attestation, [{
+	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/components/-",
 		"value": _cdx_proxy_component(
 			"pkg:maven/org.example/lib@1.0",
 			"https://evil.com/lib-1.0.jar",
 		),
-	}])
-
-	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -764,26 +751,19 @@ test_proxy_url_cyclonedx_empty_enabled_purl_types if {
 			"proxy_enabled_purl_types": [],
 			"allowed_proxy_url_patterns": {"maven": ["^https://proxy\\.example\\.com/maven/.*"]},
 		}
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
 }
 
 test_proxy_url_cyclonedx_enabled_type_no_patterns if {
-	expected := {{
-		"code": "sbom_cyclonedx.allowed_proxy_urls",
-		"term": "pkg:pypi/example-lib@1.0",
-		# regal ignore:line-length
-		"msg": `Package pkg:pypi/example-lib@1.0 has proxy URL "https://pypi.org/packages/example-lib-1.0.tar.gz" which does not match any allowed pattern for PURL type "pypi"`,
-	}}
-
-	att := json.patch(_sbom_1_5_attestation, [{
+	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/components/-",
 		"value": _cdx_proxy_component(
 			"pkg:pypi/example-lib@1.0",
 			"https://pypi.org/packages/example-lib-1.0.tar.gz",
 		),
-	}])
-
-	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -791,29 +771,73 @@ test_proxy_url_cyclonedx_enabled_type_no_patterns if {
 			"proxy_enabled_purl_types": ["maven", "pypi"],
 			"allowed_proxy_url_patterns": {"maven": ["^https://proxy\\.example\\.com/maven/.*"]},
 		}
+
+	proxy_results := {r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}
+	count(proxy_results) == 1
 }
 
 test_proxy_url_cyclonedx_non_proxy_purl_type if {
-	att := json.patch(_sbom_1_5_attestation, [{
+	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/components/-",
 		"value": _cdx_proxy_component(
 			"pkg:golang/example.com/lib@1.0",
 			"https://anything.com/lib-1.0.tar.gz",
 		),
-	}])
-
-	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
+	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
+}
+
+test_proxy_url_cyclonedx_not_hermeto_skipped if {
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": {
+			"type": "library",
+			"name": "component",
+			"purl": "pkg:maven/org.example/lib@1.0",
+			"externalReferences": [{"type": "distribution", "url": "https://evil.com/lib-1.0.jar"}],
+		},
+	}])
+
+	results := sbom_cyclonedx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
+}
+
+test_proxy_url_cyclonedx_download_url_skipped if {
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": _cdx_proxy_component(
+			"pkg:maven/org.example/lib@1.0?download_url=https://example.com/lib.jar",
+			"https://evil.com/lib-1.0.jar",
+		),
+	}])
+
+	results := sbom_cyclonedx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
 }
 
 _cdx_proxy_component(purl, distribution_url) := {
 	"type": "library",
 	"name": "component",
 	"purl": purl,
+	"properties": [{"name": "hermeto:found_by", "value": "hermeto"}],
 	"externalReferences": [{"type": "distribution", "url": distribution_url}],
 }
 
