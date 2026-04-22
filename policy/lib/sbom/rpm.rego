@@ -44,29 +44,11 @@ _is_rpmish(purl) if {
 	startswith(purl, "pkg:rpmmod/")
 }
 
-# CycloneDX style
-_component_found_by_cachi2(component) if {
-	some property in component.properties
-	some cachi2_name in _cachi2_names
-	property == _cachi2_found_by_property(cachi2_name)
-} else := false
+# CycloneDX style - delegates to the public helper in sbom.rego
+_component_found_by_cachi2(component) := component_found_by_hermeto(component)
 
-# Expecting this to be called with one of _cachi2_names
-_cachi2_found_by_property(cachi2_name) := {
-	"name": sprintf("%s:found_by", [cachi2_name]),
-	"value": cachi2_name,
-}
+# Exposed for use by tests in rpm_test.rego
+_cachi2_found_by_property(name) := hermeto_found_by_property(name)
 
-# SPDX style
-_package_found_by_cachi2(pkg) if {
-	some annotation in pkg.annotations
-	some cachi2_name in _cachi2_names
-	regex.match(sprintf(`.*%s.*`, [cachi2_name]), annotation.annotator)
-	annotation.annotationType == "OTHER"
-	# `comment` contains additional information, but that is not needed for the purpose of
-	# simply filtering what was found by cachi2.
-} else := false
-
-# The new name for cachi2 is hermeto. We want to treat them
-# as as synonymous when looking in the SBOM data.
-_cachi2_names := ["cachi2", "hermeto"]
+# SPDX style - delegates to the public helper in sbom.rego
+_package_found_by_cachi2(pkg) := package_found_by_hermeto(pkg)
