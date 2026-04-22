@@ -2,7 +2,7 @@ module github.com/conforma/policy/docs
 
 go 1.24.6
 
-toolchain go1.25.7
+toolchain go1.26.2
 
 require github.com/open-policy-agent/opa v1.12.3
 
