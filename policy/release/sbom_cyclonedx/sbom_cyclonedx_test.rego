@@ -817,10 +817,125 @@ _cdx_proxy_component(purl, distribution_url) := {
 	"externalReferences": [{"type": "distribution", "url": distribution_url}],
 }
 
+_cdx_hermeto_component(purl, external_refs) := {
+	"type": "library",
+	"name": "component",
+	"purl": purl,
+	"properties": [{"name": "hermeto:found_by", "value": "hermeto"}],
+	"externalReferences": external_refs,
+}
+
 _proxy_rule_data := {
 	"proxy_enabled_purl_types": ["maven", "npm"],
 	"allowed_proxy_url_patterns": {
 		"maven": ["^https://proxy\\.example\\.com/maven/.*"],
 		"npm": ["^https://proxy\\.example\\.com/npm/.*"],
 	},
+}
+
+# proxy_metadata_required tests
+
+test_proxy_metadata_required_cdx_denied if {
+	expected := {{
+		"code": "sbom_cyclonedx.proxy_metadata_required",
+		"term": "pkg:maven/org.example/lib@1.0",
+		# regal ignore:line-length
+		"msg": `Package pkg:maven/org.example/lib@1.0 is missing proxy metadata (no externalReference of type "distribution")`,
+	}}
+
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": _cdx_hermeto_component("pkg:maven/org.example/lib@1.0", []),
+	}])
+
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+}
+
+test_proxy_metadata_required_cdx_with_distribution_passes if {
+	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": _cdx_hermeto_component(
+			"pkg:maven/org.example/lib@1.0",
+			[{"type": "distribution", "url": "https://proxy.example.com/maven/lib-1.0.jar"}],
+		),
+	}])]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.proxy_metadata_required"}) == 0
+}
+
+test_proxy_metadata_required_cdx_not_hermeto_passes if {
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": {
+			"type": "library",
+			"name": "component",
+			"purl": "pkg:maven/org.example/lib@1.0",
+			"properties": [{"name": "other:property", "value": "other"}],
+		},
+	}])
+
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+}
+
+test_proxy_metadata_required_cdx_non_proxy_purl_type_passes if {
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": _cdx_hermeto_component("pkg:golang/example.com/lib@1.0", []),
+	}])
+
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+}
+
+test_proxy_metadata_required_cdx_download_url_passes if {
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": _cdx_hermeto_component(
+			"pkg:maven/org.example/lib@1.0?download_url=https://example.com/lib.jar",
+			[],
+		),
+	}])
+
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+}
+
+test_proxy_metadata_required_cdx_vcs_url_passes if {
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": _cdx_hermeto_component(
+			"pkg:maven/org.example/lib@1.0?vcs_url=https://github.com/example/lib.git",
+			[],
+		),
+	}])
+
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
 }
