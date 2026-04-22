@@ -304,6 +304,52 @@ deny contains result if {
 	)
 }
 
+# METADATA
+# title: Proxy metadata required
+# description: >-
+#   For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_types
+#   that are registry dependencies (no download_url or vcs_url qualifier), verify that
+#   proxy metadata is present. In SPDX, the sourceInfo field must be non-empty.
+# custom:
+#   short_name: proxy_metadata_required
+#   failure_msg: >-
+#     Package %s is missing proxy metadata (sourceInfo is empty or missing)
+#   solution: >-
+#     Ensure the build process produces proxy metadata for packages fetched by
+#     Hermeto from a package registry.
+#   collections:
+#   - redhat
+#   - redhat_rpms
+#   - policy_data
+#   effective_on: 2026-06-01T00:00:00Z
+#
+deny contains result if {
+	proxy_enabled := {t | some t in rule_data.get("proxy_enabled_purl_types")}
+
+	some s in sbom.spdx_sboms
+	some pkg in s.packages
+
+	sbom.package_found_by_hermeto(pkg)
+
+	some externalref in pkg.externalRefs
+	externalref.referenceType == "purl"
+
+	purl := externalref.referenceLocator
+	parsed_purl := ec.purl.parse(purl)
+	parsed_purl.type in proxy_enabled
+
+	sbom.is_registry_dependency(parsed_purl)
+
+	source_info := object.get(pkg, "sourceInfo", "")
+	source_info == ""
+
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[purl],
+		purl,
+	)
+}
+
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does
 # not have the attribute, result is returned unmodified.
 _with_effective_on(result, item) := new_result if {
