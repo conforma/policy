@@ -16,9 +16,9 @@
 rule_data:
   trusted_task_rules:
     allow:
-      - name: "Allow Konflux tasks"
-        pattern: "oci://quay.io/konflux-ci/tekton-catalog/*"
+      konflux-tasks:
+        - pattern: "oci://quay.io/konflux-ci/tekton-catalog/*"
     deny:
-      - name: "Deprecate old buildah versions"
-        pattern: "oci://quay.io/konflux-ci/tekton-catalog/task-buildah"
-        versions: ["<=0.5"]
+      deprecated-buildah:
+        - pattern: "oci://quay.io/konflux-ci/tekton-catalog/task-buildah"
+          versions: ["<=0.5"]

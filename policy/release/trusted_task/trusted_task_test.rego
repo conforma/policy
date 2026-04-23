@@ -224,15 +224,11 @@ test_trusted_artifact_outdated if {
 test_trusted_artifact_denied_by_rules if {
 	# Deny all trusty tasks via trusted_task_rules
 	task_rules := {
-		"allow": [{
-			"name": "Allow all trusty tasks",
-			"pattern": "oci://registry.local/trusty*",
-		}],
-		"deny": [{
-			"name": "Deny trusty 1.0",
+		"allow": {"trusty-tasks": [{"pattern": "oci://registry.local/trusty*"}]},
+		"deny": {"deprecated": [{
 			"pattern": "oci://registry.local/trusty:1.0",
 			"message": "Version 1.0 is deprecated",
-		}],
+		}]},
 	}
 
 	# Use the full TA attestation - all tasks use the same bundle so all chains are denied
@@ -306,12 +302,11 @@ test_future_deny_rule_warning if {
 
 	# Task is allowed but a deny rule with future effective_on is present
 	task_rules := {
-		"allow": [{"name": "Allow all trusty tasks", "pattern": "oci://registry.local/trusty*"}],
-		"deny": [{
-			"name": "Deny trusty 1.0 in the future",
+		"allow": {"trusty-tasks": [{"pattern": "oci://registry.local/trusty*"}]},
+		"deny": {"future-deny": [{
 			"pattern": "oci://registry.local/trusty:1.0*",
 			"effective_on": "2099-01-01",
-		}],
+		}]},
 	}
 
 	expected := {{
@@ -339,11 +334,8 @@ test_future_deny_rule_no_warning_when_already_effective if {
 
 	# Deny rule has no effective_on, so it's already effective (no warning)
 	task_rules := {
-		"allow": [{"name": "Allow all trusty tasks", "pattern": "oci://registry.local/trusty*"}],
-		"deny": [{
-			"name": "Deny trusty 1.0",
-			"pattern": "oci://registry.local/trusty:1.0*",
-		}],
+		"allow": {"trusty-tasks": [{"pattern": "oci://registry.local/trusty*"}]},
+		"deny": {"current-deny": [{"pattern": "oci://registry.local/trusty:1.0*"}]},
 	}
 
 	# No future_deny_rule warning expected (the deny itself will fire, but not the warning)
@@ -876,8 +868,8 @@ test_on_trusted_tasks_no_rules_trusted if {
 	rules_trusted_tasks_data := {"oci://quay.io/konflux-ci/tekton-catalog/task-buildah:0.4": [{"ref": "sha256:abc1230000000000000000000000000000000000000000000000000000abc123"}]}
 
 	trusted_task_rules_data := {
-		"allow": [],
-		"deny": [],
+		"allow": {},
+		"deny": {},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -902,8 +894,8 @@ test_on_trusted_tasks_expired_untrusted if {
 	}]}
 
 	trusted_task_rules_data := {
-		"allow": [],
-		"deny": [],
+		"allow": {},
+		"deny": {},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -933,8 +925,8 @@ test_not_on_trusted_tasks_no_rules_untrusted if {
 	rules_trusted_tasks_data := {}
 
 	trusted_task_rules_data := {
-		"allow": [],
-		"deny": [],
+		"allow": {},
+		"deny": {},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -962,11 +954,8 @@ test_not_on_trusted_tasks_no_rules_untrusted if {
 # Task matches allow pattern → should NOT produce warn
 test_allow_by_location if {
 	trusted_task_rules_data := {
-		"allow": [{
-			"name": "Trust all tekton-catalog",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-		"deny": [],
+		"allow": {"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},
+		"deny": {},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -989,11 +978,8 @@ test_allow_by_location if {
 # Task does NOT match allow pattern → should produce warn
 test_outside_pattern_not_trusted if {
 	trusted_task_rules_data := {
-		"allow": [{
-			"name": "Trust all tekton-catalog",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-		"deny": [],
+		"allow": {"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},
+		"deny": {},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -1025,16 +1011,12 @@ test_outside_pattern_not_trusted if {
 # Task matches allow pattern but also matches deny → should produce deny with message
 test_deny_takes_precedence_over_allow if {
 	task_rules := {
-		"allow": [{
-			"name": "Allow tekton catalog",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-		"deny": [{
-			"name": "Block buildah 0.4",
+		"allow": {"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},
+		"deny": {"deprecated-buildah": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
 			"message": "task-buildah:0.4 is deprecated",
 			"effective_on": "2025-01-01",
-		}],
+		}]},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -1067,12 +1049,11 @@ test_deny_takes_precedence_over_allow if {
 # D1 — Allow rule not yet effective → not trusted
 test_allow_rule_not_yet_effective if {
 	trusted_task_rules_data := {
-		"allow": [{
-			"name": "Trust tekton starting Feb",
+		"allow": {"tekton-catalog": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
 			"effective_on": "2025-02-01",
-		}],
-		"deny": [],
+		}]},
+		"deny": {},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -1101,12 +1082,11 @@ test_allow_rule_not_yet_effective if {
 # D1 — Allow rule becomes effective → trusted
 test_allow_rule_effective_trusted if {
 	trusted_task_rules_data := {
-		"allow": [{
-			"name": "Trust tekton starting Feb",
+		"allow": {"tekton-catalog": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
 			"effective_on": "2025-02-01",
-		}],
-		"deny": [],
+		}]},
+		"deny": {},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -1129,15 +1109,11 @@ test_allow_rule_effective_trusted if {
 # Time-based deny rule - not yet effective
 test_deny_rule_not_yet_effective if {
 	trusted_task_rules_data := {
-		"allow": [{
-			"name": "Allow tekton catalog",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-		"deny": [{
-			"name": "Expire buildah",
+		"allow": {"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},
+		"deny": {"expire-buildah": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
 			"effective_on": "2025-03-01",
-		}],
+		}]},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -1160,15 +1136,11 @@ test_deny_rule_not_yet_effective if {
 # Time-based deny rule - becomes effective
 test_deny_rule_becomes_effective if {
 	trusted_task_rules_data := {
-		"allow": [{
-			"name": "Allow tekton catalog",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-		"deny": [{
-			"name": "Expire buildah",
+		"allow": {"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},
+		"deny": {"expire-buildah": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
 			"effective_on": "2025-03-01",
-		}],
+		}]},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -1201,17 +1173,11 @@ test_deny_rule_becomes_effective if {
 # Multiple allow rules with same pattern - task matching any effective rule is trusted
 test_multiple_allow_rules if {
 	trusted_task_rules_data := {
-		"allow": [
-			{
-				"name": "Base allow by location",
-				"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-			},
-			{
-				"name": "Additional allow rule with different scope",
-				"pattern": "oci://quay.io/konflux-ci/*",
-			},
-		],
-		"deny": [],
+		"allow": {
+			"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}],
+			"all-konflux": [{"pattern": "oci://quay.io/konflux-ci/*"}],
+		},
+		"deny": {},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -1237,16 +1203,12 @@ test_multiple_allow_rules if {
 # G1 — Deny with user-visible message
 test_deny_with_message if {
 	task_rules := {
-		"allow": [{
-			"name": "Allow tekton",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-		"deny": [{
-			"name": "Deprecate manifest",
+		"allow": {"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},
+		"deny": {"deprecated-manifest": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-build-image-manifest*",
 			"message": "This task was renamed to build-image-index.",
 			"effective_on": "2025-10-26",
-		}],
+		}]},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -1286,11 +1248,8 @@ test_rules_allow_trusted_tasks_expiry_ignored if {
 	}]}
 
 	trusted_task_rules_data := {
-		"allow": [{
-			"name": "Allow tekton catalog",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-		"deny": [],
+		"allow": {"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},
+		"deny": {},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -1317,12 +1276,11 @@ test_rules_allow_trusted_tasks_expiry_ignored if {
 # K1 — Unknown fields ignored
 test_unknown_fields_ignored if {
 	trusted_task_rules_data := {
-		"allow": [{
-			"name": "Allow tekton",
+		"allow": {"tekton-catalog": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
 			"foo": "bar", # unknown field - should be ignored
-		}],
-		"deny": [],
+		}]},
+		"deny": {},
 	}
 
 	att := _rules_make_attestation([_rules_make_task(
@@ -1349,11 +1307,8 @@ test_unknown_fields_ignored if {
 # Test multiple tasks - some trusted, some not
 test_mixed_trusted_and_untrusted_tasks if {
 	trusted_task_rules_data := {
-		"allow": [{
-			"name": "Allow tekton catalog",
-			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-		}],
-		"deny": [],
+		"allow": {"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},
+		"deny": {},
 	}
 
 	att := _rules_make_attestation([
