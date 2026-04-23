@@ -142,54 +142,56 @@ _trusted_task_rules_data := {
 	),
 }
 
-# Safely extract allow from data.trusted_task_rules (object format keyed by name).
+# Safely extract allow rules from data.trusted_task_rules.
+# Each key maps to an array of rule objects; we flatten all arrays into one list.
 default _data_allow_array := []
 
-_data_allow_array := [entry |
+_data_allow_array := [rule |
 	is_object(data.trusted_task_rules)
 	is_object(data.trusted_task_rules.allow)
-	some _, entry in data.trusted_task_rules.allow # regal ignore:in-wildcard-key
+	some _, rules in data.trusted_task_rules.allow # regal ignore:in-wildcard-key
+	some rule in rules
 ] if {
 	is_object(data.trusted_task_rules)
 	is_object(data.trusted_task_rules.allow)
 }
 
-# Safely extract deny from data.trusted_task_rules (object format keyed by name).
+# Safely extract deny rules from data.trusted_task_rules.
 default _data_deny_array := []
 
-_data_deny_array := [entry |
+_data_deny_array := [rule |
 	is_object(data.trusted_task_rules)
 	is_object(data.trusted_task_rules.deny)
-	some _, entry in data.trusted_task_rules.deny # regal ignore:in-wildcard-key
+	some _, rules in data.trusted_task_rules.deny # regal ignore:in-wildcard-key
+	some rule in rules
 ] if {
 	is_object(data.trusted_task_rules)
 	is_object(data.trusted_task_rules.deny)
 }
 
-# Safely extract allow from rule_data (object format keyed by name).
-# The object format enables multiple data sources with the same key to be
-# merged by OPA without conflicts, since each entry has a unique map key.
+# Safely extract allow rules from rule_data.
+# Each key maps to an array of rule objects; we flatten all arrays into one list.
 default _rule_data_allow_array := []
 
-_rule_data_allow_array := [entry |
-	_rule_data_obj := lib_rule_data("trusted_task_rules")
+_rule_data_allow_array := [rule |
 	is_object(_rule_data_obj)
 	is_object(_rule_data_obj.allow)
-	some _, entry in _rule_data_obj.allow # regal ignore:in-wildcard-key
+	some _, rules in _rule_data_obj.allow # regal ignore:in-wildcard-key
+	some rule in rules
 ] if {
 	_rule_data_obj := lib_rule_data("trusted_task_rules")
 	is_object(_rule_data_obj)
 	is_object(_rule_data_obj.allow)
 }
 
-# Safely extract deny from rule_data (object format keyed by name).
+# Safely extract deny rules from rule_data.
 default _rule_data_deny_array := []
 
-_rule_data_deny_array := [entry |
-	_rule_data_obj := lib_rule_data("trusted_task_rules")
+_rule_data_deny_array := [rule |
 	is_object(_rule_data_obj)
 	is_object(_rule_data_obj.deny)
-	some _, entry in _rule_data_obj.deny # regal ignore:in-wildcard-key
+	some _, rules in _rule_data_obj.deny # regal ignore:in-wildcard-key
+	some rule in rules
 ] if {
 	_rule_data_obj := lib_rule_data("trusted_task_rules")
 	is_object(_rule_data_obj)
@@ -453,14 +455,21 @@ _trusted_task_rules_schema := {
 	"properties": {
 		"allow": {
 			"type": "object",
-			"description": "Rules that allow tasks matching the pattern, keyed by name",
-			"additionalProperties": _trusted_task_rule_entry_schema,
+			# regal ignore:line-length
+			"description": "Groups of allow rules keyed by a descriptive name. Each value is an array of rule objects.",
+			"additionalProperties": {
+				"type": "array",
+				"items": _trusted_task_rule_entry_schema,
+			},
 		},
 		"deny": {
 			"type": "object",
 			# regal ignore:line-length
-			"description": "Rules that deny tasks matching the pattern, keyed by name. Deny rules take precedence over allow rules.",
-			"additionalProperties": _trusted_task_rule_entry_schema,
+			"description": "Groups of deny rules keyed by a descriptive name. Deny rules take precedence over allow rules.",
+			"additionalProperties": {
+				"type": "array",
+				"items": _trusted_task_rule_entry_schema,
+			},
 		},
 	},
 	"additionalProperties": false,
