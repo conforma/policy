@@ -40,7 +40,7 @@ Feature: Task Definition
                         ],
                         "data": [
                             "$GITROOT/example/data",
-                            "$GITROOT/acceptance/testdata"
+                            "$GITROOT/acceptance/testdata/trusted-task-rules"
                         ],
                         "config": {
                             "include": [
@@ -67,7 +67,7 @@ Feature: Task Definition
                         ],
                         "data": [
                             "$GITROOT/example/data",
-                            "$GITROOT/acceptance/testdata"
+                            "$GITROOT/acceptance/testdata/trusted-task-rules"
                         ],
                         "config": {
                             "include": [
@@ -94,7 +94,7 @@ Feature: Task Definition
                         ],
                         "data": [
                             "$GITROOT/example/data",
-                            "$GITROOT/acceptance/testdata"
+                            "$GITROOT/acceptance/testdata/trusted-task-rules"
                         ],
                         "config": {
                             "include": [

@@ -285,3 +285,88 @@ _mock_sbom_manifest := {"layers": [{
 	"digest": "sha256:f0cacc1a000000000000000000000000000000000000000000000000f0cacc1a",
 	"size": 100,
 }]}
+
+# Tests for component_found_by_hermeto (CycloneDX)
+test_component_found_by_hermeto_with_hermeto if {
+	component := {"properties": [{"name": "hermeto:found_by", "value": "hermeto"}]}
+	sbom.component_found_by_hermeto(component)
+}
+
+test_component_found_by_hermeto_with_cachi2 if {
+	component := {"properties": [{"name": "cachi2:found_by", "value": "cachi2"}]}
+	sbom.component_found_by_hermeto(component)
+}
+
+test_component_found_by_hermeto_not_found if {
+	component := {"properties": [{"name": "other:property", "value": "other"}]}
+	not sbom.component_found_by_hermeto(component)
+}
+
+test_component_found_by_hermeto_no_properties if {
+	component := {}
+	not sbom.component_found_by_hermeto(component)
+}
+
+# Tests for package_found_by_hermeto (SPDX)
+test_package_found_by_hermeto_with_hermeto if {
+	pkg := {"annotations": [{
+		"annotator": "Tool: hermeto:jsonencoded",
+		"annotationType": "OTHER",
+	}]}
+	sbom.package_found_by_hermeto(pkg)
+}
+
+test_package_found_by_hermeto_with_cachi2 if {
+	pkg := {"annotations": [{
+		"annotator": "Tool: cachi2:jsonencoded",
+		"annotationType": "OTHER",
+	}]}
+	sbom.package_found_by_hermeto(pkg)
+}
+
+test_package_found_by_hermeto_not_found if {
+	pkg := {"annotations": [{
+		"annotator": "Tool: other:jsonencoded",
+		"annotationType": "OTHER",
+	}]}
+	not sbom.package_found_by_hermeto(pkg)
+}
+
+test_package_found_by_hermeto_no_annotations if {
+	pkg := {}
+	not sbom.package_found_by_hermeto(pkg)
+}
+
+# Tests for is_registry_dependency
+test_is_registry_dependency_no_qualifiers if {
+	parsed_purl := {"type": "maven", "name": "lib", "qualifiers": []}
+	sbom.is_registry_dependency(parsed_purl)
+}
+
+test_is_registry_dependency_unrelated_qualifiers if {
+	parsed_purl := {"type": "maven", "name": "lib", "qualifiers": [{"key": "type", "value": "pom"}]}
+	sbom.is_registry_dependency(parsed_purl)
+}
+
+test_is_registry_dependency_with_download_url if {
+	parsed_purl := {"type": "generic", "name": "lib", "qualifiers": [{"key": "download_url", "value": "https://example.com/lib.tar.gz"}]}
+	not sbom.is_registry_dependency(parsed_purl)
+}
+
+test_is_registry_dependency_with_vcs_url if {
+	parsed_purl := {"type": "generic", "name": "lib", "qualifiers": [{"key": "vcs_url", "value": "https://github.com/example/lib.git"}]}
+	not sbom.is_registry_dependency(parsed_purl)
+}
+
+test_is_registry_dependency_with_both if {
+	parsed_purl := {"type": "generic", "name": "lib", "qualifiers": [
+		{"key": "download_url", "value": "https://example.com/lib.tar.gz"},
+		{"key": "vcs_url", "value": "https://github.com/example/lib.git"},
+	]}
+	not sbom.is_registry_dependency(parsed_purl)
+}
+
+test_is_registry_dependency_missing_qualifiers_field if {
+	parsed_purl := {"type": "maven", "name": "lib"}
+	sbom.is_registry_dependency(parsed_purl)
+}

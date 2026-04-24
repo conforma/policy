@@ -15,7 +15,7 @@ rpms_from_sbom(s) := entities if {
 		_is_rpmish(purl)
 		entity := {
 			"purl": purl,
-			"found_by_cachi2": _component_found_by_cachi2(component),
+			"found_by_cachi2": component_found_by_hermeto(component),
 		}
 	}
 	count(entities) > 0
@@ -30,7 +30,7 @@ rpms_from_sbom(s) := entities if {
 		_is_rpmish(purl)
 		entity := {
 			"purl": purl,
-			"found_by_cachi2": _package_found_by_cachi2(pkg),
+			"found_by_cachi2": package_found_by_hermeto(pkg),
 		}
 	}
 	count(entities) > 0
@@ -44,29 +44,5 @@ _is_rpmish(purl) if {
 	startswith(purl, "pkg:rpmmod/")
 }
 
-# CycloneDX style
-_component_found_by_cachi2(component) if {
-	some property in component.properties
-	some cachi2_name in _cachi2_names
-	property == _cachi2_found_by_property(cachi2_name)
-} else := false
-
-# Expecting this to be called with one of _cachi2_names
-_cachi2_found_by_property(cachi2_name) := {
-	"name": sprintf("%s:found_by", [cachi2_name]),
-	"value": cachi2_name,
-}
-
-# SPDX style
-_package_found_by_cachi2(pkg) if {
-	some annotation in pkg.annotations
-	some cachi2_name in _cachi2_names
-	regex.match(sprintf(`.*%s.*`, [cachi2_name]), annotation.annotator)
-	annotation.annotationType == "OTHER"
-	# `comment` contains additional information, but that is not needed for the purpose of
-	# simply filtering what was found by cachi2.
-} else := false
-
-# The new name for cachi2 is hermeto. We want to treat them
-# as as synonymous when looking in the SBOM data.
-_cachi2_names := ["cachi2", "hermeto"]
+# Exposed for use by tests in rpm_test.rego
+_cachi2_found_by_property(name) := hermeto_found_by_property(name)
