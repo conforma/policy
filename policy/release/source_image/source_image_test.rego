@@ -57,6 +57,7 @@ test_success if {
 
 	assertions.assert_empty(source_image.deny) with input.attestations as attestations
 		with ec.oci.image_manifest as mock_ec_oci_image_manifest
+		with ec.oci.descriptor as mock_ec_oci_descriptor
 		with ec.sigstore.verify_image as _mock_verify_image
 }
 
@@ -130,6 +131,7 @@ test_inaccessible_source_image_references if {
 	}
 
 	assertions.assert_equal_results(expected, source_image.deny) with input.attestations as attestations
+		with ec.oci.descriptor as false
 		with ec.oci.image_manifest as false
 		with ec.sigstore.verify_image as _mock_verify_image
 }
@@ -177,6 +179,7 @@ test_empty_source_image if {
 
 	assertions.assert_equal_results(expected, source_image.deny) with input.attestations as attestations
 		with ec.oci.image_manifest as {"schemaVersion": 2}
+		with ec.oci.descriptor as mock_ec_oci_descriptor
 		with ec.sigstore.verify_image as _mock_verify_image
 }
 
@@ -226,7 +229,13 @@ test_missing_signature if {
 
 	assertions.assert_equal_results(expected, source_image.deny) with input.attestations as attestations
 		with ec.oci.image_manifest as mock_ec_oci_image_manifest
+		with ec.oci.descriptor as mock_ec_oci_descriptor
 		with ec.sigstore.verify_image as {"errors": ["kaboom!"]}
+}
+
+mock_ec_oci_descriptor(img) := descriptor if {
+	not contains(img, "\n")
+	descriptor := {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 }
 
 mock_ec_oci_image_manifest(img) := manifest if {

@@ -297,7 +297,9 @@ deny contains result if {
 	]
 
 	some unmatched_image in unmatched_image_refs
-	not ec.oci.image_manifest(image.str(unmatched_image.ref))
+
+	# Use descriptor (HEAD request) instead of image_manifest to avoid platform resolution failures on multi-arch indexes.
+	not ec.oci.descriptor(image.str(unmatched_image.ref))
 
 	# regal ignore:line-length
 	result := metadata.result_helper_with_term(rego.metadata.chain(), [image.str(unmatched_image.ref)], image.str(unmatched_image.ref))

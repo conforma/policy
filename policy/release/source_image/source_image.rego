@@ -53,7 +53,9 @@ _source_image_errors contains error if {
 
 _source_image_errors contains error if {
 	some img in _source_images
-	not ec.oci.image_manifest(img)
+
+	# Use descriptor (HEAD request) instead of image_manifest to avoid platform resolution failures on multi-arch indexes.
+	not ec.oci.descriptor(img)
 	error := sprintf("Unable to access source image %q", [img])
 }
 
