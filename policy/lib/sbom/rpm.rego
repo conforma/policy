@@ -15,7 +15,7 @@ rpms_from_sbom(s) := entities if {
 		_is_rpmish(purl)
 		entity := {
 			"purl": purl,
-			"found_by_cachi2": _component_found_by_cachi2(component),
+			"found_by_cachi2": component_found_by_hermeto(component),
 		}
 	}
 	count(entities) > 0
@@ -30,7 +30,7 @@ rpms_from_sbom(s) := entities if {
 		_is_rpmish(purl)
 		entity := {
 			"purl": purl,
-			"found_by_cachi2": _package_found_by_cachi2(pkg),
+			"found_by_cachi2": package_found_by_hermeto(pkg),
 		}
 	}
 	count(entities) > 0
@@ -44,11 +44,5 @@ _is_rpmish(purl) if {
 	startswith(purl, "pkg:rpmmod/")
 }
 
-# CycloneDX style - delegates to the public helper in sbom.rego
-_component_found_by_cachi2(component) := component_found_by_hermeto(component)
-
 # Exposed for use by tests in rpm_test.rego
 _cachi2_found_by_property(name) := hermeto_found_by_property(name)
-
-# SPDX style - delegates to the public helper in sbom.rego
-_package_found_by_cachi2(pkg) := package_found_by_hermeto(pkg)
