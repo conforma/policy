@@ -368,6 +368,7 @@ deny contains result if {
 _has_distribution_reference(component) if {
 	some reference in component.externalReferences
 	reference.type == "distribution"
+	object.get(reference, "url", "") != "NOASSERTION"
 }
 
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does
