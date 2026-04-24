@@ -429,6 +429,8 @@ _hermeto_found_by_property(name) := {
 	"value": name,
 }
 
+# Hermeto used to be known as cachi2, so we recognize the
+# old name for backwards compatibility
 _hermeto_names := ["cachi2", "hermeto"]
 
 rule_data_packages_key := "disallowed_packages"
