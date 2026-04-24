@@ -640,6 +640,32 @@ test_proxy_metadata_required_spdx_with_source_info_passes if {
 	count({r | some r in results; r.code == "sbom_spdx.proxy_metadata_required"}) == 0
 }
 
+test_proxy_metadata_required_spdx_absent_source_info_denied if {
+	expected := {{
+		"code": "sbom_spdx.proxy_metadata_required",
+		"term": "pkg:maven/org.example/lib@1.0",
+		# regal ignore:line-length
+		"msg": `Package pkg:maven/org.example/lib@1.0 is missing proxy metadata (sourceInfo is empty or missing)`,
+	}}
+
+	pkg := object.remove(
+		_spdx_hermeto_package("pkg:maven/org.example/lib@1.0", ""),
+		["sourceInfo"],
+	)
+
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": pkg,
+	}])
+
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+}
+
 test_proxy_metadata_required_spdx_not_hermeto_passes if {
 	att := json.patch(_sbom_attestation, [{
 		"op": "add",
