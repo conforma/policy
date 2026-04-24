@@ -1,0 +1,8 @@
+---
+rule_data:
+  proxy_enabled_purl_types:
+  - npm
+
+  allowed_proxy_url_patterns:
+    npm:
+    - ^https://artifact-registry-proxy\.caching\.svc\.cluster\.local/repository/npm-proxy.*
