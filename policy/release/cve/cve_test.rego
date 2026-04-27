@@ -465,7 +465,7 @@ unpatched_vulnerabilities := object.union_n([
 	_vuln(20, "Unknown", "", "2022-03-26T00:00:00Z"),
 ])
 
-_clair_report := {"vulnerabilities": object.union(vulnerabilities, unpatched_vulnerabilities)}
+_cve_scan_report := {"vulnerabilities": object.union(vulnerabilities, unpatched_vulnerabilities)}
 
 _manifests := {
 	"registry.io/repository/image@sha256:report_digest": {"layers": [{
@@ -479,7 +479,7 @@ _manifests := {
 }
 
 _blobs := {
-	"registry.io/repository/image@sha256:report_blob_digest": json.marshal(_clair_report),
+	"registry.io/repository/image@sha256:report_blob_digest": json.marshal(_cve_scan_report),
 	"registry.io/repository/image@sha256:no_vulnerabilities_report_blob_digest": json.marshal({"vulnerabilities": {}}),
 }
 
@@ -513,55 +513,281 @@ _attestations_with_reports(reports) := attestations if {
 }
 
 test_success_with_tpa_report if {
-	assertions.assert_empty(cve.deny | cve.warn) with input.attestations as _no_vuln_attestations_tpa
+	no_vuln_tpa_attestations := _attestations_with_tpa_reports({"sha256:image_digest": "sha256:no_vulnerabilities_tpa_report_digest"})
+	assertions.assert_empty(cve.deny | cve.warn) with input.attestations as no_vuln_tpa_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
-		with ec.oci.image_manifest as _mock_image_manifest_tpa
-		with ec.oci.blob as _mock_blob
+		with ec.oci.image_manifest as _mock_tpa_image_manifest
+		with ec.oci.blob as _mock_tpa_blob
 }
 
 test_success_with_both_clair_and_tpa_reports if {
-	assertions.assert_empty(cve.deny | cve.warn) with input.attestations as _no_vuln_attestations
+	assertions.assert_empty(cve.deny | cve.warn) with input.attestations as _no_vuln_both_attestations
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
-		with ec.oci.image_manifest as _mock_image_manifest_both
-		with ec.oci.blob as _mock_blob
+		with ec.oci.image_manifest as _mock_image_manifest_no_vuln_both
+		with ec.oci.blob as _mock_blob_no_vuln_both
 }
 
-_no_vuln_attestations_tpa := _attestations_with_reports({"sha256:image_digest": "sha256:no_vulnerabilities_tpa_report_digest"})
+_no_vuln_both_attestations := attestations if {
+	clair_task := tekton_test.resolved_slsav1_task("clair-scan", [], [{
+		"name": cve._reports_result_name,
+		"type": "string",
+		"value": {"sha256:image_digest": "sha256:no_vulnerabilities_report_digest"},
+	}])
 
-_manifests_tpa := {
-	"registry.io/repository/image@sha256:report_digest": {"layers": [{
+	tpa_task := tekton_test.resolved_slsav1_task("tpa-scan", [], [{
+		"name": cve._reports_result_name,
+		"type": "string",
+		"value": {"sha256:image_digest": "sha256:no_vulnerabilities_tpa_report_digest"},
+	}])
+
+	clair_with_bundle := tekton_test.with_bundle(clair_task, _bundle)
+	tpa_with_bundle := tekton_test.with_bundle(tpa_task, _bundle)
+	att := tekton_test.slsav1_attestation([clair_with_bundle, tpa_with_bundle])
+	attestations := [att]
+}
+
+_manifests_no_vuln_both := object.union(_manifests, _tpa_manifests)
+
+_blobs_no_vuln_both := object.union(_blobs, _tpa_blobs)
+
+_mock_image_manifest_no_vuln_both(ref) := _manifests_no_vuln_both[ref]
+
+_mock_blob_no_vuln_both(ref) := _blobs_no_vuln_both[ref]
+
+# TPA scan tests
+
+test_tpa_all_issues_collects_direct_and_transitive if {
+	expected := {
+		{
+			"id": "CVE-2021-38561",
+			"severity": "HIGH",
+			"source": "osv-github",
+			"title": "golang.org/x/text vulnerability",
+		},
+		{
+			"id": "CVE-2022-32149",
+			"severity": "HIGH",
+			"source": "osv-github",
+			"title": "golang.org/x/text DoS vulnerability",
+		},
+		{
+			"id": "CVE-2025-6020",
+			"severity": "HIGH",
+			"source": "redhat-csaf",
+			"title": "Linux-pam directory traversal",
+		},
+		{
+			"id": "CVE-2026-27135",
+			"severity": "HIGH",
+			"source": "redhat-csaf",
+			"title": "nghttp2 DoS",
+		},
+	}
+
+	result := cve._all_tpa_issues with input.attestations as _tpa_attestations
+		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
+		with ec.oci.image_manifest as _mock_tpa_image_manifest
+		with ec.oci.blob as _mock_tpa_blob
+
+	assertions.assert_equal(result, expected)
+}
+
+test_tpa_issues_trigger_deny if {
+	expected := {
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-2021-38561\" vulnerability of high security level",
+			"term": "CVE-2021-38561",
+		},
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-2022-32149\" vulnerability of high security level",
+			"term": "CVE-2022-32149",
+		},
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-2025-6020\" vulnerability of high security level",
+			"term": "CVE-2025-6020",
+		},
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-2026-27135\" vulnerability of high security level",
+			"term": "CVE-2026-27135",
+		},
+	}
+
+	assertions.assert_equal_results(cve.deny, expected) with input.attestations as _tpa_attestations
+		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
+		with ec.oci.image_manifest as _mock_tpa_image_manifest
+		with ec.oci.blob as _mock_tpa_blob
+}
+
+test_both_clair_and_tpa_vulns_reported if {
+	expected := {
+		# Clair critical and high vulns
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-9999-Critical-0001\" vulnerability of critical security level",
+			"term": "CVE-9999-Critical-0001",
+		},
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-9999-Critical-0002\" vulnerability of critical security level",
+			"term": "CVE-9999-Critical-0002",
+		},
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-9999-High-0003\" vulnerability of high security level",
+			"term": "CVE-9999-High-0003",
+		},
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-9999-High-0004\" vulnerability of high security level",
+			"term": "CVE-9999-High-0004",
+		},
+		# TPA high vulns
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-2021-38561\" vulnerability of high security level",
+			"term": "CVE-2021-38561",
+		},
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-2022-32149\" vulnerability of high security level",
+			"term": "CVE-2022-32149",
+		},
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-2025-6020\" vulnerability of high security level",
+			"term": "CVE-2025-6020",
+		},
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-2026-27135\" vulnerability of high security level",
+			"term": "CVE-2026-27135",
+		},
+	}
+
+	assertions.assert_equal_results(cve.deny, expected) with input.attestations as _both_attestations
+		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
+		with ec.oci.image_manifest as _mock_image_manifest_both_vulns
+		with ec.oci.blob as _mock_blob_both_vulns
+		with data.rule_data.restrict_cve_security_levels as ["critical", "high"]
+}
+
+# Both Clair and TPA reports in one pipeline run, with different CVEs in each
+_both_attestations := attestations if {
+	clair_task := tekton_test.resolved_slsav1_task("clair-scan", [], [{
+		"name": cve._reports_result_name,
+		"type": "string",
+		"value": {"sha256:image_digest": "sha256:report_digest"},
+	}])
+
+	tpa_task := tekton_test.resolved_slsav1_task("tpa-scan", [], [{
+		"name": cve._reports_result_name,
+		"type": "string",
+		"value": {"sha256:image_digest": "sha256:tpa_report_digest"},
+	}])
+
+	clair_with_bundle := tekton_test.with_bundle(clair_task, _bundle)
+	tpa_with_bundle := tekton_test.with_bundle(tpa_task, _bundle)
+	att := tekton_test.slsav1_attestation([clair_with_bundle, tpa_with_bundle])
+	attestations := [att]
+}
+
+_manifests_both_vulns := object.union(_manifests, _tpa_manifests)
+
+_blobs_both_vulns := object.union(_blobs, _tpa_blobs)
+
+_mock_image_manifest_both_vulns(ref) := _manifests_both_vulns[ref]
+
+_mock_blob_both_vulns(ref) := _blobs_both_vulns[ref]
+
+test_name_function_with_missing_fields if {
+	# Test _name with neither "name" nor "id" field
+	vuln_no_name := {"severity": "HIGH"}
+	assertions.assert_equal(cve._name(vuln_no_name), "UNKNOWN")
+
+	# Test _name with "name" field (Clair format)
+	vuln_with_name := {"name": "CVE-2024-1234"}
+	assertions.assert_equal(cve._name(vuln_with_name), "CVE-2024-1234")
+
+	# Test _name with "id" field (TPA format)
+	vuln_with_id := {"id": "CVE-2024-5678"}
+	assertions.assert_equal(cve._name(vuln_with_id), "CVE-2024-5678")
+}
+
+# TPA report mock data
+
+_tpa_issue(id, severity, source, title) := {
+	"id": id,
+	"severity": severity,
+	"source": source,
+	"title": title,
+}
+
+_tpa_report := {"providers": {"rhtpa": {"sources": {
+	"osv-github": {"dependencies": [{
+		"ref": "pkg:golang/golang.org/x/text@v0.3.6",
+		"issues": [
+			_tpa_issue("CVE-2021-38561", "HIGH", "osv-github", "golang.org/x/text vulnerability"),
+			_tpa_issue("CVE-2022-32149", "HIGH", "osv-github", "golang.org/x/text DoS vulnerability"),
+		],
+		"transitive": [],
+	}]},
+	"redhat-csaf": {"dependencies": [{
+		"ref": "pkg:rpm/redhat/libcurl-minimal@8.12.1",
+		"issues": [],
+		"transitive": [
+			{
+				"ref": "pkg:rpm/redhat/pam-libs@1.6.1",
+				"issues": [_tpa_issue("CVE-2025-6020", "HIGH", "redhat-csaf", "Linux-pam directory traversal")],
+			},
+			{
+				"ref": "pkg:rpm/redhat/libnghttp2@1.64.0",
+				"issues": [_tpa_issue("CVE-2026-27135", "HIGH", "redhat-csaf", "nghttp2 DoS")],
+			},
+		],
+	}]},
+}}}}
+
+_tpa_manifests := {
+	"registry.io/repository/image@sha256:tpa_report_digest": {"layers": [{
 		"mediaType": "application/vnd.redhat.tpa-report+json",
-		"digest": "sha256:report_blob_digest",
+		"digest": "sha256:tpa_report_blob_digest",
 	}]},
 	"registry.io/repository/image@sha256:no_vulnerabilities_tpa_report_digest": {"layers": [{
 		"mediaType": "application/vnd.redhat.tpa-report+json",
-		"digest": "sha256:no_vulnerabilities_report_blob_digest",
+		"digest": "sha256:no_vulnerabilities_tpa_blob_digest",
 	}]},
 }
 
-_mock_image_manifest_tpa(ref) := _manifests_tpa[ref]
-
-_manifests_both := {
-	"registry.io/repository/image@sha256:report_digest": {"layers": [
-		{
-			"mediaType": "application/vnd.redhat.clair-report+json",
-			"digest": "sha256:report_blob_digest",
-		},
-		{
-			"mediaType": "application/vnd.redhat.tpa-report+json",
-			"digest": "sha256:report_blob_digest",
-		},
-	]},
-	"registry.io/repository/image@sha256:no_vulnerabilities_report_digest": {"layers": [
-		{
-			"mediaType": "application/vnd.redhat.clair-report+json",
-			"digest": "sha256:no_vulnerabilities_report_blob_digest",
-		},
-		{
-			"mediaType": "application/vnd.redhat.tpa-report+json",
-			"digest": "sha256:no_vulnerabilities_report_blob_digest",
-		},
-	]},
+_tpa_blobs := {
+	"registry.io/repository/image@sha256:tpa_report_blob_digest": json.marshal(_tpa_report),
+	"registry.io/repository/image@sha256:no_vulnerabilities_tpa_blob_digest": json.marshal({"providers": {}}),
 }
 
-_mock_image_manifest_both(ref) := _manifests_both[ref]
+_mock_tpa_image_manifest(ref) := _tpa_manifests[ref]
+
+_mock_tpa_blob(ref) := _tpa_blobs[ref]
+
+_tpa_attestations := _attestations_with_tpa_reports({"sha256:image_digest": "sha256:tpa_report_digest"})
+
+_attestations_with_tpa_reports(reports) := attestations if {
+	slsav1_task_with_result := tekton_test.resolved_slsav1_task("tpa-scan", [], [{
+		"name": cve._reports_result_name,
+		"type": "string",
+		"value": reports,
+	}])
+
+	att1 := lib_test.att_mock_helper_ref(
+		cve._reports_result_name,
+		reports,
+		"tpa-scan",
+		_bundle,
+	)
+
+	task_with_bundle := tekton_test.with_bundle(slsav1_task_with_result, _bundle)
+	att2 := tekton_test.slsav1_attestation([task_with_bundle])
+	attestations := [att1, att2]
+}

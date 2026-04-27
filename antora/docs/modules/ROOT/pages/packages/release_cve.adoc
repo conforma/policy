@@ -101,4 +101,4 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `cve.rule_data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L211[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L215[Source, window="_blank"]
