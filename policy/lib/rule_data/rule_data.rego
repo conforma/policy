@@ -141,7 +141,7 @@ defaults := {
 	# The gpg-pubkey RPM does not abide to the rule of a single RPM name being installed.
 	"non_unique_rpm_names": ["gpg-pubkey"],
 	#
-	# Used in release/hermetic_task/hermetic_task.rego
+	# Used in release/sbom_cyclonedx and release/sbom_spdx
 	# PURL types that require proxy enforcement (e.g., "maven", "npm", "pypi")
 	"proxy_enabled_purl_types": [],
 	# Allowed proxy URL regex patterns per PURL type

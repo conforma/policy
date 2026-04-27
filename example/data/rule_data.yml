@@ -121,14 +121,16 @@ rule_data:
     min: v50.20.2
     max: v50.28.3
 
-  # Usage: https://conforma.dev/docs/policy/packages/release_hermetic_task.html
+  # Usage: https://conforma.dev/docs/policy/packages/release_sbom_cyclonedx.html
+  # Usage: https://conforma.dev/docs/policy/packages/release_sbom_spdx.html
   # PURL types that require proxy URL enforcement
   proxy_enabled_purl_types:
   - maven
   - npm
   - pypi
 
-  # Usage: https://conforma.dev/docs/policy/packages/release_hermetic_task.html
+  # Usage: https://conforma.dev/docs/policy/packages/release_sbom_cyclonedx.html
+  # Usage: https://conforma.dev/docs/policy/packages/release_sbom_spdx.html
   # Allowed proxy URL regex patterns per PURL type
   allowed_proxy_url_patterns:
     maven:
