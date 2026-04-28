@@ -38,8 +38,7 @@ test_oci_ta_mode_not_permissive_pass if {
 	assertions.assert_empty(prefetch_dependencies.deny) with input as _attestation("prefetch-dependencies-oci-ta", "strict")
 }
 
-# Helper to create attestation with mode parameter
-_attestation(task_name, mode) := {"attestations": [{"statement": {
+_make_attestation(task_name, params) := {"attestations": [{"statement": {
 	"_type": "https://in-toto.io/Statement/v0.1",
 	"subject": [{"name": "registry.redhat.io/ubi8/ubi:latest"}],
 	"predicateType": "https://slsa.dev/provenance/v0.2",
@@ -51,28 +50,14 @@ _attestation(task_name, mode) := {"attestations": [{"statement": {
 				"name": task_name,
 				"kind": "Task",
 			},
-			"invocation": {"parameters": {
-				"input": "$(params.prefetch-input)",
-				"mode": mode,
-			}},
+			"invocation": {"parameters": params},
 		}]},
 	},
 }}]}
 
-# Helper to create attestation without mode parameter
-_attestation_without_mode(task_name) := {"attestations": [{"statement": {
-	"_type": "https://in-toto.io/Statement/v0.1",
-	"subject": [{"name": "registry.redhat.io/ubi8/ubi:latest"}],
-	"predicateType": "https://slsa.dev/provenance/v0.2",
-	"predicate": {
-		"buildType": lib.tekton_pipeline_run,
-		"buildConfig": {"tasks": [{
-			"name": task_name,
-			"ref": {
-				"name": task_name,
-				"kind": "Task",
-			},
-			"invocation": {"parameters": {"input": "$(params.prefetch-input)"}},
-		}]},
-	},
-}}]}
+_attestation(task_name, mode) := _make_attestation(task_name, {
+	"input": "$(params.prefetch-input)",
+	"mode": mode,
+})
+
+_attestation_without_mode(task_name) := _make_attestation(task_name, {"input": "$(params.prefetch-input)"})
