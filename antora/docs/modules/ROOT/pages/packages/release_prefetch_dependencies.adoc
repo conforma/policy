@@ -19,3 +19,16 @@ Verify the prefetch-dependencies task in the PipelineRun attestation was not inv
 * FAILURE message: `Task 'prefetch-dependencies' was invoked with mode parameter set to 'permissive'`
 * Code: `prefetch_dependencies.mode_not_permissive`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/prefetch_dependencies/prefetch_dependencies.rego#L16[Source, window="_blank"]
+
+[#prefetch_dependencies__package_registry_proxy_enabled]
+=== link:#prefetch_dependencies__package_registry_proxy_enabled[Prefetch task has package registry proxy enabled]
+
+Verify that prefetch-dependencies tasks have the enable-package-registry-proxy parameter set to true. This ensures that dependency prefetching uses the package registry proxy.
+
+*Solution*: Make sure the prefetch-dependencies task has the input parameter 'enable-package-registry-proxy' set to 'true'.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Task '%s' does not have the enable-package-registry-proxy parameter set to true`
+* Code: `prefetch_dependencies.package_registry_proxy_enabled`
+* Effective from: `2026-06-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/prefetch_dependencies/prefetch_dependencies.rego#L43[Source, window="_blank"]

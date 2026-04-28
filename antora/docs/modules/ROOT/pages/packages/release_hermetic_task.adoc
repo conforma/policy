@@ -1,25 +1,12 @@
 = Hermetic task Package
 
-This package verifies that all the tasks in the attestation that are required to be hermetic were invoked with the proper parameters to perform a hermetic execution, including enabling the Sonatype proxy when required.
+This package verifies that all the tasks in the attestation that are required to be hermetic were invoked with the proper parameters to perform a hermetic execution.
 
 == Package Name
 
 * `hermetic_task`
 
 == Rules Included
-
-[#hermetic_task__hermeto_proxy_enabled]
-=== link:#hermetic_task__hermeto_proxy_enabled[Hermetic build task has Sonatype proxy enabled]
-
-Verify that hermetic build tasks have the enable-hermeto-proxy parameter set to true. This ensures that hermetic builds use the Sonatype proxy for dependency resolution.
-
-*Solution*: Make sure the task has the input parameter 'enable-hermeto-proxy' set to 'true'.
-
-* Rule type: [rule-type-indicator failure]#FAILURE#
-* FAILURE message: `Task '%s' is hermetic but does not have the enable-hermeto-proxy parameter set to true`
-* Code: `hermetic_task.hermeto_proxy_enabled`
-* Effective from: `2026-06-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L41[Source, window="_blank"]
 
 [#hermetic_task__hermetic]
 === link:#hermetic_task__hermetic[Task called with hermetic param set]
@@ -31,4 +18,4 @@ Verify the task in the PipelineRun attestation was invoked with the proper param
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task '%s' was not invoked with the hermetic parameter set`
 * Code: `hermetic_task.hermetic`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L19[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L18[Source, window="_blank"]

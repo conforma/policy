@@ -124,7 +124,6 @@ Rules included:
 * xref:packages/release_cve.adoc#cve__cve_warnings[CVE checks: Non-blocking CVE check]        
 * xref:packages/release_cve.adoc#cve__unpatched_cve_warnings[CVE checks: Non-blocking unpatched CVE check]        
 * xref:packages/release_cve.adoc#cve__rule_data_provided[CVE checks: Rule data provided]        
-* xref:packages/release_hermetic_task.adoc#hermetic_task__hermeto_proxy_enabled[Hermetic task: Hermetic build task has Sonatype proxy enabled]        
 * xref:packages/release_hermetic_task.adoc#hermetic_task__hermetic[Hermetic task: Task called with hermetic param set]        
 * xref:packages/release_labels.adoc#labels__deprecated_labels[Labels: Deprecated labels]        
 * xref:packages/release_labels.adoc#labels__disallowed_inherited_labels[Labels: Disallowed inherited labels]        
@@ -153,6 +152,7 @@ Rules included:
 * xref:packages/release_pre_build_script_task.adoc#pre_build_script_task__pre_build_script_task_runner_image_in_sbom[Pre-build-script task checks: Script runner image is included in the sbom]        
 * xref:packages/release_pre_build_script_task.adoc#pre_build_script_task__pre_build_script_task_runner_image_in_results[Pre-build-script task checks: Script runner image is listed in the task results]        
 * xref:packages/release_prefetch_dependencies.adoc#prefetch_dependencies__mode_not_permissive[Prefetch Dependencies Task: Prefetch dependencies mode parameter check]        
+* xref:packages/release_prefetch_dependencies.adoc#prefetch_dependencies__package_registry_proxy_enabled[Prefetch Dependencies Task: Prefetch task has package registry proxy enabled]        
 * xref:packages/release_provenance_materials.adoc#provenance_materials__git_clone_source_matches_provenance[Provenance Materials: Git clone source matches materials provenance]        
 * xref:packages/release_provenance_materials.adoc#provenance_materials__git_clone_task_found[Provenance Materials: Git clone task found]        
 * xref:packages/release_quay_expiration.adoc#quay_expiration__expires_label[Quay expiration: Expires label]        
@@ -400,7 +400,7 @@ a| Check that the build has an expected target git branch. The specific branches
 a| Verify attributes on the certificate involved in the image signature when using slsa-github-generator on GitHub Actions with Sigstore Fulcio
 
 | xref:packages/release_hermetic_task.adoc[hermetic_task]
-a| This package verifies that all the tasks in the attestation that are required to be hermetic were invoked with the proper parameters to perform a hermetic execution, including enabling the Sonatype proxy when required.
+a| This package verifies that all the tasks in the attestation that are required to be hermetic were invoked with the proper parameters to perform a hermetic execution.
 
 | xref:packages/release_labels.adoc[labels]
 a| Check if the image has the expected labels set. The rules in this package distinguish file-based catalog (FBC) images from all other images. When checking an FBC image, a policy rule may use a different set of rule data. An FBC image is detected by the presence of the operators.operatorframework.io.index.configs.v1 label.

@@ -350,6 +350,7 @@
                     "caTrustConfigMapName": "trusted-ca",
                     "config-file-content": "",
                     "dev-package-managers": "false",
+                    "enable-package-registry-proxy": "true",
                     "input": "",
                     "log-level": "info",
                     "sbom-type": "spdx"
@@ -476,7 +477,6 @@
                     "HERMETIC": "true",
                     "IMAGE": "quay.io/redhat-user-workloads/rhtap-contract-tenant/golden-container/golden-container:d11c0ada39f18f631ff4f54beafa72a9b62dcd7c-amd64",
                     "IMAGE_EXPIRES_AFTER": "",
-                    "enable-hermeto-proxy": "true",
                     "LABELS": [],
                     "PREFETCH_INPUT": "",
                     "PRIVILEGED_NESTED": "false",
@@ -688,7 +688,6 @@
                     "ENTITLEMENT_SECRET": "etc-pki-entitlement",
                     "HERMETIC": "true",
                     "IMAGE": "quay.io/redhat-user-workloads/rhtap-contract-tenant/golden-container/golden-container:d11c0ada39f18f631ff4f54beafa72a9b62dcd7c-arm64",
-                    "enable-hermeto-proxy": "true",
                     "IMAGE_APPEND_PLATFORM": "false",
                     "IMAGE_EXPIRES_AFTER": "",
                     "LABELS": [],
