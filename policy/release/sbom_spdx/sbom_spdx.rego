@@ -188,12 +188,7 @@ deny contains result if {
 	some s in sbom.spdx_sboms
 	some pkg in s.packages
 
-	# only look at components fetched by Hermeto
-	# cachi2 is kept here for backwards compatibility
-	some annotation in pkg.annotations
-	properties := json.unmarshal(annotation.comment)
-	properties.name in {"hermeto:found_by", "cachi2:found_by"}
-	properties.value in {"hermeto", "cachi2"}
+	sbom.package_found_by_hermeto(pkg)
 
 	some externalref in pkg.externalRefs
 

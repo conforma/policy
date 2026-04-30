@@ -56,7 +56,7 @@ For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_type
 * FAILURE message: `Package %s has proxy URL %q which does not match any allowed pattern for PURL type %q`
 * Code: `sbom_spdx.allowed_proxy_urls`
 * Effective from: `2026-06-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L255[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L250[Source, window="_blank"]
 
 [#sbom_spdx__contains_files]
 === link:#sbom_spdx__contains_files[Contains files]
@@ -93,7 +93,7 @@ Confirm the SPDX SBOM contains only packages without disallowed attributes. By d
 * FAILURE message: `Package %s has the attribute %q set%s`
 * Code: `sbom_spdx.disallowed_package_attributes`
 * Effective from: `2025-02-04T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L217[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L212[Source, window="_blank"]
 
 [#sbom_spdx__disallowed_package_external_references]
 === link:#sbom_spdx__disallowed_package_external_references[Disallowed package external references]
@@ -131,7 +131,7 @@ For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_type
 * FAILURE message: `Package %s is missing proxy metadata (sourceInfo is empty or missing)`
 * Code: `sbom_spdx.proxy_metadata_required`
 * Effective from: `2026-06-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L312[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L307[Source, window="_blank"]
 
 [#sbom_spdx__valid]
 === link:#sbom_spdx__valid[Valid]

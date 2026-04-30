@@ -56,7 +56,7 @@ For components found by Hermeto with a PURL type listed in proxy_enabled_purl_ty
 * FAILURE message: `Package %s has proxy URL %q which does not match any allowed pattern for PURL type %q`
 * Code: `sbom_cyclonedx.allowed_proxy_urls`
 * Effective from: `2026-06-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L269[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L265[Source, window="_blank"]
 
 [#sbom_cyclonedx__disallowed_package_attributes]
 === link:#sbom_cyclonedx__disallowed_package_attributes[Disallowed package attributes]
@@ -95,7 +95,7 @@ For components found by Hermeto with a PURL type listed in proxy_enabled_purl_ty
 * FAILURE message: `Package %s is missing proxy metadata (no externalReference of type "distribution")`
 * Code: `sbom_cyclonedx.proxy_metadata_required`
 * Effective from: `2026-06-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L325[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L321[Source, window="_blank"]
 
 [#sbom_cyclonedx__cdx_supported_version]
 === link:#sbom_cyclonedx__cdx_supported_version[Supported Version]

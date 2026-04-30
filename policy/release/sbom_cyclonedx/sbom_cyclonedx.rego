@@ -246,11 +246,7 @@ deny contains result if {
 	some reference in component.externalReferences
 	reference.type == "distribution"
 
-	# only look at components fetched by Hermeto
-	# cachi2 is kept here for backwards compatibility
-	some properties in component.properties
-	properties.name in {"hermeto:found_by", "cachi2:found_by"}
-	properties.value in {"hermeto", "cachi2"}
+	sbom.component_found_by_hermeto(component)
 
 	purl := component.purl
 	parsed_purl := ec.purl.parse(purl)

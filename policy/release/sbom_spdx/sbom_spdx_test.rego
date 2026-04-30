@@ -240,7 +240,7 @@ test_allowed_package_sources if {
 					"referenceLocator": "pkg:generic/unrelated?download_url=https://irrelevant.org",
 				}],
 				"annotations": [{
-					"annotator": "Tool: hermeto:jsonencoded",
+					"annotator": "Tool: other-tool:jsonencoded",
 					"comment": "{\"name\":\"irrelevant\",\"value\":\"im-irrelevant\"}",
 					"annotationDate": "2024-12-09T12:00:00Z",
 					"annotationType": "OTHER",
