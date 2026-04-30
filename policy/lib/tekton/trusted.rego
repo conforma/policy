@@ -142,34 +142,52 @@ _trusted_task_rules_data := {
 	),
 }
 
-# Safely extract allow from data.trusted_task_rules
+# Safely extract allow rules from data.trusted_task_rules.
+# Each key maps to an array of rule objects; we flatten all arrays into one list.
 default _data_allow_array := []
 
-_data_allow_array := data.trusted_task_rules.allow if {
+_data_allow_array := [rule |
+	some rules in data.trusted_task_rules.allow
+	some rule in rules
+] if {
 	is_object(data.trusted_task_rules)
+	is_object(data.trusted_task_rules.allow)
 }
 
-# Safely extract deny from data.trusted_task_rules
+# Safely extract deny rules from data.trusted_task_rules.
 default _data_deny_array := []
 
-_data_deny_array := data.trusted_task_rules.deny if {
+_data_deny_array := [rule |
+	some rules in data.trusted_task_rules.deny
+	some rule in rules
+] if {
 	is_object(data.trusted_task_rules)
+	is_object(data.trusted_task_rules.deny)
 }
 
-# Safely extract allow from rule_data
+# Safely extract allow rules from rule_data.
+# Each key maps to an array of rule objects; we flatten all arrays into one list.
 default _rule_data_allow_array := []
 
-_rule_data_allow_array := _rule_data_obj.allow if {
+_rule_data_allow_array := [rule |
+	some rules in _rule_data_obj.allow
+	some rule in rules
+] if {
 	_rule_data_obj := lib_rule_data("trusted_task_rules")
 	is_object(_rule_data_obj)
+	is_object(_rule_data_obj.allow)
 }
 
-# Safely extract deny from rule_data
+# Safely extract deny rules from rule_data.
 default _rule_data_deny_array := []
 
-_rule_data_deny_array := _rule_data_obj.deny if {
+_rule_data_deny_array := [rule |
+	some rules in _rule_data_obj.deny
+	some rule in rules
+] if {
 	_rule_data_obj := lib_rule_data("trusted_task_rules")
 	is_object(_rule_data_obj)
+	is_object(_rule_data_obj.deny)
 }
 
 data_errors contains error if {
@@ -241,8 +259,7 @@ data_errors contains error if {
 	)
 }
 
-# Validate trusted_task_rules data format using the schema defined in
-# trusted_tasks/trusted_task_rules.schema.json
+# Validate trusted_task_rules data format.
 # Skip validation if trusted_task_rules is not provided (null or empty list []).
 # lib_rule_data returns [] when a key is not found, so we only validate when
 # the value is actually an object (the expected type).
@@ -391,8 +408,36 @@ _pattern_matches(key, pattern) if {
 	regex.match(regex_pattern, key)
 }
 
-# Schema for trusted_task_rules as defined in trusted_tasks/trusted_task_rules.schema.json
-# This schema validates the rule-based trusted tasks configuration (ADR 53)
+# Schema definition for a single rule entry (object values keyed by name)
+_trusted_task_rule_entry_schema := {
+	"type": "object",
+	"required": ["pattern"],
+	"properties": {
+		"pattern": {
+			"type": "string",
+			# regal ignore:line-length
+			"description": "URL pattern to match task references. Supports wildcards (*).",
+			"pattern": "^(oci://|git\\+)",
+		},
+		"effective_on": {
+			"type": "string",
+			"format": "date",
+			# regal ignore:line-length
+			"description": "Date when this rule becomes effective. If omitted, rule is effective immediately.",
+		},
+		"message": {
+			"type": "string",
+			"description": "User-visible message explaining why the task is denied",
+		},
+		"versions": {
+			"type": "array",
+			"description": "List of version constraints",
+			"items": {"type": "string"},
+		},
+	},
+	"additionalProperties": true,
+}
+
 _trusted_task_rules_schema := {
 	"$schema": "http://json-schema.org/draft-07/schema#",
 	"$id": "https://konflux.io/schemas/trusted_task_rules.json",
@@ -401,80 +446,22 @@ _trusted_task_rules_schema := {
 	"type": "object",
 	"properties": {
 		"allow": {
-			"type": "array",
-			"description": "Rules that allow tasks matching the pattern",
-			"items": {
-				"type": "object",
-				"required": ["name", "pattern"],
-				"properties": {
-					"name": {
-						"type": "string",
-						"description": "Human-readable name for the rule",
-					},
-					"pattern": {
-						"type": "string",
-						# regal ignore:line-length
-						"description": "URL pattern to match task references. Must not include version tags (e.g., 'oci://quay.io/konflux-ci/tekton-catalog/*' not 'oci://quay.io/konflux-ci/tekton-catalog/task-buildah:0.4*'). Supports wildcards (*).",
-						"pattern": "^(oci://|git\\+)",
-					},
-					"effective_on": {
-						"type": "string",
-						"format": "date",
-						# regal ignore:line-length
-						"description": "Date when this rule becomes effective (e.g., '2025-02-01'). Rules with future effective_on dates are not considered. If omitted, rule is effective immediately.",
-					},
-					"versions": {
-						"type": "array",
-						"description": "List of version constraints to match only specific versions of the task",
-						"items": {
-							"type": "string",
-							"description": "Version constraint (e.g., '>=2.1', '<1.2.3')",
-						},
-					},
-				},
-				"additionalProperties": true,
+			"type": "object",
+			# regal ignore:line-length
+			"description": "Groups of allow rules keyed by a descriptive name. Each value is an array of rule objects.",
+			"additionalProperties": {
+				"type": "array",
+				"items": _trusted_task_rule_entry_schema,
 			},
-			"default": [],
 		},
 		"deny": {
-			"type": "array",
-			"description": "Rules that deny tasks matching the pattern. Deny rules take precedence over allow rules.",
-			"items": {
-				"type": "object",
-				"required": ["name", "pattern"],
-				"properties": {
-					"name": {
-						"type": "string",
-						"description": "Human-readable name for the rule",
-					},
-					"pattern": {
-						"type": "string",
-						# regal ignore:line-length
-						"description": "URL pattern to match task references. Must not include version tags (e.g., 'oci://quay.io/konflux-ci/tekton-catalog/task-buildah*' not 'oci://quay.io/konflux-ci/tekton-catalog/task-buildah:0.4*'). Supports wildcards (*).",
-						"pattern": "^(oci://|git\\+)",
-					},
-					"effective_on": {
-						"type": "string",
-						"format": "date",
-						# regal ignore:line-length
-						"description": "Date when this rule becomes effective (e.g., '2025-11-15'). Rules with future effective_on dates are not considered. If omitted, rule is effective immediately.",
-					},
-					"message": {
-						"type": "string",
-						"description": "User-visible message explaining why the task is denied (e.g., deprecation notice)",
-					},
-					"versions": {
-						"type": "array",
-						"description": "List of version constraints to match only specific versions of the task",
-						"items": {
-							"type": "string",
-							"description": "Version constraint (e.g., '>=2.1', '<1.2.3')",
-						},
-					},
-				},
-				"additionalProperties": true,
+			"type": "object",
+			# regal ignore:line-length
+			"description": "Groups of deny rules keyed by a descriptive name. Deny rules take precedence over allow rules.",
+			"additionalProperties": {
+				"type": "array",
+				"items": _trusted_task_rule_entry_schema,
 			},
-			"default": [],
 		},
 	},
 	"additionalProperties": false,
