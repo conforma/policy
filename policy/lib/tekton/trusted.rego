@@ -147,8 +147,6 @@ _trusted_task_rules_data := {
 default _data_allow_array := []
 
 _data_allow_array := [rule |
-	is_object(data.trusted_task_rules)
-	is_object(data.trusted_task_rules.allow)
 	some _, rules in data.trusted_task_rules.allow # regal ignore:in-wildcard-key
 	some rule in rules
 ] if {
@@ -160,8 +158,6 @@ _data_allow_array := [rule |
 default _data_deny_array := []
 
 _data_deny_array := [rule |
-	is_object(data.trusted_task_rules)
-	is_object(data.trusted_task_rules.deny)
 	some _, rules in data.trusted_task_rules.deny # regal ignore:in-wildcard-key
 	some rule in rules
 ] if {
@@ -174,8 +170,6 @@ _data_deny_array := [rule |
 default _rule_data_allow_array := []
 
 _rule_data_allow_array := [rule |
-	is_object(_rule_data_obj)
-	is_object(_rule_data_obj.allow)
 	some _, rules in _rule_data_obj.allow # regal ignore:in-wildcard-key
 	some rule in rules
 ] if {
@@ -188,8 +182,6 @@ _rule_data_allow_array := [rule |
 default _rule_data_deny_array := []
 
 _rule_data_deny_array := [rule |
-	is_object(_rule_data_obj)
-	is_object(_rule_data_obj.deny)
 	some _, rules in _rule_data_obj.deny # regal ignore:in-wildcard-key
 	some rule in rules
 ] if {
