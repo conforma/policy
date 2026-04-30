@@ -83,6 +83,19 @@ Each image indicated as a related image should match an entry in the list of pre
 * Effective from: `2025-04-15T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L232[Source, window="_blank"]
 
+[#olm__required_network_policy_rbac_for_operands]
+=== link:#olm__required_network_policy_rbac_for_operands[Required NetworkPolicy RBAC missing from OLM bundle]
+
+Operators are required to manage the network policies of their operands. This rule verifies that operator bundles request sufficient RBAC permissions to manage NetworkPolicy lifecycle (create, delete, and update/patch) for networking.k8s.io/networkpolicies in their ClusterServiceVersion. Bundles whose operator name and major.minor version are listed in the `operator_network_policy_rbac_exceptions` rule data key are exempt from this requirement.
+
+*Solution*: Add a rule granting create, delete, and update/patch on networking.k8s.io/networkpolicies to the ClusterServiceVersion clusterPermissions or permissions, or add the operator name and its major.minor version to the operator_network_policy_rbac_exceptions rule data key.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Operator %q version %q is missing required NetworkPolicy RBAC (networking.k8s.io/networkpolicies with create, delete, and update/patch)`
+* Code: `olm.required_network_policy_rbac_for_operands`
+* Effective from: `2026-08-07T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L387[Source, window="_blank"]
+
 [#olm__required_olm_features_annotations_provided]
 === link:#olm__required_olm_features_annotations_provided[Required OLM feature annotations list provided]
 

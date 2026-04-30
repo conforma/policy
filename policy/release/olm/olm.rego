@@ -384,6 +384,85 @@ deny contains result if {
 	result := metadata.result_helper_with_term(rego.metadata.chain(), [manifest.kind], manifest.kind)
 }
 
+# METADATA
+# title: Required NetworkPolicy RBAC missing from OLM bundle
+# description: >-
+#   Operators are required to manage the network policies of their operands.
+#   This rule verifies that operator bundles request sufficient RBAC permissions
+#   to manage NetworkPolicy lifecycle (create, delete, and update/patch) for
+#   networking.k8s.io/networkpolicies in their ClusterServiceVersion.
+#   Bundles whose operator name and major.minor version are listed in the
+#   `operator_network_policy_rbac_exceptions` rule data key are exempt from this
+#   requirement.
+# custom:
+#   short_name: required_network_policy_rbac_for_operands
+#   failure_msg: >-
+#     Operator %q version %q is missing required NetworkPolicy RBAC
+#     (networking.k8s.io/networkpolicies with create, delete, and update/patch)
+#   solution: >-
+#     Add a rule granting create, delete, and update/patch on networking.k8s.io/networkpolicies
+#     to the ClusterServiceVersion clusterPermissions or permissions, or add the operator name
+#     and its major.minor version to the operator_network_policy_rbac_exceptions rule data key.
+#   collections:
+#   - redhat
+#   rule_data_fields:
+#   - operator_network_policy_rbac_exceptions
+#   effective_on: 2026-08-07T00:00:00Z
+deny contains result if {
+	some manifest in _csv_manifests
+	not _network_policy_rbac_excepted(manifest)
+	not _has_network_policy_rbac(manifest)
+	result := metadata.result_helper(rego.metadata.chain(), [_operator_package_name, manifest.spec.version])
+}
+
+_operator_package_name := input.image.config.Labels["operators.operatorframework.io.bundle.package.v1"]
+
+_major_minor_version(ver) := mm if {
+	parts := split(ver, ".")
+	count(parts) >= 2
+	mm := concat(".", [parts[0], parts[1]])
+}
+
+_network_policy_rbac_excepted(manifest) if {
+	exceptions := rule_data.get("operator_network_policy_rbac_exceptions")
+	version := _major_minor_version(manifest.spec.version)
+	version in exceptions[_operator_package_name]
+}
+
+_has_network_policy_rbac(manifest) if {
+	some perm in manifest.spec.install.spec.clusterPermissions
+	some rule in perm.rules
+	_is_network_policy_rule(rule)
+}
+
+_has_network_policy_rbac(manifest) if {
+	some perm in manifest.spec.install.spec.permissions
+	some rule in perm.rules
+	_is_network_policy_rule(rule)
+}
+
+_is_network_policy_rule(rule) if {
+	"networking.k8s.io" in rule.apiGroups
+	"networkpolicies" in rule.resources
+	_has_lifecycle_verbs(rule.verbs)
+}
+
+_has_lifecycle_verbs(verbs) if {
+	"*" in verbs
+}
+
+_has_lifecycle_verbs(verbs) if {
+	"create" in verbs
+	"delete" in verbs
+	"update" in verbs
+}
+
+_has_lifecycle_verbs(verbs) if {
+	"create" in verbs
+	"delete" in verbs
+	"patch" in verbs
+}
+
 _name(o) := n if {
 	n := o.name
 } else := "unnamed"
