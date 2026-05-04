@@ -117,6 +117,9 @@ defaults := {
 		"ConsoleLink",
 		"ConsolePlugin",
 	],
+	# Used in release/olm.rego
+	# Operators excepted from NetworkPolicy RBAC requirement by name and major.minor version
+	"operator_network_policy_rbac_exceptions": {},
 	#
 	# Used in release/hermetic_task/hermetic_task.rego
 	"required_hermetic_tasks": [

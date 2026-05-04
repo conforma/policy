@@ -67,6 +67,7 @@
 **** xref:packages/release_olm.adoc#olm__allowed_resource_kinds[OLM bundle image manifests contain only allowed resource kinds]
 **** xref:packages/release_olm.adoc#olm__olm_bundle_multi_arch[OLM bundle images are not multi-arch]
 **** xref:packages/release_olm.adoc#olm__allowed_registries_related[Related images references are from allowed registries]
+**** xref:packages/release_olm.adoc#olm__required_network_policy_rbac_for_operands[Required NetworkPolicy RBAC missing from OLM bundle]
 **** xref:packages/release_olm.adoc#olm__required_olm_features_annotations_provided[Required OLM feature annotations list provided]
 **** xref:packages/release_olm.adoc#olm__subscriptions_annotation_format[Subscription annotation has expected value]
 **** xref:packages/release_olm.adoc#olm__inaccessible_related_images[Unable to access related images for a component]

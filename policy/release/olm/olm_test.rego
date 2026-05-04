@@ -657,3 +657,414 @@ test_allowed_olm_resource_kind if {
 		with input.image.files as {"manifests/service.yaml": service_manifest}
 		with data.rule_data.allowed_olm_resource_kinds as ["Service"]
 }
+
+# NetworkPolicy RBAC Tests
+
+base_network_policy_manifest := {
+	"apiVersion": "operators.coreos.com/v1alpha1",
+	"kind": "ClusterServiceVersion",
+	"metadata": {
+		"name": "test-operator.v1.2.3",
+		"annotations": {
+			"operators.operatorframework.io/bundle.package.v1": "test-operator",
+			"features.operators.openshift.io/disconnected": "true",
+			"features.operators.openshift.io/fips-compliant": "true",
+			"features.operators.openshift.io/proxy-aware": "true",
+			"features.operators.openshift.io/tls-profiles": "true",
+			"features.operators.openshift.io/token-auth-aws": "true",
+			"features.operators.openshift.io/token-auth-azure": "true",
+			"features.operators.openshift.io/token-auth-gcp": "true",
+			"operators.openshift.io/valid-subscription": `["test"]`,
+		},
+	},
+	"spec": {
+		"version": "1.2.3",
+		"install": {"spec": {
+			"clusterPermissions": [],
+			"permissions": [],
+			"deployments": [],
+		}},
+	},
+}
+
+test_network_policy_rbac_with_all_required_verbs if {
+	manifest_with_rbac := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["networkpolicies"],
+				"verbs": ["create", "update", "patch", "delete"],
+			}],
+		}],
+	}])
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_with_rbac}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_with_only_create if {
+	manifest_with_create := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["networkpolicies"],
+				"verbs": ["create"],
+			}],
+		}],
+	}])
+
+	expected := {{
+		"code": "olm.required_network_policy_rbac_for_operands",
+		# regal ignore:line-length
+		"msg": `Operator "test-operator" version "1.2.3" is missing required NetworkPolicy RBAC (networking.k8s.io/networkpolicies with create, delete, and update/patch)`,
+	}}
+
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest_with_create}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_with_only_delete if {
+	manifest_with_delete := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["networkpolicies"],
+				"verbs": ["delete"],
+			}],
+		}],
+	}])
+
+	expected := {{
+		"code": "olm.required_network_policy_rbac_for_operands",
+		# regal ignore:line-length
+		"msg": `Operator "test-operator" version "1.2.3" is missing required NetworkPolicy RBAC (networking.k8s.io/networkpolicies with create, delete, and update/patch)`,
+	}}
+
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest_with_delete}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_with_create_update_delete if {
+	manifest_cud := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["networkpolicies"],
+				"verbs": ["create", "update", "delete"],
+			}],
+		}],
+	}])
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_cud}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_with_create_patch_delete if {
+	manifest_cpd := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["networkpolicies"],
+				"verbs": ["create", "patch", "delete"],
+			}],
+		}],
+	}])
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_cpd}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_missing_entirely if {
+	manifest_without_rbac := base_network_policy_manifest
+
+	expected := {{
+		"code": "olm.required_network_policy_rbac_for_operands",
+		# regal ignore:line-length
+		"msg": `Operator "test-operator" version "1.2.3" is missing required NetworkPolicy RBAC (networking.k8s.io/networkpolicies with create, delete, and update/patch)`,
+	}}
+
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest_without_rbac}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_with_wildcard_verbs if {
+	manifest_with_wildcard := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["networkpolicies"],
+				"verbs": ["*"],
+			}],
+		}],
+	}])
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_with_wildcard}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_with_only_read_verbs if {
+	manifest_read_only := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["networkpolicies"],
+				"verbs": ["get", "list", "watch"],
+			}],
+		}],
+	}])
+
+	expected := {{
+		"code": "olm.required_network_policy_rbac_for_operands",
+		# regal ignore:line-length
+		"msg": `Operator "test-operator" version "1.2.3" is missing required NetworkPolicy RBAC (networking.k8s.io/networkpolicies with create, delete, and update/patch)`,
+	}}
+
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest_read_only}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_missing_networkpolicies_resource if {
+	manifest_wrong_resource := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["ingresses"],
+				"verbs": ["create", "update", "patch", "delete"],
+			}],
+		}],
+	}])
+
+	expected := {{
+		"code": "olm.required_network_policy_rbac_for_operands",
+		# regal ignore:line-length
+		"msg": `Operator "test-operator" version "1.2.3" is missing required NetworkPolicy RBAC (networking.k8s.io/networkpolicies with create, delete, and update/patch)`,
+	}}
+
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest_wrong_resource}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_missing_networking_apigroup if {
+	manifest_wrong_group := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["apps"],
+				"resources": ["networkpolicies"],
+				"verbs": ["create", "update", "patch", "delete"],
+			}],
+		}],
+	}])
+
+	expected := {{
+		"code": "olm.required_network_policy_rbac_for_operands",
+		# regal ignore:line-length
+		"msg": `Operator "test-operator" version "1.2.3" is missing required NetworkPolicy RBAC (networking.k8s.io/networkpolicies with create, delete, and update/patch)`,
+	}}
+
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest_wrong_group}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_excepted_operator if {
+	manifest_without_rbac := base_network_policy_manifest
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_without_rbac}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {"test-operator": ["1.2"]}
+}
+
+test_network_policy_rbac_with_extra_verbs if {
+	manifest_extra_verbs := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["networkpolicies"],
+				"verbs": ["create", "update", "patch", "delete", "get", "list", "watch"],
+			}],
+		}],
+	}])
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_extra_verbs}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_multiple_rules if {
+	manifest_multiple_rules := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [
+				{
+					"apiGroups": ["apps"],
+					"resources": ["deployments"],
+					"verbs": ["get", "list"],
+				},
+				{
+					"apiGroups": ["networking.k8s.io"],
+					"resources": ["networkpolicies"],
+					"verbs": ["create", "update", "patch", "delete"],
+				},
+				{
+					"apiGroups": [""],
+					"resources": ["pods"],
+					"verbs": ["get"],
+				},
+			],
+		}],
+	}])
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_multiple_rules}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_exception_wrong_version if {
+	manifest_without_rbac := base_network_policy_manifest
+
+	expected := {{
+		"code": "olm.required_network_policy_rbac_for_operands",
+		# regal ignore:line-length
+		"msg": `Operator "test-operator" version "1.2.3" is missing required NetworkPolicy RBAC (networking.k8s.io/networkpolicies with create, delete, and update/patch)`,
+	}}
+
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest_without_rbac}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {"test-operator": ["2.0"]}
+}
+
+test_network_policy_rbac_mixed_resources if {
+	manifest_mixed := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["ingresses", "networkpolicies"],
+				"verbs": ["create", "patch", "delete"],
+			}],
+		}],
+	}])
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_mixed}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_in_permissions if {
+	manifest_with_permissions := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/permissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["networkpolicies"],
+				"verbs": ["create", "update", "patch", "delete"],
+			}],
+		}],
+	}])
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_with_permissions}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_uses_image_label_not_csv_annotation if {
+	# Create manifest with CSV annotation set to "wrong-package"
+	manifest_with_wrong_annotation := json.patch(base_network_policy_manifest, [{
+		"op": "replace",
+		"path": "/metadata/annotations/operators.operatorframework.io~1bundle.package.v1",
+		"value": "wrong-package",
+	}])
+
+	# Set exception for "correct-package" (which is in the image label)
+	# This should be found because package name should come from image label
+	exceptions := {"correct-package": ["1.2"]}
+
+	image_labels := {
+		"operators.operatorframework.io.bundle.manifests.v1": "manifests/",
+		"operators.operatorframework.io.bundle.package.v1": "correct-package",
+	}
+
+	# Should NOT deny because image label "correct-package" is in exceptions
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_with_wrong_annotation}
+		with input.image.config.Labels as image_labels
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as exceptions
+}
