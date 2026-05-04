@@ -577,6 +577,99 @@ test_trusted_build_digests_from_snapshot_components if {
 	assertions.assert_equal(trusted_task._trusted_build_digests, expected) with input.snapshot.components as components
 }
 
+test_trusted_build_digests_from_trusted_registry if {
+	# A digest from a parameter referencing a trusted registry should appear in _trusted_build_digests
+	attestation := _mock_att_with_task({
+		"ref": {"name": "some-task", "bundle": "registry.local/trusty:1.0@sha256:digest"},
+		"results": [
+			{"name": "SOME_IMAGE_URL", "value": "registry.io/whatever/image", "type": "string"},
+			# regal ignore:line-length
+			{"name": "SOME_IMAGE_DIGEST", "value": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "type": "string"},
+		],
+		# regal ignore:line-length
+		"invocation": {"parameters": {"image": "trusted.registry.io/repository/image@sha256:5555555555555555555555555555555555555555555555555555555555555555"}},
+	})
+	expected := {
+		# From build task results (existing behavior)
+		"sha256:2222222222222222222222222222222222222222222222222222222222222222",
+		# From trusted registry parameter (new behavior)
+		"sha256:5555555555555555555555555555555555555555555555555555555555555555",
+	}
+	lib.assert_equal(trusted_task._trusted_build_digests, expected) with input.attestations as [attestation]
+		with data.trusted_tasks as trusted_tasks_data
+		with data.rule_data.trusted_build_image_registries as ["trusted.registry.io/"]
+}
+
+test_trusted_build_digests_from_untrusted_registry if {
+	# A digest from a parameter referencing an untrusted registry should NOT appear in _trusted_build_digests
+	attestation := _mock_att_with_task({
+		"ref": {"name": "some-task", "bundle": "registry.local/trusty:1.0@sha256:digest"},
+		"results": [
+			{"name": "SOME_IMAGE_URL", "value": "registry.io/whatever/image", "type": "string"},
+			# regal ignore:line-length
+			{"name": "SOME_IMAGE_DIGEST", "value": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "type": "string"},
+		],
+		# regal ignore:line-length
+		"invocation": {"parameters": {"image": "untrusted.registry.io/repository/image@sha256:5555555555555555555555555555555555555555555555555555555555555555"}},
+	})
+
+	# Only the build task result digest should be trusted, not the parameter digest
+	expected := {"sha256:2222222222222222222222222222222222222222222222222222222222222222"}
+	lib.assert_equal(trusted_task._trusted_build_digests, expected) with input.attestations as [attestation]
+		with data.trusted_tasks as trusted_tasks_data
+		with data.rule_data.trusted_build_image_registries as ["trusted.registry.io/"]
+}
+
+test_trusted_parameters_with_trusted_registry if {
+	# When a parameter references a trusted registry, the deny rule should not fire
+	evil_attestation := json.patch(attestation_ta, [{
+		"op": "add",
+		"path": "/statement/predicate/buildConfig/tasks/3/invocation/parameters/image",
+		# regal ignore:line-length
+		"value": "trusted.registry.io/repository/image@sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+	}])
+
+	# With the registry trusted, no violation should be produced
+	lib.assert_empty(trusted_task.deny) with data.trusted_tasks as trusted_tasks_data
+		with input.attestations as [evil_attestation]
+		with data.rule_data.trusted_build_image_registries as ["trusted.registry.io/"]
+}
+
+test_trusted_parameters_with_untrusted_registry if {
+	# When a parameter references an untrusted registry, the deny rule should fire
+	evil_attestation := json.patch(attestation_ta, [{
+		"op": "add",
+		"path": "/statement/predicate/buildConfig/tasks/3/invocation/parameters/image",
+		# regal ignore:line-length
+		"value": "untrusted.registry.io/repository/image@sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+	}])
+
+	lib.assert_equal_results(trusted_task.deny, {{
+		"code": "trusted_task.trusted_parameters",
+		# regal ignore:line-length
+		"msg": `The "image" parameter of the "task_image_index" PipelineTask includes an untrusted digest: sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff`,
+	}}) with data.trusted_tasks as trusted_tasks_data
+		with input.attestations as [evil_attestation]
+		with data.rule_data.trusted_build_image_registries as ["trusted.registry.io/"]
+}
+
+test_from_trusted_registry if {
+	# regal ignore:line-length
+	trusted_task._from_trusted_registry("trusted.io/repo/image@sha256:abc123") with data.rule_data.trusted_build_image_registries as ["trusted.io/"]
+
+	# regal ignore:line-length
+	trusted_task._from_trusted_registry("trusted.io/repo/image:tag@sha256:abc123") with data.rule_data.trusted_build_image_registries as ["trusted.io/repo"]
+
+	# regal ignore:line-length
+	not trusted_task._from_trusted_registry("untrusted.io/repo/image@sha256:abc123") with data.rule_data.trusted_build_image_registries as ["trusted.io/"]
+
+	# regal ignore:line-length
+	not trusted_task._from_trusted_registry("not-an-image-ref") with data.rule_data.trusted_build_image_registries as ["trusted.io/"]
+
+	# regal ignore:line-length
+	not trusted_task._from_trusted_registry("trusted.io/repo/image@sha256:abc123") with data.rule_data.trusted_build_image_registries as []
+}
+
 #########################################
 # Pipeline Tasks using bundles resolver #
 #########################################
@@ -1339,6 +1432,35 @@ test_mixed_trusted_and_untrusted_tasks if {
 		with ec.oci.image_manifests as _mock_image_manifests
 		with ec.oci.image_manifest as _mock_image_manifest
 }
+
+test_signature_verification_failed_error_rules if {
+	att := {"statement": {
+		"predicateType": "https://slsa.dev/provenance/v0.2",
+		"predicate": {
+			"buildType": lib.tekton_pipeline_run,
+			"buildConfig": {"tasks": [trusted_bundle_pipeline_task]},
+		},
+	}}
+
+	rules := {"allow": [{
+		"name": "signed catalog",
+		"pattern": "oci://registry.local/trusty*",
+		"signature_verification": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+		},
+	}]}
+
+	results := trusted_task.deny with input.attestations as [att]
+		with data.trusted_task_rules as rules
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+
+	count(results) > 0
+	some result in results
+	contains(result.msg, "signature_verification_failed")
+}
+
+_mock_verify_image_failure(_, _) := {"success": false, "errors": ["signature verification failed"]}
 
 #####################################################
 # Helper Functions for trusted_task_rules tests
