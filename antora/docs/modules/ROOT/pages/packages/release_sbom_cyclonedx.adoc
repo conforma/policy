@@ -48,7 +48,7 @@ For each of the components fetched by Hermeto which define externalReferences of
 [#sbom_cyclonedx__allowed_proxy_urls]
 === link:#sbom_cyclonedx__allowed_proxy_urls[Allowed proxy URLs]
 
-For components with externalReferences of type distribution, verify proxy URLs match at least one pattern from allowed_proxy_url_patterns for the component's PURL type. Only PURL types listed in proxy_enabled_purl_types are checked. The "proxy_enabled_purl_types" rule data key is a list of PURL type strings (e.g. ["maven", "npm"]). The "allowed_proxy_url_patterns" rule data key is an object mapping each PURL type string to a list of regular expression patterns (e.g. {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}). Components with a URL of "NOASSERTION" are skipped. If a PURL type is listed in proxy_enabled_purl_types but has no entry in allowed_proxy_url_patterns, all components of that type are denied.
+For components found by Hermeto with a PURL type listed in proxy_enabled_purl_types that are registry dependencies (no download_url or vcs_url qualifier), verify proxy URLs in externalReferences of type distribution match at least one pattern from allowed_proxy_url_patterns. The "proxy_enabled_purl_types" rule data key is a list of PURL type strings (e.g. ["maven", "npm"]). The "allowed_proxy_url_patterns" rule data key is an object mapping each PURL type string to a list of regular expression patterns (e.g. {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}). Components with a URL of "NOASSERTION" are skipped. If a PURL type is listed in proxy_enabled_purl_types but has no entry in allowed_proxy_url_patterns, all components of that type are denied.
 
 *Solution*: Ensure the proxy URL matches one of the patterns defined in the allowed_proxy_url_patterns rule data for the given PURL type.
 
@@ -56,7 +56,7 @@ For components with externalReferences of type distribution, verify proxy URLs m
 * FAILURE message: `Package %s has proxy URL %q which does not match any allowed pattern for PURL type %q`
 * Code: `sbom_cyclonedx.allowed_proxy_urls`
 * Effective from: `2026-06-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L269[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L265[Source, window="_blank"]
 
 [#sbom_cyclonedx__disallowed_package_attributes]
 === link:#sbom_cyclonedx__disallowed_package_attributes[Disallowed package attributes]
@@ -83,6 +83,19 @@ Confirm the CycloneDX SBOM contains only packages without disallowed external re
 * Code: `sbom_cyclonedx.disallowed_package_external_references`
 * Effective from: `2024-07-31T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L193[Source, window="_blank"]
+
+[#sbom_cyclonedx__proxy_metadata_required]
+=== link:#sbom_cyclonedx__proxy_metadata_required[Proxy metadata required]
+
+For components found by Hermeto with a PURL type listed in proxy_enabled_purl_types that are registry dependencies (no download_url or vcs_url qualifier), verify that proxy metadata is present. In CycloneDX, this means at least one externalReference with type "distribution" must exist.
+
+*Solution*: Ensure the build process produces proxy metadata for packages fetched by Hermeto from a package registry.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Package %s is missing proxy metadata (no externalReference of type "distribution")`
+* Code: `sbom_cyclonedx.proxy_metadata_required`
+* Effective from: `2026-06-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L321[Source, window="_blank"]
 
 [#sbom_cyclonedx__cdx_supported_version]
 === link:#sbom_cyclonedx__cdx_supported_version[Supported Version]

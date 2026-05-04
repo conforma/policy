@@ -1,0 +1,145 @@
+{
+  "attestations": [
+    {
+      "signatures": [],
+      "statement": {
+        "_type": "https://in-toto.io/Statement/v0.1",
+        "predicateType": "https://cyclonedx.org/bom",
+        "predicate": {
+          "bomFormat": "CycloneDX",
+          "specVersion": "1.5",
+          "version": 1,
+          "metadata": {
+            "component": {
+              "type": "container",
+              "name": "test-image",
+              "version": "latest"
+            }
+          },
+          "components": [
+            {
+              "type": "library",
+              "name": "@babel/code-frame",
+              "version": "7.29.0",
+              "purl": "pkg:npm/%40babel/code-frame@7.29.0",
+              "properties": [
+                {
+                  "name": "hermeto:found_by",
+                  "value": "hermeto"
+                }
+              ],
+              "externalReferences": [
+                {
+                  "type": "distribution",
+                  "url": "https://artifact-registry-proxy.caching.svc.cluster.local/repository/npm-proxy"
+                }
+              ]
+            },
+            {
+              "type": "library",
+              "name": "@babel/core",
+              "version": "7.29.0",
+              "purl": "pkg:npm/%40babel/core@7.29.0",
+              "properties": [
+                {
+                  "name": "hermeto:found_by",
+                  "value": "hermeto"
+                }
+              ],
+              "externalReferences": [
+                {
+                  "type": "distribution",
+                  "url": "https://artifact-registry-proxy.caching.svc.cluster.local/repository/npm-proxy"
+                }
+              ]
+            },
+            {
+              "type": "library",
+              "name": "@babel/generator",
+              "version": "7.29.1",
+              "purl": "pkg:npm/%40babel/generator@7.29.1",
+              "properties": [
+                {
+                  "name": "hermeto:found_by",
+                  "value": "hermeto"
+                }
+              ],
+              "externalReferences": [
+                {
+                  "type": "distribution",
+                  "url": "https://artifact-registry-proxy.caching.svc.cluster.local/repository/npm-proxy"
+                }
+              ]
+            },
+            {
+              "type": "library",
+              "name": "@babel/compat-data",
+              "version": "7.29.0",
+              "purl": "pkg:npm/%40babel/compat-data@7.29.0",
+              "properties": [
+                {
+                  "name": "hermeto:found_by",
+                  "value": "hermeto"
+                }
+              ],
+              "externalReferences": [
+                {
+                  "type": "distribution",
+                  "url": "https://evil.example.com/npm/compat-data-7.29.0.tgz"
+                }
+              ]
+            },
+            {
+              "type": "library",
+              "name": "express",
+              "version": "5.2.1",
+              "purl": "pkg:npm/express@5.2.1?vcs_url=git%2Bhttps://github.com/taylormadore/express%40790b5812c1e83803a4df88be21e7d3ce92f37017",
+              "properties": [
+                {
+                  "name": "hermeto:found_by",
+                  "value": "hermeto"
+                }
+              ]
+            },
+            {
+              "type": "library",
+              "name": "libbrotli",
+              "version": "1.1.0",
+              "purl": "pkg:rpm/redhat/libbrotli@1.1.0-7.el10_1?arch=x86_64&checksum=sha256:894800ee7893f8e4aa1d3870afb22b54d92624134bc7cf5d2cdc1a1db92366db&repository_id=ubi-10-for-x86_64-baseos-rpms",
+              "properties": [
+                {
+                  "name": "hermeto:found_by",
+                  "value": "hermeto"
+                }
+              ]
+            },
+            {
+              "type": "library",
+              "name": "nodejs",
+              "version": "22.22.2",
+              "purl": "pkg:rpm/redhat/nodejs@22.22.2-1.el10_1?arch=x86_64&checksum=sha256:35d57559d5e83f6f2867a0b0ad4eb1a94bee7e0be656dca2529a5dd312b37962&epoch=1&repository_id=ubi-10-for-x86_64-appstream-rpms",
+              "properties": [
+                {
+                  "name": "hermeto:found_by",
+                  "value": "hermeto"
+                }
+              ]
+            },
+            {
+              "type": "library",
+              "name": "abbrev",
+              "version": "3.0.1",
+              "purl": "pkg:npm/abbrev@3.0.1"
+            },
+            {
+              "type": "library",
+              "name": "bash",
+              "version": "5.2.26",
+              "purl": "pkg:rpm/redhat/bash@5.2.26-6.el10?arch=x86_64&distro=rhel-10.1&upstream=bash-5.2.26-6.el10.src.rpm"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

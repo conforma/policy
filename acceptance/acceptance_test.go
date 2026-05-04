@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -31,6 +32,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/cucumber/godog"
 	// Neded so the "go run" command can execute.
@@ -41,6 +43,31 @@ const (
 	policyInputFilename  = "input.json"
 	policyConfigFilename = "policy.json"
 )
+
+var ecBinary string
+
+func TestMain(m *testing.M) {
+	tmpBin, err := os.CreateTemp("", "ec-test-*")
+	if err != nil {
+		log.Fatalf("creating temp file for ec binary: %v", err)
+	}
+	tmpBin.Close()
+	ecBinary = tmpBin.Name()
+
+	log.Printf("building ec binary at %s...", ecBinary)
+	start := time.Now()
+	cmd := exec.Command("go", "build", "-o", ecBinary, "github.com/conforma/cli")
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		os.Remove(ecBinary)
+		log.Fatalf("building ec binary: %v", err)
+	}
+	log.Printf("ec binary built in %s", time.Since(start))
+
+	code := m.Run()
+	os.Remove(ecBinary)
+	os.Exit(code)
+}
 
 var (
 	//go:embed samples/policy-input-golden-container.json
@@ -53,6 +80,10 @@ var (
 	sampleUntrustedTask string
 	//go:embed samples/untrusted-task-despite-valid-oci-ref-tag.json
 	sampleUntrustedTaskDespiteValidOciRefTag string
+	//go:embed samples/policy-input-spdx-sbom.json
+	sampleSPDXSBOM string
+	//go:embed samples/policy-input-cdx-sbom.json
+	sampleCDXSBOM string
 )
 
 type testStateKey struct{}
@@ -66,6 +97,7 @@ type testState struct {
 	inputFileName        string
 	configFileName       string
 	acceptanceModulePath string
+	effectiveTime        string
 }
 
 // Types used for parsing violations and warnings from report
@@ -117,6 +149,10 @@ func writeSampleGCPolicyInput(ctx context.Context, sampleName string) (context.C
 		content = sampleUntrustedTask
 	case "untrusted-task-despite-valid-oci-ref-tag":
 		content = sampleUntrustedTaskDespiteValidOciRefTag
+	case "spdx-sbom":
+		content = sampleSPDXSBOM
+	case "cdx-sbom":
+		content = sampleCDXSBOM
 	default:
 		return ctx, fmt.Errorf("%q is not a known sample name", sampleName)
 	}
@@ -149,16 +185,24 @@ func writePolicyConfig(ctx context.Context, config *godog.DocString) (context.Co
 	return ctx, nil
 }
 
+func setEffectiveTime(ctx context.Context, effectiveTime string) (context.Context, error) {
+	ts, err := getTestState(ctx)
+	if err != nil {
+		return ctx, fmt.Errorf("setEffectiveTime get test state: %w", err)
+	}
+
+	ts.effectiveTime = effectiveTime
+
+	return setTestState(ctx, ts), nil
+}
+
 func validateInputWithPolicyConfig(ctx context.Context) (context.Context, error) {
 	ts, err := getTestState(ctx)
 	if err != nil {
 		return ctx, fmt.Errorf("validateInputWithPolicyConfig get test state: %w", err)
 	}
 
-	cmd := exec.Command(
-		"go",
-		"run",
-		"github.com/conforma/cli",
+	args := []string{
 		"validate",
 		"input",
 		"--file",
@@ -169,17 +213,24 @@ func validateInputWithPolicyConfig(ctx context.Context) (context.Context, error)
 		"--info",
 		"--output",
 		"json",
-	)
-	cmd.Dir = ts.acceptanceModulePath
+	}
+	if ts.effectiveTime != "" {
+		args = append(args, "--effective-time", ts.effectiveTime)
+	}
+
+	cmd := exec.Command(ecBinary, args...)
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
+	log.Printf("[%s] running ec validate input...", ts.id)
+	start := time.Now()
 	if err := cmd.Run(); err != nil {
 		return ctx, fmt.Errorf("running ec validate input: %w\n%s", err, stderr.String())
 	}
+	log.Printf("[%s] ec validate input completed in %s", ts.id, time.Since(start))
 
 	var r report
 	if err := json.Unmarshal(stdout.Bytes(), &r); err != nil {
@@ -306,6 +357,40 @@ func thereShouldBeNoWarningsWithPackageInTheResult(ctx context.Context, pkg stri
 	return nil
 }
 
+func thereShouldBeViolationsWithCodeInTheResult(ctx context.Context, code string) error {
+	ts, err := getTestState(ctx)
+	if err != nil {
+		return fmt.Errorf("reading test state: %w", err)
+	}
+
+	for _, filepath := range ts.report.FilePaths {
+		for _, violation := range filepath.Violations {
+			if violation.Metadata.Code == code {
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf("expected at least one violation with code %q, but found none", code)
+}
+
+func thereShouldBeNoViolationsWithCodeInTheResult(ctx context.Context, code string) error {
+	ts, err := getTestState(ctx)
+	if err != nil {
+		return fmt.Errorf("reading test state: %w", err)
+	}
+
+	for _, filepath := range ts.report.FilePaths {
+		for _, violation := range filepath.Violations {
+			if violation.Metadata.Code == code {
+				return errors.New(prettifyResults(fmt.Sprintf("expected no violations with code %q, got:", code), filepath.Violations))
+			}
+		}
+	}
+
+	return nil
+}
+
 func prettifyResults(msg string, results []result) string {
 	for _, violation := range results {
 		code := violation.Metadata.Code
@@ -380,6 +465,7 @@ func InitializeScenario(sc *godog.ScenarioContext) {
 
 	sc.Step(`^a sample policy input "([^"]*)"$`, writeSampleGCPolicyInput)
 	sc.Step(`^a policy config:$`, writePolicyConfig)
+	sc.Step(`^an effective time of "([^"]*)"$`, setEffectiveTime)
 	sc.Step(`^input is validated$`, validateInputWithPolicyConfig)
 	sc.Step(`^there should be no violations in the result$`, thereShouldBeNoViolationsInTheResult)
 	sc.Step(`^there should be violations in the result$`, thereShouldBeViolationsInTheResult)
@@ -388,6 +474,8 @@ func InitializeScenario(sc *godog.ScenarioContext) {
 	sc.Step(`^there should be no violations with "([^"]*)" package in the result$`, thereShouldBeNoViolationsWithPackageInTheResult)
 	sc.Step(`^there should be no violations with "([^"]*)" code and "([^"]*)" term in the result$`, thereShouldBeNoViolationsWithRuleAndTermInTheResult)
 	sc.Step(`^there should be no warnings with "([^"]*)" package in the result$`, thereShouldBeNoWarningsWithPackageInTheResult)
+	sc.Step(`^there should be violations with "([^"]*)" code in the result$`, thereShouldBeViolationsWithCodeInTheResult)
+	sc.Step(`^there should be no violations with "([^"]*)" code in the result$`, thereShouldBeNoViolationsWithCodeInTheResult)
 
 	sc.After(tearDownScenario)
 }

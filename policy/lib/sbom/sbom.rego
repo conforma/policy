@@ -395,6 +395,44 @@ rule_data_errors contains error if {
 	}
 }
 
+# component_found_by_hermeto checks if a CycloneDX component was fetched by
+# cachi2 or hermeto, based on the component's properties.
+component_found_by_hermeto(component) if {
+	some property in component.properties
+	some name in _hermeto_names
+	property == _hermeto_found_by_property(name)
+} else := false
+
+# package_found_by_hermeto checks if an SPDX package was fetched by
+# cachi2 or hermeto, based on the package's annotations.
+package_found_by_hermeto(pkg) if {
+	some annotation in pkg.annotations
+	some name in _hermeto_names
+	regex.match(sprintf(`.*%s.*`, [name]), annotation.annotator)
+	annotation.annotationType == "OTHER"
+} else := false
+
+# is_registry_dependency returns true if the parsed PURL has no download_url
+# or vcs_url qualifier, indicating it is a registry dependency.
+is_registry_dependency(parsed_purl) if {
+	qualifiers := {q.key | some q in object.get(parsed_purl, "qualifiers", [])}
+	not "download_url" in qualifiers
+	not "vcs_url" in qualifiers
+}
+
+# hermeto_found_by_property generates the CycloneDX property object used
+# to identify components fetched by the given tool name.
+hermeto_found_by_property(name) := _hermeto_found_by_property(name)
+
+_hermeto_found_by_property(name) := {
+	"name": sprintf("%s:found_by", [name]),
+	"value": name,
+}
+
+# Hermeto used to be known as cachi2, so we recognize the
+# old name for backwards compatibility
+_hermeto_names := ["cachi2", "hermeto"]
+
 rule_data_packages_key := "disallowed_packages"
 
 rule_data_attributes_key := "disallowed_attributes"
