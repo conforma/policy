@@ -471,17 +471,15 @@ _task_matches_allow_rule_pattern_version(ref, rule, bundle_manifests) if {
 }
 
 # Build sigstore opts object from a rule's signature_verification config.
+# Only includes keys that are explicitly set to non-default values to avoid
+# empty strings being interpreted as "no constraint" by Sigstore.
 _sigstore_opts_for_rule(rule) := opts if {
 	sv := rule.signature_verification
 	is_object(sv)
-	opts := {
-		"certificate_identity": object.get(sv, "certificate_identity", ""),
-		"certificate_identity_regexp": object.get(sv, "certificate_identity_regexp", ""),
-		"certificate_oidc_issuer": object.get(sv, "certificate_oidc_issuer", ""),
-		"certificate_oidc_issuer_regexp": object.get(sv, "certificate_oidc_issuer_regexp", ""),
-		"ignore_rekor": object.get(sv, "ignore_rekor", false),
-		"public_key": object.get(sv, "public_key", ""),
-		"rekor_url": object.get(sv, "rekor_url", ""),
+	opts := {k: v |
+		some k, v in sv
+		v != ""
+		v != false
 	}
 }
 
@@ -552,15 +550,21 @@ _trusted_task_rule_entry_schema := {
 			# regal ignore:line-length
 			"description": "Sigstore verification options. When present, bundles matching this allow rule must also have a verified signature.",
 			"properties": {
-				"certificate_identity": {"type": "string"},
-				"certificate_identity_regexp": {"type": "string"},
-				"certificate_oidc_issuer": {"type": "string"},
-				"certificate_oidc_issuer_regexp": {"type": "string"},
+				"certificate_identity": {"type": "string", "minLength": 1},
+				"certificate_identity_regexp": {"type": "string", "minLength": 1},
+				"certificate_oidc_issuer": {"type": "string", "minLength": 1},
+				"certificate_oidc_issuer_regexp": {"type": "string", "minLength": 1},
 				"ignore_rekor": {"type": "boolean"},
-				"public_key": {"type": "string"},
-				"rekor_url": {"type": "string"},
+				"public_key": {"type": "string", "minLength": 1},
+				"rekor_url": {"type": "string", "minLength": 1},
 			},
 			"additionalProperties": false,
+			# regal ignore:line-length
+			"anyOf": [
+				{"required": ["certificate_identity"]},
+				{"required": ["certificate_identity_regexp"]},
+				{"required": ["public_key"]},
+			],
 		},
 	},
 	"additionalProperties": true,

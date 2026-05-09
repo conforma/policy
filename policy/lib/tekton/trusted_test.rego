@@ -1295,6 +1295,26 @@ test_schema_accepts_signature_verification if {
 	assertions.assert_empty(tekton.data_errors) with data.rule_data.trusted_task_rules as rules
 }
 
+# Test: Schema validation rejects empty signature_verification (would be silently permissive)
+test_schema_rejects_empty_signature_verification if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signature_verification": {},
+	}]}}
+
+	count(tekton.data_errors) > 0 with data.rule_data.trusted_task_rules as rules
+}
+
+# Test: Schema validation rejects signature_verification with only non-identity fields
+test_schema_rejects_signature_verification_without_identity if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signature_verification": {"ignore_rekor": true},
+	}]}}
+
+	count(tekton.data_errors) > 0 with data.rule_data.trusted_task_rules as rules
+}
+
 # Mock helpers for signature verification tests
 _mock_verify_image_success(_, _) := {"success": true, "errors": []}
 
