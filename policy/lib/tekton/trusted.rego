@@ -357,8 +357,7 @@ denial_reason(task, bundle_manifests) := reason if {
 	not _task_matches_deny_rule(ref, bundle_manifests)
 
 	some rule in _effective_allow_rules
-	_pattern_matches(ref.key, rule.pattern)
-	_version_satisfies_all_rule_constraints(ref, rule, bundle_manifests)
+	_task_matches_allow_rule_pattern_version(ref, rule, bundle_manifests)
 
 	# But no allow rule passes signature verification
 	not _task_matches_allow_rule(ref, bundle_manifests)
@@ -414,9 +413,13 @@ _denying_rules_info(task, bundle_manifests) := {"patterns": patterns, "messages"
 # bundle_manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
 _task_matches_allow_rule(ref, bundle_manifests) if {
 	some rule in _effective_allow_rules
+	_task_matches_allow_rule_pattern_version(ref, rule, bundle_manifests)
+	_signature_verified_for_rule(ref, rule)
+}
+
+_task_matches_allow_rule_pattern_version(ref, rule, bundle_manifests) if {
 	_pattern_matches(ref.key, rule.pattern)
 	_version_satisfies_all_rule_constraints(ref, rule, bundle_manifests)
-	_signature_verified_for_rule(ref, rule)
 }
 
 # Build sigstore opts object from a rule's signature_verification config.
