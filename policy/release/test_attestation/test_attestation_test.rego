@@ -528,7 +528,143 @@ test_missing_predicate if {
 	contains(r.msg, "unknown test")
 }
 
-# --- Test Case 15: Non-string elements in failedTests array ---
+# --- Test Case 15: Non-array failedTests value (is_array guard) ---
+
+_mock_blob_non_array_failed_tests(_) := _make_statement({
+	"result": "FAILED",
+	"configuration": [{"name": "string-tests"}],
+	"failedTests": "not-an-array",
+})
+
+test_non_array_failed_tests if {
+	assertions.assert_equal_results(test_attestation.deny, {{
+		"code": "test_attestation.no_failed_tests",
+		"msg": "Test attestation \"string-tests\" has a failed result, failed tests (none listed)",
+		"term": "string-tests",
+	}}) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_non_array_failed_tests
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+}
+
+_mock_blob_non_array_warned_tests(_) := _make_statement({
+	"result": "WARNED",
+	"configuration": [{"name": "object-tests"}],
+	"warnedTests": {"not": "an-array"},
+})
+
+test_non_array_warned_tests if {
+	assertions.assert_equal_results(test_attestation.warn, {{
+		"code": "test_attestation.no_test_warnings",
+		"msg": "Test attestation \"object-tests\" has warnings, warned tests (none listed)",
+		"term": "object-tests",
+	}}) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_non_array_warned_tests
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+}
+
+# --- Test Case 16: Empty failedTests array boundary ---
+
+_mock_blob_empty_failed_tests(_) := _make_statement({
+	"result": "FAILED",
+	"configuration": [{"name": "empty-array-test"}],
+	"failedTests": [],
+})
+
+test_empty_failed_tests_array if {
+	assertions.assert_equal_results(test_attestation.deny, {{
+		"code": "test_attestation.no_failed_tests",
+		"msg": "Test attestation \"empty-array-test\" has a failed result, failed tests (none listed)",
+		"term": "empty-array-test",
+	}}) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_empty_failed_tests
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+}
+
+_mock_blob_empty_warned_tests(_) := _make_statement({
+	"result": "WARNED",
+	"configuration": [{"name": "empty-warn-test"}],
+	"warnedTests": [],
+})
+
+test_empty_warned_tests_array if {
+	assertions.assert_equal_results(test_attestation.warn, {{
+		"code": "test_attestation.no_test_warnings",
+		"msg": "Test attestation \"empty-warn-test\" has warnings, warned tests (none listed)",
+		"term": "empty-warn-test",
+	}}) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_empty_warned_tests
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+}
+
+# --- Test Case 17: Falsy result values ---
+
+_mock_blob_false_result(_) := _make_statement({
+	"result": false,
+	"configuration": [{"name": "false-result-test"}],
+})
+
+test_false_result_value if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_false_result
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+
+	count(results) == 1
+	some r in results
+	r.code == "test_attestation.test_data_found"
+}
+
+_mock_blob_null_result(_) := _make_statement({
+	"result": null,
+	"configuration": [{"name": "null-result-test"}],
+})
+
+test_null_result_value if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_null_result
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+
+	count(results) == 1
+	some r in results
+	r.code == "test_attestation.test_result_known"
+}
+
+_mock_blob_empty_string_result(_) := _make_statement({
+	"result": "",
+	"configuration": [{"name": "empty-string-test"}],
+})
+
+test_empty_string_result_value if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_empty_string_result
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+
+	count(results) == 1
+	some r in results
+	r.code == "test_attestation.test_result_known"
+}
+
+# --- Test Case 18: Non-string elements in failedTests array ---
 
 _mock_blob_non_string_tests(_) := _make_statement({
 	"result": "FAILED",
