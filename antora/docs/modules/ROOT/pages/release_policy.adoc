@@ -217,6 +217,10 @@ Rules included:
 * xref:packages/release_tasks.adoc#tasks__required_tasks_list_provided[Tasks: Required tasks list was provided]        
 * xref:packages/release_tasks.adoc#tasks__successful_pipeline_tasks[Tasks: Successful pipeline tasks]        
 * xref:packages/release_tasks.adoc#tasks__unsupported[Tasks: Task version unsupported]        
+* xref:packages/release_test_attestation.adoc#test_attestation__no_failed_tests[Test attestation: No failed test attestations]        
+* xref:packages/release_test_attestation.adoc#test_attestation__no_test_warnings[Test attestation: No test attestation warnings]        
+* xref:packages/release_test_attestation.adoc#test_attestation__test_result_known[Test attestation: No unsupported test attestation result values]        
+* xref:packages/release_test_attestation.adoc#test_attestation__test_data_found[Test attestation: Test attestation data includes result]        
 * xref:packages/release_test.adoc#test__test_all_images[Test: Image digest is present in IMAGES_PROCESSED result]        
 * xref:packages/release_test.adoc#test__no_failed_informative_tests[Test: No informative tests failed]        
 * xref:packages/release_test.adoc#test__no_erred_tests[Test: No tests erred]        
@@ -499,6 +503,9 @@ a| Conforma expects that a set of tasks were included in the pipeline build for 
 
 | xref:packages/release_test.adoc[test]
 a| Conforma requires that each build was subjected to a set of tests and that those tests all passed. This package includes a set of rules to verify that.
+
+| xref:packages/release_test_attestation.adoc[test_attestation]
+a| Conforma can verify test result attestations attached to images as in-toto statements. This package inspects the content of verified test-result predicates and produces violations for failed tests and warnings for warned tests. The package is a no-op when no test-result attestations are present.
 
 | xref:packages/release_trusted_task.adoc[trusted_task]
 a| This package is used to verify all the Tekton Tasks involved in building the image are trusted. Trust is established by comparing the Task references found in the SLSA Provenance with a pre-defined list of trusted Tasks, which is expected to be provided as a data source that creates the `data.trusted_tasks` in the format demonstrated at https://github.com/conforma/policy/blob/main/example/data/trusted_tekton_tasks.yml. The list can be extended or customized using the `trusted_tasks` rule data key which is merged into the `trusted_tasks` data.

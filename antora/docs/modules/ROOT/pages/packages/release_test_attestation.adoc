@@ -1,0 +1,57 @@
+= Test attestation Package
+
+Conforma can verify test result attestations attached to images as in-toto statements. This package inspects the content of verified test-result predicates and produces violations for failed tests and warnings for warned tests. The package is a no-op when no test-result attestations are present.
+
+== Package Name
+
+* `test_attestation`
+
+== Rules Included
+
+[#test_attestation__no_failed_tests]
+=== link:#test_attestation__no_failed_tests[No failed test attestations]
+
+Produce a violation if any test result attestation has a result of "FAILED". Failed test names from the attestation predicate are included in the message when available.
+
+*Solution*: Ensure all test attestations have a passing result. Review the failed tests listed in the attestation predicate.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Test attestation %q has a failed result, failed tests %s`
+* Code: `test_attestation.no_failed_tests`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L51[Source, window="_blank"]
+
+[#test_attestation__no_test_warnings]
+=== link:#test_attestation__no_test_warnings[No test attestation warnings]
+
+Produce a warning if any test result attestation has a result of "WARNED". Warned test names from the attestation predicate are included in the message when available.
+
+*Solution*: Review the warned tests listed in the attestation predicate.
+
+* Rule type: [rule-type-indicator warning]#WARNING#
+* WARNING message: `Test attestation %q has warnings, warned tests %s`
+* Code: `test_attestation.no_test_warnings`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L133[Source, window="_blank"]
+
+[#test_attestation__test_result_known]
+=== link:#test_attestation__test_result_known[No unsupported test attestation result values]
+
+Ensure the result field of each test result attestation is a recognized value. Valid values are PASSED, WARNED, and FAILED per the in-toto test-result predicate specification.
+
+*Solution*: The test result attestation contains an unrecognized result value. Valid values are PASSED, WARNED, and FAILED.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Test attestation %q has an unsupported result value %q`
+* Code: `test_attestation.test_result_known`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L79[Source, window="_blank"]
+
+[#test_attestation__test_data_found]
+=== link:#test_attestation__test_data_found[Test attestation data includes result]
+
+Each test result attestation must include a result field in its predicate. Verify that the result field is present.
+
+*Solution*: The test result attestation predicate must include a "result" field with a value of PASSED, WARNED, or FAILED.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Test attestation %q is missing the required result field`
+* Code: `test_attestation.test_data_found`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L107[Source, window="_blank"]
