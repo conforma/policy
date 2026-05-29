@@ -84,6 +84,19 @@ Confirm the CycloneDX SBOM contains only packages without disallowed external re
 * Effective from: `2024-07-31T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L197[Source, window="_blank"]
 
+[#sbom_cyclonedx__experimental_hermeto_backend]
+=== link:#sbom_cyclonedx__experimental_hermeto_backend[Experimental Hermeto backend]
+
+Verify that no components in the CycloneDX SBOM were fetched using an experimental Hermeto backend. Experimental backends are identified by top-level annotations whose text starts with "hermeto:backend:experimental:".
+
+*Solution*: Use a supported, non-experimental package manager backend in your build process, or request a policy exception.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Package %s was fetched using experimental Hermeto backend %q`
+* Code: `sbom_cyclonedx.experimental_hermeto_backend`
+* Effective from: `2026-08-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_cyclonedx/sbom_cyclonedx.rego#L366[Source, window="_blank"]
+
 [#sbom_cyclonedx__proxy_metadata_required]
 === link:#sbom_cyclonedx__proxy_metadata_required[Proxy metadata required]
 

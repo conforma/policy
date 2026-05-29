@@ -1021,3 +1021,137 @@ test_proxy_metadata_required_spdx_vcs_url_passes if {
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _spdx_proxy_rule_data
 }
+
+# experimental_hermeto_backend tests
+
+test_experimental_hermeto_backend_spdx_denied if {
+	expected := {{
+		"code": "sbom_spdx.experimental_hermeto_backend",
+		"term": "pkg:golang/example.com/foo@1.0.0",
+		# regal ignore:line-length
+		"msg": `Package pkg:golang/example.com/foo@1.0.0 was fetched using experimental Hermeto backend "hermeto:backend:experimental:x-pnpm"`,
+	}}
+
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_backend_package("pkg:golang/example.com/foo@1.0.0", "hermeto:backend:experimental:x-pnpm"),
+	}])
+
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+}
+
+test_experimental_hermeto_backend_spdx_stable_passes if {
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_backend_package("pkg:golang/example.com/foo@1.0.0", "hermeto:backend:gomod"),
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+
+	count({r | some r in results; r.code == "sbom_spdx.experimental_hermeto_backend"}) == 0
+}
+
+test_experimental_hermeto_backend_spdx_no_purl_denied if {
+	expected := {{
+		"code": "sbom_spdx.experimental_hermeto_backend",
+		"term": "backend-package",
+		# regal ignore:line-length
+		"msg": `Package backend-package was fetched using experimental Hermeto backend "hermeto:backend:experimental:x-pnpm"`,
+	}}
+
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_backend_package_no_purl("hermeto:backend:experimental:x-pnpm"),
+	}])
+
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+}
+
+test_experimental_hermeto_backend_spdx_mixed_annotations if {
+	expected := {{
+		"code": "sbom_spdx.experimental_hermeto_backend",
+		"term": "pkg:golang/example.com/foo@1.0.0",
+		# regal ignore:line-length
+		"msg": `Package pkg:golang/example.com/foo@1.0.0 was fetched using experimental Hermeto backend "hermeto:backend:experimental:x-pnpm"`,
+	}}
+
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_backend_package_mixed("pkg:golang/example.com/foo@1.0.0"),
+	}])
+
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+}
+
+_spdx_backend_package_mixed(purl) := {
+	"name": "backend-package",
+	"SPDXID": "SPDXRef-backend-package-mixed",
+	"downloadLocation": "NOASSERTION",
+	"externalRefs": [{
+		"referenceCategory": "PACKAGE-MANAGER",
+		"referenceType": "purl",
+		"referenceLocator": purl,
+	}],
+	"annotations": [
+		{
+			"annotator": "Tool: hermeto:backend",
+			"comment": "hermeto:backend:gomod",
+			"annotationDate": "2026-05-01T12:00:00Z",
+			"annotationType": "OTHER",
+		},
+		{
+			"annotator": "Tool: hermeto:backend",
+			"comment": "hermeto:backend:experimental:x-pnpm",
+			"annotationDate": "2026-05-01T12:00:00Z",
+			"annotationType": "OTHER",
+		},
+	],
+	"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
+}
+
+_spdx_backend_package(purl, backend_annotation) := {
+	"name": "backend-package",
+	"SPDXID": "SPDXRef-backend-package",
+	"downloadLocation": "NOASSERTION",
+	"externalRefs": [{
+		"referenceCategory": "PACKAGE-MANAGER",
+		"referenceType": "purl",
+		"referenceLocator": purl,
+	}],
+	"annotations": [{
+		"annotator": "Tool: hermeto:backend",
+		"comment": backend_annotation,
+		"annotationDate": "2026-05-01T12:00:00Z",
+		"annotationType": "OTHER",
+	}],
+	"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
+}
+
+_spdx_backend_package_no_purl(backend_annotation) := {
+	"name": "backend-package",
+	"SPDXID": "SPDXRef-backend-package-no-purl",
+	"downloadLocation": "NOASSERTION",
+	"annotations": [{
+		"annotator": "Tool: hermeto:backend",
+		"comment": backend_annotation,
+		"annotationDate": "2026-05-01T12:00:00Z",
+		"annotationType": "OTHER",
+	}],
+	"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
+}
