@@ -103,6 +103,22 @@
             },
             {
               "type": "library",
+              "name": "fsevents",
+              "version": "2.3.3",
+              "purl": "pkg:npm/fsevents@2.3.3",
+              "properties": [
+                {
+                  "name": "hermeto:found_by",
+                  "value": "hermeto"
+                },
+                {
+                  "name": "cdx:npm:package:bundled",
+                  "value": "true"
+                }
+              ]
+            },
+            {
+              "type": "library",
               "name": "libbrotli",
               "version": "1.1.0",
               "purl": "pkg:rpm/redhat/libbrotli@1.1.0-7.el10_1?arch=x86_64&checksum=sha256:894800ee7893f8e4aa1d3870afb22b54d92624134bc7cf5d2cdc1a1db92366db&repository_id=ubi-10-for-x86_64-baseos-rpms",

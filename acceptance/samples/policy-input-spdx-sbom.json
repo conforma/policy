@@ -238,6 +238,40 @@
               "versionInfo": "5.2.1"
             },
             {
+              "SPDXID": "SPDXRef-Package-npm-fsevents-2.3.3-bundled",
+              "annotations": [
+                {
+                  "annotationDate": "2026-04-23T14:19:57Z",
+                  "annotationType": "OTHER",
+                  "annotator": "Tool: hermeto:jsonencoded",
+                  "comment": "hermeto:backend:npm"
+                },
+                {
+                  "annotationDate": "2026-04-23T14:19:57Z",
+                  "annotationType": "OTHER",
+                  "annotator": "Tool: hermeto:jsonencoded",
+                  "comment": "{\"name\": \"hermeto:found_by\", \"value\": \"hermeto\"}"
+                },
+                {
+                  "annotationDate": "2026-04-23T14:19:57Z",
+                  "annotationType": "OTHER",
+                  "annotator": "Tool: hermeto:jsonencoded",
+                  "comment": "{\"name\": \"cdx:npm:package:bundled\", \"value\": \"true\"}"
+                }
+              ],
+              "downloadLocation": "NOASSERTION",
+              "externalRefs": [
+                {
+                  "referenceCategory": "PACKAGE_MANAGER",
+                  "referenceLocator": "pkg:npm/fsevents@2.3.3",
+                  "referenceType": "purl"
+                }
+              ],
+              "filesAnalyzed": true,
+              "name": "fsevents",
+              "versionInfo": "2.3.3"
+            },
+            {
               "SPDXID": "SPDXRef-Package-libbrotli-1.1.0-1e61557cdb9610ac9b4cb1db23b878ceb9048c799c8536650f49f42268db3ff2",
               "annotations": [
                 {

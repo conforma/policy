@@ -251,15 +251,15 @@ deny contains result if {
 # title: Allowed proxy URLs
 # description: >-
 #   For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_types
-#   that are registry dependencies (no download_url or vcs_url qualifier), verify the
-#   downloadLocation matches at least one pattern from allowed_proxy_url_patterns.
-#   The "proxy_enabled_purl_types" rule data key is a list of PURL type strings
-#   (e.g. ["maven", "npm"]). The "allowed_proxy_url_patterns" rule data key is an
-#   object mapping each PURL type string to a list of regular expression patterns
-#   (e.g. {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}). Packages with
-#   downloadLocation set to "NOASSERTION" are skipped. If a PURL type is listed in
-#   proxy_enabled_purl_types but has no entry in allowed_proxy_url_patterns, all
-#   packages of that type are denied.
+#   that are registry dependencies (no download_url or vcs_url qualifier, not bundled),
+#   verify the downloadLocation matches at least one pattern from
+#   allowed_proxy_url_patterns. The "proxy_enabled_purl_types" rule data key is a list
+#   of PURL type strings (e.g. ["maven", "npm"]). The "allowed_proxy_url_patterns"
+#   rule data key is an object mapping each PURL type string to a list of regular
+#   expression patterns (e.g. {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}).
+#   Packages with downloadLocation set to "NOASSERTION" are skipped. If a PURL type
+#   is listed in proxy_enabled_purl_types but has no entry in
+#   allowed_proxy_url_patterns, all packages of that type are denied.
 # custom:
 #   short_name: allowed_proxy_urls
 #   failure_msg: >-
@@ -288,7 +288,7 @@ deny contains result if {
 	parsed_purl := ec.purl.parse(purl)
 	parsed_purl.type in proxy_enabled
 
-	sbom.is_registry_dependency(parsed_purl)
+	sbom.is_registry_dependency(parsed_purl, pkg)
 
 	download_location := object.get(pkg, "downloadLocation", "")
 	download_location != "NOASSERTION"
@@ -307,8 +307,9 @@ deny contains result if {
 # title: Proxy metadata required
 # description: >-
 #   For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_types
-#   that are registry dependencies (no download_url or vcs_url qualifier), verify that
-#   proxy metadata is present. In SPDX, the sourceInfo field must be non-empty.
+#   that are registry dependencies (no download_url or vcs_url qualifier, not bundled),
+#   verify that proxy metadata is present. In SPDX, the sourceInfo field must be
+#   non-empty.
 # custom:
 #   short_name: proxy_metadata_required
 #   failure_msg: >-
@@ -336,7 +337,7 @@ deny contains result if {
 	parsed_purl := ec.purl.parse(purl)
 	parsed_purl.type in proxy_enabled
 
-	sbom.is_registry_dependency(parsed_purl)
+	sbom.is_registry_dependency(parsed_purl, pkg)
 
 	source_info := object.get(pkg, "sourceInfo", "")
 	source_info == ""

@@ -412,13 +412,36 @@ package_found_by_hermeto(pkg) if {
 	annotation.annotationType == "OTHER"
 } else := false
 
-# is_registry_dependency returns true if the parsed PURL has no download_url
-# or vcs_url qualifier, indicating it is a registry dependency.
-is_registry_dependency(parsed_purl) if {
+# is_registry_dependency checks that an SBOM artifact (CycloneDX component
+# or SPDX package) is a registry dependency: fetched from a package
+# registry, not from a direct URL or VCS, and not bundled inside another
+# dependency's tarball.
+is_registry_dependency(parsed_purl, dependency) if {
+	_is_registry_purl(parsed_purl)
+	not _is_bundled(dependency)
+}
+
+_is_registry_purl(parsed_purl) if {
 	qualifiers := {q.key | some q in object.get(parsed_purl, "qualifiers", [])}
 	not "download_url" in qualifiers
 	not "vcs_url" in qualifiers
 }
+
+# CycloneDX: bundled property in component.properties
+_is_bundled(dependency) if {
+	some property in object.get(dependency, "properties", [])
+	property == _npm_bundled_property
+}
+
+# SPDX: bundled property JSON-encoded in package annotations
+_is_bundled(dependency) if {
+	some annotation in object.get(dependency, "annotations", [])
+	annotation.annotationType == "OTHER"
+	parsed := json.unmarshal(annotation.comment)
+	parsed == _npm_bundled_property
+}
+
+_npm_bundled_property := {"name": "cdx:npm:package:bundled", "value": "true"}
 
 # hermeto_found_by_property generates the CycloneDX property object used
 # to identify components fetched by the given tool name.

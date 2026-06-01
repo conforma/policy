@@ -833,6 +833,48 @@ test_proxy_url_cyclonedx_download_url_skipped if {
 	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
 }
 
+test_proxy_url_cyclonedx_bundled_skipped if {
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": _cdx_bundled_component("pkg:npm/example-lib@2.0"),
+	}])
+
+	results := sbom_cyclonedx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
+}
+
+test_proxy_metadata_required_cdx_bundled_passes if {
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": _cdx_bundled_component("pkg:npm/example-lib@2.0"),
+	}])
+
+	results := sbom_cyclonedx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.proxy_metadata_required"}) == 0
+}
+
+_cdx_bundled_component(purl) := {
+	"type": "library",
+	"name": "component",
+	"purl": purl,
+	"properties": [
+		{"name": "hermeto:found_by", "value": "hermeto"},
+		{"name": "cdx:npm:package:bundled", "value": "true"},
+	],
+}
+
 _cdx_proxy_component(purl, distribution_url) := {
 	"type": "library",
 	"name": "component",
