@@ -10,6 +10,7 @@ package annotations
 import rego.v1
 
 import data.lib.metadata
+import data.lib.tkn_bundle
 
 # METADATA
 # title: Task definition uses expires-on annotation in RFC3339 format
@@ -22,7 +23,8 @@ import data.lib.metadata
 #     Expires on time is not in RFC3339 format: %q
 #
 deny contains result if {
-	expires_on := input.metadata.annotations[_expires_on_annotation]
+	some task in tkn_bundle.tasks
+	expires_on := task.metadata.annotations[_expires_on_annotation]
 
 	not time.parse_rfc3339_ns(expires_on)
 

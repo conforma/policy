@@ -16,4 +16,4 @@ Make sure to use the date format in RFC3339 format in the "build.appstudio.redha
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Expires on time is not in RFC3339 format: %q`
 * Code: `annotations.expires_on_format`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/annotations/annotations.rego#L14[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/annotations/annotations.rego#L15[Source, window="_blank"]

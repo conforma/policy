@@ -19,4 +19,4 @@ Confirm that each step in the Task uses a container image that is accessible.
 * FAILURE message: `Step %d uses inaccessible image ref '%s'`
 * Code: `step_images.step_images_accessible`
 * Effective from: `2025-02-10T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_images/step_images.rego#L14[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_images/step_images.rego#L15[Source, window="_blank"]

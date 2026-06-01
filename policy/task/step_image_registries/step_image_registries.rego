@@ -11,6 +11,7 @@ import rego.v1
 
 import data.lib.metadata
 import data.lib.rule_data
+import data.lib.tkn_bundle
 
 import data.lib.json as j
 import data.lib.k8s
@@ -28,9 +29,10 @@ import data.lib.k8s
 #     Make sure the container image used in each step of the Task comes from an approved registry.
 #
 deny contains result if {
-	input.kind == "Task"
+	some task in tkn_bundle.tasks
+	task.kind == "Task"
 
-	some step_index, step in input.spec.steps
+	some step_index, step in task.spec.steps
 	image_ref := step.image
 	allowed_registry_prefixes := rule_data.get(_rule_data_key)
 	not image_ref_permitted(image_ref, allowed_registry_prefixes)
@@ -38,7 +40,7 @@ deny contains result if {
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[step_index, image_ref],
-		k8s.name_version(input),
+		k8s.name_version(task),
 	)
 }
 

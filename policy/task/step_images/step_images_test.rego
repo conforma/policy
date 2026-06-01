@@ -8,7 +8,7 @@ import data.step_images
 
 test_looks_at_tasks_only if {
 	pipeline := {
-		"kind": "Pipeline",
+		"apiVersion": "tekton.dev/v1", "kind": "Pipeline",
 		"spec": {"steps": [{"image": "registry.io/repository/not_ok"}]},
 	}
 
@@ -23,7 +23,7 @@ test_task_with_no_steps if {
 
 test_task_with_valid_steps if {
 	task := {
-		"kind": "Task",
+		"apiVersion": "tekton.dev/v1", "kind": "Task",
 		"spec": {"steps": [
 			{"image": "registry.io/repository/ok:1"},
 			{"image": "registry.io/repository/ok:2"},
@@ -36,7 +36,7 @@ test_task_with_valid_steps if {
 
 test_task_with_invalid_steps if {
 	task := {
-		"kind": "Task",
+		"apiVersion": "tekton.dev/v1", "kind": "Task",
 		"spec": {"steps": [
 			{"image": "registry.io/repository/ok:1"},
 			{"image": "registry.io/repository/not_ok:2"},

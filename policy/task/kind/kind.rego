@@ -10,6 +10,7 @@ package kind
 import rego.v1
 
 import data.lib.metadata
+import data.lib.tkn_bundle
 
 expected_kind := "Task"
 
@@ -22,8 +23,9 @@ expected_kind := "Task"
 #   failure_msg: Unexpected kind '%s' for task definition
 #
 deny contains result if {
-	expected_kind != input.kind
-	result := metadata.result_helper(rego.metadata.chain(), [input.kind])
+	some task in tkn_bundle.tasks
+	expected_kind != task.kind
+	result := metadata.result_helper(rego.metadata.chain(), [task.kind])
 }
 
 # METADATA
@@ -35,6 +37,7 @@ deny contains result if {
 #   failure_msg: Required field 'kind' not found
 #
 deny contains result if {
-	not input.kind
+	some task in tkn_bundle.tasks
+	not task.kind
 	result := metadata.result_helper(rego.metadata.chain(), [])
 }

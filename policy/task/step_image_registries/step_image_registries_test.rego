@@ -14,7 +14,7 @@ bad_image := "hackz.io/openshift-pipelines/pipelines-git-init-rhel8@sha256:af7dd
 
 test_step_images_permitted_success if {
 	task := {
-		"kind": "Task",
+		"apiVersion": "tekton.dev/v1", "kind": "Task",
 		"spec": {"steps": [{"image": good_image}, {"image": good_image}]},
 	}
 
@@ -23,7 +23,7 @@ test_step_images_permitted_success if {
 
 test_step_images_permitted_failure if {
 	task := {
-		"kind": "Task",
+		"apiVersion": "tekton.dev/v1", "kind": "Task",
 		"metadata": {"labels": {"app.kubernetes.io/version": "1.0"}, "name": "git-clone"},
 		"spec": {"steps": [{"image": bad_image}, {"image": good_image}, {"image": bad_image}]},
 	}
@@ -48,7 +48,7 @@ test_step_images_permitted_failure if {
 
 test_step_images_missing_name_version if {
 	task_no_name := {
-		"kind": "Task",
+		"apiVersion": "tekton.dev/v1", "kind": "Task",
 		"metadata": {"labels": {"app.kubernetes.io/version": "1.0"}},
 		"spec": {"steps": [{"image": bad_image}]},
 	}
@@ -61,7 +61,7 @@ test_step_images_missing_name_version if {
 	}}) with input as task_no_name
 
 	task_no_version := {
-		"kind": "Task",
+		"apiVersion": "tekton.dev/v1", "kind": "Task",
 		"metadata": {"name": "git-clone"},
 		"spec": {"steps": [{"image": bad_image}]},
 	}
@@ -74,7 +74,7 @@ test_step_images_missing_name_version if {
 	}}) with input as task_no_version
 
 	task_no_name_no_version := {
-		"kind": "Task",
+		"apiVersion": "tekton.dev/v1", "kind": "Task",
 		"spec": {"steps": [{"image": bad_image}]},
 	}
 
@@ -97,7 +97,7 @@ test_step_images_permitted_skipped if {
 
 test_step_images_permitted_prefix_list_empty if {
 	task := {
-		"kind": "Task",
+		"apiVersion": "tekton.dev/v1", "kind": "Task",
 		"metadata": {"labels": {"app.kubernetes.io/version": "1.0"}, "name": "git-clone"},
 		"spec": {"steps": [{"image": good_image}]},
 	}
