@@ -361,7 +361,7 @@
                   "comment": "{\"name\": \"hermeto:found_by\", \"value\": \"hermeto\"}"
                 }
               ],
-              "downloadLocation": "https://evil.example.com/npm/compat-data-7.29.0.tgz",
+              "downloadLocation": "NOASSERTION",
               "externalRefs": [
                 {
                   "referenceCategory": "PACKAGE_MANAGER",
@@ -371,7 +371,7 @@
               ],
               "filesAnalyzed": true,
               "name": "@babel/compat-data",
-              "sourceInfo": "https://artifact-registry-proxy.caching.svc.cluster.local/repository/npm-proxy",
+              "sourceInfo": "https://evil.example.com/npm/compat-data-7.29.0.tgz",
               "versionInfo": "7.29.0"
             }
           ],

@@ -48,7 +48,7 @@ For each of the packages fetched by Hermeto which define externalReferences, ver
 [#sbom_spdx__allowed_proxy_urls]
 === link:#sbom_spdx__allowed_proxy_urls[Allowed proxy URLs]
 
-For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_types that are registry dependencies (no download_url or vcs_url qualifier, not bundled), verify the downloadLocation matches at least one pattern from allowed_proxy_url_patterns. The "proxy_enabled_purl_types" rule data key is a list of PURL type strings (e.g. ["maven", "npm"]). The "allowed_proxy_url_patterns" rule data key is an object mapping each PURL type string to a list of regular expression patterns (e.g. {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}). Packages with downloadLocation set to "NOASSERTION" are skipped. If a PURL type is listed in proxy_enabled_purl_types but has no entry in allowed_proxy_url_patterns, all packages of that type are denied.
+For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_types that are registry dependencies (no download_url or vcs_url qualifier, not bundled), verify each proxy URL in sourceInfo matches at least one pattern from allowed_proxy_url_patterns. Hermeto records proxy URLs in the sourceInfo field, semicolon-separated when multiple proxies are used. The "proxy_enabled_purl_types" rule data key is a list of PURL type strings (e.g. ["maven", "npm"]). The "allowed_proxy_url_patterns" rule data key is an object mapping each PURL type string to a list of regular expression patterns (e.g. {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}). If a PURL type is listed in proxy_enabled_purl_types but has no entry in allowed_proxy_url_patterns, all packages of that type are denied.
 
 *Solution*: Ensure the proxy URL matches one of the patterns defined in the allowed_proxy_url_patterns rule data for the given PURL type.
 
@@ -131,7 +131,7 @@ For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_type
 * FAILURE message: `Package %s is missing proxy metadata (sourceInfo is empty or missing)`
 * Code: `sbom_spdx.proxy_metadata_required`
 * Effective from: `2026-05-13T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L306[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L309[Source, window="_blank"]
 
 [#sbom_spdx__valid]
 === link:#sbom_spdx__valid[Valid]

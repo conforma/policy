@@ -252,14 +252,15 @@ deny contains result if {
 # description: >-
 #   For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_types
 #   that are registry dependencies (no download_url or vcs_url qualifier, not bundled),
-#   verify the downloadLocation matches at least one pattern from
-#   allowed_proxy_url_patterns. The "proxy_enabled_purl_types" rule data key is a list
-#   of PURL type strings (e.g. ["maven", "npm"]). The "allowed_proxy_url_patterns"
-#   rule data key is an object mapping each PURL type string to a list of regular
-#   expression patterns (e.g. {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}).
-#   Packages with downloadLocation set to "NOASSERTION" are skipped. If a PURL type
-#   is listed in proxy_enabled_purl_types but has no entry in
-#   allowed_proxy_url_patterns, all packages of that type are denied.
+#   verify each proxy URL in sourceInfo matches at least one pattern from
+#   allowed_proxy_url_patterns. Hermeto records proxy URLs in the sourceInfo field,
+#   semicolon-separated when multiple proxies are used. The "proxy_enabled_purl_types"
+#   rule data key is a list of PURL type strings (e.g. ["maven", "npm"]). The
+#   "allowed_proxy_url_patterns" rule data key is an object mapping each PURL type
+#   string to a list of regular expression patterns (e.g.
+#   {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}). If a PURL type is listed
+#   in proxy_enabled_purl_types but has no entry in allowed_proxy_url_patterns, all
+#   packages of that type are denied.
 # custom:
 #   short_name: allowed_proxy_urls
 #   failure_msg: >-
@@ -290,15 +291,17 @@ deny contains result if {
 
 	sbom.is_registry_dependency(parsed_purl, pkg)
 
-	download_location := object.get(pkg, "downloadLocation", "")
-	download_location != "NOASSERTION"
+	source_info := object.get(pkg, "sourceInfo", "")
+	source_info != ""
+	some url in split(source_info, ";")
+	url != ""
 
 	patterns := object.get(allowed_patterns, parsed_purl.type, [])
-	not sbom.url_matches_any_pattern(download_location, patterns)
+	not sbom.url_matches_any_pattern(url, patterns)
 
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[purl, download_location, parsed_purl.type],
+		[purl, url, parsed_purl.type],
 		purl,
 	)
 }

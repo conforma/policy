@@ -458,13 +458,13 @@ test_proxy_url_spdx_denied if {
 	count(proxy_results) == 1
 }
 
-test_proxy_url_spdx_noassertion_skipped if {
+test_proxy_url_spdx_empty_source_info_skipped if {
 	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:maven/org.example/lib@1.0",
-			"NOASSERTION",
+			"",
 		),
 	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
@@ -537,13 +537,13 @@ test_proxy_url_spdx_download_url_skipped if {
 	count({r | some r in results; r.code == "sbom_spdx.allowed_proxy_urls"}) == 0
 }
 
-test_proxy_url_spdx_empty_download_location if {
+test_proxy_url_spdx_semicolon_separated if {
 	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
-			"pkg:maven/org.example/lib@1.0",
-			"",
+			"pkg:npm/example-lib@2.0",
+			"https://proxy.example.com/npm/example-lib-2.0.tgz;https://evil.com/lib.tgz",
 		),
 	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
@@ -613,10 +613,11 @@ _spdx_bundled_package(purl) := {
 	"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
 }
 
-_spdx_proxy_package(purl, download_location) := {
+_spdx_proxy_package(purl, source_info) := {
 	"name": "proxy-package",
 	"SPDXID": "SPDXRef-proxy-package",
-	"downloadLocation": download_location,
+	"downloadLocation": "NOASSERTION",
+	"sourceInfo": source_info,
 	"externalRefs": [{
 		"referenceCategory": "PACKAGE-MANAGER",
 		"referenceType": "purl",

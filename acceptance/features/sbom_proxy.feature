@@ -56,7 +56,7 @@ Feature: SBOM proxy rules
         When input is validated
         Then there should be no violations in the result
 
-    Scenario: SPDX allowed proxy URLs denies non-matching downloadLocation
+    Scenario: SPDX allowed proxy URLs denies non-matching sourceInfo
         Given a sample policy input "spdx-sbom"
         And a policy config:
             """
