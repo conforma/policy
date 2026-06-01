@@ -272,9 +272,9 @@ deny contains result if {
 #   key is a list of PURL type strings (e.g. ["maven", "npm"]). The
 #   "allowed_proxy_url_patterns" rule data key is an object mapping each PURL type
 #   string to a list of regular expression patterns (e.g.
-#   {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}). Components with a URL of
-#   "NOASSERTION" are skipped. If a PURL type is listed in proxy_enabled_purl_types but
-#   has no entry in allowed_proxy_url_patterns, all components of that type are denied.
+#   {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}). If a PURL type is listed
+#   in proxy_enabled_purl_types but has no entry in allowed_proxy_url_patterns, all
+#   components of that type are denied.
 # custom:
 #   short_name: allowed_proxy_urls
 #   failure_msg: >-
@@ -306,7 +306,6 @@ deny contains result if {
 	sbom.is_registry_dependency(parsed_purl, component)
 
 	distribution_url := object.get(reference, "url", "")
-	distribution_url != "NOASSERTION"
 	patterns := object.get(allowed_patterns, parsed_purl.type, [])
 	not sbom.url_matches_any_pattern(distribution_url, patterns)
 
@@ -362,7 +361,6 @@ deny contains result if {
 _has_distribution_reference(component) if {
 	some reference in component.externalReferences
 	reference.type == "distribution"
-	object.get(reference, "url", "") != "NOASSERTION"
 }
 
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does

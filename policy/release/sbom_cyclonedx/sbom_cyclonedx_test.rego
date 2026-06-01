@@ -694,23 +694,6 @@ test_proxy_url_cyclonedx_denied if {
 	count(proxy_results) == 1
 }
 
-test_proxy_url_cyclonedx_noassertion_skipped if {
-	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/components/-",
-		"value": _cdx_proxy_component(
-			"pkg:maven/org.example/lib@1.0",
-			"NOASSERTION",
-		),
-	}])]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _proxy_rule_data
-
-	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
-}
-
 test_proxy_url_cyclonedx_multiple_distribution_refs if {
 	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
@@ -980,23 +963,6 @@ test_proxy_metadata_required_cdx_non_distribution_refs_denied if {
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _proxy_rule_data
-}
-
-test_proxy_metadata_required_cdx_noassertion_distribution_denied if {
-	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/components/-",
-		"value": _cdx_hermeto_component(
-			"pkg:maven/org.example/lib@1.0",
-			[{"type": "distribution", "url": "NOASSERTION"}],
-		),
-	}])]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _proxy_rule_data
-
-	count({r | some r in results; r.code == "sbom_cyclonedx.proxy_metadata_required"}) == 1
 }
 
 test_proxy_metadata_required_cdx_non_proxy_purl_type_passes if {
