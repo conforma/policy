@@ -694,23 +694,6 @@ test_proxy_url_cyclonedx_denied if {
 	count(proxy_results) == 1
 }
 
-test_proxy_url_cyclonedx_noassertion_skipped if {
-	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/components/-",
-		"value": _cdx_proxy_component(
-			"pkg:maven/org.example/lib@1.0",
-			"NOASSERTION",
-		),
-	}])]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _proxy_rule_data
-
-	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
-}
-
 test_proxy_url_cyclonedx_multiple_distribution_refs if {
 	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
@@ -721,8 +704,8 @@ test_proxy_url_cyclonedx_multiple_distribution_refs if {
 			"purl": "pkg:maven/org.example/lib@1.0",
 			"properties": [{"name": "hermeto:found_by", "value": "hermeto"}],
 			"externalReferences": [
-				{"type": "distribution", "url": "https://proxy.example.com/maven/org/example/lib-1.0.jar"},
-				{"type": "distribution", "url": "https://evil.com/lib-1.0.jar"},
+				{"type": "distribution", "comment": "proxy URL", "url": "https://proxy.example.com/maven/org/example/lib-1.0.jar"},
+				{"type": "distribution", "comment": "proxy URL", "url": "https://evil.com/lib-1.0.jar"},
 			],
 		},
 	}])]
@@ -833,12 +816,54 @@ test_proxy_url_cyclonedx_download_url_skipped if {
 	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
 }
 
+test_proxy_url_cyclonedx_bundled_skipped if {
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": _cdx_bundled_component("pkg:npm/example-lib@2.0"),
+	}])
+
+	results := sbom_cyclonedx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.allowed_proxy_urls"}) == 0
+}
+
+test_proxy_metadata_required_cdx_bundled_passes if {
+	att := json.patch(_sbom_1_5_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/components/-",
+		"value": _cdx_bundled_component("pkg:npm/example-lib@2.0"),
+	}])
+
+	results := sbom_cyclonedx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.proxy_metadata_required"}) == 0
+}
+
+_cdx_bundled_component(purl) := {
+	"type": "library",
+	"name": "component",
+	"purl": purl,
+	"properties": [
+		{"name": "hermeto:found_by", "value": "hermeto"},
+		{"name": "cdx:npm:package:bundled", "value": "true"},
+	],
+}
+
 _cdx_proxy_component(purl, distribution_url) := {
 	"type": "library",
 	"name": "component",
 	"purl": purl,
 	"properties": [{"name": "hermeto:found_by", "value": "hermeto"}],
-	"externalReferences": [{"type": "distribution", "url": distribution_url}],
+	"externalReferences": [{"type": "distribution", "comment": "proxy URL", "url": distribution_url}],
 }
 
 _cdx_hermeto_component(purl, external_refs) := {
@@ -864,7 +889,7 @@ test_proxy_metadata_required_cdx_denied if {
 		"code": "sbom_cyclonedx.proxy_metadata_required",
 		"term": "pkg:maven/org.example/lib@1.0",
 		# regal ignore:line-length
-		"msg": `Package pkg:maven/org.example/lib@1.0 is missing proxy metadata (no externalReference of type "distribution")`,
+		"msg": `Package pkg:maven/org.example/lib@1.0 is missing proxy metadata (no externalReference of type "distribution" with comment "proxy URL")`,
 	}}
 
 	att := json.patch(_sbom_1_5_attestation, [{
@@ -886,7 +911,7 @@ test_proxy_metadata_required_cdx_with_distribution_passes if {
 		"path": "/statement/predicate/components/-",
 		"value": _cdx_hermeto_component(
 			"pkg:maven/org.example/lib@1.0",
-			[{"type": "distribution", "url": "https://proxy.example.com/maven/lib-1.0.jar"}],
+			[{"type": "distribution", "comment": "proxy URL", "url": "https://proxy.example.com/maven/lib-1.0.jar"}],
 		),
 	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
@@ -921,7 +946,7 @@ test_proxy_metadata_required_cdx_non_distribution_refs_denied if {
 		"code": "sbom_cyclonedx.proxy_metadata_required",
 		"term": "pkg:maven/org.example/lib@1.0",
 		# regal ignore:line-length
-		"msg": `Package pkg:maven/org.example/lib@1.0 is missing proxy metadata (no externalReference of type "distribution")`,
+		"msg": `Package pkg:maven/org.example/lib@1.0 is missing proxy metadata (no externalReference of type "distribution" with comment "proxy URL")`,
 	}}
 
 	att := json.patch(_sbom_1_5_attestation, [{
@@ -938,23 +963,6 @@ test_proxy_metadata_required_cdx_non_distribution_refs_denied if {
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _proxy_rule_data
-}
-
-test_proxy_metadata_required_cdx_noassertion_distribution_denied if {
-	results := sbom_cyclonedx.deny with input.attestations as [json.patch(_sbom_1_5_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/components/-",
-		"value": _cdx_hermeto_component(
-			"pkg:maven/org.example/lib@1.0",
-			[{"type": "distribution", "url": "NOASSERTION"}],
-		),
-	}])]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _proxy_rule_data
-
-	count({r | some r in results; r.code == "sbom_cyclonedx.proxy_metadata_required"}) == 1
 }
 
 test_proxy_metadata_required_cdx_non_proxy_purl_type_passes if {

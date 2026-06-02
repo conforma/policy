@@ -31,6 +31,7 @@
               "externalReferences": [
                 {
                   "type": "distribution",
+                  "comment": "proxy URL",
                   "url": "https://artifact-registry-proxy.caching.svc.cluster.local/repository/npm-proxy"
                 }
               ]
@@ -49,6 +50,7 @@
               "externalReferences": [
                 {
                   "type": "distribution",
+                  "comment": "proxy URL",
                   "url": "https://artifact-registry-proxy.caching.svc.cluster.local/repository/npm-proxy"
                 }
               ]
@@ -67,6 +69,7 @@
               "externalReferences": [
                 {
                   "type": "distribution",
+                  "comment": "proxy URL",
                   "url": "https://artifact-registry-proxy.caching.svc.cluster.local/repository/npm-proxy"
                 }
               ]
@@ -85,6 +88,7 @@
               "externalReferences": [
                 {
                   "type": "distribution",
+                  "comment": "proxy URL",
                   "url": "https://evil.example.com/npm/compat-data-7.29.0.tgz"
                 }
               ]
@@ -98,6 +102,22 @@
                 {
                   "name": "hermeto:found_by",
                   "value": "hermeto"
+                }
+              ]
+            },
+            {
+              "type": "library",
+              "name": "fsevents",
+              "version": "2.3.3",
+              "purl": "pkg:npm/fsevents@2.3.3",
+              "properties": [
+                {
+                  "name": "hermeto:found_by",
+                  "value": "hermeto"
+                },
+                {
+                  "name": "cdx:npm:package:bundled",
+                  "value": "true"
                 }
               ]
             },

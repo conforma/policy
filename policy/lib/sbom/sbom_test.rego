@@ -338,24 +338,36 @@ test_package_found_by_hermeto_no_annotations if {
 }
 
 # Tests for is_registry_dependency
-test_is_registry_dependency_no_qualifiers if {
-	parsed_purl := {"type": "maven", "name": "lib", "qualifiers": []}
-	sbom.is_registry_dependency(parsed_purl)
+test_is_registry_dependency_cdx_plain if {
+	parsed_purl := {"type": "npm", "name": "lib", "qualifiers": []}
+	component := {"properties": [{"name": "hermeto:found_by", "value": "hermeto"}]}
+	sbom.is_registry_dependency(parsed_purl, component)
+}
+
+test_is_registry_dependency_spdx_plain if {
+	parsed_purl := {"type": "npm", "name": "lib", "qualifiers": []}
+	pkg := {"annotations": [{
+		"annotator": "Tool: hermeto:jsonencoded",
+		"comment": "{\"name\":\"hermeto:found_by\",\"value\":\"hermeto\"}",
+		"annotationDate": "2024-12-09T12:00:00Z",
+		"annotationType": "OTHER",
+	}]}
+	sbom.is_registry_dependency(parsed_purl, pkg)
 }
 
 test_is_registry_dependency_unrelated_qualifiers if {
 	parsed_purl := {"type": "maven", "name": "lib", "qualifiers": [{"key": "type", "value": "pom"}]}
-	sbom.is_registry_dependency(parsed_purl)
+	sbom.is_registry_dependency(parsed_purl, {})
 }
 
 test_is_registry_dependency_with_download_url if {
 	parsed_purl := {"type": "generic", "name": "lib", "qualifiers": [{"key": "download_url", "value": "https://example.com/lib.tar.gz"}]}
-	not sbom.is_registry_dependency(parsed_purl)
+	not sbom.is_registry_dependency(parsed_purl, {})
 }
 
 test_is_registry_dependency_with_vcs_url if {
 	parsed_purl := {"type": "generic", "name": "lib", "qualifiers": [{"key": "vcs_url", "value": "https://github.com/example/lib.git"}]}
-	not sbom.is_registry_dependency(parsed_purl)
+	not sbom.is_registry_dependency(parsed_purl, {})
 }
 
 test_is_registry_dependency_with_both if {
@@ -363,10 +375,43 @@ test_is_registry_dependency_with_both if {
 		{"key": "download_url", "value": "https://example.com/lib.tar.gz"},
 		{"key": "vcs_url", "value": "https://github.com/example/lib.git"},
 	]}
-	not sbom.is_registry_dependency(parsed_purl)
+	not sbom.is_registry_dependency(parsed_purl, {})
 }
 
 test_is_registry_dependency_missing_qualifiers_field if {
 	parsed_purl := {"type": "maven", "name": "lib"}
-	sbom.is_registry_dependency(parsed_purl)
+	sbom.is_registry_dependency(parsed_purl, {})
+}
+
+test_is_registry_dependency_cdx_bundled if {
+	parsed_purl := {"type": "npm", "name": "lib", "qualifiers": []}
+	component := {"properties": [
+		{"name": "hermeto:found_by", "value": "hermeto"},
+		{"name": "cdx:npm:package:bundled", "value": "true"},
+	]}
+	not sbom.is_registry_dependency(parsed_purl, component)
+}
+
+test_is_registry_dependency_spdx_bundled if {
+	parsed_purl := {"type": "npm", "name": "lib", "qualifiers": []}
+	pkg := {"annotations": [
+		{
+			"annotator": "Tool: hermeto:jsonencoded",
+			"comment": "{\"name\":\"hermeto:found_by\",\"value\":\"hermeto\"}",
+			"annotationDate": "2024-12-09T12:00:00Z",
+			"annotationType": "OTHER",
+		},
+		{
+			"annotator": "Tool: hermeto:jsonencoded",
+			"comment": "{\"name\":\"cdx:npm:package:bundled\",\"value\":\"true\"}",
+			"annotationDate": "2024-12-09T12:00:00Z",
+			"annotationType": "OTHER",
+		},
+	]}
+	not sbom.is_registry_dependency(parsed_purl, pkg)
+}
+
+test_is_registry_dependency_no_properties_or_annotations if {
+	parsed_purl := {"type": "npm", "name": "lib", "qualifiers": []}
+	sbom.is_registry_dependency(parsed_purl, {})
 }

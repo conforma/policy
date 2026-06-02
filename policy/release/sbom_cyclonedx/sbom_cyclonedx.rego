@@ -266,14 +266,14 @@ deny contains result if {
 # title: Allowed proxy URLs
 # description: >-
 #   For components found by Hermeto with a PURL type listed in proxy_enabled_purl_types
-#   that are registry dependencies (no download_url or vcs_url qualifier), verify proxy
-#   URLs in externalReferences of type distribution match at least one pattern from
-#   allowed_proxy_url_patterns. The "proxy_enabled_purl_types" rule data key is a list
-#   of PURL type strings (e.g. ["maven", "npm"]). The "allowed_proxy_url_patterns" rule
-#   data key is an object mapping each PURL type string to a list of regular expression
-#   patterns (e.g. {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}). Components
-#   with a URL of "NOASSERTION" are skipped. If a PURL type is listed in
-#   proxy_enabled_purl_types but has no entry in allowed_proxy_url_patterns, all
+#   that are registry dependencies (no download_url or vcs_url qualifier, not bundled),
+#   verify proxy URLs in externalReferences of type distribution with comment
+#   "proxy URL" match at least one pattern from allowed_proxy_url_patterns. The "proxy_enabled_purl_types" rule data
+#   key is a list of PURL type strings (e.g. ["maven", "npm"]). The
+#   "allowed_proxy_url_patterns" rule data key is an object mapping each PURL type
+#   string to a list of regular expression patterns (e.g.
+#   {"maven": ["^https://proxy\\.example\\.com/maven/.*"]}). If a PURL type is listed
+#   in proxy_enabled_purl_types but has no entry in allowed_proxy_url_patterns, all
 #   components of that type are denied.
 # custom:
 #   short_name: allowed_proxy_urls
@@ -298,15 +298,15 @@ deny contains result if {
 
 	some reference in component.externalReferences
 	reference.type == "distribution"
+	object.get(reference, "comment", "") == "proxy URL"
 
 	purl := component.purl
 	parsed_purl := ec.purl.parse(purl)
 	parsed_purl.type in proxy_enabled
 
-	sbom.is_registry_dependency(parsed_purl)
+	sbom.is_registry_dependency(parsed_purl, component)
 
 	distribution_url := object.get(reference, "url", "")
-	distribution_url != "NOASSERTION"
 	patterns := object.get(allowed_patterns, parsed_purl.type, [])
 	not sbom.url_matches_any_pattern(distribution_url, patterns)
 
@@ -321,13 +321,13 @@ deny contains result if {
 # title: Proxy metadata required
 # description: >-
 #   For components found by Hermeto with a PURL type listed in proxy_enabled_purl_types
-#   that are registry dependencies (no download_url or vcs_url qualifier), verify that
-#   proxy metadata is present. In CycloneDX, this means at least one externalReference
-#   with type "distribution" must exist.
+#   that are registry dependencies (no download_url or vcs_url qualifier, not bundled),
+#   verify that proxy metadata is present. In CycloneDX, this means at least one
+#   externalReference with type "distribution" and comment "proxy URL" must exist.
 # custom:
 #   short_name: proxy_metadata_required
 #   failure_msg: >-
-#     Package %s is missing proxy metadata (no externalReference of type "distribution")
+#     Package %s is missing proxy metadata (no externalReference of type "distribution" with comment "proxy URL")
 #   solution: >-
 #     Ensure the build process produces proxy metadata for packages fetched by
 #     Hermeto from a package registry.
@@ -348,7 +348,7 @@ deny contains result if {
 	parsed_purl := ec.purl.parse(purl)
 	parsed_purl.type in proxy_enabled
 
-	sbom.is_registry_dependency(parsed_purl)
+	sbom.is_registry_dependency(parsed_purl, component)
 
 	not _has_distribution_reference(component)
 
@@ -362,7 +362,7 @@ deny contains result if {
 _has_distribution_reference(component) if {
 	some reference in component.externalReferences
 	reference.type == "distribution"
-	object.get(reference, "url", "") != "NOASSERTION"
+	object.get(reference, "comment", "") == "proxy URL"
 }
 
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does

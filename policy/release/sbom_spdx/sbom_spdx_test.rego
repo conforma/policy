@@ -458,13 +458,13 @@ test_proxy_url_spdx_denied if {
 	count(proxy_results) == 1
 }
 
-test_proxy_url_spdx_noassertion_skipped if {
+test_proxy_url_spdx_empty_source_info_skipped if {
 	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:maven/org.example/lib@1.0",
-			"NOASSERTION",
+			"",
 		),
 	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
@@ -537,13 +537,13 @@ test_proxy_url_spdx_download_url_skipped if {
 	count({r | some r in results; r.code == "sbom_spdx.allowed_proxy_urls"}) == 0
 }
 
-test_proxy_url_spdx_empty_download_location if {
+test_proxy_url_spdx_semicolon_separated if {
 	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
-			"pkg:maven/org.example/lib@1.0",
-			"",
+			"pkg:npm/example-lib@2.0",
+			"https://proxy.example.com/npm/example-lib-2.0.tgz;https://evil.com/lib.tgz",
 		),
 	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
@@ -555,10 +555,69 @@ test_proxy_url_spdx_empty_download_location if {
 	count(proxy_results) == 1
 }
 
-_spdx_proxy_package(purl, download_location) := {
+test_proxy_url_spdx_bundled_skipped if {
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_bundled_package("pkg:npm/example-lib@2.0"),
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_spdx.allowed_proxy_urls"}) == 0
+}
+
+test_proxy_metadata_required_spdx_bundled_passes if {
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_bundled_package("pkg:npm/example-lib@2.0"),
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as _spdx_proxy_rule_data
+
+	count({r | some r in results; r.code == "sbom_spdx.proxy_metadata_required"}) == 0
+}
+
+_spdx_bundled_package(purl) := {
+	"name": "bundled-package",
+	"SPDXID": "SPDXRef-bundled-package",
+	"downloadLocation": "NOASSERTION",
+	"externalRefs": [{
+		"referenceCategory": "PACKAGE-MANAGER",
+		"referenceType": "purl",
+		"referenceLocator": purl,
+	}],
+	"annotations": [
+		{
+			"annotator": "Tool: hermeto:jsonencoded",
+			"comment": "{\"name\":\"hermeto:found_by\",\"value\":\"hermeto\"}",
+			"annotationDate": "2024-12-09T12:00:00Z",
+			"annotationType": "OTHER",
+		},
+		{
+			"annotator": "Tool: hermeto:jsonencoded",
+			"comment": "{\"name\":\"cdx:npm:package:bundled\",\"value\":\"true\"}",
+			"annotationDate": "2024-12-09T12:00:00Z",
+			"annotationType": "OTHER",
+		},
+	],
+	"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
+}
+
+_spdx_proxy_package(purl, source_info) := {
 	"name": "proxy-package",
 	"SPDXID": "SPDXRef-proxy-package",
-	"downloadLocation": download_location,
+	"downloadLocation": "NOASSERTION",
+	"sourceInfo": source_info,
 	"externalRefs": [{
 		"referenceCategory": "PACKAGE-MANAGER",
 		"referenceType": "purl",
