@@ -31,6 +31,7 @@
               "externalReferences": [
                 {
                   "type": "distribution",
+                  "comment": "proxy URL",
                   "url": "https://artifact-registry-proxy.caching.svc.cluster.local/repository/npm-proxy"
                 }
               ]
@@ -49,6 +50,7 @@
               "externalReferences": [
                 {
                   "type": "distribution",
+                  "comment": "proxy URL",
                   "url": "https://artifact-registry-proxy.caching.svc.cluster.local/repository/npm-proxy"
                 }
               ]
@@ -67,6 +69,7 @@
               "externalReferences": [
                 {
                   "type": "distribution",
+                  "comment": "proxy URL",
                   "url": "https://artifact-registry-proxy.caching.svc.cluster.local/repository/npm-proxy"
                 }
               ]
@@ -85,6 +88,7 @@
               "externalReferences": [
                 {
                   "type": "distribution",
+                  "comment": "proxy URL",
                   "url": "https://evil.example.com/npm/compat-data-7.29.0.tgz"
                 }
               ]

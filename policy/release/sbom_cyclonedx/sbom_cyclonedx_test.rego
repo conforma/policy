@@ -704,8 +704,8 @@ test_proxy_url_cyclonedx_multiple_distribution_refs if {
 			"purl": "pkg:maven/org.example/lib@1.0",
 			"properties": [{"name": "hermeto:found_by", "value": "hermeto"}],
 			"externalReferences": [
-				{"type": "distribution", "url": "https://proxy.example.com/maven/org/example/lib-1.0.jar"},
-				{"type": "distribution", "url": "https://evil.com/lib-1.0.jar"},
+				{"type": "distribution", "comment": "proxy URL", "url": "https://proxy.example.com/maven/org/example/lib-1.0.jar"},
+				{"type": "distribution", "comment": "proxy URL", "url": "https://evil.com/lib-1.0.jar"},
 			],
 		},
 	}])]
@@ -863,7 +863,7 @@ _cdx_proxy_component(purl, distribution_url) := {
 	"name": "component",
 	"purl": purl,
 	"properties": [{"name": "hermeto:found_by", "value": "hermeto"}],
-	"externalReferences": [{"type": "distribution", "url": distribution_url}],
+	"externalReferences": [{"type": "distribution", "comment": "proxy URL", "url": distribution_url}],
 }
 
 _cdx_hermeto_component(purl, external_refs) := {
@@ -889,7 +889,7 @@ test_proxy_metadata_required_cdx_denied if {
 		"code": "sbom_cyclonedx.proxy_metadata_required",
 		"term": "pkg:maven/org.example/lib@1.0",
 		# regal ignore:line-length
-		"msg": `Package pkg:maven/org.example/lib@1.0 is missing proxy metadata (no externalReference of type "distribution")`,
+		"msg": `Package pkg:maven/org.example/lib@1.0 is missing proxy metadata (no externalReference of type "distribution" with comment "proxy URL")`,
 	}}
 
 	att := json.patch(_sbom_1_5_attestation, [{
@@ -911,7 +911,7 @@ test_proxy_metadata_required_cdx_with_distribution_passes if {
 		"path": "/statement/predicate/components/-",
 		"value": _cdx_hermeto_component(
 			"pkg:maven/org.example/lib@1.0",
-			[{"type": "distribution", "url": "https://proxy.example.com/maven/lib-1.0.jar"}],
+			[{"type": "distribution", "comment": "proxy URL", "url": "https://proxy.example.com/maven/lib-1.0.jar"}],
 		),
 	}])]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
@@ -946,7 +946,7 @@ test_proxy_metadata_required_cdx_non_distribution_refs_denied if {
 		"code": "sbom_cyclonedx.proxy_metadata_required",
 		"term": "pkg:maven/org.example/lib@1.0",
 		# regal ignore:line-length
-		"msg": `Package pkg:maven/org.example/lib@1.0 is missing proxy metadata (no externalReference of type "distribution")`,
+		"msg": `Package pkg:maven/org.example/lib@1.0 is missing proxy metadata (no externalReference of type "distribution" with comment "proxy URL")`,
 	}}
 
 	att := json.patch(_sbom_1_5_attestation, [{

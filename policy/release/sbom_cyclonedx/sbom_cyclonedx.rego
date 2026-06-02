@@ -267,8 +267,8 @@ deny contains result if {
 # description: >-
 #   For components found by Hermeto with a PURL type listed in proxy_enabled_purl_types
 #   that are registry dependencies (no download_url or vcs_url qualifier, not bundled),
-#   verify proxy URLs in externalReferences of type distribution match at least one
-#   pattern from allowed_proxy_url_patterns. The "proxy_enabled_purl_types" rule data
+#   verify proxy URLs in externalReferences of type distribution with comment
+#   "proxy URL" match at least one pattern from allowed_proxy_url_patterns. The "proxy_enabled_purl_types" rule data
 #   key is a list of PURL type strings (e.g. ["maven", "npm"]). The
 #   "allowed_proxy_url_patterns" rule data key is an object mapping each PURL type
 #   string to a list of regular expression patterns (e.g.
@@ -298,6 +298,7 @@ deny contains result if {
 
 	some reference in component.externalReferences
 	reference.type == "distribution"
+	object.get(reference, "comment", "") == "proxy URL"
 
 	purl := component.purl
 	parsed_purl := ec.purl.parse(purl)
@@ -322,11 +323,11 @@ deny contains result if {
 #   For components found by Hermeto with a PURL type listed in proxy_enabled_purl_types
 #   that are registry dependencies (no download_url or vcs_url qualifier, not bundled),
 #   verify that proxy metadata is present. In CycloneDX, this means at least one
-#   externalReference with type "distribution" must exist.
+#   externalReference with type "distribution" and comment "proxy URL" must exist.
 # custom:
 #   short_name: proxy_metadata_required
 #   failure_msg: >-
-#     Package %s is missing proxy metadata (no externalReference of type "distribution")
+#     Package %s is missing proxy metadata (no externalReference of type "distribution" with comment "proxy URL")
 #   solution: >-
 #     Ensure the build process produces proxy metadata for packages fetched by
 #     Hermeto from a package registry.
@@ -361,6 +362,7 @@ deny contains result if {
 _has_distribution_reference(component) if {
 	some reference in component.externalReferences
 	reference.type == "distribution"
+	object.get(reference, "comment", "") == "proxy URL"
 }
 
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does
