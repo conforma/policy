@@ -1247,6 +1247,130 @@ test_version_satisfies_any_rule_constraints if {
 	not tekton._version_satisfies_any_rule_constraints({"bundle": "example.com/task:1.0"}, {"versions": ["<1", ">=1.5.1"]}, manifests_v1_5_0)
 }
 
+test_git_version_extraction if {
+	assertions.assert_equal("0.3", tekton._get_git_path_version({"pathInRepo": "task/buildah/0.3/buildah.yaml"}))
+	assertions.assert_equal("0.1", tekton._get_git_path_version({"pathInRepo": "task/git-clone/0.1/git-clone.yaml"}))
+	assertions.assert_equal("v2.1.0", tekton._get_git_path_version({"pathInRepo": "task/build/v2.1.0/build.yaml"}))
+	assertions.assert_equal("1", tekton._get_git_path_version({"pathInRepo": "stepaction/eaas/1/eaas.yaml"}))
+
+	not tekton._get_git_path_version({"pathInRepo": ""})
+	not tekton._get_git_path_version({"pathInRepo": "short/path"})
+	not tekton._get_git_path_version({"pathInRepo": "task/buildah/latest/buildah.yaml"})
+	not tekton._get_git_path_version({})
+}
+
+test_git_task_version_constraints_allow if {
+	rules := {
+		"allow": {"catalog": [{
+			"pattern": "git\\+https://github.com/konflux-ci/build-definitions.git//*",
+			"versions": [">=0.2", "<1"],
+		}]},
+		"deny": {},
+	}
+
+	# Git task with version 0.3 satisfies >=0.2 AND <1 → allowed
+	allowed_task := _git_task_with_path(
+		"https://github.com/konflux-ci/build-definitions",
+		"task/buildah/0.3/buildah.yaml",
+		"abc123def456abc123def456abc123def456abc1",
+	)
+	tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+
+	# Git task with version 1.5 does NOT satisfy <1 → not allowed
+	rejected_task := _git_task_with_path(
+		"https://github.com/konflux-ci/build-definitions",
+		"task/buildah/1.5/buildah.yaml",
+		"abc123def456abc123def456abc123def456abc1",
+	)
+	not tekton.is_trusted_task(rejected_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+
+	# Git task with version 0.1 does NOT satisfy >=0.2 → not allowed
+	too_old_task := _git_task_with_path(
+		"https://github.com/konflux-ci/build-definitions",
+		"task/buildah/0.1/buildah.yaml",
+		"abc123def456abc123def456abc123def456abc1",
+	)
+	not tekton.is_trusted_task(too_old_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+}
+
+test_git_task_version_constraints_deny if {
+	rules := {
+		"allow": {"catalog": [{"pattern": "git\\+https://github.com/konflux-ci/build-definitions.git//*"}]},
+		"deny": {"deprecated": [{
+			"pattern": "git\\+https://github.com/konflux-ci/build-definitions.git//task/buildah/*",
+			"versions": ["<0.3"],
+		}]},
+	}
+
+	# Version 0.2 satisfies deny constraint <0.3 → denied
+	denied_task := _git_task_with_path(
+		"https://github.com/konflux-ci/build-definitions",
+		"task/buildah/0.2/buildah.yaml",
+		"abc123def456abc123def456abc123def456abc1",
+	)
+	not tekton.is_trusted_task(denied_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+
+	# Version 0.3 does NOT satisfy deny constraint <0.3 → allowed
+	allowed_task := _git_task_with_path(
+		"https://github.com/konflux-ci/build-definitions",
+		"task/buildah/0.3/buildah.yaml",
+		"abc123def456abc123def456abc123def456abc1",
+	)
+	tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+}
+
+test_git_task_no_version_in_path if {
+	rules := {
+		"allow": {"catalog": [{
+			"pattern": "git\\+https://github.com/konflux-ci/build-definitions.git//*",
+			"versions": [">=0.2"],
+		}]},
+		"deny": {},
+	}
+
+	# Path without version component → version not found → fail-closed (not allowed)
+	no_version_task := _git_task_with_path(
+		"https://github.com/konflux-ci/build-definitions",
+		"tasks/buildah.yaml",
+		"abc123def456abc123def456abc123def456abc1",
+	)
+	not tekton.is_trusted_task(no_version_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+
+	# Deny rule with version + no version in path → denied (fail-closed)
+	deny_rules := {
+		"allow": {"catalog": [{"pattern": "git\\+https://github.com/konflux-ci/build-definitions.git//*"}]},
+		"deny": {"deprecated": [{
+			"pattern": "git\\+https://github.com/konflux-ci/build-definitions.git//tasks/*",
+			"versions": ["<0.3"],
+		}]},
+	}
+	not tekton.is_trusted_task(no_version_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as deny_rules
+}
+
+test_git_task_without_version_constraints if {
+	rules := {
+		"allow": {"catalog": [{"pattern": "git\\+https://github.com/konflux-ci/build-definitions.git//*"}]},
+		"deny": {},
+	}
+
+	# No version constraints in rule → allowed regardless of path version
+	task := _git_task_with_path(
+		"https://github.com/konflux-ci/build-definitions",
+		"task/buildah/0.3/buildah.yaml",
+		"abc123def456abc123def456abc123def456abc1",
+	)
+	tekton.is_trusted_task(task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+}
+
+_git_task_with_path(url, path, revision) := {
+	"metadata": {"labels": {"tekton.dev/task": "test-task"}},
+	"spec": {"taskRef": {"resolver": "git", "params": [
+		{"name": "url", "value": url},
+		{"name": "pathInRepo", "value": path},
+		{"name": "revision", "value": revision},
+	]}},
+}
+
 test_normalize_version if {
 	# Trim operators
 	assertions.assert_equal("1.2.3", tekton._normalize_version(">=1.2.3"))

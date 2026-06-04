@@ -517,8 +517,8 @@ _version_satisfies_all_rule_constraints(ref, rule, bundle_manifests) if {
 	not "versions" in object.keys(rule)
 } else if {
 	# If versions field exists, manifest version must be found
-	manifest_version := _get_manifest_version_annotation(ref, bundle_manifests)
-	version := _normalize_version(manifest_version)
+	task_version := _get_task_version(ref, bundle_manifests)
+	version := _normalize_version(task_version)
 	semver.is_valid(version)
 
 	constraints := rule.versions
@@ -544,16 +544,16 @@ _version_satisfies_all_rule_constraints(ref, rule, bundle_manifests) if {
 _version_satisfies_any_rule_constraints(ref, rule, bundle_manifests) if {
 	not "versions" in object.keys(rule)
 } else if {
-	# If versions field exists but no manifest version found, deny the task (return true)
+	# If versions field exists but no task version found, deny the task (return true)
 	"versions" in object.keys(rule)
-	not _get_manifest_version_annotation(ref, bundle_manifests)
+	not _get_task_version(ref, bundle_manifests)
 } else if {
-	manifest_version := _get_manifest_version_annotation(ref, bundle_manifests)
-	version := _normalize_version(manifest_version)
+	task_version := _get_task_version(ref, bundle_manifests)
+	version := _normalize_version(task_version)
 	not semver.is_valid(version)
 } else if {
-	manifest_version := _get_manifest_version_annotation(ref, bundle_manifests)
-	version := _normalize_version(manifest_version)
+	task_version := _get_task_version(ref, bundle_manifests)
+	version := _normalize_version(task_version)
 	semver.is_valid(version)
 
 	constraints := rule.versions
@@ -608,6 +608,13 @@ _result_satisfies_operator(result, constraint) if {
 	result < 0
 } else := false
 
+# Returns the task version from either OCI manifest annotations or git path conventions.
+_get_task_version(ref, bundle_manifests) := version if {
+	version := _get_manifest_version_annotation(ref, bundle_manifests)
+} else := version if {
+	version := _get_git_path_version(ref)
+}
+
 # Returns the version annotation from the manifest for a bundle reference.
 # bundle_manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
 _get_manifest_version_annotation(ref, bundle_manifests) := version if {
@@ -615,6 +622,17 @@ _get_manifest_version_annotation(ref, bundle_manifests) := version if {
 	annotations := object.get(task_manifest, "annotations", {})
 	version := annotations["org.opencontainers.image.version"]
 	version != null
+}
+
+# Extracts version from git resolver pathInRepo using Tekton catalog conventions.
+# Paths follow the pattern type/name/version/filename (e.g., task/buildah/0.3/buildah.yaml).
+_get_git_path_version(ref) := version if {
+	path := ref.pathInRepo
+	path != ""
+	parts := split(path, "/")
+	count(parts) >= 3
+	version := parts[2]
+	regex.match(`^v?\d+(\.\d+)*$`, version)
 }
 
 # =============================================================================
