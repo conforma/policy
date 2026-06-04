@@ -149,6 +149,8 @@ deny contains result if {
 	property.name == disallowed.name
 	object.get(property, "value", "") == object.get(disallowed, "value", "")
 
+	not sbom.disallowed_attribute_excepted(disallowed, object.get(component, "purl", ""))
+
 	msg := regex.replace(object.get(property, "value", ""), `(.+)`, ` to "$1"`)
 
 	id := object.get(component, "purl", component.name)

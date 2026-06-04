@@ -258,6 +258,21 @@ rule_data_errors contains error if {
 				"name": {"type": "string"},
 				"value": {"type": "string"},
 				"effective_on": {"type": "string", "format": "date-time"},
+				"except_when": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {
+							"purl_qualifier": {"type": "string"},
+							"patterns": {
+								"type": "array",
+								"items": {"type": "string", "format": "regex"},
+							},
+						},
+						"required": ["purl_qualifier", "patterns"],
+						"additionalProperties": false,
+					},
+				},
 			},
 			"additionalProperties": false,
 			"required": ["name"],
@@ -267,6 +282,32 @@ rule_data_errors contains error if {
 		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_attributes_key, e.message]),
 		"severity": e.severity,
 	}
+}
+
+# Verify items in disallowed_attributes except_when have valid regular expressions.
+rule_data_errors contains error if {
+	some attr_index, attr in rule_data.get(rule_data_attributes_key)
+	some ew in object.get(attr, "except_when", [])
+	some pattern in ew.patterns
+	not regex.is_valid(pattern)
+	error := {
+		"message": sprintf(
+			"Item at index %d in %s has an invalid regular expression in except_when: %q",
+			[attr_index, rule_data_attributes_key, pattern],
+		),
+		"severity": "failure",
+	}
+}
+
+# disallowed_attribute_excepted returns true when the package's PURL has a qualifier
+# matching an except_when condition, meaning the violation should be suppressed.
+disallowed_attribute_excepted(disallowed, purl_string) if {
+	purl_string != ""
+	some exception in disallowed.except_when
+	parsed := ec.purl.parse(purl_string)
+	some qualifier in parsed.qualifiers
+	qualifier.key == exception.purl_qualifier
+	url_matches_any_pattern(qualifier.value, exception.patterns)
 }
 
 # Verify allowed_external_references is an array of type/url pairs

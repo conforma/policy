@@ -238,6 +238,8 @@ deny contains result if {
 
 	object.get(properties, "value", "") == object.get(disallowed, "value", "")
 
+	not sbom.disallowed_attribute_excepted(disallowed, _package_purl(pkg))
+
 	msg := regex.replace(object.get(properties, "value", ""), `(.+)`, ` to "$1"`)
 
 	id := object.get(externalref, "referenceLocator", pkg.name)
@@ -246,6 +248,12 @@ deny contains result if {
 		disallowed,
 	)
 }
+
+_package_purl(pkg) := purl if {
+	some ref in pkg.externalRefs
+	ref.referenceType == "purl"
+	purl := ref.referenceLocator
+} else := ""
 
 # METADATA
 # title: Allowed proxy URLs

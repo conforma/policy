@@ -415,3 +415,76 @@ test_is_registry_dependency_no_properties_or_annotations if {
 	parsed_purl := {"type": "npm", "name": "lib", "qualifiers": []}
 	sbom.is_registry_dependency(parsed_purl, {})
 }
+
+# Tests for disallowed_attribute_excepted
+
+test_disallowed_attribute_excepted_match if {
+	disallowed := {
+		"name": "hermeto:pip:package:binary",
+		"value": "true",
+		"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/api/pypi/.*"]}],
+	}
+	purl := "pkg:pypi/some-lib@1.0?repository_url=https://console.redhat.com/api/pypi/public-rhai/rhoai/3.5/simple/"
+	sbom.disallowed_attribute_excepted(disallowed, purl)
+}
+
+test_disallowed_attribute_excepted_no_match if {
+	disallowed := {
+		"name": "hermeto:pip:package:binary",
+		"value": "true",
+		"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/api/pypi/.*"]}],
+	}
+	purl := "pkg:pypi/some-lib@1.0?repository_url=https://pypi.org/simple/"
+	not sbom.disallowed_attribute_excepted(disallowed, purl)
+}
+
+test_disallowed_attribute_excepted_missing_qualifier if {
+	disallowed := {
+		"name": "hermeto:pip:package:binary",
+		"value": "true",
+		"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/api/pypi/.*"]}],
+	}
+	purl := "pkg:pypi/some-lib@1.0"
+	not sbom.disallowed_attribute_excepted(disallowed, purl)
+}
+
+test_disallowed_attribute_excepted_no_except_when if {
+	disallowed := {"name": "hermeto:pip:package:binary", "value": "true"}
+	purl := "pkg:pypi/some-lib@1.0?repository_url=https://console.redhat.com/api/pypi/public-rhai/"
+	not sbom.disallowed_attribute_excepted(disallowed, purl)
+}
+
+test_disallowed_attribute_excepted_empty_purl if {
+	disallowed := {
+		"name": "hermeto:pip:package:binary",
+		"value": "true",
+		"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/.*"]}],
+	}
+	not sbom.disallowed_attribute_excepted(disallowed, "")
+}
+
+test_disallowed_attribute_excepted_multiple_patterns if {
+	disallowed := {
+		"name": "hermeto:pip:package:binary",
+		"value": "true",
+		"except_when": [{"purl_qualifier": "repository_url", "patterns": [
+			"^https://console\\.redhat\\.com/api/pypi/.*",
+			"^https://packages\\.redhat\\.com/pypi/.*",
+		]}],
+	}
+	purl := "pkg:pypi/some-lib@1.0?repository_url=https://packages.redhat.com/pypi/rhoai/"
+	sbom.disallowed_attribute_excepted(disallowed, purl)
+}
+
+test_disallowed_attribute_excepted_multiple_except_when if {
+	disallowed := {
+		"name": "hermeto:pip:package:binary",
+		"value": "true",
+		"except_when": [
+			{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/.*"]},
+			{"purl_qualifier": "index_url", "patterns": ["^https://internal\\.example\\.com/.*"]},
+		],
+	}
+	purl := "pkg:pypi/some-lib@1.0?index_url=https://internal.example.com/pypi/"
+	sbom.disallowed_attribute_excepted(disallowed, purl)
+}

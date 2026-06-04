@@ -76,6 +76,8 @@ test_rule_data_validation if {
 			{"name": "_name_", "value": "_value_"},
 			# Invalid effective on format
 			{"name": "_name_", "effective_on": "not-a-date"},
+			# Invalid regex in except_when
+			{"name": "bad_regex_attr", "except_when": [{"purl_qualifier": "repo", "patterns": ["["]}]},
 		],
 		lib.sbom.rule_data_allowed_external_references_key: [
 			{"type": "distribution", "url": "example.com"},
@@ -188,6 +190,18 @@ test_rule_data_validation if {
 		{
 			"code": "sbom.disallowed_packages_provided",
 			"msg": "Rule data disallowed_attributes has unexpected format: 7.effective_on: Does not match format 'date-time'",
+			"severity": "failure",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_attributes has unexpected format: 8.except_when.0.patterns.0: Does not match format 'regex'",
+			"severity": "failure",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Item at index 8 in disallowed_attributes has an invalid regular expression in except_when: \"[\"",
 			"severity": "failure",
 		},
 		{
