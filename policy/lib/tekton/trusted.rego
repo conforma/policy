@@ -295,7 +295,7 @@ future_deny_rules := [rule |
 # Returns true if a rule has a future effective_on date
 _rule_is_future(rule) if {
 	"effective_on" in object.keys(rule)
-	effective_date := time.parse_rfc3339_ns(sprintf("%sT00:00:00Z", [rule.effective_on]))
+	effective_date := time.parse_rfc3339_ns(rule.effective_on)
 	effective_date > time_lib.effective_current_time_ns
 }
 
@@ -314,7 +314,7 @@ future_deny_rules_for_task(task, bundle_manifests) := matching_rules if {
 _rule_is_effective(rule) if {
 	not "effective_on" in object.keys(rule)
 } else if {
-	effective_date := time.parse_rfc3339_ns(sprintf("%sT00:00:00Z", [rule.effective_on]))
+	effective_date := time.parse_rfc3339_ns(rule.effective_on)
 	effective_date <= time_lib.effective_current_time_ns
 }
 
@@ -421,7 +421,7 @@ _trusted_task_rule_entry_schema := {
 		},
 		"effective_on": {
 			"type": "string",
-			"format": "date",
+			"format": "date-time",
 			# regal ignore:line-length
 			"description": "Date when this rule becomes effective. If omitted, rule is effective immediately.",
 		},

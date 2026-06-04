@@ -706,7 +706,7 @@ test_trusted_task_rules_data_errors if {
 		"allow": {"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},
 		"deny": {"deprecated": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
-			"effective_on": "2025-11-15",
+			"effective_on": "2025-11-15T00:00:00Z",
 			"message": "Deprecated",
 		}]},
 	}
@@ -728,7 +728,7 @@ test_trusted_task_rules_data_errors if {
 	}]}}
 	expected_date := {{
 		# regal ignore:line-length
-		"message": "trusted_task_rules data has unexpected format: allow.bad-date.0.effective_on: Does not match format 'date'",
+		"message": "trusted_task_rules data has unexpected format: allow.bad-date.0.effective_on: Does not match format 'date-time'",
 		"severity": "failure",
 	}}
 	assertions.assert_equal(tekton.data_errors, expected_date) with data.rule_data.trusted_task_rules as invalid_date_rules
