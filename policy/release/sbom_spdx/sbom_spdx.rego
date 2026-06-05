@@ -250,9 +250,8 @@ deny contains result if {
 }
 
 _package_purl(pkg) := purl if {
-	some ref in pkg.externalRefs
-	ref.referenceType == "purl"
-	purl := ref.referenceLocator
+	purls := [ref.referenceLocator | some ref in pkg.externalRefs; ref.referenceType == "purl"]
+	purl := purls[0]
 } else := ""
 
 # METADATA

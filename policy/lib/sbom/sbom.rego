@@ -303,8 +303,8 @@ rule_data_errors contains error if {
 # matching an except_when condition, meaning the violation should be suppressed.
 disallowed_attribute_excepted(disallowed, purl_string) if {
 	purl_string != ""
-	some exception in disallowed.except_when
 	parsed := ec.purl.parse(purl_string)
+	some exception in disallowed.except_when
 	some qualifier in parsed.qualifiers
 	qualifier.key == exception.purl_qualifier
 	url_matches_any_pattern(qualifier.value, exception.patterns)
