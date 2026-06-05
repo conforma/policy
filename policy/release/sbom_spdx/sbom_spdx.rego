@@ -249,11 +249,6 @@ deny contains result if {
 	)
 }
 
-_package_purl(pkg) := purl if {
-	purls := [ref.referenceLocator | some ref in pkg.externalRefs; ref.referenceType == "purl"]
-	purl := purls[0]
-} else := ""
-
 # METADATA
 # title: Allowed proxy URLs
 # description: >-
@@ -358,6 +353,11 @@ deny contains result if {
 		purl,
 	)
 }
+
+_package_purl(pkg) := purl if {
+	purls := [ref.referenceLocator | some ref in pkg.externalRefs; ref.referenceType == "purl"]
+	purl := purls[0]
+} else := ""
 
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does
 # not have the attribute, result is returned unmodified.

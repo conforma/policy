@@ -299,17 +299,6 @@ rule_data_errors contains error if {
 	}
 }
 
-# disallowed_attribute_excepted returns true when the package's PURL has a qualifier
-# matching an except_when condition, meaning the violation should be suppressed.
-disallowed_attribute_excepted(disallowed, purl_string) if {
-	purl_string != ""
-	parsed := ec.purl.parse(purl_string)
-	some exception in disallowed.except_when
-	some qualifier in parsed.qualifiers
-	qualifier.key == exception.purl_qualifier
-	url_matches_any_pattern(qualifier.value, exception.patterns)
-}
-
 # Verify allowed_external_references is an array of type/url pairs
 rule_data_errors contains error if {
 	some e in j.validate_schema(rule_data.get(rule_data_allowed_external_references_key), {
@@ -434,6 +423,17 @@ rule_data_errors contains error if {
 		"message": sprintf("%q is not a valid regular expression for PURL type %q", [pattern, purl_type]),
 		"severity": "failure",
 	}
+}
+
+# disallowed_attribute_excepted returns true when the package's PURL has a qualifier
+# matching an except_when condition, meaning the violation should be suppressed.
+disallowed_attribute_excepted(disallowed, purl_string) if {
+	purl_string != ""
+	parsed := ec.purl.parse(purl_string)
+	some exception in disallowed.except_when
+	some qualifier in parsed.qualifiers
+	qualifier.key == exception.purl_qualifier
+	url_matches_any_pattern(qualifier.value, exception.patterns)
 }
 
 # component_found_by_hermeto checks if a CycloneDX component was fetched by
