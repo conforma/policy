@@ -55,6 +55,7 @@ import data.lib
 import data.lib.image
 import data.lib.json as j
 import data.lib.metadata
+import data.lib.oci
 import data.lib.rule_data
 
 # METADATA
@@ -315,7 +316,7 @@ _cve_scan_reports contains report if {
 	report_blob := object.union(input_image, {"digest": layer.digest})
 	report_blob_ref := image.str(report_blob)
 
-	report := json.unmarshal(ec.oci.blob(report_blob_ref))
+	report := oci.parsed_blob(report_blob_ref)
 }
 
 # Clair format uses "name", TPA format uses "id"

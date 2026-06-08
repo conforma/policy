@@ -39,6 +39,7 @@ package lib.intoto
 
 import rego.v1
 
+import data.lib.oci
 import data.lib.sigstore
 import data.lib.tekton
 
@@ -50,8 +51,7 @@ _intoto_referrers contains referrer if {
 verified_statements contains statement if {
 	some referrer in _intoto_referrers
 	_has_trusted_provenance(referrer)
-	blob := ec.oci.blob(referrer.ref)
-	statement := json.unmarshal(blob)
+	statement := oci.parsed_blob(referrer.ref)
 
 	# regal ignore:leaked-internal-reference
 	statement._type in _known_types

@@ -15,6 +15,7 @@ import rego.v1
 import data.lib.image
 import data.lib.json as j
 import data.lib.metadata
+import data.lib.oci
 import data.lib.rule_data
 
 # METADATA
@@ -221,7 +222,7 @@ deny contains result if {
 _config(repository, manifest) := config if {
 	config_ref := sprintf("%s@%s", [repository, manifest.config.digest])
 
-	config = json.unmarshal(ec.oci.blob(config_ref))
+	config = oci.parsed_blob(config_ref)
 } else := null
 
 _image_labels := labels if {
