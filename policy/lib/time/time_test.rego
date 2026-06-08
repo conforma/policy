@@ -79,3 +79,23 @@ test_newest if {
 		{"effective_on": "2099-01-01T00:00:00Z"},
 	]))
 }
+
+test_parse_rfc3339_safe if {
+	assertions.assert_equal(lib_time.parse_rfc3339_safe("2024-01-15T00:00:00Z"), time.parse_rfc3339_ns("2024-01-15T00:00:00Z"))
+
+	not lib_time.parse_rfc3339_safe("")
+
+	not lib_time.parse_rfc3339_safe("not-a-date")
+
+	not lib_time.parse_rfc3339_safe("2024-01-15")
+}
+
+test_is_date_invalid if {
+	lib_time.is_date_invalid("not-a-date")
+
+	lib_time.is_date_invalid("2024-01-15")
+
+	not lib_time.is_date_invalid("")
+
+	not lib_time.is_date_invalid("2024-01-15T00:00:00Z")
+}

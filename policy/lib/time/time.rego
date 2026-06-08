@@ -61,3 +61,16 @@ newest(items) := item if {
 
 	item := ordered[count(ordered) - 1]
 }
+
+# Safely parse an RFC 3339 date string to nanoseconds.
+# Returns undefined when date_str is empty or unparseable.
+parse_rfc3339_safe(date_str) := ns if {
+	date_str != ""
+	ns := time.parse_rfc3339_ns(date_str)
+}
+
+# Returns true when date_str is non-empty but fails to parse as RFC 3339.
+is_date_invalid(date_str) if {
+	date_str != ""
+	not parse_rfc3339_safe(date_str)
+}

@@ -295,7 +295,7 @@ future_deny_rules := [rule |
 # Returns true if a rule has a future effective_on date
 _rule_is_future(rule) if {
 	"effective_on" in object.keys(rule)
-	effective_date := time.parse_rfc3339_ns(rule.effective_on)
+	effective_date := time_lib.parse_rfc3339_safe(rule.effective_on)
 	effective_date > time_lib.effective_current_time_ns
 }
 
@@ -314,7 +314,7 @@ future_deny_rules_for_task(task, bundle_manifests) := matching_rules if {
 _rule_is_effective(rule) if {
 	not "effective_on" in object.keys(rule)
 } else if {
-	effective_date := time.parse_rfc3339_ns(rule.effective_on)
+	effective_date := time_lib.parse_rfc3339_safe(rule.effective_on)
 	effective_date <= time_lib.effective_current_time_ns
 }
 
