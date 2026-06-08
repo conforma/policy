@@ -509,7 +509,7 @@ _trusted_task_rules_schema := {
 # This is intended for use in allow rules, where the rule is effective if all constraints match.
 # Supports constraints like: >=v2, <3, >3.1.0, <v4.2, >=1.2.3
 # Returns true if rule has no "versions" field
-# Returns false if versions field exists but no manifest version is found (don't allow by default for security)
+# Returns false if versions field exists but no task version is found (don't allow by default for security)
 # Returns true if task version satisfies all constraints
 # Returns false otherwise
 # bundle_manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
@@ -537,7 +537,7 @@ _version_satisfies_all_rule_constraints(ref, rule, bundle_manifests) if {
 # This is intended for use in deny rules, where the rule is effective if at least one constraint match.
 # Supports constraints like: >=v2, <3, >3.1.0, <v4.2, >=1.2.3
 # Returns true if rule has no "versions" field
-# Returns true if versions field exists but no manifest version is found (deny by default for security)
+# Returns true if versions field exists but no task version is found (deny by default for security)
 # Returns true if task version satisfies at least one constraint
 # Returns false otherwise
 # bundle_manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
@@ -609,6 +609,7 @@ _result_satisfies_operator(result, constraint) if {
 } else := false
 
 # Returns the task version from either OCI manifest annotations or git path conventions.
+# bundle_manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
 _get_task_version(ref, bundle_manifests) := version if {
 	version := _get_manifest_version_annotation(ref, bundle_manifests)
 } else := version if {
@@ -630,10 +631,17 @@ _get_git_path_version(ref) := version if {
 	path := ref.pathInRepo
 	path != ""
 	parts := split(path, "/")
-	count(parts) >= 3
+	count(parts) >= 4
+	parts[0] in _catalog_types
 	version := parts[2]
-	regex.match(`^v?\d+(\.\d+)*$`, version)
+	regex.match(`^v?\d+(\.\d+){0,2}$`, version)
 }
+
+# Recognized Tekton catalog top-level directory names. Version extraction
+# only applies to paths under these directories to avoid false matches on
+# non-catalog paths (e.g., docs/examples/1/readme.yaml). Extend this set
+# if new catalog resource types are introduced.
+_catalog_types := {"task", "stepaction"}
 
 # =============================================================================
 # BEGIN LEGACY SYSTEM (trusted_tasks)
