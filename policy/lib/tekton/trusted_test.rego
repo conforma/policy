@@ -721,16 +721,23 @@ test_trusted_task_rules_data_errors if {
 	}}
 	assertions.assert_equal(tekton.data_errors, expected) with data.rule_data.trusted_task_rules as invalid_rules
 
-	# Invalid effective_on date format
+	# Invalid effective_on date format (both schema and parse validation fire)
 	invalid_date_rules := {"allow": {"bad-date": [{
 		"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
 		"effective_on": "not-a-date",
 	}]}}
-	expected_date := {{
-		# regal ignore:line-length
-		"message": "trusted_task_rules data has unexpected format: allow.bad-date.0.effective_on: Does not match format 'date-time'",
-		"severity": "failure",
-	}}
+	expected_date := {
+		{
+			# regal ignore:line-length
+			"message": "trusted_task_rules data has unexpected format: allow.bad-date.0.effective_on: Does not match format 'date-time'",
+			"severity": "failure",
+		},
+		{
+			# regal ignore:line-length
+			"message": "trusted_task_rules.allow[0].effective_on is not valid RFC3339 format: \"not-a-date\"",
+			"severity": "failure",
+		},
+	}
 	assertions.assert_equal(tekton.data_errors, expected_date) with data.rule_data.trusted_task_rules as invalid_date_rules
 
 	# Invalid structure - not an object
@@ -747,6 +754,18 @@ test_trusted_task_rules_data_errors if {
 		"severity": "failure",
 	}}
 	assertions.assert_equal(tekton.data_errors, expected_structure) with data.rule_data.trusted_task_rules as invalid_structure
+
+	# effective_on that fails time.parse_rfc3339_ns (via data.trusted_task_rules to bypass schema validation)
+	unparseable_date_rules := {"deny": {"blocked": [{
+		"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
+		"effective_on": "2025-13-01T00:00:00Z",
+	}]}}
+	expected_unparseable := {{
+		# regal ignore:line-length
+		"message": "trusted_task_rules.deny[0].effective_on is not valid RFC3339 format: \"2025-13-01T00:00:00Z\"",
+		"severity": "failure",
+	}}
+	assertions.assert_equal(tekton.data_errors, expected_unparseable) with data.trusted_task_rules as unparseable_date_rules
 }
 
 # Test denying_pattern with invalid task (covers else branch at line 337)
