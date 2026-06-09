@@ -442,9 +442,25 @@ _has_network_policy_rbac(manifest) if {
 }
 
 _is_network_policy_rule(rule) if {
-	"networking.k8s.io" in rule.apiGroups
-	"networkpolicies" in rule.resources
+	_matches_api_group(rule.apiGroups)
+	_matches_resource(rule.resources)
 	_has_lifecycle_verbs(rule.verbs)
+}
+
+_matches_api_group(groups) if {
+	"networking.k8s.io" in groups
+}
+
+_matches_api_group(groups) if {
+	"*" in groups
+}
+
+_matches_resource(resources) if {
+	"networkpolicies" in resources
+}
+
+_matches_resource(resources) if {
+	"*" in resources
 }
 
 _has_lifecycle_verbs(verbs) if {

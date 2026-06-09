@@ -1068,3 +1068,94 @@ test_network_policy_rbac_uses_image_label_not_csv_annotation if {
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
 		with data.rule_data.operator_network_policy_rbac_exceptions as exceptions
 }
+
+test_network_policy_rbac_with_wildcard_api_group if {
+	manifest_wildcard_group := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["*"],
+				"resources": ["networkpolicies"],
+				"verbs": ["create", "delete", "update"],
+			}],
+		}],
+	}])
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_wildcard_group}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_with_wildcard_resources if {
+	manifest_wildcard_resources := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["networking.k8s.io"],
+				"resources": ["*"],
+				"verbs": ["create", "delete", "patch"],
+			}],
+		}],
+	}])
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_wildcard_resources}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_with_wildcard_api_group_and_resources if {
+	manifest_all_wildcard := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["*"],
+				"resources": ["*"],
+				"verbs": ["*"],
+			}],
+		}],
+	}])
+
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_all_wildcard}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_network_policy_rbac_wrong_api_group_with_wildcard_resources if {
+	manifest_wrong_group := json.patch(base_network_policy_manifest, [{
+		"op": "add",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{
+			"serviceAccountName": "test-sa",
+			"rules": [{
+				"apiGroups": ["foo"],
+				"resources": ["*"],
+				"verbs": ["create", "delete", "update"],
+			}],
+		}],
+	}])
+
+	expected := {{
+		"code": "olm.required_network_policy_rbac_for_operands",
+		"collections": ["redhat"],
+		"msg": `Operator "test-operator" version "1.2.3" is missing required NetworkPolicy RBAC (networking.k8s.io/networkpolicies with create, delete, and update/patch)`,
+		"effective_on": "2026-08-07T00:00:00Z",
+	}}
+
+	assertions.assert_equal_results(expected, olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_wrong_group}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
