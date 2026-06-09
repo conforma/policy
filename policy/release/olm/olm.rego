@@ -385,7 +385,7 @@ deny contains result if {
 }
 
 # METADATA
-# title: Required NetworkPolicy RBAC missing from OLM bundle
+# title: NetworkPolicy RBAC present in OLM bundle
 # description: >-
 #   Operators are required to manage the network policies of their operands.
 #   This rule verifies that operator bundles request sufficient RBAC permissions

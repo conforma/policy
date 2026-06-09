@@ -84,7 +84,7 @@ Each image indicated as a related image should match an entry in the list of pre
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L232[Source, window="_blank"]
 
 [#olm__required_network_policy_rbac_for_operands]
-=== link:#olm__required_network_policy_rbac_for_operands[Required NetworkPolicy RBAC missing from OLM bundle]
+=== link:#olm__required_network_policy_rbac_for_operands[NetworkPolicy RBAC present in OLM bundle]
 
 Operators are required to manage the network policies of their operands. This rule verifies that operator bundles request sufficient RBAC permissions to manage NetworkPolicy lifecycle (create, delete, and update/patch) for networking.k8s.io/networkpolicies in their ClusterServiceVersion. Bundles whose operator name and major.minor version are listed in the `operator_network_policy_rbac_exceptions` rule data key are exempt from this requirement.
 
