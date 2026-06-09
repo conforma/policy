@@ -276,13 +276,31 @@ data_errors contains error if {
 
 data_errors contains error if {
 	some rule_type in ["allow", "deny"]
-	some i, rule in _trusted_task_rules_data[rule_type]
+	some group, rules in data.trusted_task_rules[rule_type]
+	some i, rule in rules
 	"effective_on" in object.keys(rule)
 	not time.parse_rfc3339_ns(rule.effective_on)
 	error := {
 		"message": sprintf(
-			"trusted_task_rules.%s[%d].effective_on is not valid RFC3339 format: %q",
-			[rule_type, i, rule.effective_on],
+			"trusted_task_rules.%s.%s[%d].effective_on is not valid RFC3339 format: %q",
+			[rule_type, group, i, rule.effective_on],
+		),
+		"severity": "failure",
+	}
+}
+
+data_errors contains error if {
+	rule_data_rules := lib_rule_data("trusted_task_rules")
+	is_object(rule_data_rules)
+	some rule_type in ["allow", "deny"]
+	some group, rules in rule_data_rules[rule_type]
+	some i, rule in rules
+	"effective_on" in object.keys(rule)
+	not time.parse_rfc3339_ns(rule.effective_on)
+	error := {
+		"message": sprintf(
+			"trusted_task_rules.%s.%s[%d].effective_on is not valid RFC3339 format: %q",
+			[rule_type, group, i, rule.effective_on],
 		),
 		"severity": "failure",
 	}

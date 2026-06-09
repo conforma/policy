@@ -734,7 +734,7 @@ test_trusted_task_rules_data_errors if {
 		},
 		{
 			# regal ignore:line-length
-			"message": "trusted_task_rules.allow[0].effective_on is not valid RFC3339 format: \"not-a-date\"",
+			"message": "trusted_task_rules.allow.bad-date[0].effective_on is not valid RFC3339 format: \"not-a-date\"",
 			"severity": "failure",
 		},
 	}
@@ -762,7 +762,7 @@ test_trusted_task_rules_data_errors if {
 	}]}}
 	expected_unparseable := {{
 		# regal ignore:line-length
-		"message": "trusted_task_rules.deny[0].effective_on is not valid RFC3339 format: \"2025-13-01T00:00:00Z\"",
+		"message": "trusted_task_rules.deny.blocked[0].effective_on is not valid RFC3339 format: \"2025-13-01T00:00:00Z\"",
 		"severity": "failure",
 	}}
 	assertions.assert_equal(tekton.data_errors, expected_unparseable) with data.trusted_task_rules as unparseable_date_rules
