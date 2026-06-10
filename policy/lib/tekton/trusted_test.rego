@@ -811,6 +811,191 @@ test_denying_rules_info_empty if {
 	assertions.assert_equal([], patterns)
 }
 
+# =============================================================================
+# PATTERN MATCHING TESTS
+# Tests that _pattern_matches correctly handles wildcard patterns, regex
+# metacharacters (especially + in git+ prefixes), anchoring, and literal dots.
+# =============================================================================
+
+test_pattern_matches_git_resolved_tasks if {
+	# git+ patterns must work — the + must be treated literally, not as a regex quantifier
+	git_rules := {
+		"allow": {"build-defs": [
+			{"pattern": "git+https://github.com/konflux-ci/build-definitions.git//task/*"},
+			{"pattern": "git+https://gitlab.cee.redhat.com/rhel-on-konflux/rpmbuild-pipeline.git//task/*"},
+		]},
+		"deny": {},
+	}
+
+	# Task resolved via git from github.com/konflux-ci/build-definitions
+	github_git_task := {
+		"metadata": {"labels": {"tekton.dev/task": "buildah"}},
+		"spec": {"taskRef": {"resolver": "git", "params": [
+			{"name": "revision", "value": "48df630394794f28142224295851a45eea5c63ae"},
+			{"name": "pathInRepo", "value": "task/buildah/0.10/buildah.yaml"},
+			{"name": "url", "value": "https://github.com/konflux-ci/build-definitions.git"},
+		]}},
+	}
+
+	# regal ignore:line-length
+	tekton.is_trusted_task(github_git_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as git_rules
+
+	# Task resolved via git from gitlab.cee.redhat.com rpmbuild
+	gitlab_git_task := {
+		"metadata": {"labels": {"tekton.dev/task": "rpmbuild"}},
+		"spec": {"taskRef": {"resolver": "git", "params": [
+			{"name": "revision", "value": "48df630394794f28142224295851a45eea5c63ae"},
+			{"name": "pathInRepo", "value": "task/rpmbuild.yaml"},
+			{"name": "url", "value": "https://gitlab.cee.redhat.com/rhel-on-konflux/rpmbuild-pipeline"},
+		]}},
+	}
+
+	# regal ignore:line-length
+	tekton.is_trusted_task(gitlab_git_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as git_rules
+
+	# Task from a different repo should NOT be trusted
+	untrusted_git_task_other := {
+		"metadata": {"labels": {"tekton.dev/task": "evil"}},
+		"spec": {"taskRef": {"resolver": "git", "params": [
+			{"name": "revision", "value": "48df630394794f28142224295851a45eea5c63ae"},
+			{"name": "pathInRepo", "value": "task/evil.yaml"},
+			{"name": "url", "value": "https://github.com/evil-org/evil-repo.git"},
+		]}},
+	}
+
+	# regal ignore:line-length
+	not tekton.is_trusted_task(untrusted_git_task_other, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as git_rules
+}
+
+test_pattern_matches_git_deny_rules if {
+	# Deny rules with git+ patterns should also work
+	git_deny_rules := {
+		"allow": {"build-defs": [{"pattern": "git+https://github.com/konflux-ci/build-definitions.git//task/*"}]},
+		"deny": {"deprecated-git-tasks": [{"pattern": "git+https://github.com/konflux-ci/build-definitions.git//task/buildah-rhtap/*"}]},
+	}
+
+	# Allowed git task
+	allowed_git := {
+		"metadata": {"labels": {"tekton.dev/task": "buildah"}},
+		"spec": {"taskRef": {"resolver": "git", "params": [
+			{"name": "revision", "value": "48df630394794f28142224295851a45eea5c63ae"},
+			{"name": "pathInRepo", "value": "task/buildah/0.10/buildah.yaml"},
+			{"name": "url", "value": "https://github.com/konflux-ci/build-definitions.git"},
+		]}},
+	}
+
+	# regal ignore:line-length
+	tekton.is_trusted_task(allowed_git, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as git_deny_rules
+
+	# Denied git task (matches deny pattern)
+	denied_git := {
+		"metadata": {"labels": {"tekton.dev/task": "buildah-rhtap"}},
+		"spec": {"taskRef": {"resolver": "git", "params": [
+			{"name": "revision", "value": "48df630394794f28142224295851a45eea5c63ae"},
+			{"name": "pathInRepo", "value": "task/buildah-rhtap/0.1/buildah-rhtap.yaml"},
+			{"name": "url", "value": "https://github.com/konflux-ci/build-definitions.git"},
+		]}},
+	}
+
+	# regal ignore:line-length
+	not tekton.is_trusted_task(denied_git, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as git_deny_rules
+}
+
+test_pattern_matches_dots_are_literal if {
+	# Dots in patterns must match literal dots, not any character
+	dot_rules := {
+		"allow": {"quay": [{"pattern": "oci://quay.io/konflux-ci/*"}]},
+		"deny": {},
+	}
+
+	# Task from quay.io — should be trusted
+	quay_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		# regal ignore:line-length
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-foo:0.1@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
+		{"name": "name", "value": "task-foo"},
+		{"name": "kind", "value": "task"},
+	]}}}
+
+	# regal ignore:line-length
+	tekton.is_trusted_task(quay_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as dot_rules
+
+	# Task from quayXio (dot replaced with X) — must NOT be trusted
+	spoofed_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		# regal ignore:line-length
+		{"name": "bundle", "value": "quayXio/konflux-ci/tekton-catalog/task-foo:0.1@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
+		{"name": "name", "value": "task-foo"},
+		{"name": "kind", "value": "task"},
+	]}}}
+
+	# regal ignore:line-length
+	not tekton.is_trusted_task(spoofed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as dot_rules
+}
+
+test_pattern_matches_anchored if {
+	# Patterns must not match as substrings — the full key must match
+	anchored_rules := {
+		"allow": {"quay": [{"pattern": "oci://quay.io/konflux-ci/*"}]},
+		"deny": {},
+	}
+
+	# Task with a prefix before the matching portion — must NOT be trusted
+	prefix_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		# regal ignore:line-length
+		{"name": "bundle", "value": "evil.io/quay.io/konflux-ci/tekton-catalog/task-foo:0.1@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
+		{"name": "name", "value": "task-foo"},
+		{"name": "kind", "value": "task"},
+	]}}}
+
+	# regal ignore:line-length
+	not tekton.is_trusted_task(prefix_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as anchored_rules
+}
+
+test_pattern_matches_mixed_oci_and_git if {
+	# Both OCI and git patterns can coexist in the same allow list
+	mixed_rules := {
+		"allow": {"all-tasks": [
+			{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-*"},
+			{"pattern": "git+https://github.com/konflux-ci/build-definitions.git//task/*"},
+		]},
+		"deny": {},
+	}
+
+	# OCI task — trusted
+	oci_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		# regal ignore:line-length
+		{"name": "bundle", "value": "quay.io/konflux-ci/tekton-catalog/task-buildah:0.10@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+
+	# regal ignore:line-length
+	tekton.is_trusted_task(oci_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as mixed_rules
+
+	# Git task — trusted
+	git_task := {
+		"metadata": {"labels": {"tekton.dev/task": "buildah"}},
+		"spec": {"taskRef": {"resolver": "git", "params": [
+			{"name": "revision", "value": "48df630394794f28142224295851a45eea5c63ae"},
+			{"name": "pathInRepo", "value": "task/buildah/0.10/buildah.yaml"},
+			{"name": "url", "value": "https://github.com/konflux-ci/build-definitions.git"},
+		]}},
+	}
+
+	# regal ignore:line-length
+	tekton.is_trusted_task(git_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as mixed_rules
+
+	# Neither OCI nor git from a trusted source — not trusted
+	untrusted_oci := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+		# regal ignore:line-length
+		{"name": "bundle", "value": "evil.io/task-buildah:0.10@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
+		{"name": "name", "value": "task-buildah"},
+		{"name": "kind", "value": "task"},
+	]}}}
+
+	# regal ignore:line-length
+	not tekton.is_trusted_task(untrusted_oci, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as mixed_rules
+}
+
 trusted_bundle_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
 	# regal ignore:line-length
 	{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"},
