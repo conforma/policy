@@ -274,6 +274,38 @@ data_errors contains error if {
 	}
 }
 
+data_errors contains error if {
+	some rule_type in ["allow", "deny"]
+	some group, rules in data.trusted_task_rules[rule_type]
+	some i, rule in rules
+	"effective_on" in object.keys(rule)
+	not time.parse_rfc3339_ns(rule.effective_on)
+	error := {
+		"message": sprintf(
+			"trusted_task_rules.%s.%s[%d].effective_on is not valid RFC3339 format: %q",
+			[rule_type, group, i, rule.effective_on],
+		),
+		"severity": "failure",
+	}
+}
+
+data_errors contains error if {
+	rule_data_rules := lib_rule_data("trusted_task_rules")
+	is_object(rule_data_rules)
+	some rule_type in ["allow", "deny"]
+	some group, rules in rule_data_rules[rule_type]
+	some i, rule in rules
+	"effective_on" in object.keys(rule)
+	not time.parse_rfc3339_ns(rule.effective_on)
+	error := {
+		"message": sprintf(
+			"trusted_task_rules.%s.%s[%d].effective_on is not valid RFC3339 format: %q",
+			[rule_type, group, i, rule.effective_on],
+		),
+		"severity": "failure",
+	}
+}
+
 # Filter allow rules to only include those that are currently effective (not in the future)
 _effective_allow_rules := [rule |
 	some rule in _trusted_task_rules_data.allow
@@ -295,7 +327,7 @@ future_deny_rules := [rule |
 # Returns true if a rule has a future effective_on date
 _rule_is_future(rule) if {
 	"effective_on" in object.keys(rule)
-	effective_date := time.parse_rfc3339_ns(sprintf("%sT00:00:00Z", [rule.effective_on]))
+	effective_date := time_lib.parse_rfc3339_safe(rule.effective_on)
 	effective_date > time_lib.effective_current_time_ns
 }
 
@@ -314,7 +346,7 @@ future_deny_rules_for_task(task, bundle_manifests) := matching_rules if {
 _rule_is_effective(rule) if {
 	not "effective_on" in object.keys(rule)
 } else if {
-	effective_date := time.parse_rfc3339_ns(sprintf("%sT00:00:00Z", [rule.effective_on]))
+	effective_date := time_lib.parse_rfc3339_safe(rule.effective_on)
 	effective_date <= time_lib.effective_current_time_ns
 }
 
@@ -421,7 +453,7 @@ _trusted_task_rule_entry_schema := {
 		},
 		"effective_on": {
 			"type": "string",
-			"format": "date",
+			"format": "date-time",
 			# regal ignore:line-length
 			"description": "Date when this rule becomes effective. If omitted, rule is effective immediately.",
 		},

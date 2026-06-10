@@ -90,11 +90,11 @@ is_rule_applicable(rule, context) if {
 
 # Determine warning category - check for invalid dates first
 warning_category(rule) := "invalid" if {
-	_is_date_invalid(_get_effective_on(rule))
+	time_lib.is_date_invalid(_get_effective_on(rule))
 }
 
 warning_category(rule) := "invalid" if {
-	_is_date_invalid(_get_effective_until(rule))
+	time_lib.is_date_invalid(_get_effective_until(rule))
 }
 
 # Pending: effectiveOn is in the future
@@ -131,24 +131,11 @@ _get_effective_on(rule) := object.get(rule, "effectiveOn", "")
 # Extract effectiveUntil date string from rule
 _get_effective_until(rule) := object.get(rule, "effectiveUntil", "")
 
-# Safely parse RFC3339 date, undefined on failure
-_parse_date_safe(date_str) := ns if {
-	date_str != ""
-	ns := time.parse_rfc3339_ns(date_str)
-}
-
-# Check if a date string is invalid (non-empty but unparseable)
-# Empty strings are considered valid (not set, not invalid)
-_is_date_invalid(date_str) if {
-	date_str != ""
-	not _parse_date_safe(date_str)
-}
-
 # Get effectiveOn as nanoseconds, undefined if invalid or empty
-_get_effective_on_ns(rule) := _parse_date_safe(_get_effective_on(rule))
+_get_effective_on_ns(rule) := time_lib.parse_rfc3339_safe(_get_effective_on(rule))
 
 # Get effectiveUntil as nanoseconds, undefined if invalid or empty
-_get_effective_until_ns(rule) := _parse_date_safe(_get_effective_until(rule))
+_get_effective_until_ns(rule) := time_lib.parse_rfc3339_safe(_get_effective_until(rule))
 
 # Check if effectiveOn is in the future
 _is_effective_on_in_future(rule) if {

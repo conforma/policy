@@ -305,14 +305,14 @@ test_future_deny_rule_warning if {
 		"allow": {"trusty-tasks": [{"pattern": "oci://registry.local/trusty*"}]},
 		"deny": {"future-deny": [{
 			"pattern": "oci://registry.local/trusty:1.0*",
-			"effective_on": "2099-01-01",
+			"effective_on": "2099-01-01T00:00:00Z",
 		}]},
 	}
 
 	expected := {{
 		"code": "trusted_task.future_deny_rule",
 		# regal ignore:line-length
-		"msg": `Task "trusty-p" will be denied by rule pattern "oci://registry.local/trusty:1.0*" starting on 2099-01-01.`,
+		"msg": `Task "trusty-p" will be denied by rule pattern "oci://registry.local/trusty:1.0*" starting on 2099-01-01T00:00:00Z.`,
 		"term": "trusty",
 	}}
 
@@ -1015,7 +1015,7 @@ test_deny_takes_precedence_over_allow if {
 		"deny": {"deprecated-buildah": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
 			"message": "task-buildah:0.4 is deprecated",
-			"effective_on": "2025-01-01",
+			"effective_on": "2025-01-01T00:00:00Z",
 		}]},
 	}
 
@@ -1051,7 +1051,7 @@ test_allow_rule_not_yet_effective if {
 	trusted_task_rules_data := {
 		"allow": {"tekton-catalog": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-			"effective_on": "2025-02-01",
+			"effective_on": "2025-02-01T00:00:00Z",
 		}]},
 		"deny": {},
 	}
@@ -1084,7 +1084,7 @@ test_allow_rule_effective_trusted if {
 	trusted_task_rules_data := {
 		"allow": {"tekton-catalog": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*",
-			"effective_on": "2025-02-01",
+			"effective_on": "2025-02-01T00:00:00Z",
 		}]},
 		"deny": {},
 	}
@@ -1112,7 +1112,7 @@ test_deny_rule_not_yet_effective if {
 		"allow": {"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},
 		"deny": {"expire-buildah": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
-			"effective_on": "2025-03-01",
+			"effective_on": "2025-03-01T00:00:00Z",
 		}]},
 	}
 
@@ -1139,7 +1139,7 @@ test_deny_rule_becomes_effective if {
 		"allow": {"tekton-catalog": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},
 		"deny": {"expire-buildah": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-buildah*",
-			"effective_on": "2025-03-01",
+			"effective_on": "2025-03-01T00:00:00Z",
 		}]},
 	}
 
@@ -1207,7 +1207,7 @@ test_deny_with_message if {
 		"deny": {"deprecated-manifest": [{
 			"pattern": "oci://quay.io/konflux-ci/tekton-catalog/task-build-image-manifest*",
 			"message": "This task was renamed to build-image-index.",
-			"effective_on": "2025-10-26",
+			"effective_on": "2025-10-26T00:00:00Z",
 		}]},
 	}
 
