@@ -367,6 +367,41 @@ test_attributes_multiple_external_refs if {
 		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attr2", "value": "value2"}]}
 }
 
+test_attributes_not_allowed_unless_matching if {
+	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attr1", "unless": [{"purl": "^pkg:oci/.*"}]}]}
+}
+
+test_attributes_not_allowed_unless_multiple_any_matches if {
+	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: [{
+			"name": "attr1",
+			"unless": [{"purl": "^pkg:pypi/.*"}, {"purl": "^pkg:oci/.*"}],
+		}]}
+}
+
+test_attributes_not_allowed_unless_not_matching if {
+	expected := {{
+		"code": "sbom_spdx.disallowed_package_attributes",
+		# regal ignore:line-length
+		"term": "pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98",
+		# regal ignore:line-length
+		"msg": `Package pkg:oci/kernel-module-management-rhel9-operator@sha256%3Ad845f0bd93dad56c92c47e8c116a11a0cc5924c0b99aed912b4f8b54178efa98 has the attribute "attr1" set`,
+	}}
+
+	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attr1", "unless": [{"purl": "^pkg:pypi/.*"}]}]}
+}
+
 _sbom_attestation := {"statement": {
 	"predicateType": "https://spdx.dev/Document",
 	"predicate": {

@@ -65,6 +65,8 @@ test_rule_data_validation if {
 			# ok
 			{"name": "some_attr", "value": "some_val"},
 			{"name": "no_val_attr"},
+			# ok with unless
+			{"name": "some_attr", "unless": [{"purl": "^pkg:pypi/.*"}]},
 			# Missing required attributes
 			{},
 			# Additional properties not allowed
@@ -76,6 +78,12 @@ test_rule_data_validation if {
 			{"name": "_name_", "value": "_value_"},
 			# Invalid effective on format
 			{"name": "_name_", "effective_on": "not-a-date"},
+			# Invalid unless format
+			{"name": "_name_", "unless": "not-an-array"},
+			# Invalid unless item
+			{"name": "_name_", "unless": [{"not_purl": "value"}]},
+			# Invalid unless purl regex
+			{"name": "_name_", "unless": [{"purl": "[invalid"}]},
 		],
 		lib.sbom.rule_data_allowed_external_references_key: [
 			{"type": "distribution", "url": "example.com"},
@@ -160,34 +168,59 @@ test_rule_data_validation if {
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
-			"msg": "Rule data disallowed_attributes has unexpected format: 2: name is required",
+			"msg": "Rule data disallowed_attributes has unexpected format: 3: name is required",
 			"severity": "failure",
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
-			"msg": "Rule data disallowed_attributes has unexpected format: 3: Additional property something is not allowed",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_attributes has unexpected format: 4: Additional property something is not allowed",
 			"severity": "warning",
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
 			# regal ignore:line-length
-			"msg": "Rule data disallowed_attributes has unexpected format: 4.name: Invalid type. Expected: string, given: integer",
+			"msg": "Rule data disallowed_attributes has unexpected format: 5.name: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
 			# regal ignore:line-length
-			"msg": "Rule data disallowed_attributes has unexpected format: 4.value: Invalid type. Expected: string, given: integer",
+			"msg": "Rule data disallowed_attributes has unexpected format: 5.value: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
-			"msg": "Rule data disallowed_attributes has unexpected format: (Root): array items[5,6] must be unique",
+			"msg": "Rule data disallowed_attributes has unexpected format: (Root): array items[6,7] must be unique",
 			"severity": "failure",
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
-			"msg": "Rule data disallowed_attributes has unexpected format: 7.effective_on: Does not match format 'date-time'",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_attributes has unexpected format: 8.effective_on: Does not match format 'date-time'",
+			"severity": "failure",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_attributes has unexpected format: 9.unless: Invalid type. Expected: array, given: string",
+			"severity": "failure",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_attributes has unexpected format: 10.unless.0: Additional property not_purl is not allowed",
+			"severity": "warning",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			"msg": "Rule data disallowed_attributes has unexpected format: 10.unless.0: purl is required",
+			"severity": "failure",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_attributes has unexpected format: 11.unless.0.purl: Does not match format 'regex'",
 			"severity": "failure",
 		},
 		{

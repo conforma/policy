@@ -258,6 +258,15 @@ rule_data_errors contains error if {
 				"name": {"type": "string"},
 				"value": {"type": "string"},
 				"effective_on": {"type": "string", "format": "date-time"},
+				"unless": {
+					"type": "array",
+					"items": {
+						"type": "object",
+						"properties": {"purl": {"type": "string", "format": "regex"}},
+						"additionalProperties": false,
+						"required": ["purl"],
+					},
+				},
 			},
 			"additionalProperties": false,
 			"required": ["name"],
@@ -465,3 +474,9 @@ rule_data_allowed_external_references_key := "allowed_external_references"
 rule_data_disallowed_external_references_key := "disallowed_external_references"
 
 rule_data_allowed_package_sources_key := "allowed_package_sources"
+
+attribute_excluded(purls, disallowed) if {
+	some condition in object.get(disallowed, "unless", [])
+	some purl in purls
+	regex.match(condition.purl, purl)
+}

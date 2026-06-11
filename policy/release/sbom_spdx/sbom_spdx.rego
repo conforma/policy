@@ -238,6 +238,9 @@ deny contains result if {
 
 	object.get(properties, "value", "") == object.get(disallowed, "value", "")
 
+	purls := {ref.referenceLocator | some ref in pkg.externalRefs; ref.referenceType == "purl"}
+	not sbom.attribute_excluded(purls, disallowed)
+
 	msg := regex.replace(object.get(properties, "value", ""), `(.+)`, ` to "$1"`)
 
 	id := object.get(externalref, "referenceLocator", pkg.name)

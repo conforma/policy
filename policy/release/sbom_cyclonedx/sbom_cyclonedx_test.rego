@@ -214,6 +214,41 @@ test_attributes_not_allowed_value_no_purl if {
 		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "syft:distro:id", "value": "rhel"}]}
 }
 
+test_attributes_not_allowed_unless_matching if {
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attr1", "unless": [{"purl": "^pkg:rpm/.*"}]}]}
+}
+
+test_attributes_not_allowed_unless_multiple_any_matches if {
+	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: [{
+			"name": "attr1",
+			"unless": [{"purl": "^pkg:pypi/.*"}, {"purl": "^pkg:rpm/.*"}],
+		}]}
+}
+
+test_attributes_not_allowed_unless_not_matching if {
+	expected := {{
+		"code": "sbom_cyclonedx.disallowed_package_attributes",
+		# regal ignore:line-length
+		"term": "pkg:rpm/rhel/coreutils-single@8.32-34.el9?arch=x86_64&upstream=coreutils-8.32-34.el9.src.rpm&distro=rhel-9.3",
+		# regal ignore:line-length
+		"msg": `Package pkg:rpm/rhel/coreutils-single@8.32-34.el9?arch=x86_64&upstream=coreutils-8.32-34.el9.src.rpm&distro=rhel-9.3 has the attribute "attr1" set`,
+	}}
+
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: [{"name": "attr1", "unless": [{"purl": "^pkg:pypi/.*"}]}]}
+}
+
 test_external_references_allowed_regex_with_no_rules_is_allowed if {
 	expected := {}
 	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [_sbom_1_5_attestation]
