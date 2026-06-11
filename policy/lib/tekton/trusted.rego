@@ -433,11 +433,17 @@ _task_matches_allow_rule(ref, bundle_manifests) if {
 	_version_satisfies_all_rule_constraints(ref, rule, bundle_manifests)
 }
 
-# Converts a wildcard pattern to a regex pattern and checks if the key matches
-# Wildcards (*) are converted to .* in regex
+# Checks if the key matches the wildcard pattern using glob matching.
+# Wildcards (*) match any sequence of characters. Patterns without a
+# wildcard also match keys that have a :tag suffix appended (e.g.
+# pattern "oci://repo/task" matches key "oci://repo/task:0.3").
 _pattern_matches(key, pattern) if {
-	regex_pattern := regex.replace(pattern, `\*`, ".*")
-	regex.match(regex_pattern, key)
+	glob.match(pattern, null, key)
+}
+
+_pattern_matches(key, pattern) if {
+	not contains(pattern, "*")
+	glob.match(sprintf("%s:*", [pattern]), null, key)
 }
 
 # Schema definition for a single rule entry (object values keyed by name)
