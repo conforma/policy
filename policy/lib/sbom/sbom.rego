@@ -425,7 +425,7 @@ rule_data_errors contains error if {
 	}
 }
 
-# disallowed_attribute_excepted returns true when the package's PURL has a qualifier
+# disallowed_attribute_excepted checks if the package's PURL has a qualifier
 # matching an except_when condition, meaning the violation should be suppressed.
 disallowed_attribute_excepted(disallowed, purl_string) if {
 	purl_string != ""
@@ -434,7 +434,7 @@ disallowed_attribute_excepted(disallowed, purl_string) if {
 	some qualifier in parsed.qualifiers
 	qualifier.key == exception.purl_qualifier
 	url_matches_any_pattern(qualifier.value, exception.patterns)
-}
+} else := false
 
 # component_found_by_hermeto checks if a CycloneDX component was fetched by
 # cachi2 or hermeto, based on the component's properties.

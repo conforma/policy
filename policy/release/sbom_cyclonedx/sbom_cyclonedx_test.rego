@@ -224,12 +224,11 @@ test_attributes_except_when_match_suppresses_violation if {
 	att := json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/components/-",
-		"value": {
-			"type": "library",
-			"name": "some-lib",
-			"purl": "pkg:pypi/some-lib@1.0?repository_url=https://console.redhat.com/api/pypi/rhoai/3.5/simple/",
-			"properties": [{"name": "hermeto:pip:package:binary", "value": "true"}],
-		},
+		"value": _cdx_excepted_component(
+			"pkg:pypi/some-lib@1.0?repository_url=https://console.redhat.com/api/pypi/rhoai/3.5/simple/",
+			"hermeto:pip:package:binary",
+			"true",
+		),
 	}])
 
 	results := sbom_cyclonedx.deny with input.attestations as [att]
@@ -251,12 +250,11 @@ test_attributes_except_when_no_match_produces_violation if {
 	att := json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/components/-",
-		"value": {
-			"type": "library",
-			"name": "some-lib",
-			"purl": "pkg:pypi/some-lib@1.0?repository_url=https://pypi.org/simple/",
-			"properties": [{"name": "hermeto:pip:package:binary", "value": "true"}],
-		},
+		"value": _cdx_excepted_component(
+			"pkg:pypi/some-lib@1.0?repository_url=https://pypi.org/simple/",
+			"hermeto:pip:package:binary",
+			"true",
+		),
 	}])
 
 	results := sbom_cyclonedx.deny with input.attestations as [att]
@@ -278,12 +276,11 @@ test_attributes_except_when_missing_qualifier_produces_violation if {
 	att := json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/components/-",
-		"value": {
-			"type": "library",
-			"name": "some-lib",
-			"purl": "pkg:pypi/some-lib@1.0",
-			"properties": [{"name": "hermeto:pip:package:binary", "value": "true"}],
-		},
+		"value": _cdx_excepted_component(
+			"pkg:pypi/some-lib@1.0",
+			"hermeto:pip:package:binary",
+			"true",
+		),
 	}])
 
 	results := sbom_cyclonedx.deny with input.attestations as [att]
@@ -334,12 +331,11 @@ test_attributes_except_when_multiple_patterns if {
 	att := json.patch(_sbom_1_5_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/components/-",
-		"value": {
-			"type": "library",
-			"name": "some-lib",
-			"purl": "pkg:pypi/some-lib@1.0?repository_url=https://packages.redhat.com/pypi/rhoai/",
-			"properties": [{"name": "hermeto:pip:package:binary", "value": "true"}],
-		},
+		"value": _cdx_excepted_component(
+			"pkg:pypi/some-lib@1.0?repository_url=https://packages.redhat.com/pypi/rhoai/",
+			"hermeto:pip:package:binary",
+			"true",
+		),
 	}])
 
 	results := sbom_cyclonedx.deny with input.attestations as [att]
@@ -365,22 +361,20 @@ test_attributes_except_when_without_except_when_unchanged if {
 		{
 			"op": "add",
 			"path": "/statement/predicate/components/-",
-			"value": {
-				"type": "library",
-				"name": "excepted-lib",
-				"purl": "pkg:pypi/excepted-lib@1.0?repository_url=https://console.redhat.com/api/pypi/rhoai/simple/",
-				"properties": [{"name": "hermeto:pip:package:binary", "value": "true"}],
-			},
+			"value": _cdx_excepted_component(
+				"pkg:pypi/excepted-lib@1.0?repository_url=https://console.redhat.com/api/pypi/rhoai/simple/",
+				"hermeto:pip:package:binary",
+				"true",
+			),
 		},
 		{
 			"op": "add",
 			"path": "/statement/predicate/components/-",
-			"value": {
-				"type": "library",
-				"name": "bundler-lib",
-				"purl": "pkg:gem/bundler-lib@1.0",
-				"properties": [{"name": "hermeto:bundler:package:binary", "value": "true"}],
-			},
+			"value": _cdx_excepted_component(
+				"pkg:gem/bundler-lib@1.0",
+				"hermeto:bundler:package:binary",
+				"true",
+			),
 		},
 	])
 
@@ -1038,6 +1032,13 @@ _cdx_bundled_component(purl) := {
 		{"name": "hermeto:found_by", "value": "hermeto"},
 		{"name": "cdx:npm:package:bundled", "value": "true"},
 	],
+}
+
+_cdx_excepted_component(purl, attr_name, attr_value) := {
+	"type": "library",
+	"name": "excepted-component",
+	"purl": purl,
+	"properties": [{"name": attr_name, "value": attr_value}],
 }
 
 _cdx_proxy_component(purl, distribution_url) := {

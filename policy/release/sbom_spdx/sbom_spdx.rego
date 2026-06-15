@@ -215,7 +215,9 @@ deny contains result if {
 #   Confirm the SPDX SBOM contains only packages without disallowed
 #   attributes. By default all attributes are allowed. Use the
 #   "disallowed_attributes" rule data key to provide a list of key-value pairs
-#   that forbid the use of an attribute set to the given value.
+#   that forbid the use of an attribute set to the given value. Each entry
+#   may include an optional "except_when" field to suppress violations when
+#   a PURL qualifier matches specified regex patterns.
 # custom:
 #   short_name: disallowed_package_attributes
 #   failure_msg: Package %s has the attribute %q set%s

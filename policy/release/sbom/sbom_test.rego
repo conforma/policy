@@ -279,6 +279,16 @@ test_rule_data_validation if {
 			lib.sbom.rule_data_attributes_key: [],
 			lib.sbom.rule_data_allowed_package_sources_key: [],
 		}
+
+	# valid except_when entry passes schema validation
+	assertions.assert_empty(sbom.deny) with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with input.attestations as _sbom_attestation
+		with data.rule_data as {lib.sbom.rule_data_attributes_key: [{
+			"name": "hermeto:pip:package:binary",
+			"value": "true",
+			"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/.*"]}],
+		}]}
 }
 
 test_proxy_rule_data_validation if {
