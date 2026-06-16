@@ -423,6 +423,225 @@ _sbom_attestation := {"statement": {
 	},
 }}
 
+test_attributes_except_when_match_suppresses_violation if {
+	disallowed_attributes := [{
+		"name": "hermeto:pip:package:binary",
+		"value": "true",
+		"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/api/pypi/.*"]}],
+	}]
+
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_excepted_package(
+			"pkg:pypi/some-lib@1.0?repository_url=https://console.redhat.com/api/pypi/rhoai/3.5/simple/",
+			"hermeto:pip:package:binary",
+			"true",
+		),
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: disallowed_attributes}
+
+	count({r | some r in results; r.code == "sbom_spdx.disallowed_package_attributes"}) == 0
+}
+
+test_attributes_except_when_no_match_produces_violation if {
+	disallowed_attributes := [{
+		"name": "hermeto:pip:package:binary",
+		"value": "true",
+		"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/api/pypi/.*"]}],
+	}]
+
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_excepted_package(
+			"pkg:pypi/some-lib@1.0?repository_url=https://pypi.org/simple/",
+			"hermeto:pip:package:binary",
+			"true",
+		),
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: disallowed_attributes}
+
+	count({r | some r in results; r.code == "sbom_spdx.disallowed_package_attributes"}) == 1
+}
+
+test_attributes_except_when_missing_qualifier_produces_violation if {
+	disallowed_attributes := [{
+		"name": "hermeto:pip:package:binary",
+		"value": "true",
+		"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/api/pypi/.*"]}],
+	}]
+
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": _spdx_excepted_package(
+			"pkg:pypi/some-lib@1.0",
+			"hermeto:pip:package:binary",
+			"true",
+		),
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: disallowed_attributes}
+
+	count({r | some r in results; r.code == "sbom_spdx.disallowed_package_attributes"}) == 1
+}
+
+test_attributes_except_when_no_purl_ref_produces_violation if {
+	disallowed_attributes := [{
+		"name": "hermeto:pip:package:binary",
+		"value": "true",
+		"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/.*"]}],
+	}]
+
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": {
+			"SPDXID": "SPDXRef-no-purl",
+			"name": "no-purl-package",
+			"downloadLocation": "NOASSERTION",
+			"externalRefs": [{
+				"referenceCategory": "SECURITY",
+				"referenceType": "cpe23Type",
+				"referenceLocator": "cpe:2.3:a:example:lib:1.0:*:*:*:*:*:*:*",
+			}],
+			"annotations": [{
+				"annotator": "Tool: konflux:jsonencoded",
+				"comment": "{\"name\":\"hermeto:pip:package:binary\",\"value\":\"true\"}",
+				"annotationDate": "2024-12-09T12:00:00Z",
+				"annotationType": "OTHER",
+			}],
+		},
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: disallowed_attributes}
+
+	count({r | some r in results; r.code == "sbom_spdx.disallowed_package_attributes"}) == 1
+}
+
+test_attributes_except_when_multiple_external_refs if {
+	disallowed_attributes := [{
+		"name": "hermeto:pip:package:binary",
+		"value": "true",
+		"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/api/pypi/.*"]}],
+	}]
+
+	att := json.patch(_sbom_attestation, [{
+		"op": "add",
+		"path": "/statement/predicate/packages/-",
+		"value": {
+			"SPDXID": "SPDXRef-multi-ref",
+			"name": "multi-ref-package",
+			"downloadLocation": "NOASSERTION",
+			"externalRefs": [
+				{
+					"referenceCategory": "PACKAGE-MANAGER",
+					"referenceType": "purl",
+					"referenceLocator": "pkg:pypi/some-lib@1.0?repository_url=https://console.redhat.com/api/pypi/rhoai/simple/",
+				},
+				{
+					"referenceCategory": "SECURITY",
+					"referenceType": "cpe23Type",
+					"referenceLocator": "cpe:2.3:a:example:some-lib:1.0:*:*:*:*:*:*:*",
+				},
+			],
+			"annotations": [{
+				"annotator": "Tool: konflux:jsonencoded",
+				"comment": "{\"name\":\"hermeto:pip:package:binary\",\"value\":\"true\"}",
+				"annotationDate": "2024-12-09T12:00:00Z",
+				"annotationType": "OTHER",
+			}],
+		},
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: disallowed_attributes}
+
+	count({r | some r in results; r.code == "sbom_spdx.disallowed_package_attributes"}) == 0
+}
+
+_spdx_excepted_package(purl, attr_name, attr_value) := {
+	"SPDXID": "SPDXRef-excepted-pkg",
+	"name": "excepted-package",
+	"downloadLocation": "NOASSERTION",
+	"externalRefs": [{
+		"referenceCategory": "PACKAGE-MANAGER",
+		"referenceType": "purl",
+		"referenceLocator": purl,
+	}],
+	"annotations": [{
+		"annotator": "Tool: konflux:jsonencoded",
+		"comment": sprintf("{\"name\":\"%s\",\"value\":\"%s\"}", [attr_name, attr_value]),
+		"annotationDate": "2024-12-09T12:00:00Z",
+		"annotationType": "OTHER",
+	}],
+}
+
+test_attributes_except_when_without_except_when_unchanged if {
+	disallowed_attributes := [
+		{
+			"name": "hermeto:pip:package:binary",
+			"value": "true",
+			"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/.*"]}],
+		},
+		{"name": "hermeto:bundler:package:binary", "value": "true"},
+	]
+
+	att := json.patch(_sbom_attestation, [
+		{
+			"op": "add",
+			"path": "/statement/predicate/packages/-",
+			"value": _spdx_excepted_package(
+				"pkg:pypi/excepted-lib@1.0?repository_url=https://console.redhat.com/api/pypi/rhoai/simple/",
+				"hermeto:pip:package:binary",
+				"true",
+			),
+		},
+		{
+			"op": "add",
+			"path": "/statement/predicate/packages/-",
+			"value": _spdx_excepted_package(
+				"pkg:gem/bundler-lib@1.0",
+				"hermeto:bundler:package:binary",
+				"true",
+			),
+		},
+	])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with data.rule_data as {sbom.rule_data_attributes_key: disallowed_attributes}
+
+	attr_results := {r | some r in results; r.code == "sbom_spdx.disallowed_package_attributes"}
+	count(attr_results) == 1
+	some r in attr_results
+	contains(r.msg, "hermeto:bundler:package:binary")
+}
+
 test_proxy_url_spdx_allowed if {
 	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
 		"op": "add",

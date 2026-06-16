@@ -76,6 +76,8 @@ test_rule_data_validation if {
 			{"name": "_name_", "value": "_value_"},
 			# Invalid effective on format
 			{"name": "_name_", "effective_on": "not-a-date"},
+			# Invalid regex in except_when
+			{"name": "bad_regex_attr", "except_when": [{"purl_qualifier": "repo", "patterns": ["["]}]},
 		],
 		lib.sbom.rule_data_allowed_external_references_key: [
 			{"type": "distribution", "url": "example.com"},
@@ -192,6 +194,18 @@ test_rule_data_validation if {
 		},
 		{
 			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_attributes has unexpected format: 8.except_when.0.patterns.0: Does not match format 'regex'",
+			"severity": "failure",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Item at index 8 in disallowed_attributes has an invalid regular expression in except_when: \"[\"",
+			"severity": "failure",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
 			"msg": "Rule data allowed_external_references has unexpected format: 1: Additional property invalid is not allowed",
 			"severity": "warning",
 		},
@@ -265,6 +279,16 @@ test_rule_data_validation if {
 			lib.sbom.rule_data_attributes_key: [],
 			lib.sbom.rule_data_allowed_package_sources_key: [],
 		}
+
+	# valid except_when entry passes schema validation
+	assertions.assert_empty(sbom.deny) with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with input.attestations as _sbom_attestation
+		with data.rule_data as {lib.sbom.rule_data_attributes_key: [{
+			"name": "hermeto:pip:package:binary",
+			"value": "true",
+			"except_when": [{"purl_qualifier": "repository_url", "patterns": ["^https://console\\.redhat\\.com/.*"]}],
+		}]}
 }
 
 test_proxy_rule_data_validation if {

@@ -215,7 +215,9 @@ deny contains result if {
 #   Confirm the SPDX SBOM contains only packages without disallowed
 #   attributes. By default all attributes are allowed. Use the
 #   "disallowed_attributes" rule data key to provide a list of key-value pairs
-#   that forbid the use of an attribute set to the given value.
+#   that forbid the use of an attribute set to the given value. Each entry
+#   may include an optional "except_when" field to suppress violations when
+#   a PURL qualifier matches specified regex patterns.
 # custom:
 #   short_name: disallowed_package_attributes
 #   failure_msg: Package %s has the attribute %q set%s
@@ -237,6 +239,8 @@ deny contains result if {
 	properties.name == disallowed.name
 
 	object.get(properties, "value", "") == object.get(disallowed, "value", "")
+
+	not sbom.disallowed_attribute_excepted(disallowed, _package_purl(pkg))
 
 	msg := regex.replace(object.get(properties, "value", ""), `(.+)`, ` to "$1"`)
 
@@ -351,6 +355,11 @@ deny contains result if {
 		purl,
 	)
 }
+
+_package_purl(pkg) := purl if {
+	purls := [ref.referenceLocator | some ref in pkg.externalRefs; ref.referenceType == "purl"]
+	purl := purls[0]
+} else := ""
 
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does
 # not have the attribute, result is returned unmodified.
