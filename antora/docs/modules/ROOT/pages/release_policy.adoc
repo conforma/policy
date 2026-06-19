@@ -376,9 +376,36 @@ a| This package is responsible for verifying a CVE scan was performed during the
 
 The behaviour of the rules in this package is influenced by rule data. Firstly the rules can be configured to emit violations or warnings based on the availability of the vulnerability fix: patched -- if there is a remediation available, e.g. new version with a fix, or unpatched -- if there is, currently, no remidiation available. Secondly per severity: critical, high, medium, low or unknown choice can be made of the rule outcome: failure or warning. And lastly, per severity, choice can be made of how many leeway days are allowed before a vulnerability causing a failure will be reported as a warning instead.
 
-In the following example if rule data configuration, failures will be reported for critical and high patched vulnerabilities, for critical unpatched vulnerabilities only, warnings will be reported for medium and low patched, and for high and medium unpatched vulnerabilities. For critical and high patched vulnerabilities a leeway of 10 days is allowed.
+== Default values
 
-.Example rule data
+The following are the default values for each rule data key. These defaults are defined in https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/lib/rule_data/rule_data.rego[rule_data.rego] and are used when no custom rule data is provided.
+
+.Default rule data
+[source,yaml]
+----
+restrict_cve_security_levels:
+  - critical
+  - high
+
+warn_cve_security_levels: []
+restrict_unpatched_cve_security_levels: []
+warn_unpatched_cve_security_levels:
+  - critical
+  - high
+
+cve_leeway:
+  critical: 0
+  high: 0
+  medium: 0
+  low: 0
+  unknown: 0
+----
+
+== Customization example
+
+In the following example of rule data configuration, failures will be reported for critical and high patched vulnerabilities, for critical unpatched vulnerabilities only, warnings will be reported for medium and low patched, and for high and medium unpatched vulnerabilities. For critical and high patched vulnerabilities a leeway of 10 days is allowed.
+
+.Example rule data (non-default)
 [source,yaml]
 ----
 restrict_cve_security_levels:

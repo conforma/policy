@@ -18,14 +18,53 @@
 #   as a warning instead.
 #
 #
-#   In the following example if rule data configuration, failures will be
+#   == Default values
+#
+#
+#   The following are the default values for each rule data key. These defaults
+#   are defined in
+#   https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/lib/rule_data/rule_data.rego[rule_data.rego]
+#   and are used when no custom rule data is provided.
+#
+#
+#   .Default rule data
+#
+#   [source,yaml]
+#
+#   ----
+#
+#   restrict_cve_security_levels:
+#     - critical
+#     - high
+#
+#   warn_cve_security_levels: []
+#
+#   restrict_unpatched_cve_security_levels: []
+#
+#   warn_unpatched_cve_security_levels:
+#     - critical
+#     - high
+#
+#   cve_leeway:
+#     critical: 0
+#     high: 0
+#     medium: 0
+#     low: 0
+#     unknown: 0
+#   ----
+#
+#
+#   == Customization example
+#
+#
+#   In the following example of rule data configuration, failures will be
 #   reported for critical and high patched vulnerabilities, for critical
 #   unpatched vulnerabilities only, warnings will be reported for medium and low
 #   patched, and for high and medium unpatched vulnerabilities. For critical and
 #   high patched vulnerabilities a leeway of 10 days is allowed.
 #
 #
-#   .Example rule data
+#   .Example rule data (non-default)
 #
 #   [source,yaml]
 #
