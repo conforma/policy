@@ -59,6 +59,145 @@ The https://conforma.dev/docs/cli/index.html[cli] is reponsible for gathering
 the information to be validated which is made available to policies via the `input` object. Its
 structure is defined https://conforma.dev/docs/cli/policy_input.html[here].
 
+== Result format
+
+When a policy rule detects a violation it produces a **result object**. The Conforma evaluation
+engine expects each result to contain a specific set of fields. While it is possible to construct
+result objects by hand, the recommended approach is to use the helper functions described in
+<<Result helpers>>.
+
+=== Result object fields
+
+[cols="1,1,3"]
+|===
+| Field | Type | Description
+
+| `code`
+| string (required)
+| A unique identifier for the rule violation, formatted as `<package_path>.<short_name>`. Used for
+  skipping rules via policy configuration and in violation reports.
+
+| `msg`
+| string (required)
+| A human-readable message describing the violation. Typically produced via `sprintf` using the
+  `custom.failure_msg` annotation as a template.
+
+| `effective_on`
+| string (required)
+| An https://datatracker.ietf.org/doc/html/rfc3339[RFC3339] timestamp controlling when the rule
+  becomes a hard failure. If the date is in the future, the violation is reported as a warning
+  instead of a failure. Derived from the `custom.effective_on` annotation, defaulting to
+  `"2022-01-01T00:00:00Z"`.
+
+| `collections`
+| list of strings (optional)
+| Rule collections this violation belongs to, derived from the `custom.collections` annotation.
+  Used for grouping rules into logical sets such as `minimal`, `slsa3`, or `redhat`.
+
+| `term`
+| any (optional)
+| An additional value for grouping or identifying the specific subject of the violation (e.g., a
+  task name or image reference).
+
+| `severity`
+| string (optional)
+| Override severity level for the violation (e.g., `"warning"`).
+|===
+
+=== Result helpers
+
+The `data.lib.metadata` package provides helper functions that produce correctly formatted result
+objects. These helpers use https://www.openpolicyagent.org/docs/policy-reference#metadata[`rego.metadata.chain()`] to automatically derive `code` and `effective_on` from the
+rule's annotations. Using these helpers is the recommended pattern for all policy rules.
+
+==== `result_helper(chain, failure_sprintf_params)`
+
+Produces a result with `code`, `msg`, and `effective_on`. If the rule annotation includes
+`custom.collections`, the result also contains a `collections` field.
+
+* `chain` — pass `rego.metadata.chain()` to supply the rule's annotation context.
+* `failure_sprintf_params` — a list of values to interpolate into the `custom.failure_msg` template.
+
+==== `result_helper_with_term(chain, failure_sprintf_params, term)`
+
+Same as `result_helper`, but adds a `term` field to the result.
+
+* `term` — an additional value identifying the subject of the violation.
+
+==== `result_helper_with_severity(chain, failure_sprintf_params, severity)`
+
+Same as `result_helper`, but adds a `severity` field to the result.
+
+* `severity` — a string such as `"warning"` that overrides the default severity.
+
+NOTE: The `data.lib` package provides deprecated aliases for these helpers (`data.lib.result_helper`,
+etc.). New code should import from `data.lib.metadata` directly.
+
+=== How annotations map to result fields
+
+The result helpers read annotation values from the metadata chain to populate the result object.
+The following table shows how each annotation maps to a result field:
+
+[cols="1,1"]
+|===
+| Annotation | Result field
+
+| `custom.short_name`
+| Used together with the package path to build the `code` field (formatted as `<package>.<short_name>`).
+
+| `custom.failure_msg`
+| Used as a `sprintf` template to produce the `msg` field. Parameters are passed via `failure_sprintf_params`.
+
+| `custom.effective_on`
+| Copied to the `effective_on` field. Defaults to `"2022-01-01T00:00:00Z"` when not specified.
+
+| `custom.collections`
+| Copied to the `collections` field when present.
+|===
+
+=== Example
+
+The following example shows a complete policy rule using `result_helper`:
+
+```rego
+package my_policy
+
+import rego.v1
+
+import data.lib.metadata
+
+# METADATA
+# title: Attestation has expected predicate type
+# description: >-
+#   Verify that each attestation uses the expected SLSA provenance
+#   predicate type.
+# custom:
+#   short_name: expected_predicate_type
+#   failure_msg: Unexpected predicate type %q in attestation
+#   effective_on: "2024-01-01T00:00:00Z"
+#   collections:
+#   - minimal
+#   - slsa3
+#
+deny contains result if {
+	some att in input.attestations
+	got := object.get(att, ["statement", "predicateType"], "N/A")
+	got != "https://slsa.dev/provenance/v1"
+	result := metadata.result_helper(rego.metadata.chain(), [got])
+}
+```
+
+This rule produces a result object like:
+
+```json
+{
+  "code": "my_policy.expected_predicate_type",
+  "msg": "Unexpected predicate type \"application/vnd.unknown\" in attestation",
+  "effective_on": "2024-01-01T00:00:00Z",
+  "collections": ["minimal", "slsa3"]
+}
+```
+
 == Pitfalls
 
 Today, EC takes the https://www.conftest.dev/[conftest] approach for asserting violations and
@@ -115,26 +254,40 @@ The pitfalls above showcase an interesting property of rego. A statement within 
 produces no value (or a false value) causes the rule to not produce a value as well. In our case,
 since the rule is asserting a violation, no value means no violation.
 
-Here is a safer version of the example above:
+Here is a safer version of the example above. It also uses `result_helper` (see <<Result helpers>>)
+to produce correctly formatted result objects:
 
 ```rego
 package main
 
 import rego.v1
 
+import data.lib.metadata
+
+# METADATA
+# title: Unexpected predicate type
+# description: Verify attestation predicate types.
+# custom:
+#   short_name: unexpected_predicate_type
+#   failure_msg: "Unexpected predicate type %s in statement %s"
+#
 deny contains result if {
 	some att in attestations
 	got := predicate_type(att)
 	got != "https://slsa.dev/provenance/v0.2"
-	result := {"msg": sprintf(
-		"Unexpected predicate type %s in statement %s",
-		[got, statement_type(att)],
-	)}
+	result := metadata.result_helper(rego.metadata.chain(), [got, statement_type(att)])
 }
 
+# METADATA
+# title: No attestation found
+# description: At least one attestation must be present.
+# custom:
+#   short_name: no_attestation
+#   failure_msg: No attestation found
+#
 deny contains result if {
 	count(attestations) == 0
-	result := {"msg": "No attestation found"}
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 attestations := object.get(input, "attestations", [])
