@@ -18,6 +18,7 @@ Confirm the `allowed_predicate_types` rule data was provided, since it is requir
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `slsa_provenance_available.allowed_predicate_types_provided`
+* To exclude this rule, add `slsa_provenance_available.allowed_predicate_types_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `slsa_provenance_available`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_provenance_available/slsa_provenance_available.rego#L51[Source, window="_blank"]
 
 [#slsa_provenance_available__attestation_predicate_type_accepted]
@@ -30,4 +31,5 @@ Verify that the predicateType field of the attestation indicates the in-toto SLS
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Attestation predicate type %q is not an expected type (%s)`
 * Code: `slsa_provenance_available.attestation_predicate_type_accepted`
+* To exclude this rule, add `slsa_provenance_available.attestation_predicate_type_accepted` to the `exclude` list in your policy config. You can also exclude the entire package with `slsa_provenance_available`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_provenance_available/slsa_provenance_available.rego#L22[Source, window="_blank"]

@@ -16,6 +16,7 @@ Verify if Task defines the required result. This is controlled by the `required_
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `results.required`
+* To exclude this rule, add `results.required` to the `exclude` list in your policy config. You can also exclude the entire package with `results`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/results/results.rego#L16[Source, window="_blank"]
 
 [#results__rule_data_provided]
@@ -28,4 +29,5 @@ Confirm the expected `required_task_results` rule data key has been provided in 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `results.rule_data_provided`
+* To exclude this rule, add `results.rule_data_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `results`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/results/results.rego#L31[Source, window="_blank"]

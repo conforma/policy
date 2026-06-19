@@ -16,6 +16,7 @@ Verify the PipelineRun was initialized with a set of expected parameters. By def
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `PipelineRun params, %v, do not match expectation, %v.`
 * Code: `external_parameters.pipeline_run_params`
+* To exclude this rule, add `external_parameters.pipeline_run_params` to the `exclude` list in your policy config. You can also exclude the entire package with `external_parameters`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/external_parameters/external_parameters.rego#L17[Source, window="_blank"]
 
 [#external_parameters__pipeline_run_params_provided]
@@ -28,6 +29,7 @@ Confirm the `pipeline_run_params` rule data was provided.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `external_parameters.pipeline_run_params_provided`
+* To exclude this rule, add `external_parameters.pipeline_run_params_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `external_parameters`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/external_parameters/external_parameters.rego#L41[Source, window="_blank"]
 
 [#external_parameters__restrict_shared_volumes]
@@ -38,4 +40,5 @@ Verify the PipelineRun did not use any pre-existing PersistentVolumeClaim worksp
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `PipelineRun uses shared volumes, %v.`
 * Code: `external_parameters.restrict_shared_volumes`
+* To exclude this rule, add `external_parameters.restrict_shared_volumes` to the `exclude` list in your policy config. You can also exclude the entire package with `external_parameters`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/external_parameters/external_parameters.rego#L56[Source, window="_blank"]

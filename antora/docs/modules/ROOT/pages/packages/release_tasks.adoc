@@ -18,6 +18,7 @@ Ensure that the all required tasks are resolved from trusted tasks.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s is required and present but not from a trusted task`
 * Code: `tasks.required_untrusted_task_found`
+* To exclude this rule, add `tasks.required_untrusted_task_found` to the `exclude` list in your policy config. You can also exclude the entire package with `tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L173[Source, window="_blank"]
 
 [#tasks__required_tasks_found]
@@ -30,6 +31,7 @@ Ensure that the set of required tasks are included in the PipelineRun attestatio
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s is missing`
 * Code: `tasks.required_tasks_found`
+* To exclude this rule, add `tasks.required_tasks_found` to the `exclude` list in your policy config. You can also exclude the entire package with `tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L145[Source, window="_blank"]
 
 [#tasks__data_provided]
@@ -42,6 +44,7 @@ Confirm the expected data keys have been provided in the expected format. The ke
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `tasks.data_provided`
+* To exclude this rule, add `tasks.data_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L300[Source, window="_blank"]
 
 [#tasks__future_required_tasks_found]
@@ -54,6 +57,7 @@ Produce a warning when a task that will be required in the future was not includ
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `%s is missing and will be required on %s`
 * Code: `tasks.future_required_tasks_found`
+* To exclude this rule, add `tasks.future_required_tasks_found` to the `exclude` list in your policy config. You can also exclude the entire package with `tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L60[Source, window="_blank"]
 
 [#tasks__pinned_task_refs]
@@ -66,6 +70,7 @@ Ensure that all Tasks in the SLSA Provenance attestation use an immuntable refer
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task %s is used by pipeline task %s via an unpinned reference.`
 * Code: `tasks.pinned_task_refs`
+* To exclude this rule, add `tasks.pinned_task_refs` to the `exclude` list in your policy config. You can also exclude the entire package with `tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L234[Source, window="_blank"]
 
 [#tasks__pipeline_has_tasks]
@@ -78,6 +83,7 @@ Ensure that at least one Task is present in the PipelineRun attestation.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `No tasks found in PipelineRun attestation`
 * Code: `tasks.pipeline_has_tasks`
+* To exclude this rule, add `tasks.pipeline_has_tasks` to the `exclude` list in your policy config. You can also exclude the entire package with `tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L90[Source, window="_blank"]
 
 [#tasks__pipeline_required_tasks_list_provided]
@@ -90,6 +96,7 @@ Produce a warning if the required tasks list rule data was not provided.
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Required tasks do not exist for pipeline`
 * Code: `tasks.pipeline_required_tasks_list_provided`
+* To exclude this rule, add `tasks.pipeline_required_tasks_list_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L39[Source, window="_blank"]
 
 [#tasks__required_tasks_list_provided]
@@ -102,6 +109,7 @@ Confirm the `required-tasks` rule data was provided, since it's required by the 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Missing required required-tasks data`
 * Code: `tasks.required_tasks_list_provided`
+* To exclude this rule, add `tasks.required_tasks_list_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L210[Source, window="_blank"]
 
 [#tasks__successful_pipeline_tasks]
@@ -114,6 +122,7 @@ Ensure that all of the Tasks in the Pipeline completed successfully. Note that s
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Pipeline task %q did not complete successfully, %q`
 * Code: `tasks.successful_pipeline_tasks`
+* To exclude this rule, add `tasks.successful_pipeline_tasks` to the `exclude` list in your policy config. You can also exclude the entire package with `tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L115[Source, window="_blank"]
 
 [#tasks__unsupported]
@@ -124,4 +133,5 @@ The Tekton Task used is or will be unsupported. The Task is annotated with `buil
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task %q is used by pipeline task %q is or will be unsupported as of %s. %s`
 * Code: `tasks.unsupported`
+* To exclude this rule, add `tasks.unsupported` to the `exclude` list in your policy config. You can also exclude the entire package with `tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L261[Source, window="_blank"]

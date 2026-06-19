@@ -16,5 +16,6 @@ Build must target a configured branch pattern (e.g., 'c10s')
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Build target is %s which is not a trusted target branch`
 * Code: `git_branch.git_branch`
+* To exclude this rule, add `git_branch.git_branch` to the `exclude` list in your policy config. You can also exclude the entire package with `git_branch`, or exclude by collection with `@collection-name`.
 * Effective from: `2025-07-01T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/git_branch/git_branch.rego#L16[Source, window="_blank"]

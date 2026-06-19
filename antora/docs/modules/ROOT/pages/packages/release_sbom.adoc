@@ -18,6 +18,7 @@ Confirm the `disallowed_packages` and `disallowed_attributes` rule data were pro
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `sbom.disallowed_packages_provided`
+* To exclude this rule, add `sbom.disallowed_packages_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `sbom`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom/sbom.rego#L36[Source, window="_blank"]
 
 [#sbom__found]
@@ -30,4 +31,5 @@ Confirm an SBOM attestation exists.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `No SBOM attestations found`
 * Code: `sbom.found`
+* To exclude this rule, add `sbom.found` to the `exclude` list in your policy config. You can also exclude the entire package with `sbom`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom/sbom.rego#L16[Source, window="_blank"]

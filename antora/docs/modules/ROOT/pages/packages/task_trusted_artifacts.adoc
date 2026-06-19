@@ -16,6 +16,7 @@ Trusted Artifact parameters follow the expected naming convention.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The parameter %q of the Task %q does not use the _ARTIFACT suffix`
 * Code: `trusted_artifacts.parameter`
+* To exclude this rule, add `trusted_artifacts.parameter` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_artifacts`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/trusted_artifacts/trusted_artifacts.rego#L17[Source, window="_blank"]
 
 [#trusted_artifacts__result]
@@ -26,6 +27,7 @@ Trusted Artifact results follow the expected naming convention.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The result %q of the Task %q does not use the _ARTIFACT suffix`
 * Code: `trusted_artifacts.result`
+* To exclude this rule, add `trusted_artifacts.result` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_artifacts`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/trusted_artifacts/trusted_artifacts.rego#L30[Source, window="_blank"]
 
 [#trusted_artifacts__workspace]
@@ -36,5 +38,6 @@ Tasks that implement the Trusted Artifacts pattern should not allow general purp
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `General purpose workspace %q is not allowed`
 * Code: `trusted_artifacts.workspace`
+* To exclude this rule, add `trusted_artifacts.workspace` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_artifacts`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-07-07T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/trusted_artifacts/trusted_artifacts.rego#L43[Source, window="_blank"]

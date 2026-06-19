@@ -18,6 +18,7 @@ Verify the prefetch-dependencies task in the PipelineRun attestation was not inv
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task '%s' was invoked with mode parameter set to 'permissive'`
 * Code: `prefetch_dependencies.mode_not_permissive`
+* To exclude this rule, add `prefetch_dependencies.mode_not_permissive` to the `exclude` list in your policy config. You can also exclude the entire package with `prefetch_dependencies`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/prefetch_dependencies/prefetch_dependencies.rego#L16[Source, window="_blank"]
 
 [#prefetch_dependencies__package_registry_proxy_enabled]
@@ -30,5 +31,6 @@ Verify that prefetch-dependencies tasks have the enable-package-registry-proxy p
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task '%s' does not have the enable-package-registry-proxy parameter set to true`
 * Code: `prefetch_dependencies.package_registry_proxy_enabled`
+* To exclude this rule, add `prefetch_dependencies.package_registry_proxy_enabled` to the `exclude` list in your policy config. You can also exclude the entire package with `prefetch_dependencies`, or exclude by collection with `@collection-name`.
 * Effective from: `2026-05-13T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/prefetch_dependencies/prefetch_dependencies.rego#L43[Source, window="_blank"]

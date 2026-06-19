@@ -18,5 +18,6 @@ Confirm that each step in the Task uses a container image that is accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Step %d uses inaccessible image ref '%s'`
 * Code: `step_images.step_images_accessible`
+* To exclude this rule, add `step_images.step_images_accessible` to the `exclude` list in your policy config. You can also exclude the entire package with `step_images`, or exclude by collection with `@collection-name`.
 * Effective from: `2025-02-10T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_images/step_images.rego#L15[Source, window="_blank"]

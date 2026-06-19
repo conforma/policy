@@ -18,6 +18,7 @@ Verify that the images used to run the pre-build script tasks come from a known 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Pre-Build-Script task runner image %q is from a disallowed registry`
 * Code: `pre_build_script_task.pre_build_script_task_runner_image_allowed`
+* To exclude this rule, add `pre_build_script_task.pre_build_script_task_runner_image_allowed` to the `exclude` list in your policy config. You can also exclude the entire package with `pre_build_script_task`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L19[Source, window="_blank"]
 
 [#pre_build_script_task__valid_pre_build_script_task_runner_image_ref]
@@ -30,6 +31,7 @@ Verify that a valid image reference is specified as image being used to run the 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Pre-Build-Script task runner image %q is not a valid image reference`
 * Code: `pre_build_script_task.valid_pre_build_script_task_runner_image_ref`
+* To exclude this rule, add `pre_build_script_task.valid_pre_build_script_task_runner_image_ref` to the `exclude` list in your policy config. You can also exclude the entire package with `pre_build_script_task`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L72[Source, window="_blank"]
 
 [#pre_build_script_task__pre_build_script_task_runner_image_in_sbom]
@@ -42,6 +44,7 @@ Verify that the image used to run the pre-build script task is included in the S
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Pre-Build-Script task runner image %q is not in the SBOM`
 * Code: `pre_build_script_task.pre_build_script_task_runner_image_in_sbom`
+* To exclude this rule, add `pre_build_script_task.pre_build_script_task_runner_image_in_sbom` to the `exclude` list in your policy config. You can also exclude the entire package with `pre_build_script_task`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L96[Source, window="_blank"]
 
 [#pre_build_script_task__pre_build_script_task_runner_image_in_results]
@@ -54,4 +57,5 @@ Verify that the image used to run the pre-build script task is listed in the tas
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The runner image used for the pre-Build-Script task '%s' is not listed in the task results`
 * Code: `pre_build_script_task.pre_build_script_task_runner_image_in_results`
+* To exclude this rule, add `pre_build_script_task.pre_build_script_task_runner_image_in_results` to the `exclude` list in your policy config. You can also exclude the entire package with `pre_build_script_task`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/pre_build_script_task/pre_build_script_task.rego#L49[Source, window="_blank"]

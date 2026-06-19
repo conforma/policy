@@ -41,6 +41,7 @@ The SLSA Provenance attestation for the image is inspected to ensure CVEs that h
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Found %q vulnerability of %s security level`
 * Code: `cve.cve_blockers`
+* To exclude this rule, add `cve.cve_blockers` to the `exclude` list in your policy config. You can also exclude the entire package with `cve`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L115[Source, window="_blank"]
 
 [#cve__unpatched_cve_blockers]
@@ -53,6 +54,7 @@ The SLSA Provenance attestation for the image is inspected to ensure CVEs that d
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Found %q unpatched vulnerability of %s security level`
 * Code: `cve.unpatched_cve_blockers`
+* To exclude this rule, add `cve.unpatched_cve_blockers` to the `exclude` list in your policy config. You can also exclude the entire package with `cve`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L149[Source, window="_blank"]
 
 [#cve__cve_results_found]
@@ -65,6 +67,7 @@ Confirm that CVE scan task results (Clair or TPA) are present in the SLSA Proven
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `CVE scan results were not found`
 * Code: `cve.cve_results_found`
+* To exclude this rule, add `cve.cve_results_found` to the `exclude` list in your policy config. You can also exclude the entire package with `cve`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L185[Source, window="_blank"]
 
 [#cve__cve_warnings]
@@ -77,6 +80,7 @@ The SLSA Provenance attestation for the image is inspected to ensure CVEs that h
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Found %q non-blocking vulnerability of %s security level`
 * Code: `cve.cve_warnings`
+* To exclude this rule, add `cve.cve_warnings` to the `exclude` list in your policy config. You can also exclude the entire package with `cve`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L60[Source, window="_blank"]
 
 [#cve__unpatched_cve_warnings]
@@ -89,6 +93,7 @@ The SLSA Provenance attestation for the image is inspected to ensure CVEs that d
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Found %q non-blocking unpatched vulnerability of %s security level`
 * Code: `cve.unpatched_cve_warnings`
+* To exclude this rule, add `cve.unpatched_cve_warnings` to the `exclude` list in your policy config. You can also exclude the entire package with `cve`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L87[Source, window="_blank"]
 
 [#cve__rule_data_provided]
@@ -101,4 +106,5 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `cve.rule_data_provided`
+* To exclude this rule, add `cve.rule_data_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `cve`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L215[Source, window="_blank"]

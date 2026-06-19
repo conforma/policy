@@ -16,4 +16,5 @@ Confirm that the pipeline definition has the kind "Pipeline".
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Unexpected kind '%s' for pipeline definition`
 * Code: `basic.expected_kind`
+* To exclude this rule, add `basic.expected_kind` to the `exclude` list in your policy config. You can also exclude the entire package with `basic`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/basic/basic.rego#L19[Source, window="_blank"]

@@ -16,6 +16,7 @@ Confirm the task definition includes the kind field.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Required field 'kind' not found`
 * Code: `kind.kind_present`
+* To exclude this rule, add `kind.kind_present` to the `exclude` list in your policy config. You can also exclude the entire package with `kind`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/kind/kind.rego#L31[Source, window="_blank"]
 
 [#kind__expected_kind]
@@ -26,4 +27,5 @@ Confirm the task definition has the kind "Task".
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Unexpected kind '%s' for task definition`
 * Code: `kind.expected_kind`
+* To exclude this rule, add `kind.expected_kind` to the `exclude` list in your policy config. You can also exclude the entire package with `kind`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/kind/kind.rego#L17[Source, window="_blank"]

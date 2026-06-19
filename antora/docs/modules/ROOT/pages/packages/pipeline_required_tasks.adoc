@@ -16,6 +16,7 @@ Produce a warning when a task that will be required in the future is not current
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `%s is missing and will be required on %s`
 * Code: `required_tasks.missing_future_required_task`
+* To exclude this rule, add `required_tasks.missing_future_required_task` to the `exclude` list in your policy config. You can also exclude the entire package with `required_tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L63[Source, window="_blank"]
 
 [#required_tasks__missing_required_task]
@@ -26,6 +27,7 @@ Ensure that the set of required tasks is included in the Pipeline definition.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s is missing or outdated`
 * Code: `required_tasks.missing_required_task`
+* To exclude this rule, add `required_tasks.missing_required_task` to the `exclude` list in your policy config. You can also exclude the entire package with `required_tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L100[Source, window="_blank"]
 
 [#required_tasks__tasks_found]
@@ -36,6 +38,7 @@ Confirm at least one task is present in the pipeline definition.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `No tasks found in pipeline`
 * Code: `required_tasks.tasks_found`
+* To exclude this rule, add `required_tasks.tasks_found` to the `exclude` list in your policy config. You can also exclude the entire package with `required_tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L87[Source, window="_blank"]
 
 [#required_tasks__required_tasks_list_present]
@@ -46,6 +49,7 @@ Confirm the `required-tasks` rule data was provided, since it's required by the 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The required tasks list is missing from the rule data`
 * Code: `required_tasks.required_tasks_list_present`
+* To exclude this rule, add `required_tasks.required_tasks_list_present` to the `exclude` list in your policy config. You can also exclude the entire package with `required_tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L122[Source, window="_blank"]
 
 [#required_tasks__required_tasks_found]
@@ -56,4 +60,5 @@ Produce a warning if a list of current or future required tasks does not exist i
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Required tasks do not exist for pipeline %q`
 * Code: `required_tasks.required_tasks_found`
+* To exclude this rule, add `required_tasks.required_tasks_found` to the `exclude` list in your policy config. You can also exclude the entire package with `required_tasks`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/pipeline/required_tasks/required_tasks.rego#L44[Source, window="_blank"]

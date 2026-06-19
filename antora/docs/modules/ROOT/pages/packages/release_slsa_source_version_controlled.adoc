@@ -33,6 +33,7 @@ Ensure each entry in the predicate.materials array with a SHA-1 digest includes 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Material URI %q is not a git URI`
 * Code: `slsa_source_version_controlled.materials_uri_is_git_repo`
+* To exclude this rule, add `slsa_source_version_controlled.materials_uri_is_git_repo` to the `exclude` list in your policy config. You can also exclude the entire package with `slsa_source_version_controlled`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L59[Source, window="_blank"]
 
 [#slsa_source_version_controlled__materials_format_okay]
@@ -45,6 +46,7 @@ Confirm at least one entry in the predicate.materials array of the attestation c
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `No materials match expected format`
 * Code: `slsa_source_version_controlled.materials_format_okay`
+* To exclude this rule, add `slsa_source_version_controlled.materials_format_okay` to the `exclude` list in your policy config. You can also exclude the entire package with `slsa_source_version_controlled`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L34[Source, window="_blank"]
 
 [#slsa_source_version_controlled__materials_include_git_sha]
@@ -57,4 +59,5 @@ Ensure that each entry in the predicate.materials array with a SHA-1 digest incl
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Material digest %q is not a git commit sha`
 * Code: `slsa_source_version_controlled.materials_include_git_sha`
+* To exclude this rule, add `slsa_source_version_controlled.materials_include_git_sha` to the `exclude` list in your policy config. You can also exclude the entire package with `slsa_source_version_controlled`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L85[Source, window="_blank"]

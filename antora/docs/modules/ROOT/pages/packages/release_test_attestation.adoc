@@ -18,6 +18,7 @@ Produce a violation if any test result attestation has a result of "FAILED". Fai
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q has a failed result, failed tests %s`
 * Code: `test_attestation.no_failed_tests`
+* To exclude this rule, add `test_attestation.no_failed_tests` to the `exclude` list in your policy config. You can also exclude the entire package with `test_attestation`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L51[Source, window="_blank"]
 
 [#test_attestation__no_test_warnings]
@@ -30,6 +31,7 @@ Produce a warning if any test result attestation has a result of "WARNED". Warne
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Test attestation %q has warnings, warned tests %s`
 * Code: `test_attestation.no_test_warnings`
+* To exclude this rule, add `test_attestation.no_test_warnings` to the `exclude` list in your policy config. You can also exclude the entire package with `test_attestation`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L133[Source, window="_blank"]
 
 [#test_attestation__test_result_known]
@@ -42,6 +44,7 @@ Ensure the result field of each test result attestation is a recognized value. V
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q has an unsupported result value %q`
 * Code: `test_attestation.test_result_known`
+* To exclude this rule, add `test_attestation.test_result_known` to the `exclude` list in your policy config. You can also exclude the entire package with `test_attestation`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L79[Source, window="_blank"]
 
 [#test_attestation__test_data_found]
@@ -54,4 +57,5 @@ Each test result attestation must include a result field in its predicate. Verif
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q is missing the required result field`
 * Code: `test_attestation.test_data_found`
+* To exclude this rule, add `test_attestation.test_data_found` to the `exclude` list in your policy config. You can also exclude the entire package with `test_attestation`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L107[Source, window="_blank"]

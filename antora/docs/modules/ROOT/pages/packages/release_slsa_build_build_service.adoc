@@ -18,6 +18,7 @@ Confirm the `allowed_builder_ids` rule data was provided, since it is required b
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `slsa_build_build_service.allowed_builder_ids_provided`
+* To exclude this rule, add `slsa_build_build_service.allowed_builder_ids_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `slsa_build_build_service`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_build_service/slsa_build_build_service.rego#L71[Source, window="_blank"]
 
 [#slsa_build_build_service__slsa_builder_id_found]
@@ -30,6 +31,7 @@ Verify that the attestation attribute predicate.builder.id is set.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Builder ID not set in attestation`
 * Code: `slsa_build_build_service.slsa_builder_id_found`
+* To exclude this rule, add `slsa_build_build_service.slsa_builder_id_found` to the `exclude` list in your policy config. You can also exclude the entire package with `slsa_build_build_service`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_build_service/slsa_build_build_service.rego#L22[Source, window="_blank"]
 
 [#slsa_build_build_service__slsa_builder_id_accepted]
@@ -42,4 +44,5 @@ Verify that the attestation attribute predicate.builder.id is set to one of the 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Builder ID %q is unexpected`
 * Code: `slsa_build_build_service.slsa_builder_id_accepted`
+* To exclude this rule, add `slsa_build_build_service.slsa_builder_id_accepted` to the `exclude` list in your policy config. You can also exclude the entire package with `slsa_build_build_service`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_build_service/slsa_build_build_service.rego#L44[Source, window="_blank"]

@@ -16,4 +16,5 @@ The Tekton Task used specifies an invalid pipeline. The Task is annotated with `
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task %q uses invalid pipleline %s, which is not in the list of valid pipelines: %s`
 * Code: `rpm_pipeline.invalid_pipeline`
+* To exclude this rule, add `rpm_pipeline.invalid_pipeline` to the `exclude` list in your policy config. You can also exclude the entire package with `rpm_pipeline`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_pipeline/rpm_pipeline.rego#L20[Source, window="_blank"]
