@@ -18,4 +18,5 @@ Check the image metadata for the presence of a "quay.expires-after" label. If it
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The label 'quay.expires-after' is not allowed in the released image`
 * Code: `quay_expiration.expires_label`
+* To exclude this rule, add `quay_expiration.expires_label` to the `exclude` list in your policy config. You can also exclude the entire package with `quay_expiration`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/quay_expiration/quay_expiration.rego#L16[Source, window="_blank"]

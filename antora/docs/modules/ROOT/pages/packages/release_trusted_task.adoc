@@ -18,6 +18,7 @@ Confirm the expected `trusted_tasks` data keys have been provided in the expecte
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `trusted_task.data_format`
+* To exclude this rule, add `trusted_task.data_format` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_task`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L258[Source, window="_blank"]
 
 [#trusted_task__future_deny_rule]
@@ -30,6 +31,7 @@ Warn when a task matches a deny rule that has an effective_on date in the future
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Task %q will be denied by rule pattern %q starting on %s.`
 * Code: `trusted_task.future_deny_rule`
+* To exclude this rule, add `trusted_task.future_deny_rule` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_task`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L112[Source, window="_blank"]
 
 [#trusted_task__pinned]
@@ -42,6 +44,7 @@ Check if all Tekton Tasks use a Task definition by a pinned reference. When usin
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Pipeline task %q uses an unpinned task reference, %s`
 * Code: `trusted_task.pinned`
+* To exclude this rule, add `trusted_task.pinned` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_task`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-05-07T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L53[Source, window="_blank"]
 
@@ -55,6 +58,7 @@ Check if all Tekton Tasks defined with the bundle format contain a tag reference
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Pipeline task %q uses an untagged task reference, %s`
 * Code: `trusted_task.tagged`
+* To exclude this rule, add `trusted_task.tagged` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_task`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-05-07T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L29[Source, window="_blank"]
 
@@ -68,6 +72,7 @@ Confirm the `trusted_tasks` rule data was provided, since it's required by the p
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Missing required trusted_tasks data`
 * Code: `trusted_task.data`
+* To exclude this rule, add `trusted_task.data` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_task`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-05-07T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L238[Source, window="_blank"]
 
@@ -81,6 +86,7 @@ Check the trust of the Tekton Tasks used in the build Pipeline. There are two mo
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `trusted_task.trusted`
+* To exclude this rule, add `trusted_task.trusted` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_task`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-05-07T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L138[Source, window="_blank"]
 
@@ -94,6 +100,7 @@ Check if all Tekton Tasks use the latest known Task reference. When warnings wil
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `A newer version of task %q exists. Please update before %s. The current bundle is %q and the latest bundle ref is %q`
 * Code: `trusted_task.current`
+* To exclude this rule, add `trusted_task.current` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_task`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-05-07T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L79[Source, window="_blank"]
 
@@ -107,6 +114,7 @@ All input trusted artifacts must be produced on the pipeline. If they are not th
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Code tampering detected, input %q for task %q was not produced by the pipeline as attested.`
 * Code: `trusted_task.valid_trusted_artifact_inputs`
+* To exclude this rule, add `trusted_task.valid_trusted_artifact_inputs` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_task`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L200[Source, window="_blank"]
 
 [#trusted_task__trusted_parameters]
@@ -119,5 +127,6 @@ Confirm certain parameters provided to each builder Task have come from trusted 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The %q parameter of the %q PipelineTask includes an untrusted digest: %s`
 * Code: `trusted_task.trusted_parameters`
+* To exclude this rule, add `trusted_task.trusted_parameters` to the `exclude` list in your policy config. You can also exclude the entire package with `trusted_task`, or exclude by collection with `@collection-name`.
 * Effective from: `2021-07-04T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/trusted_task/trusted_task.rego#L164[Source, window="_blank"]

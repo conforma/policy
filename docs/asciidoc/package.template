@@ -24,6 +24,7 @@
 * Rule type: [rule-type-indicator {{ warningOrFailure . }}]#{{ toUpper (warningOrFailure .) }}#
 * {{ toTitle (warningOrFailure .) }} message: `{{ index .Custom "failure_msg" }}`
 * Code: `{{ packageName $pkg }}.{{ index .Custom "short_name" }}`
+* To exclude this rule, add `{{ packageName $pkg }}.{{ index .Custom "short_name" }}` to the `exclude` list in your policy config. You can also exclude the entire package with `{{ packageName $pkg }}`, or exclude by collection with `@collection-name`.
 {{- with index .Custom "effective_on" }}
 * Effective from: `{{ formatTime . }}`
 {{- end }}{{/* index .Custom "effective_on" */}}

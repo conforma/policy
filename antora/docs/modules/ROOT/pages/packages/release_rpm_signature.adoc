@@ -18,6 +18,7 @@ The SLSA Provenance attestation for the image is inspected to ensure RPMs have b
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Signing key %q is not one of the allowed keys: %s`
 * Code: `rpm_signature.allowed`
+* To exclude this rule, add `rpm_signature.allowed` to the `exclude` list in your policy config. You can also exclude the entire package with `rpm_signature`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-10-05T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L17[Source, window="_blank"]
 
@@ -29,6 +30,7 @@ Confirm the format of the RPMS_DATA result is in the expected format.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `rpm_signature.result_format`
+* To exclude this rule, add `rpm_signature.result_format` to the `exclude` list in your policy config. You can also exclude the entire package with `rpm_signature`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-10-05T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L40[Source, window="_blank"]
 
@@ -40,5 +42,6 @@ Confirm the expected `allowed_rpm_signature_keys` rule data key has been provide
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `rpm_signature.rule_data_provided`
+* To exclude this rule, add `rpm_signature.rule_data_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `rpm_signature`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-10-05T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L57[Source, window="_blank"]

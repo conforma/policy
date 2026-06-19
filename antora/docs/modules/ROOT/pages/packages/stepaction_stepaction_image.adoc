@@ -18,6 +18,7 @@ Confirm the StepAction uses a container image with a URL that matches one of the
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Image ref %q is disallowed`
 * Code: `stepaction_image.permitted`
+* To exclude this rule, add `stepaction_image.permitted` to the `exclude` list in your policy config. You can also exclude the entire package with `stepaction_image`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/stepaction/stepaction_image/stepaction_image.rego#L40[Source, window="_blank"]
 
 [#stepaction_image__accessible]
@@ -30,6 +31,7 @@ Confirm the container image used in the StepTemplate is accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Image ref %q is inaccessible`
 * Code: `stepaction_image.accessible`
+* To exclude this rule, add `stepaction_image.accessible` to the `exclude` list in your policy config. You can also exclude the entire package with `stepaction_image`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/stepaction/stepaction_image/stepaction_image.rego#L18[Source, window="_blank"]
 
 [#stepaction_image__rule_data]
@@ -42,4 +44,5 @@ Confirm the `allowed_step_image_registry_prefixes` rule data is provided.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `stepaction_image.rule_data`
+* To exclude this rule, add `stepaction_image.rule_data` to the `exclude` list in your policy config. You can also exclude the entire package with `stepaction_image`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/stepaction/stepaction_image/stepaction_image.rego#L64[Source, window="_blank"]

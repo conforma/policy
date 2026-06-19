@@ -16,4 +16,5 @@ Builds have valid download locations for RPM build dependencies
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `RPM build dependency source %s is not in the allowed list %v.`
 * Code: `rpm_build_deps.download_location_valid`
+* To exclude this rule, add `rpm_build_deps.download_location_valid` to the `exclude` list in your policy config. You can also exclude the entire package with `rpm_build_deps`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_build_deps/rpm_build_deps.rego#L15[Source, window="_blank"]

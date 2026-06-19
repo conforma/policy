@@ -18,6 +18,7 @@ Confirm that the result of the git-clone task is included in the materials secti
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Entry in materials for the git repo %q and commit %q not found`
 * Code: `provenance_materials.git_clone_source_matches_provenance`
+* To exclude this rule, add `provenance_materials.git_clone_source_matches_provenance` to the `exclude` list in your policy config. You can also exclude the entire package with `provenance_materials`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/provenance_materials/provenance_materials.rego#L38[Source, window="_blank"]
 
 [#provenance_materials__git_clone_task_found]
@@ -30,4 +31,5 @@ Confirm that the attestation contains a git-clone task with `commit` and `url` t
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task git-clone not found`
 * Code: `provenance_materials.git_clone_task_found`
+* To exclude this rule, add `provenance_materials.git_clone_task_found` to the `exclude` list in your policy config. You can also exclude the entire package with `provenance_materials`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/provenance_materials/provenance_materials.rego#L16[Source, window="_blank"]

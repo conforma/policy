@@ -18,6 +18,7 @@ Each RPM package listed in an SBOM must specify the repository id that it comes 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `RPM repo id check failed: %s`
 * Code: `rpm_repos.ids_known`
+* To exclude this rule, add `rpm_repos.ids_known` to the `exclude` list in your policy config. You can also exclude the entire package with `rpm_repos`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-11-10T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_repos/rpm_repos.rego#L40[Source, window="_blank"]
 
@@ -31,4 +32,5 @@ A list of known and permitted repository ids should be available in the rule dat
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Rule data '%s' has unexpected format: %s`
 * Code: `rpm_repos.rule_data_provided`
+* To exclude this rule, add `rpm_repos.rule_data_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `rpm_repos`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_repos/rpm_repos.rego#L18[Source, window="_blank"]

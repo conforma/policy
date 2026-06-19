@@ -16,6 +16,7 @@ Verify the source container image exists.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `source_image.exists`
+* To exclude this rule, add `source_image.exists` to the `exclude` list in your policy config. You can also exclude the entire package with `source_image`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-06-05T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/source_image/source_image.rego#L17[Source, window="_blank"]
 
@@ -27,5 +28,6 @@ Verify the source container image is signed.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `source_image.signed`
+* To exclude this rule, add `source_image.signed` to the `exclude` list in your policy config. You can also exclude the entire package with `source_image`, or exclude by collection with `@collection-name`.
 * Effective from: `2024-05-04T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/source_image/source_image.rego#L32[Source, window="_blank"]

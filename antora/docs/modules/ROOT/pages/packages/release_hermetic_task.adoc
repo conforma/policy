@@ -18,4 +18,5 @@ Verify the task in the PipelineRun attestation was invoked with the proper param
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task '%s' was not invoked with the hermetic parameter set`
 * Code: `hermetic_task.hermetic`
+* To exclude this rule, add `hermetic_task.hermetic` to the `exclude` list in your policy config. You can also exclude the entire package with `hermetic_task`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/hermetic_task/hermetic_task.rego#L18[Source, window="_blank"]

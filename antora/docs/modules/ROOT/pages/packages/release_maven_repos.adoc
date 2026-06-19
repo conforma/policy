@@ -18,6 +18,7 @@ Each Maven package listed in an SBOM must specify the repository URL that it com
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `maven_repos.deny_unpermitted_urls`
+* To exclude this rule, add `maven_repos.deny_unpermitted_urls` to the `exclude` list in your policy config. You can also exclude the entire package with `maven_repos`, or exclude by collection with `@collection-name`.
 * Effective from: `2026-05-10T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/maven_repos/maven_repos.rego#L35[Source, window="_blank"]
 
@@ -31,4 +32,5 @@ Ensures the required allowed_maven_repositories list is provided.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Policy data is missing the required "%s" list`
 * Code: `maven_repos.policy_data_missing`
+* To exclude this rule, add `maven_repos.policy_data_missing` to the `exclude` list in your policy config. You can also exclude the entire package with `maven_repos`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/maven_repos/maven_repos.rego#L17[Source, window="_blank"]

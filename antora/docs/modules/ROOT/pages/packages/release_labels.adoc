@@ -18,6 +18,7 @@ Check the image for the presence of labels that have been deprecated. Use the ru
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The %q label is deprecated, replace with %q`
 * Code: `labels.deprecated_labels`
+* To exclude this rule, add `labels.deprecated_labels` to the `exclude` list in your policy config. You can also exclude the entire package with `labels`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L88[Source, window="_blank"]
 
 [#labels__disallowed_inherited_labels]
@@ -30,6 +31,7 @@ Check that certain labels on the image have different values than the labels fro
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The %q label should not be inherited from the parent image`
 * Code: `labels.disallowed_inherited_labels`
+* To exclude this rule, add `labels.disallowed_inherited_labels` to the `exclude` list in your policy config. You can also exclude the entire package with `labels`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L137[Source, window="_blank"]
 
 [#labels__inaccessible_config]
@@ -42,6 +44,7 @@ The image config is not accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Image config of the image %q is inaccessible`
 * Code: `labels.inaccessible_config`
+* To exclude this rule, add `labels.inaccessible_config` to the `exclude` list in your policy config. You can also exclude the entire package with `labels`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L66[Source, window="_blank"]
 
 [#labels__inaccessible_manifest]
@@ -54,6 +57,7 @@ The image manifest is not accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Manifest of the image %q is inaccessible`
 * Code: `labels.inaccessible_manifest`
+* To exclude this rule, add `labels.inaccessible_manifest` to the `exclude` list in your policy config. You can also exclude the entire package with `labels`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L47[Source, window="_blank"]
 
 [#labels__inaccessible_parent_config]
@@ -66,6 +70,7 @@ The parent image config is not accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Image config of the image %q, parent of image %q is inaccessible`
 * Code: `labels.inaccessible_parent_config`
+* To exclude this rule, add `labels.inaccessible_parent_config` to the `exclude` list in your policy config. You can also exclude the entire package with `labels`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L201[Source, window="_blank"]
 
 [#labels__inaccessible_parent_manifest]
@@ -78,6 +83,7 @@ The parent image manifest is not accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Manifest of the image %q, parent of image %q is inaccessible`
 * Code: `labels.inaccessible_parent_manifest`
+* To exclude this rule, add `labels.inaccessible_parent_manifest` to the `exclude` list in your policy config. You can also exclude the entire package with `labels`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L182[Source, window="_blank"]
 
 [#labels__optional_labels]
@@ -90,6 +96,7 @@ Check the image for the presence of labels that are recommended, but not require
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `The optional %q label is missing. Label description: %s`
 * Code: `labels.optional_labels`
+* To exclude this rule, add `labels.optional_labels` to the `exclude` list in your policy config. You can also exclude the entire package with `labels`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L20[Source, window="_blank"]
 
 [#labels__required_labels]
@@ -102,6 +109,7 @@ Check the image for the presence of labels that are required. Use the rule data 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `labels.required_labels`
+* To exclude this rule, add `labels.required_labels` to the `exclude` list in your policy config. You can also exclude the entire package with `labels`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L116[Source, window="_blank"]
 
 [#labels__rule_data_provided]
@@ -114,4 +122,5 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `labels.rule_data_provided`
+* To exclude this rule, add `labels.rule_data_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `labels`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L163[Source, window="_blank"]

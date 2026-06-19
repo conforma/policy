@@ -16,6 +16,7 @@ Check if the image signature certificate contains the expected GitHub extensions
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Missing extension %q`
 * Code: `github_certificate.gh_workflow_extensions`
+* To exclude this rule, add `github_certificate.gh_workflow_extensions` to the `exclude` list in your policy config. You can also exclude the entire package with `github_certificate`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L16[Source, window="_blank"]
 
 [#github_certificate__gh_workflow_name]
@@ -26,6 +27,7 @@ Check if the value of the GitHub Workflow Name extension in the image signature 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Name %q not in allowed list: %v`
 * Code: `github_certificate.gh_workflow_name`
+* To exclude this rule, add `github_certificate.gh_workflow_name` to the `exclude` list in your policy config. You can also exclude the entire package with `github_certificate`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L64[Source, window="_blank"]
 
 [#github_certificate__gh_workflow_repository]
@@ -36,6 +38,7 @@ Check if the value of the GitHub Workflow Repository extension in the image sign
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Repository %q not in allowed list: %v`
 * Code: `github_certificate.gh_workflow_repository`
+* To exclude this rule, add `github_certificate.gh_workflow_repository` to the `exclude` list in your policy config. You can also exclude the entire package with `github_certificate`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L34[Source, window="_blank"]
 
 [#github_certificate__gh_workflow_ref]
@@ -46,6 +49,7 @@ Check if the value of the GitHub Workflow Ref extension in the image signature c
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Ref %q not in allowed list: %v`
 * Code: `github_certificate.gh_workflow_ref`
+* To exclude this rule, add `github_certificate.gh_workflow_ref` to the `exclude` list in your policy config. You can also exclude the entire package with `github_certificate`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L49[Source, window="_blank"]
 
 [#github_certificate__gh_workflow_trigger]
@@ -56,6 +60,7 @@ Check if the value of the GitHub Workflow Trigger extension in the image signatu
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Trigger %q not in allowed list: %v`
 * Code: `github_certificate.gh_workflow_trigger`
+* To exclude this rule, add `github_certificate.gh_workflow_trigger` to the `exclude` list in your policy config. You can also exclude the entire package with `github_certificate`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L79[Source, window="_blank"]
 
 [#github_certificate__rule_data_provided]
@@ -68,4 +73,5 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `github_certificate.rule_data_provided`
+* To exclude this rule, add `github_certificate.rule_data_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `github_certificate`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/github_certificate/github_certificate.rego#L94[Source, window="_blank"]

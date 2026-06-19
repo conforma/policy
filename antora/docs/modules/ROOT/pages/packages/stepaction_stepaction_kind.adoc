@@ -16,4 +16,5 @@ Confirm the StepAction definition has the kind "StepAction".
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Unexpected kind %q for StepAction definition`
 * Code: `stepaction_kind.valid`
+* To exclude this rule, add `stepaction_kind.valid` to the `exclude` list in your policy config. You can also exclude the entire package with `stepaction_kind`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/stepaction/stepaction_kind/stepaction_kind.rego#L14[Source, window="_blank"]

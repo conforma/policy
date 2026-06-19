@@ -18,6 +18,7 @@ The Conforma CLI now places the attestation data in a different location. This c
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Deprecated policy attestation format found`
 * Code: `attestation_type.deprecated_policy_attestation_format`
+* To exclude this rule, add `attestation_type.deprecated_policy_attestation_format` to the `exclude` list in your policy config. You can also exclude the entire package with `attestation_type`, or exclude by collection with `@collection-name`.
 * Effective from: `2023-08-31T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L82[Source, window="_blank"]
 
@@ -31,6 +32,7 @@ Confirm the attestation found for the image has a known attestation type.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Unknown attestation type '%s'`
 * Code: `attestation_type.known_attestation_type`
+* To exclude this rule, add `attestation_type.known_attestation_type` to the `exclude` list in your policy config. You can also exclude the entire package with `attestation_type`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L16[Source, window="_blank"]
 
 [#attestation_type__known_attestation_types_provided]
@@ -43,6 +45,7 @@ Confirm the `known_attestation_types` rule data was provided.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `attestation_type.known_attestation_types_provided`
+* To exclude this rule, add `attestation_type.known_attestation_types_provided` to the `exclude` list in your policy config. You can also exclude the entire package with `attestation_type`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L44[Source, window="_blank"]
 
 [#attestation_type__pipelinerun_attestation_found]
@@ -55,4 +58,5 @@ Confirm at least one PipelineRun attestation is present.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Missing pipelinerun attestation`
 * Code: `attestation_type.pipelinerun_attestation_found`
+* To exclude this rule, add `attestation_type.pipelinerun_attestation_found` to the `exclude` list in your policy config. You can also exclude the entire package with `attestation_type`, or exclude by collection with `@collection-name`.
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L62[Source, window="_blank"]
