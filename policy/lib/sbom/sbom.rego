@@ -74,8 +74,7 @@ _fetch_pipelinerun_sbom contains sbom if {
 	expected_image_digest == image_digest
 
 	blob_ref := tekton.task_result(task, "SBOM_BLOB_URL")
-	blob := ec.oci.blob(blob_ref)
-	sbom := json.unmarshal(blob)
+	sbom := oci.parsed_blob(blob_ref)
 }
 
 # _fetch_sboms_from_image discovers SBOMs attached directly to the image being validated,
@@ -87,18 +86,16 @@ _fetch_sboms_from_image := _sboms_from_referrers | _sboms_from_tag_refs
 _sboms_from_referrers contains sbom if {
 	some referrer in ec.oci.image_referrers(input.image.ref)
 	referrer.artifactType in _sbom_artifact_types
-	blob := ec.oci.blob(referrer.ref)
-	sbom := json.unmarshal(blob)
+	sbom := oci.parsed_blob(referrer.ref)
 }
 
 # Discover SBOMs via legacy cosign tag-based conventions (.sbom suffix).
 # Tag refs point to OCI images, so we fetch the manifest and extract the
-# blob from its first layer using blob_from_image.
+# blob from its first layer using parsed_blob_from_image.
 _sboms_from_tag_refs contains sbom if {
 	some ref in ec.oci.image_tag_refs(input.image.ref)
 	endswith(ref, ".sbom")
-	blob := oci.blob_from_image(ref)
-	sbom := json.unmarshal(blob)
+	sbom := oci.parsed_blob_from_image(ref)
 }
 
 has_item(needle, haystack) if {

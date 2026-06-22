@@ -16,6 +16,7 @@
 
 package lib.intoto
 
+import data.lib.oci
 import rego.v1
 
 _artifact_type := "application/vnd.in-toto+json"
@@ -32,8 +33,7 @@ _known_types := {"https://in-toto.io/Statement/v0.1", "https://in-toto.io/Statem
 statements contains statement if {
 	some referrer in ec.oci.image_referrers(input.image.ref)
 	referrer.artifactType == _artifact_type
-	blob := ec.oci.blob(referrer.ref)
-	statement := json.unmarshal(blob)
+	statement := oci.parsed_blob(referrer.ref)
 
 	# regal ignore:leaked-internal-reference
 	statement._type in _known_types

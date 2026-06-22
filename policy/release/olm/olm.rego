@@ -12,6 +12,7 @@ import data.lib
 import data.lib.image
 import data.lib.json as j
 import data.lib.metadata
+import data.lib.oci
 import data.lib.rule_data
 
 manifestv1 := "operators.operatorframework.io.bundle.manifests.v1"
@@ -511,7 +512,7 @@ _related_images(tested_image) := [e |
 		related_image_blob := object.union(input_image, {"digest": layer.digest})
 		related_image_blob_ref := image.str(related_image_blob)
 
-		raw_related_images := json.unmarshal(ec.oci.blob(related_image_blob_ref))
+		raw_related_images := oci.parsed_blob(related_image_blob_ref)
 
 		some related_ref in raw_related_images
 		r := {

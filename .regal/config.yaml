@@ -24,6 +24,12 @@
 # make it difficult to detect when a new issue is detected and they end up being ignored and
 # cluttering the output.
 rules:
+  custom:
+    prefer-parsed-blob:
+      level: error
+      ignore:
+        files:
+          - policy/lib/oci/oci.rego
   style:
     todo-comment:
       # We use TODO comments through out the code base to indicate work that

@@ -12,6 +12,7 @@ import rego.v1
 import data.lib
 import data.lib.image
 import data.lib.metadata
+import data.lib.oci
 import data.lib.rule_data
 import data.lib.sbom
 import data.lib.strings as string_utils
@@ -107,9 +108,8 @@ all_rpms_by_name_and_platform[rpm_name][platform] contains nvr if {
 	result.name == "SBOM_BLOB_URL"
 	sbom_blob_ref := result.value
 
-	# Fetch the SBOM data
-	sbom_blob := ec.oci.blob(sbom_blob_ref)
-	s := json.unmarshal(sbom_blob)
+	# Fetch and parse the SBOM data
+	s := oci.parsed_blob(sbom_blob_ref)
 
 	# Extract the list of rpm purls from the SBOM and parse out
 	# the rpm version details

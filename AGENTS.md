@@ -57,6 +57,7 @@ These files have `effective_on` dates — rules with future dates are warnings, 
 | Add a new release policy rule | `policy/release/` (rule + _test + add to collection) |
 | Add a new pipeline policy rule | `policy/pipeline/` |
 | Add a shared library function | `policy/lib/` (must have test coverage) |
+| Fetch and parse an OCI blob as JSON | Use `oci.parsed_blob(ref)` from `data.lib.oci`, not `json.unmarshal(ec.oci.blob(ref))` directly. A Regal lint rule (`prefer-parsed-blob`) enforces this. |
 
 ## PR Conventions
 
