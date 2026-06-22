@@ -63,6 +63,11 @@ missing_trusted_task_rules_data if {
 	count(_trusted_task_rules_data.allow) + count(_trusted_task_rules_data.deny) == 0
 }
 
+# Returns true if trusted_task_rules is explicitly disabled via rule_data
+missing_trusted_task_rules_data if {
+	lib_rule_data("trusted_task_rules_enabled") == false
+}
+
 default missing_trusted_tasks_data := false
 
 # Returns true if legacy trusted_tasks data is missing
@@ -255,6 +260,17 @@ data_errors contains error if {
 				"type": "integer",
 				"minimum": 0,
 			}},
+		},
+	)
+}
+
+data_errors contains error if {
+	some error in j.validate_schema(
+		{"trusted_task_rules_enabled": lib_rule_data("trusted_task_rules_enabled")},
+		{
+			"$schema": "http://json-schema.org/draft-07/schema#",
+			"type": "object",
+			"properties": {"trusted_task_rules_enabled": {"type": "boolean"}},
 		},
 	)
 }

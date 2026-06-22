@@ -136,6 +136,8 @@ defaults := {
 	# using the ruleData key. Make this default to an empty dict so we can conveniently
 	# merge it with with `data.trusted_tasks`
 	"trusted_tasks": {},
+	# Used in lib/tekton/trusted.rego to toggle trusted_task_rules on/off
+	"trusted_task_rules_enabled": false,
 	# Number of days before a version of the Task expires that warnings are reported
 	"task_expiry_warning_days": 0,
 	# Number of days before a volatile config rule expires that warnings are reported

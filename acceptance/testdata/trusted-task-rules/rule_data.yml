@@ -14,6 +14,7 @@
 # limitations under the License.
 
 rule_data:
+  trusted_task_rules_enabled: true
   trusted_task_rules:
     allow:
       konflux-tasks:

@@ -281,6 +281,7 @@ test_all_passed_no_violations if {
 		with ec.oci.blob as _mock_blob_passed
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	assertions.assert_empty(test_attestation.warn) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
@@ -288,6 +289,7 @@ test_all_passed_no_violations if {
 		with ec.oci.blob as _mock_blob_passed
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # --- Test Case 2: FAILED with failedTests array ---
@@ -303,6 +305,7 @@ test_failed_with_details if {
 		with ec.oci.blob as _mock_blob_failed_with_details
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # --- Test Case 3: FAILED without failedTests array ---
@@ -318,6 +321,7 @@ test_failed_no_details if {
 		with ec.oci.blob as _mock_blob_failed_no_details
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # --- Test Case 4: WARNED with warnedTests array ---
@@ -329,6 +333,7 @@ test_warned_with_details if {
 		with ec.oci.blob as _mock_blob_warned
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	assertions.assert_equal_results(test_attestation.warn, {{
 		"code": "test_attestation.no_test_warnings",
@@ -340,6 +345,7 @@ test_warned_with_details if {
 		with ec.oci.blob as _mock_blob_warned
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # --- Test Case 6: Unknown result value ---
@@ -355,6 +361,7 @@ test_unknown_result_value if {
 		with ec.oci.blob as _mock_blob_unknown_result
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # --- Test Case 7: Missing result field ---
@@ -370,6 +377,7 @@ test_missing_result_field if {
 		with ec.oci.blob as _mock_blob_missing_result
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # --- Test Case 5: Mixed PASSED and FAILED ---
@@ -385,6 +393,7 @@ test_mixed_passed_and_failed if {
 		with ec.oci.blob as _mock_blob_mixed
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	assertions.assert_empty(test_attestation.warn) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers_two
@@ -392,6 +401,7 @@ test_mixed_passed_and_failed if {
 		with ec.oci.blob as _mock_blob_mixed
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # --- Test Case 8: No test attestations at all ---
@@ -413,6 +423,7 @@ test_test_name_from_configuration if {
 		with ec.oci.blob as _mock_blob_custom_config
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	some r in results
 	contains(r.msg, "\"my-custom-test\"")
@@ -427,6 +438,7 @@ test_test_name_fallback if {
 		with ec.oci.blob as _mock_blob_no_config
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	some r in results
 	contains(r.msg, "\"unknown test\"")
@@ -445,6 +457,7 @@ test_warned_and_failed_coexist if {
 		with ec.oci.blob as _mock_blob_warned_and_failed
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	assertions.assert_equal_results(test_attestation.warn, {{
 		"code": "test_attestation.no_test_warnings",
@@ -456,6 +469,7 @@ test_warned_and_failed_coexist if {
 		with ec.oci.blob as _mock_blob_warned_and_failed
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # --- Test Case 12: Multiple FAILEDs across attestations ---
@@ -467,6 +481,7 @@ test_multiple_failures_deny if {
 		with ec.oci.blob as _mock_blob_multi_failed
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	count(results) == 2
 
@@ -488,6 +503,7 @@ test_multiple_failures_no_warn if {
 		with ec.oci.blob as _mock_blob_multi_failed
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # --- Test Case 13: Non-string result value ---
@@ -499,6 +515,7 @@ test_non_string_result if {
 		with ec.oci.blob as _mock_blob_non_string_result
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	count(results) == 1
 	some r in results
@@ -521,6 +538,7 @@ test_missing_predicate if {
 		with ec.oci.blob as _mock_blob_missing_predicate
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	count(results) == 1
 	some r in results
@@ -547,6 +565,7 @@ test_non_array_failed_tests if {
 		with ec.oci.blob as _mock_blob_non_array_failed_tests
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 _mock_blob_non_array_warned_tests(_) := _make_statement({
@@ -566,6 +585,7 @@ test_non_array_warned_tests if {
 		with ec.oci.blob as _mock_blob_non_array_warned_tests
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # --- Test Case 16: Empty failedTests array boundary ---
@@ -587,6 +607,7 @@ test_empty_failed_tests_array if {
 		with ec.oci.blob as _mock_blob_empty_failed_tests
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 _mock_blob_empty_warned_tests(_) := _make_statement({
@@ -606,6 +627,7 @@ test_empty_warned_tests_array if {
 		with ec.oci.blob as _mock_blob_empty_warned_tests
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # --- Test Case 17: Falsy result values ---
@@ -622,6 +644,7 @@ test_false_result_value if {
 		with ec.oci.blob as _mock_blob_false_result
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	count(results) == 1
 	some r in results
@@ -640,6 +663,7 @@ test_null_result_value if {
 		with ec.oci.blob as _mock_blob_null_result
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	count(results) == 1
 	some r in results
@@ -658,6 +682,7 @@ test_empty_string_result_value if {
 		with ec.oci.blob as _mock_blob_empty_string_result
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	count(results) == 1
 	some r in results
@@ -683,4 +708,5 @@ test_non_string_test_list_elements if {
 		with ec.oci.blob as _mock_blob_non_string_tests
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
