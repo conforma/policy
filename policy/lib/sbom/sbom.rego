@@ -457,6 +457,7 @@ package_found_by_hermeto(pkg) if {
 is_registry_dependency(parsed_purl, dependency) if {
 	_is_registry_purl(parsed_purl)
 	not _is_bundled(dependency)
+	not _is_local_gomod_dep(parsed_purl)
 }
 
 _is_registry_purl(parsed_purl) if {
@@ -478,6 +479,45 @@ _is_bundled(dependency) if {
 	parsed := json.unmarshal(annotation.comment)
 	parsed == _npm_bundled_property
 }
+
+# Hermeto counts standard libraries mentioned in go.mod as dependencies and
+# includes them into SBOM. Since they won't originate from an artifact
+# registry proxy they must be excluded. The same logic applies to packages
+# originating from a VCS.
+_is_local_gomod_dep(parsed_purl) if {
+	parsed_purl.type == "golang"
+	_gomod_locality_rule(parsed_purl)
+}
+
+# A gomod package will have vcs_url qualifier either if it is the main package
+# or a module was obtained from local file system via a local replace.
+# The relevant lines in Hermeto:
+#  https://github.com/hermetoproject/hermeto/blob/db5e5f9d4f3dd2e44316a1cb2c44368c92007d54/
+#	hermeto/core/package_managers/gomod/main.py#L216
+#  https://github.com/hermetoproject/hermeto/blob/db5e5f9d4f3dd2e44316a1cb2c44368c92007d54/
+#	hermeto/core/package_managers/gomod/main.py#L232
+# go mod local replace:
+#  https://go.dev/doc/modules/gomod-ref#replace
+_gomod_locality_rule(parsed_purl) if {
+	qualifiers := object.get(parsed_purl, "qualifiers", [])
+
+	some qualifier in qualifiers
+	qualifier.key == "vcs_url"
+
+	# This is not supposed to happen ever, but in case it happens empty vcs_urls are forbidden.
+	not _is_empty(qualifier.value)
+}
+
+# Missing version indicates that this is either the main module (i.e. the package that is
+# being built which origin we cannot establish) or a standard package shipped with golang.
+# In this case the version will be missing and will not be reported in SBOM:
+#  https://github.com/hermetoproject/hermeto/blob/db5e5f9d4f3dd2e44316a1cb2c44368c92007d54/
+#	hermeto/core/package_managers/gomod/main.py#L244
+# In all other cases the version must be set to something:
+#  https://go.dev/ref/mod#versions
+_gomod_locality_rule(parsed_purl) if _is_empty(parsed_purl.version)
+
+_is_empty(field) if field in {null, ""}
 
 _npm_bundled_property := {"name": "cdx:npm:package:bundled", "value": "true"}
 

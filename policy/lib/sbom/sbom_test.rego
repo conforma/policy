@@ -488,3 +488,33 @@ test_disallowed_attribute_excepted_multiple_except_when if {
 	purl := "pkg:pypi/some-lib@1.0?index_url=https://internal.example.com/pypi/"
 	sbom.disallowed_attribute_excepted(disallowed, purl)
 }
+
+test_golang_non_registry_empty_version_dependencies_excluded if {
+	parsed_purl := {"type": "golang", "name": "localdep", "version": "", "qualifiers": []}
+	sbom._is_local_gomod_dep(parsed_purl)
+}
+
+test_golang_non_registry_null_version_dependencies_excluded if {
+	parsed_purl := {"type": "golang", "name": "localdep", "version": null, "qualifiers": []}
+	sbom._is_local_gomod_dep(parsed_purl)
+}
+
+test_golang_non_registry_vcs_dependencies_excluded if {
+	parsed_purl := {"type": "golang", "name": "localdep", "qualifiers": [{"key": "vcs_url", "value": "https://github.com/example/lib.git"}]}
+	sbom._is_local_gomod_dep(parsed_purl)
+}
+
+test_golang_empty_present_vcs_url_not_excluded if {
+	parsed_purl := {"type": "golang", "name": "localdep", "qualifiers": [{"key": "vcs_url", "value": ""}]}
+	not sbom._is_local_gomod_dep(parsed_purl)
+}
+
+test_golang_null_present_vcs_url_not_excluded if {
+	parsed_purl := {"type": "golang", "name": "localdep", "qualifiers": [{"key": "vcs_url", "value": null}]}
+	not sbom._is_local_gomod_dep(parsed_purl)
+}
+
+test_golang_regular_package_not_rejected_as_local if {
+	parsed_purl := {"type": "golang", "name": "adep", "version": "v0.0.1", "qualifiers": []}
+	not sbom._is_local_gomod_dep(parsed_purl)
+}
