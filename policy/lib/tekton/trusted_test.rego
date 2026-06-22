@@ -179,6 +179,64 @@ test_untrusted_task_refs_routes_to_rules if {
 
 	# regal ignore:line-length
 	assertions.assert_equal(expected, tekton.untrusted_task_refs(tasks, _empty_bundle_manifests)) with data.rule_data.trusted_task_rules as task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+}
+
+test_trusted_task_rules_enabled_toggle if {
+	task_rules := {
+		"allow": {"trusty-tasks": [{"pattern": "oci://registry.local/*"}]},
+		"deny": {},
+	}
+
+	# With toggle true, rules system is active
+	assertions.assert_equal(false, tekton.missing_trusted_task_rules_data) with data.rule_data.trusted_task_rules as task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+
+	# With toggle false (default), rules system is disabled even when rules data is present
+	assertions.assert_equal(true, tekton.missing_trusted_task_rules_data) with data.rule_data.trusted_task_rules as task_rules
+
+	# With toggle explicitly false, rules system is disabled
+	assertions.assert_equal(true, tekton.missing_trusted_task_rules_data) with data.rule_data.trusted_task_rules as task_rules
+		with data.rule_data.trusted_task_rules_enabled as false
+}
+
+test_trusted_task_rules_enabled_routing if {
+	task_rules := {
+		"allow": {"trusty-tasks": [{"pattern": "oci://registry.local/*"}]},
+		"deny": {},
+	}
+
+	# With rules enabled, trusted_bundle_task matches via rules system
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+
+	# With rules disabled, falls back to legacy trusted_tasks
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data.trusted_task_rules_enabled as false
+		with data.trusted_tasks as trusted_tasks
+
+	# With rules disabled and no legacy data, task is untrusted
+	not tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data.trusted_task_rules_enabled as false
+}
+
+test_trusted_task_rules_enabled_data_errors if {
+	# Valid boolean values should pass
+	assertions.assert_empty(tekton.data_errors) with data.rule_data.trusted_task_rules_enabled as true
+	assertions.assert_empty(tekton.data_errors) with data.rule_data.trusted_task_rules_enabled as false
+
+	# Non-boolean values should fail
+	assertions.assert_equal(tekton.data_errors, {{
+		"message": "trusted_task_rules_enabled: Invalid type. Expected: boolean, given: string",
+		"severity": "failure",
+	}}) with data.rule_data.trusted_task_rules_enabled as "false"
+
+	assertions.assert_equal(tekton.data_errors, {{
+		"message": "trusted_task_rules_enabled: Invalid type. Expected: boolean, given: integer",
+		"severity": "failure",
+	}}) with data.rule_data.trusted_task_rules_enabled as 0
 }
 
 test_is_trusted_task if {
@@ -232,6 +290,7 @@ test_is_trusted_task_with_rules if {
 
 	# regal ignore:line-length
 	tekton.is_trusted_task(allowed_task, allowed_task_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Task that matches deny rule should not be trusted (deny takes precedence)
 	denied_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
@@ -247,6 +306,7 @@ test_is_trusted_task_with_rules if {
 
 	# regal ignore:line-length
 	not tekton.is_trusted_task(denied_task, denied_task_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Task that matches allow pattern (registry.local) should be trusted
 	# Note: The key format is oci://registry.local/trusty:1.0 (with tag), so pattern oci://registry.local/* matches
@@ -260,6 +320,7 @@ test_is_trusted_task_with_rules if {
 
 	# regal ignore:line-length
 	tekton.is_trusted_task(registry_local_task, registry_local_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Task that doesn't match any allow rule should not be trusted
 	# Note: This task uses a different path (untrusted) that doesn't match the pattern
@@ -273,6 +334,7 @@ test_is_trusted_task_with_rules if {
 
 	# regal ignore:line-length
 	not tekton.is_trusted_task(not_allowed_task, not_allowed_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Tasks satisfying at least one deny rule version constraints should be denied
 	deny_constrained_task_denied_version := {"spec": {"taskRef": {"resolver": "bundles", "params": [
@@ -287,6 +349,7 @@ test_is_trusted_task_with_rules if {
 
 	# regal ignore:line-length
 	not tekton.is_trusted_task(deny_constrained_task_denied_version, deny_constrained_denied_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Task not satisfying any deny rule version constraints should not be denied
 	deny_constrained_task_valid_version := {"spec": {"taskRef": {"resolver": "bundles", "params": [
@@ -299,6 +362,7 @@ test_is_trusted_task_with_rules if {
 	# regal ignore:line-length
 	deny_constrained_valid_manifests := _mock_bundle_manifests("quay.io/konflux-ci/tekton-catalog/deny-task-constrained:1.2.3@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700", "1.2.3")
 	tekton.is_trusted_task(deny_constrained_task_valid_version, deny_constrained_valid_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules # regal ignore:line-length
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Tasks satisfying all the allow-rule version constraints should be allowed
 	allow_constrained_task_valid_version := {"spec": {"taskRef": {"resolver": "bundles", "params": [
@@ -311,6 +375,7 @@ test_is_trusted_task_with_rules if {
 	# regal ignore:line-length
 	allow_constrained_valid_manifests := _mock_bundle_manifests("quay.io/konflux-ci/another-catalog/allow-task-constrained:1.5@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700", "1.5")
 	tekton.is_trusted_task(allow_constrained_task_valid_version, allow_constrained_valid_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules # regal ignore:line-length
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Tasks *NOT* satisfying all the allow-rule version constraints should be denied
 	allow_constrained_task_denied_version := {"spec": {"taskRef": {"resolver": "bundles", "params": [
@@ -323,6 +388,7 @@ test_is_trusted_task_with_rules if {
 	# regal ignore:line-length
 	allow_constrained_denied_manifests := _mock_bundle_manifests("quay.io/konflux-ci/another-catalog/allow-task-constrained:1.2.3@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700", "1.2.3")
 	not tekton.is_trusted_task(allow_constrained_task_denied_version, allow_constrained_denied_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules # regal ignore:line-length
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Task with mismatching versions between ref and manifest annotations.
 	# Only the manifest annotation is taken into consideration
@@ -337,6 +403,7 @@ test_is_trusted_task_with_rules if {
 	# regal ignore:line-length
 	mismatch_manifests_1 := _mock_bundle_manifests("quay.io/konflux-ci/another-catalog/allow-task-constrained:1.5@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700", "1.2.3")
 	not tekton.is_trusted_task(allow_constrained_task_denied_version_mismatching_1, mismatch_manifests_1) with data.rule_data.trusted_task_rules as trusted_task_rules # regal ignore:line-length
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Task with mismatching versions between ref and manifest annotations.
 	# Only the manifest annotation is taken into consideration
@@ -351,6 +418,7 @@ test_is_trusted_task_with_rules if {
 	# regal ignore:line-length
 	mismatch_manifests_2 := _mock_bundle_manifests("quay.io/konflux-ci/another-catalog/allow-task-constrained:1.2.3@sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700", "1.5")
 	tekton.is_trusted_task(allow_constrained_task_denied_version_mismatching_2, mismatch_manifests_2) with data.rule_data.trusted_task_rules as trusted_task_rules # regal ignore:line-length
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Digest-only bundle reference (no tag). The key becomes "oci://repo" without tag or digest.
 	# Pattern must match the repo without tag/digest components.
@@ -367,6 +435,7 @@ test_is_trusted_task_with_rules if {
 		{"name": "kind", "value": "task"},
 	]}}}
 	tekton.is_trusted_task(digest_only_allowed, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as digest_only_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Digest-only task matching deny: key is "oci://registry.local/crook" (no tag)
 	digest_only_denied := {"spec": {"taskRef": {"resolver": "bundles", "params": [
@@ -376,6 +445,7 @@ test_is_trusted_task_with_rules if {
 		{"name": "kind", "value": "task"},
 	]}}}
 	not tekton.is_trusted_task(digest_only_denied, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as digest_only_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 test_trusted_task_records if {
@@ -429,6 +499,7 @@ test_data_trusted_task_rules_extraction if {
 	]}}}
 	tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.trusted_task_rules as data_rules_allow
 		with data.rule_data.trusted_task_rules as null
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Test when data.trusted_task_rules is provided with deny rules
 	data_rules_deny := {"deny": {"blocked": [{"pattern": "oci://registry.local/crook/*"}]}}
@@ -442,11 +513,13 @@ test_data_trusted_task_rules_extraction if {
 	]}}}
 	not tekton.is_trusted_task(denied_task, _empty_bundle_manifests) with data.trusted_task_rules as data_rules_deny
 		with data.rule_data.trusted_task_rules as null
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Test when data.trusted_task_rules is not provided (covers default cases 145, 152)
 	# Should fall back to empty arrays, so task won't be trusted via rules
 	not tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.trusted_task_rules as null
 		with data.rule_data.trusted_task_rules as null
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 test_rule_data_trusted_task_rules_extraction if {
@@ -465,6 +538,7 @@ test_rule_data_trusted_task_rules_extraction if {
 		{"name": "kind", "value": "task"},
 	]}}}
 	tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rule_data_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Task matching deny from rule_data should not be trusted
 	denied_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
@@ -476,10 +550,12 @@ test_rule_data_trusted_task_rules_extraction if {
 
 	# regal ignore:line-length
 	not tekton.is_trusted_task(denied_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rule_data_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Test when lib_rule_data returns [] (not an object) - covers default cases
 	# When rule_data returns [], it's not an object, so defaults are used
 	not tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as []
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 test_data_errors if {
@@ -569,6 +645,7 @@ test_denying_pattern if {
 	# Should return a list with the pattern that denied it
 	# regal ignore:line-length
 	patterns := tekton.denying_pattern(denied_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 	assertions.assert_equal(["oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"], patterns)
 
 	# Task that doesn't match any deny rule should return empty list
@@ -581,6 +658,7 @@ test_denying_pattern if {
 
 	# regal ignore:line-length
 	patterns_empty := tekton.denying_pattern(non_matching_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 	assertions.assert_equal([], patterns_empty)
 }
 
@@ -604,6 +682,7 @@ test_denying_pattern_multiple_rules if {
 
 	# regal ignore:line-length
 	patterns_multi := tekton.denying_pattern(buildah_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as multiple_deny_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Should contain both patterns (order may vary)
 	assertions.assert_equal(2, count(patterns_multi))
@@ -635,6 +714,7 @@ test_denial_reason if {
 
 	# regal ignore:line-length
 	reason_deny := tekton.denial_reason(denied_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 	assertions.assert_equal("deny_rule", reason_deny.type)
 	assertions.assert_equal(["oci://quay.io/konflux-ci/tekton-catalog/task-buildah*"], reason_deny.pattern)
 	assertions.assert_equal(["This version is deprecated"], reason_deny.messages)
@@ -649,6 +729,7 @@ test_denial_reason if {
 
 	# regal ignore:line-length
 	reason_not_allowed := tekton.denial_reason(not_allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 	assertions.assert_equal("not_allowed", reason_not_allowed.type)
 	assertions.assert_equal([], reason_not_allowed.pattern)
 	assertions.assert_equal([], reason_not_allowed.messages)
@@ -663,11 +744,13 @@ test_denial_reason if {
 
 	# regal ignore:line-length
 	not tekton.denial_reason(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Task in legacy trusted_tasks but doesn't match allow rules should return "not_allowed"
 	# (denial_reason only works with trusted_task_rules, not legacy)
 	# regal ignore:line-length
 	reason_legacy := tekton.denial_reason(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 		with data.trusted_tasks as trusted_tasks
 	assertions.assert_equal("not_allowed", reason_legacy.type)
 	assertions.assert_equal([], reason_legacy.pattern)
@@ -692,6 +775,7 @@ test_denial_reason_no_allow_rules if {
 
 	# regal ignore:line-length
 	not tekton.denial_reason(untrusted_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules_no_allow
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 test_trusted_task_rules_data_errors if {
@@ -711,6 +795,7 @@ test_trusted_task_rules_data_errors if {
 		}]},
 	}
 	assertions.assert_empty(tekton.data_errors) with data.rule_data.trusted_task_rules as valid_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Missing required fields - array entry without pattern
 	invalid_rules := {"allow": {"bad-group": [{}]}}
@@ -720,6 +805,7 @@ test_trusted_task_rules_data_errors if {
 		"severity": "failure",
 	}}
 	assertions.assert_equal(tekton.data_errors, expected) with data.rule_data.trusted_task_rules as invalid_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Invalid effective_on date format (both schema and parse validation fire)
 	invalid_date_rules := {"allow": {"bad-date": [{
@@ -739,6 +825,7 @@ test_trusted_task_rules_data_errors if {
 		},
 	}
 	assertions.assert_equal(tekton.data_errors, expected_date) with data.rule_data.trusted_task_rules as invalid_date_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Invalid structure - not an object
 	assertions.assert_empty(tekton.data_errors) with data.rule_data.trusted_task_rules as [] # Empty list is skipped
@@ -754,6 +841,7 @@ test_trusted_task_rules_data_errors if {
 		"severity": "failure",
 	}}
 	assertions.assert_equal(tekton.data_errors, expected_structure) with data.rule_data.trusted_task_rules as invalid_structure
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# effective_on that fails time.parse_rfc3339_ns (via data.trusted_task_rules to bypass schema validation)
 	unparseable_date_rules := {"deny": {"blocked": [{
@@ -782,6 +870,7 @@ test_denying_pattern_invalid_task if {
 	# Should return empty list (else branch) since task_ref fails
 	# regal ignore:line-length
 	patterns := tekton.denying_pattern(invalid_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 	assertions.assert_equal([], patterns)
 }
 
@@ -804,10 +893,12 @@ test_denying_rules_info_empty if {
 
 	# denial_reason returns nothing for allowed tasks (internally calls _denying_rules_info which returns empty)
 	not tekton.denial_reason(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules_no_deny
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# denying_pattern should also return empty list (covers line 337)
 	# regal ignore:line-length
 	patterns := tekton.denying_pattern(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules_no_deny
+		with data.rule_data.trusted_task_rules_enabled as true
 	assertions.assert_equal([], patterns)
 }
 
@@ -839,6 +930,7 @@ test_pattern_matches_git_resolved_tasks if {
 
 	# regal ignore:line-length
 	tekton.is_trusted_task(github_git_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as git_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Task resolved via git from gitlab.cee.redhat.com rpmbuild
 	gitlab_git_task := {
@@ -852,6 +944,7 @@ test_pattern_matches_git_resolved_tasks if {
 
 	# regal ignore:line-length
 	tekton.is_trusted_task(gitlab_git_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as git_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Task from a different repo should NOT be trusted
 	untrusted_git_task_other := {
@@ -865,6 +958,7 @@ test_pattern_matches_git_resolved_tasks if {
 
 	# regal ignore:line-length
 	not tekton.is_trusted_task(untrusted_git_task_other, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as git_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 test_pattern_matches_git_deny_rules if {
@@ -886,6 +980,7 @@ test_pattern_matches_git_deny_rules if {
 
 	# regal ignore:line-length
 	tekton.is_trusted_task(allowed_git, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as git_deny_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Denied git task (matches deny pattern)
 	denied_git := {
@@ -899,6 +994,7 @@ test_pattern_matches_git_deny_rules if {
 
 	# regal ignore:line-length
 	not tekton.is_trusted_task(denied_git, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as git_deny_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 test_pattern_matches_dots_are_literal if {
@@ -918,6 +1014,7 @@ test_pattern_matches_dots_are_literal if {
 
 	# regal ignore:line-length
 	tekton.is_trusted_task(quay_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as dot_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Task from quayXio (dot replaced with X) — must NOT be trusted
 	spoofed_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
@@ -929,6 +1026,7 @@ test_pattern_matches_dots_are_literal if {
 
 	# regal ignore:line-length
 	not tekton.is_trusted_task(spoofed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as dot_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 test_pattern_matches_anchored if {
@@ -948,6 +1046,7 @@ test_pattern_matches_anchored if {
 
 	# regal ignore:line-length
 	not tekton.is_trusted_task(prefix_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as anchored_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 test_pattern_matches_mixed_oci_and_git if {
@@ -970,6 +1069,7 @@ test_pattern_matches_mixed_oci_and_git if {
 
 	# regal ignore:line-length
 	tekton.is_trusted_task(oci_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as mixed_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Git task — trusted
 	git_task := {
@@ -983,6 +1083,7 @@ test_pattern_matches_mixed_oci_and_git if {
 
 	# regal ignore:line-length
 	tekton.is_trusted_task(git_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as mixed_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Neither OCI nor git from a trusted source — not trusted
 	untrusted_oci := {"spec": {"taskRef": {"resolver": "bundles", "params": [
@@ -994,6 +1095,7 @@ test_pattern_matches_mixed_oci_and_git if {
 
 	# regal ignore:line-length
 	not tekton.is_trusted_task(untrusted_oci, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as mixed_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 trusted_bundle_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
