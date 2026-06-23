@@ -1377,6 +1377,7 @@ test_signature_verification_failed_error_rules if {
 
 	results := trusted_task.deny with input.attestations as [att]
 		with data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 		with ec.sigstore.verify_image as _mock_verify_image_failure
 		with ec.oci.image_manifests as _mock_empty_manifests
 
