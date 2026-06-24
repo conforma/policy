@@ -108,6 +108,19 @@ Confirm the SPDX SBOM contains only packages without disallowed external referen
 * Effective from: `2024-07-31T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L106[Source, window="_blank"]
 
+[#sbom_spdx__experimental_hermeto_backend]
+=== link:#sbom_spdx__experimental_hermeto_backend[Experimental Hermeto backend]
+
+Verify that no packages in the SPDX SBOM were fetched using an experimental Hermeto backend. Experimental backends are identified by annotations with annotator "Tool: hermeto:backend" whose comment starts with "hermeto:backend:experimental:".
+
+*Solution*: Use a supported, non-experimental package manager backend in your build process, or request a policy exception.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Package %s was fetched using experimental Hermeto backend %q`
+* Code: `sbom_spdx.experimental_hermeto_backend`
+* Effective from: `2026-08-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L359[Source, window="_blank"]
+
 [#sbom_spdx__matches_image]
 === link:#sbom_spdx__matches_image[Matches image]
 

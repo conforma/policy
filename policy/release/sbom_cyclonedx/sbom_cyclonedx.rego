@@ -363,6 +363,41 @@ deny contains result if {
 	)
 }
 
+# METADATA
+# title: Experimental Hermeto backend
+# description: >-
+#   Verify that no components in the CycloneDX SBOM were fetched using an
+#   experimental Hermeto backend. Experimental backends are identified by
+#   top-level annotations whose text starts with "hermeto:backend:experimental:".
+# custom:
+#   short_name: experimental_hermeto_backend
+#   failure_msg: Package %s was fetched using experimental Hermeto backend %q
+#   solution: >-
+#     Use a supported, non-experimental package manager backend in your build
+#     process, or request a policy exception.
+#   collections:
+#   - minimal
+#   - redhat
+#   - redhat_rpms
+#   effective_on: 2026-08-01T00:00:00Z
+deny contains result if {
+	some s in sbom.cyclonedx_sboms
+	some annotation in s.annotations
+	startswith(annotation.text, "hermeto:backend:experimental:")
+
+	some subject in annotation.subjects
+	some component in s.components
+	component["bom-ref"] == subject
+
+	id := object.get(component, "purl", component.name)
+
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[id, annotation.text],
+		id,
+	)
+}
+
 _has_distribution_reference(component) if {
 	some reference in component.externalReferences
 	reference.type == "distribution"

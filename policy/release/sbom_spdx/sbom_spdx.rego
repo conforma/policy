@@ -356,10 +356,50 @@ deny contains result if {
 	)
 }
 
+# METADATA
+# title: Experimental Hermeto backend
+# description: >-
+#   Verify that no packages in the SPDX SBOM were fetched using an experimental
+#   Hermeto backend. Experimental backends are identified by annotations with
+#   annotator "Tool: hermeto:backend" whose comment starts with
+#   "hermeto:backend:experimental:".
+# custom:
+#   short_name: experimental_hermeto_backend
+#   failure_msg: Package %s was fetched using experimental Hermeto backend %q
+#   solution: >-
+#     Use a supported, non-experimental package manager backend in your build
+#     process, or request a policy exception.
+#   collections:
+#   - minimal
+#   - redhat
+#   - redhat_rpms
+#   effective_on: 2026-08-01T00:00:00Z
+deny contains result if {
+	some s in sbom.spdx_sboms
+	some pkg in s.packages
+
+	some annotation in pkg.annotations
+	annotation.annotator == "Tool: hermeto:backend"
+	startswith(annotation.comment, "hermeto:backend:experimental:")
+
+	id := _spdx_package_id(pkg)
+
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[id, annotation.comment],
+		id,
+	)
+}
+
 _package_purl(pkg) := purl if {
 	purls := [ref.referenceLocator | some ref in pkg.externalRefs; ref.referenceType == "purl"]
 	purl := purls[0]
 } else := ""
+
+_spdx_package_id(pkg) := purl if {
+	purl := _package_purl(pkg)
+	purl != ""
+} else := pkg.name
 
 # _with_effective_on annotates the result with the item's effective_on attribute. If the item does
 # not have the attribute, result is returned unmodified.

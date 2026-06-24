@@ -1195,3 +1195,131 @@ test_proxy_metadata_required_cdx_vcs_url_passes if {
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as _proxy_rule_data
 }
+
+# experimental_hermeto_backend tests
+
+test_experimental_hermeto_backend_cdx_denied if {
+	expected := {{
+		"code": "sbom_cyclonedx.experimental_hermeto_backend",
+		"term": "pkg:golang/example.com/foo@1.0.0",
+		# regal ignore:line-length
+		"msg": `Package pkg:golang/example.com/foo@1.0.0 was fetched using experimental Hermeto backend "hermeto:backend:experimental:x-pnpm"`,
+	}}
+
+	att := json.patch(_sbom_1_5_attestation, [
+		{
+			"op": "add",
+			"path": "/statement/predicate/components/-",
+			"value": _cdx_backend_component("pkg:golang/example.com/foo@1.0.0"),
+		},
+		{
+			"op": "add",
+			"path": "/statement/predicate/annotations",
+			"value": [_cdx_backend_annotation("pkg:golang/example.com/foo@1.0.0", "hermeto:backend:experimental:x-pnpm")],
+		},
+	])
+
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+}
+
+test_experimental_hermeto_backend_cdx_stable_passes if {
+	att := json.patch(_sbom_1_5_attestation, [
+		{
+			"op": "add",
+			"path": "/statement/predicate/components/-",
+			"value": _cdx_backend_component("pkg:golang/example.com/foo@1.0.0"),
+		},
+		{
+			"op": "add",
+			"path": "/statement/predicate/annotations",
+			"value": [_cdx_backend_annotation("pkg:golang/example.com/foo@1.0.0", "hermeto:backend:gomod")],
+		},
+	])
+
+	results := sbom_cyclonedx.deny with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+
+	count({r | some r in results; r.code == "sbom_cyclonedx.experimental_hermeto_backend"}) == 0
+}
+
+test_experimental_hermeto_backend_cdx_no_purl_denied if {
+	expected := {{
+		"code": "sbom_cyclonedx.experimental_hermeto_backend",
+		"term": "component-no-purl",
+		# regal ignore:line-length
+		"msg": `Package component-no-purl was fetched using experimental Hermeto backend "hermeto:backend:experimental:x-pnpm"`,
+	}}
+
+	att := json.patch(_sbom_1_5_attestation, [
+		{
+			"op": "add",
+			"path": "/statement/predicate/components/-",
+			"value": _cdx_backend_component_no_purl,
+		},
+		{
+			"op": "add",
+			"path": "/statement/predicate/annotations",
+			"value": [_cdx_backend_annotation("component-no-purl-ref", "hermeto:backend:experimental:x-pnpm")],
+		},
+	])
+
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+}
+
+test_experimental_hermeto_backend_cdx_mixed_annotations if {
+	expected := {{
+		"code": "sbom_cyclonedx.experimental_hermeto_backend",
+		"term": "pkg:golang/example.com/foo@1.0.0",
+		# regal ignore:line-length
+		"msg": `Package pkg:golang/example.com/foo@1.0.0 was fetched using experimental Hermeto backend "hermeto:backend:experimental:x-pnpm"`,
+	}}
+
+	att := json.patch(_sbom_1_5_attestation, [
+		{
+			"op": "add",
+			"path": "/statement/predicate/components/-",
+			"value": _cdx_backend_component("pkg:golang/example.com/foo@1.0.0"),
+		},
+		{
+			"op": "add",
+			"path": "/statement/predicate/annotations",
+			"value": [
+				_cdx_backend_annotation("pkg:golang/example.com/foo@1.0.0", "hermeto:backend:gomod"),
+				_cdx_backend_annotation("pkg:golang/example.com/foo@1.0.0", "hermeto:backend:experimental:x-pnpm"),
+			],
+		},
+	])
+
+	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
+		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+}
+
+_cdx_backend_component(purl) := {
+	"bom-ref": purl,
+	"type": "library",
+	"name": "component",
+	"purl": purl,
+}
+
+_cdx_backend_component_no_purl := {
+	"bom-ref": "component-no-purl-ref",
+	"type": "library",
+	"name": "component-no-purl",
+}
+
+_cdx_backend_annotation(subject, text) := {
+	"subjects": [subject],
+	"annotator": {"organization": {"name": "red hat"}},
+	"timestamp": "2026-05-01T12:00:00Z",
+	"text": text,
+}
