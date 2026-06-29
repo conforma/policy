@@ -519,16 +519,19 @@ test_task_effective_on_helper if {
 }
 
 test_task_effective_on_with_one_of_tasks if {
-	one_of_task := ["c1", "c2", "c3"]
+	sorted_task := ["c1", "c2", "c3"]
 	data_with_map := {
 		"effective_on": "2024-06-01T00:00:00Z",
-		"tasks": {"buildah", one_of_task},
+		"tasks": {"buildah", sorted_task},
 		"effective_on_by_task": {
 			"buildah": "2024-01-01T00:00:00Z",
-			one_of_task: "2024-06-01T00:00:00Z",
+			sorted_task: "2024-06-01T00:00:00Z",
 		},
 	}
 
-	assertions.assert_equal(tekton.task_effective_on(data_with_map, one_of_task), "2024-06-01T00:00:00Z")
+	# Lookup with unsorted array proves normalization works
+	unsorted_task := ["c3", "c1", "c2"]
+	assertions.assert_equal(tekton.task_effective_on(data_with_map, unsorted_task), "2024-06-01T00:00:00Z")
+	assertions.assert_equal(tekton.task_effective_on(data_with_map, sorted_task), "2024-06-01T00:00:00Z")
 	assertions.assert_equal(tekton.task_effective_on(data_with_map, "buildah"), "2024-01-01T00:00:00Z")
 }
