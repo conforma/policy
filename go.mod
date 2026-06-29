@@ -5,9 +5,9 @@ go 1.25.5
 require (
 	github.com/conforma/cli v0.9.2
 	github.com/google/addlicense v1.2.0
-	github.com/open-policy-agent/conftest v0.66.0
-	github.com/open-policy-agent/regal v0.37.0
-	github.com/tektoncd/cli v0.42.1
+	github.com/open-policy-agent/conftest v0.68.2
+	github.com/open-policy-agent/regal v0.41.1
+	github.com/tektoncd/cli v0.45.0
 	oras.land/oras v1.3.0
 )
 
@@ -495,4 +495,4 @@ require (
 
 exclude google.golang.org/grpc/stats/opentelemetry v0.0.0-20241028142157-ada6787961b3
 
-replace github.com/google/go-containerregistry => github.com/conforma/go-containerregistry v0.20.7-0.20251103083939-3459088e4bae
+replace github.com/google/go-containerregistry => github.com/conforma/go-containerregistry v0.21.7
