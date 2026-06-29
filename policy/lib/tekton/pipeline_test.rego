@@ -166,6 +166,14 @@ test_required_task_list_multi_type_union if {
 
 	# max(effective_on) across types
 	assertions.assert_equal(result.effective_on, "2024-06-01T00:00:00Z")
+
+	# Per-task dates: clair-scan in both types gets min date
+	assertions.assert_equal(result.effective_on_by_task, {
+		"buildah": "2024-01-01T00:00:00Z",
+		"clair-scan": "2024-01-01T00:00:00Z",
+		"git-clone": "2024-01-01T00:00:00Z",
+		"tkn-build": "2024-06-01T00:00:00Z",
+	})
 }
 
 test_required_task_list_missing_type_skipped if {
@@ -206,6 +214,10 @@ test_required_task_list_missing_type_skipped if {
 	# Only docker tasks returned, tkn-bundle silently skipped
 	assertions.assert_equal(result.tasks, {"buildah", "git-clone"})
 	assertions.assert_equal(result.effective_on, "2024-01-01T00:00:00Z")
+	assertions.assert_equal(result.effective_on_by_task, {
+		"buildah": "2024-01-01T00:00:00Z",
+		"git-clone": "2024-01-01T00:00:00Z",
+	})
 }
 
 test_required_task_list_all_types_missing if {
@@ -284,6 +296,11 @@ test_current_required_pipeline_tasks_multi_type if {
 	# most_current excludes the future entry (2099), so tkn-bundle resolves to 2024-06-01
 	assertions.assert_equal(result.tasks, {"buildah", "git-clone", "tkn-build"})
 	assertions.assert_equal(result.effective_on, "2024-06-01T00:00:00Z")
+	assertions.assert_equal(result.effective_on_by_task, {
+		"buildah": "2024-01-01T00:00:00Z",
+		"git-clone": "2024-01-01T00:00:00Z",
+		"tkn-build": "2024-06-01T00:00:00Z",
+	})
 }
 
 test_required_task_list_multi_type_concatenation if {
@@ -356,6 +373,11 @@ test_latest_required_pipeline_tasks_single_type if {
 
 	assertions.assert_equal(result.tasks, {"buildah", "clair-scan", "git-clone"})
 	assertions.assert_equal(result.effective_on, "2024-01-01T00:00:00Z")
+	assertions.assert_equal(result.effective_on_by_task, {
+		"buildah": "2024-01-01T00:00:00Z",
+		"clair-scan": "2024-01-01T00:00:00Z",
+		"git-clone": "2024-01-01T00:00:00Z",
+	})
 }
 
 test_latest_required_pipeline_tasks_multi_time_entries if {
@@ -415,4 +437,98 @@ test_latest_required_pipeline_tasks_multi_time_entries if {
 
 	# max(effective_on) across resolved types
 	assertions.assert_equal(result.effective_on, "2024-09-01T00:00:00Z")
+	assertions.assert_equal(result.effective_on_by_task, {
+		"buildah": "2024-06-01T00:00:00Z",
+		"clair-scan": "2024-06-01T00:00:00Z",
+		"tkn-build": "2024-09-01T00:00:00Z",
+		"tkn-lint": "2024-09-01T00:00:00Z",
+	})
+}
+
+test_per_task_effective_on_uses_min_for_shared_tasks if {
+	docker_task_base := slsav1_task("build-container")
+	docker_task_w_labels := with_labels(docker_task_base, {tekton.task_label: "docker"})
+	docker_task := with_results(
+		docker_task_w_labels,
+		[
+			{"name": "IMAGE_URL", "value": "localhost:5000/repo:latest"},
+			# regal ignore:line-length
+			{"name": "IMAGE_DIGEST", "value": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
+		],
+	)
+
+	bundle_task_base := slsav1_task("build-tekton-bundle")
+	bundle_task_w_labels := with_labels(bundle_task_base, {tekton.task_label: "tkn-bundle"})
+	bundle_task := with_results(
+		bundle_task_w_labels,
+		[
+			{"name": "IMAGE_URL", "value": "localhost:5000/bundle:latest"},
+			# regal ignore:line-length
+			{"name": "IMAGE_DIGEST", "value": "sha256:def0000000000000000000000000000000000000000000000000000000000def"},
+		],
+	)
+
+	attestation := slsav1_attestation_full(
+		[docker_task, bundle_task],
+		{},
+		{},
+	)
+
+	pipeline_required_tasks := {
+		"docker": [{
+			"effective_on": "2024-01-01T00:00:00Z",
+			"tasks": ["shared-task", "docker-only"],
+		}],
+		"tkn-bundle": [{
+			"effective_on": "2024-06-01T00:00:00Z",
+			"tasks": ["shared-task", "bundle-only"],
+		}],
+	}
+
+	result := tekton.latest_required_pipeline_tasks(attestation) with data["pipeline-required-tasks"] as pipeline_required_tasks
+
+	assertions.assert_equal(result.tasks, {"shared-task", "docker-only", "bundle-only"})
+	assertions.assert_equal(result.effective_on, "2024-06-01T00:00:00Z")
+
+	# shared-task gets min(2024-01-01, 2024-06-01) = 2024-01-01
+	assertions.assert_equal(result.effective_on_by_task["shared-task"], "2024-01-01T00:00:00Z")
+	assertions.assert_equal(result.effective_on_by_task["docker-only"], "2024-01-01T00:00:00Z")
+	assertions.assert_equal(result.effective_on_by_task["bundle-only"], "2024-06-01T00:00:00Z")
+}
+
+test_task_effective_on_helper if {
+	data_with_map := {
+		"effective_on": "2024-06-01T00:00:00Z",
+		"tasks": {"buildah", "clair-scan"},
+		"effective_on_by_task": {
+			"buildah": "2024-01-01T00:00:00Z",
+			"clair-scan": "2024-06-01T00:00:00Z",
+		},
+	}
+
+	assertions.assert_equal(tekton.task_effective_on(data_with_map, "buildah"), "2024-01-01T00:00:00Z")
+	assertions.assert_equal(tekton.task_effective_on(data_with_map, "clair-scan"), "2024-06-01T00:00:00Z")
+
+	# Without effective_on_by_task (default tasks fallback)
+	data_without_map := {
+		"effective_on": "2024-03-01T00:00:00Z",
+		"tasks": {"buildah"},
+	}
+
+	assertions.assert_equal(tekton.task_effective_on(data_without_map, "buildah"), "2024-03-01T00:00:00Z")
+}
+
+test_task_effective_on_with_one_of_tasks if {
+	one_of_task := ["c1", "c2", "c3"]
+	data_with_map := {
+		"effective_on": "2024-06-01T00:00:00Z",
+		"tasks": {"buildah", one_of_task},
+		"effective_on_by_task": {
+			"buildah": "2024-01-01T00:00:00Z",
+			one_of_task: "2024-06-01T00:00:00Z",
+		},
+	}
+
+	assertions.assert_equal(tekton.task_effective_on(data_with_map, one_of_task), "2024-06-01T00:00:00Z")
+	assertions.assert_equal(tekton.task_effective_on(data_with_map, "buildah"), "2024-01-01T00:00:00Z")
 }

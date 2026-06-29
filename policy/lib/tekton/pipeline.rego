@@ -25,12 +25,11 @@ required_task_list(pipeline) := pipeline_data if {
 	count(pipeline_data) > 0
 }
 
-# _merged_required_task_list resolves time-based entries independently per
-# build type, then unions the task lists. Uses max(effective_on) across
-# types so that no type's tasks are enforced before their designated date.
-# This is conservative but imprecise when types have different dates — see
-# EC-1798 for per-task effective_on tracking.
-_merged_required_task_list(pipeline, mode) := {"effective_on": max_effective_on, "tasks": all_tasks} if {
+_merged_required_task_list(pipeline, mode) := {
+	"effective_on": max_effective_on,
+	"tasks": all_tasks,
+	"effective_on_by_task": task_dates,
+} if {
 	selectors := pipeline_label_selectors(pipeline)
 
 	resolved := [r |
@@ -42,15 +41,34 @@ _merged_required_task_list(pipeline, mode) := {"effective_on": max_effective_on,
 
 	count(resolved) > 0
 
-	all_tasks := {task |
+	all_tasks := {_normalize_task(task) |
 		some r in resolved
 		some task in r.tasks
+	}
+
+	task_dates := {task: sort(dates_for_task)[0] |
+		some task in all_tasks
+		dates_for_task := [r.effective_on |
+			some r in resolved
+			some t in r.tasks
+			_normalize_task(t) == task
+		]
 	}
 
 	dates := [r.effective_on | some r in resolved]
 	ordered_dates := sort(dates)
 	max_effective_on := ordered_dates[count(ordered_dates) - 1]
 }
+
+task_effective_on(required_tasks_data, task) := date if {
+	date := required_tasks_data.effective_on_by_task[_normalize_task(task)]
+} else := date if {
+	date := required_tasks_data.effective_on
+}
+
+_normalize_task(task) := sort(task) if is_array(task)
+
+_normalize_task(task) := task if not is_array(task)
 
 _resolve(entries, "newest") := ectime.newest(entries)
 
