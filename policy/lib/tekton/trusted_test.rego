@@ -1380,6 +1380,7 @@ test_git_task_version_constraints_allow if {
 		"abc123def456abc123def456abc123def456abc1",
 	)
 	tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Git task with version 1.5 does NOT satisfy <1 → not allowed
 	rejected_task := _mock_git_task(
@@ -1388,6 +1389,7 @@ test_git_task_version_constraints_allow if {
 		"abc123def456abc123def456abc123def456abc1",
 	)
 	not tekton.is_trusted_task(rejected_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Git task with version 0.1 does NOT satisfy >=0.2 → not allowed
 	too_old_task := _mock_git_task(
@@ -1396,6 +1398,7 @@ test_git_task_version_constraints_allow if {
 		"abc123def456abc123def456abc123def456abc1",
 	)
 	not tekton.is_trusted_task(too_old_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 test_git_task_version_constraints_deny if {
@@ -1414,6 +1417,7 @@ test_git_task_version_constraints_deny if {
 		"abc123def456abc123def456abc123def456abc1",
 	)
 	not tekton.is_trusted_task(denied_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Version 0.3 does NOT satisfy deny constraint <0.3 → allowed
 	allowed_task := _mock_git_task(
@@ -1422,6 +1426,7 @@ test_git_task_version_constraints_deny if {
 		"abc123def456abc123def456abc123def456abc1",
 	)
 	tekton.is_trusted_task(allowed_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 test_git_task_no_version_in_path if {
@@ -1440,6 +1445,7 @@ test_git_task_no_version_in_path if {
 		"abc123def456abc123def456abc123def456abc1",
 	)
 	not tekton.is_trusted_task(no_version_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 
 	# Deny rule with version + no version in path → denied (fail-closed)
 	deny_rules := {
@@ -1450,6 +1456,7 @@ test_git_task_no_version_in_path if {
 		}]},
 	}
 	not tekton.is_trusted_task(no_version_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as deny_rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 test_git_task_without_version_constraints if {
@@ -1465,6 +1472,7 @@ test_git_task_without_version_constraints if {
 		"abc123def456abc123def456abc123def456abc1",
 	)
 	tekton.is_trusted_task(task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 _mock_git_task(url, path, revision) := {
