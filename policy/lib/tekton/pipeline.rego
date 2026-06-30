@@ -25,6 +25,9 @@ required_task_list(pipeline) := pipeline_data if {
 	count(pipeline_data) > 0
 }
 
+# Resolves time-based entries per build type, unions task lists, and tracks
+# per-task effective_on dates. Uses min(effective_on) for tasks shared across
+# types. The top-level effective_on is max() for backward compatibility.
 _merged_required_task_list(pipeline, mode) := {
 	"effective_on": max_effective_on,
 	"tasks": all_tasks,
@@ -60,12 +63,14 @@ _merged_required_task_list(pipeline, mode) := {
 	max_effective_on := ordered_dates[count(ordered_dates) - 1]
 }
 
+# Returns per-task effective_on date, falling back to the global effective_on.
 task_effective_on(required_tasks_data, task) := date if {
 	date := required_tasks_data.effective_on_by_task[_normalize_task(task)]
 } else := date if {
 	date := required_tasks_data.effective_on
 }
 
+# Sorts array tasks (one-of alternatives) for consistent set/map keys.
 _normalize_task(task) := sort(task) if is_array(task)
 
 _normalize_task(task) := task if not is_array(task)
