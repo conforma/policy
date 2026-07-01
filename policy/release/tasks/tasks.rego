@@ -82,7 +82,7 @@ warn contains result if {
 	not required_task in current_required_tasks.tasks
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_format_missing(required_task, true), latest_required_tasks.effective_on],
+		[_format_missing(required_task, true), tekton.task_effective_on(latest_required_tasks, required_task)],
 		required_task,
 	)
 }
