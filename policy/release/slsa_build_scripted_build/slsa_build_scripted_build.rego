@@ -16,6 +16,7 @@ import rego.v1
 
 import data.lib
 import data.lib.image
+import data.lib.intoto
 import data.lib.metadata
 import data.lib.tekton
 
@@ -143,14 +144,9 @@ task_steps(task) := steps if {
 	steps := task.steps
 } else := []
 
-subject_digest(subject) := digest if {
-	some algorithm, value in subject.digest
-	digest := concat(":", [algorithm, value])
-}
-
 collect_subjects(attestation) := [subject_image_ref |
 	some subject in attestation.statement.subject
-	subject_image_ref := concat("@", [subject.name, subject_digest(subject)])
+	subject_image_ref := concat("@", [subject.name, intoto.subject_digest(subject)])
 ]
 
 _trusted_build_task_error(tasks) := error if {

@@ -48,3 +48,8 @@ statements_by_predicate(predicate_type) := {statement |
 predicate_test_result := "https://in-toto.io/attestation/test-result/v0.1"
 
 predicate_vuln_scan := "https://in-toto.io/attestation/vulns/v0.2"
+
+subject_digest(subject) := digest if {
+	some algorithm, value in subject.digest
+	digest := concat(":", [algorithm, value])
+}

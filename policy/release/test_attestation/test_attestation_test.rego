@@ -136,8 +136,13 @@ _mock_blob_warned(_) := _make_statement({
 	"warnedTests": ["deprecated-api-v1"],
 })
 
-_mock_blob_unknown_result(_) := _make_statement({
+_mock_blob_erred_result(_) := _make_statement({
 	"result": "ERROR",
+	"configuration": [{"name": "lint-check"}],
+})
+
+_mock_blob_unknown_result(_) := _make_statement({
+	"result": "UNKNOWN_STATUS",
 	"configuration": [{"name": "lint-check"}],
 })
 
@@ -353,12 +358,26 @@ test_warned_with_details if {
 test_unknown_result_value if {
 	assertions.assert_equal_results(test_attestation.deny, {{
 		"code": "test_attestation.test_result_known",
-		"msg": "Test attestation \"lint-check\" has an unsupported result value \"ERROR\"",
+		"msg": "Test attestation \"lint-check\" has an unsupported result value \"UNKNOWN_STATUS\"",
 		"term": "lint-check",
 	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_unknown_result
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+}
+
+test_erred_result if {
+	assertions.assert_equal_results(test_attestation.deny, {{
+		"code": "test_attestation.no_erred_test_attestations",
+		"msg": "Test attestation \"lint-check\" has an erred result",
+		"term": "lint-check",
+	}}) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_erred_result
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -709,4 +728,158 @@ test_non_string_test_list_elements if {
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
+}
+
+# =============================================================================
+# NEW TESTS: EC-1950 feature parity
+# =============================================================================
+
+# --- SKIPPED result (AC-3) ---
+
+_mock_blob_skipped(_) := _make_statement({
+	"result": "SKIPPED",
+	"configuration": [{"name": "fips-check"}],
+})
+
+test_skipped_result if {
+	assertions.assert_equal_results(test_attestation.deny, {{
+		"code": "test_attestation.no_skipped_test_attestations",
+		"msg": "Test attestation \"fips-check\" has a skipped result",
+		"term": "fips-check",
+	}}) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_skipped
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+}
+
+# --- Informative tests (AC-4) ---
+
+test_informative_test_warns_instead_of_denies if {
+	# A failed test that's in the informative list should warn, not deny
+	assertions.assert_empty(test_attestation.deny) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_with_details
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data.informative_test_attestations as ["clair-scan"]
+
+	results := test_attestation.warn with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_with_details
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data.informative_test_attestations as ["clair-scan"]
+
+	some r in results
+	r.code == "test_attestation.no_failed_informative_test_attestations"
+}
+
+test_non_informative_test_still_denies if {
+	# A failed test NOT in the informative list should still deny
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_with_details
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data.informative_test_attestations as ["some-other-test"]
+
+	some r in results
+	r.code == "test_attestation.no_failed_tests"
+}
+
+# --- Subject validation (AC-5) ---
+
+_mock_blob_wrong_subject(_) := json.marshal({
+	"_type": "https://in-toto.io/Statement/v1",
+	"predicateType": "https://in-toto.io/attestation/test-result/v0.1",
+	"subject": [{"name": "registry.io/repo/other-image", "digest": {"sha256": "wrong999"}}],
+	"predicate": {
+		"result": "PASSED",
+		"configuration": [{"name": "mismatched-test"}],
+	},
+})
+
+test_subject_mismatch_denied if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_wrong_subject
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+
+	some r in results
+	r.code == "test_attestation.subject_mismatch"
+}
+
+test_subject_match_passes if {
+	# The standard mock already has matching subject digest
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+
+	not _has_code(results, "test_attestation.subject_mismatch")
+}
+
+_has_code(results, code) if {
+	some r in results
+	r.code == code
+}
+
+# --- Rule data validation (AC-6) ---
+
+test_rule_data_valid_no_errors if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+
+	not _has_code(results, "test_attestation.rule_data_provided")
+}
+
+test_rule_data_invalid_triggers_error if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data.supported_test_attestation_results as ["INVALID_VALUE"]
+
+	some r in results
+	r.code == "test_attestation.rule_data_provided"
+}
+
+# --- Custom rule data overrides (AC-1) ---
+
+test_custom_failed_results if {
+	# Override failed results to include WARNED — now WARNED triggers deny
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_warned
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data.failed_test_attestation_results as ["WARNED"]
+
+	some r in results
+	r.code == "test_attestation.no_failed_tests"
 }
