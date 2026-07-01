@@ -88,12 +88,7 @@ _verify_provenance(provenance_referrer, expected_subject_digest) if {
 
 _attests_to_subject(att, expected_digest) if {
 	some subject in att.statement.subject
-	_subject_digest(subject) == expected_digest
-}
-
-_subject_digest(subject) := digest if {
-	some algorithm, value in subject.digest
-	digest := concat(":", [algorithm, value])
+	subject_digest(subject) == expected_digest
 }
 
 _all_tasks_trusted(att) if {

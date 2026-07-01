@@ -28,8 +28,11 @@ package test_attestation
 
 import rego.v1
 
+import data.lib.image
 import data.lib.intoto
+import data.lib.json as j
 import data.lib.metadata
+import data.lib.rule_data
 
 _test_attestations := intoto.verified_statements_by_predicate(intoto.predicate_test_result)
 
@@ -49,11 +52,72 @@ _test_list(predicate, key) := result if {
 } else := "(none listed)"
 
 # METADATA
+# title: No failed informative test attestations
+# description: >-
+#   Produce a warning if any informative test attestation has a failed result.
+#   Informative tests produce warnings instead of violations, allowing teams
+#   to roll out new tests without blocking releases. The list of informative
+#   tests is configurable by the "informative_test_attestations" key, and the
+#   result type by the "failed_test_attestation_results" key in the rule data.
+# custom:
+#   short_name: no_failed_informative_test_attestations
+#   failure_msg: Informative test attestation %q has a failed result, failed tests %s
+#   solution: >-
+#     An informative test attestation has a failed result. While this does
+#     not block the release, review the failed tests listed in the attestation.
+#   collections:
+#   - redhat
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+warn contains result if {
+	some statement in _test_attestations
+	statement.predicate.result in {r | some r in rule_data.get("failed_test_attestation_results")}
+	_test_name(statement) in {t | some t in rule_data.get("informative_test_attestations")}
+	failed := _test_list(statement.predicate, "failedTests")
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[_test_name(statement), failed],
+		_test_name(statement),
+	)
+}
+
+# METADATA
+# title: No test attestation warnings
+# description: >-
+#   Produce a warning if any test result attestation has a warned result.
+#   Warned test names from the attestation predicate are included in the message
+#   when available. The result type is configurable by the
+#   "warned_test_attestation_results" key in the rule data.
+# custom:
+#   short_name: no_test_warnings
+#   failure_msg: Test attestation %q has warnings, warned tests %s
+#   solution: >-
+#     Review the warned tests listed in the attestation predicate.
+#   collections:
+#   - redhat
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+warn contains result if {
+	some statement in _test_attestations
+	statement.predicate.result in {r | some r in rule_data.get("warned_test_attestation_results")}
+	warned := _test_list(statement.predicate, "warnedTests")
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[_test_name(statement), warned],
+		_test_name(statement),
+	)
+}
+
+# METADATA
 # title: No failed test attestations
 # description: >-
-#   Produce a violation if any test result attestation has a result of "FAILED".
-#   Failed test names from the attestation predicate are included in the message
-#   when available.
+#   Produce a violation if any non-informative test result attestation has
+#   a failed result. Failed test names from the attestation predicate are
+#   included in the message when available. The result type is configurable
+#   by the "failed_test_attestation_results" key, and the list of informative
+#   tests by the "informative_test_attestations" key in the rule data.
 # custom:
 #   short_name: no_failed_tests
 #   failure_msg: Test attestation %q has a failed result, failed tests %s
@@ -67,7 +131,8 @@ _test_list(predicate, key) := result if {
 #
 deny contains result if {
 	some statement in _test_attestations
-	statement.predicate.result == "FAILED"
+	statement.predicate.result in {r | some r in rule_data.get("failed_test_attestation_results")}
+	not _test_name(statement) in {t | some t in rule_data.get("informative_test_attestations")}
 	failed := _test_list(statement.predicate, "failedTests")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
@@ -80,14 +145,15 @@ deny contains result if {
 # title: No unsupported test attestation result values
 # description: >-
 #   Ensure the result field of each test result attestation is a recognized
-#   value. Valid values are PASSED, WARNED, and FAILED per the in-toto
-#   test-result predicate specification.
+#   value. Valid values are configurable by the "supported_test_attestation_results"
+#   key in the rule data. Defaults are PASSED, WARNED, FAILED, ERROR, and SKIPPED
+#   per the in-toto test-result predicate specification.
 # custom:
 #   short_name: test_result_known
 #   failure_msg: Test attestation %q has an unsupported result value %q
 #   solution: >-
 #     The test result attestation contains an unrecognized result value.
-#     Valid values are PASSED, WARNED, and FAILED.
+#     Valid values are configurable via rule data.
 #   collections:
 #   - redhat
 #   depends_on:
@@ -96,7 +162,7 @@ deny contains result if {
 deny contains result if {
 	some statement in _test_attestations
 	statement.predicate.result
-	not statement.predicate.result in {"PASSED", "FAILED", "WARNED"}
+	not statement.predicate.result in {r | some r in rule_data.get("supported_test_attestation_results")}
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[_test_name(statement), statement.predicate.result],
@@ -114,7 +180,7 @@ deny contains result if {
 #   failure_msg: Test attestation %q is missing the required result field
 #   solution: >-
 #     The test result attestation predicate must include a "result" field
-#     with a value of PASSED, WARNED, or FAILED.
+#     with a recognized value such as PASSED, WARNED, or FAILED.
 #   collections:
 #   - redhat
 #   depends_on:
@@ -131,28 +197,147 @@ deny contains result if {
 }
 
 # METADATA
-# title: No test attestation warnings
+# title: No erred test attestations
 # description: >-
-#   Produce a warning if any test result attestation has a result of "WARNED".
-#   Warned test names from the attestation predicate are included in the message
-#   when available.
+#   Produce a violation if any test result attestation has an erred result.
+#   The result type is configurable by the "erred_test_attestation_results"
+#   key in the rule data.
 # custom:
-#   short_name: no_test_warnings
-#   failure_msg: Test attestation %q has warnings, warned tests %s
+#   short_name: no_erred_test_attestations
+#   failure_msg: Test attestation %q has an erred result
 #   solution: >-
-#     Review the warned tests listed in the attestation predicate.
+#     A test attestation has an erred result, indicating an infrastructure
+#     or execution failure. Review the test attestation and re-run the test.
 #   collections:
 #   - redhat
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
-warn contains result if {
+deny contains result if {
 	some statement in _test_attestations
-	statement.predicate.result == "WARNED"
-	warned := _test_list(statement.predicate, "warnedTests")
+	statement.predicate.result in {r | some r in rule_data.get("erred_test_attestation_results")}
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), warned],
+		[_test_name(statement)],
 		_test_name(statement),
 	)
+}
+
+# METADATA
+# title: No skipped test attestations
+# description: >-
+#   Produce a violation if any test result attestation has a skipped result.
+#   A skipped result means a pre-requirement for executing the test was not met.
+#   The result type is configurable by the "skipped_test_attestation_results"
+#   key in the rule data.
+# custom:
+#   short_name: no_skipped_test_attestations
+#   failure_msg: Test attestation %q has a skipped result
+#   solution: >-
+#     A test attestation was skipped, indicating a missing prerequisite
+#     such as a scanner license. Ensure prerequisites are available and
+#     re-run the test.
+#   collections:
+#   - redhat
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+deny contains result if {
+	some statement in _test_attestations
+	statement.predicate.result in {r | some r in rule_data.get("skipped_test_attestation_results")}
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[_test_name(statement)],
+		_test_name(statement),
+	)
+}
+
+# METADATA
+# title: Test attestation subject matches image
+# description: >-
+#   Verify that each test-result attestation's subject includes the digest
+#   of the image being evaluated. An attestation produced for a different
+#   image should not satisfy this image's test requirements.
+# custom:
+#   short_name: subject_mismatch
+#   failure_msg: Test attestation %q subject does not match image digest %q
+#   solution: >-
+#     The test result attestation was produced for a different image than
+#     the one being evaluated. Ensure the test pipeline produces attestations
+#     with the correct subject digest.
+#   collections:
+#   - redhat
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+deny contains result if {
+	img := image.parse(input.image.ref)
+	img_digest := img.digest
+	some statement in _test_attestations
+	not _subject_matches(statement, img_digest)
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[_test_name(statement), img_digest],
+		_test_name(statement),
+	)
+}
+
+# METADATA
+# title: Rule data provided
+# description: >-
+#   Confirm the expected rule data keys have been provided in the expected format.
+#   The keys are "supported_test_attestation_results", "failed_test_attestation_results",
+#   "erred_test_attestation_results", "skipped_test_attestation_results",
+#   "warned_test_attestation_results", and "informative_test_attestations".
+# custom:
+#   short_name: rule_data_provided
+#   failure_msg: '%s'
+#   solution: If provided, ensure the rule data is in the expected format.
+#   collections:
+#   - redhat
+#   - policy_data
+#
+deny contains result if {
+	some e in _rule_data_errors
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+}
+
+_rule_data_errors contains error if {
+	statuses := {
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"type": "array",
+		"items": {"enum": ["PASSED", "FAILED", "WARNED", "ERROR", "SKIPPED"]},
+		"uniqueItems": true,
+	}
+
+	strings_array := {
+		"$schema": "http://json-schema.org/draft-07/schema#",
+		"type": "array",
+		"items": {"type": "string"},
+		"uniqueItems": true,
+	}
+
+	items := [
+		["supported_test_attestation_results", statuses],
+		["failed_test_attestation_results", statuses],
+		["erred_test_attestation_results", statuses],
+		["skipped_test_attestation_results", statuses],
+		["warned_test_attestation_results", statuses],
+		["informative_test_attestations", strings_array],
+	]
+
+	some item in items
+	key := item[0]
+	schema := item[1]
+
+	some e in j.validate_schema(rule_data.get(key), schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_subject_matches(statement, digest) if {
+	some subject in object.get(statement, "subject", [])
+	intoto.subject_digest(subject) == digest
 }
