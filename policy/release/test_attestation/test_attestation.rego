@@ -43,13 +43,22 @@ _test_name(statement) := name if {
 	name := config[0].name
 } else := "unknown test"
 
-_test_list(predicate, key) := result if {
-	value := object.get(predicate, key, [])
-	is_array(value)
-	items := [x | some x in value; is_string(x)]
-	count(items) > 0
-	result := concat(", ", items)
-} else := "(none listed)"
+_count_detail(predicate, key) := result if {
+	n := object.get(predicate, key, 0)
+	is_number(n)
+	n > 0
+	result := sprintf("%d", [n])
+} else := "0"
+
+_has_result(predicate, results, count_key) if {
+	predicate.result in {r | some r in results}
+}
+
+_has_result(predicate, _, count_key) if {
+	n := object.get(predicate, count_key, 0)
+	is_number(n)
+	n > 0
+}
 
 # METADATA
 # title: No failed informative test attestations
@@ -61,10 +70,10 @@ _test_list(predicate, key) := result if {
 #   result type by the "failed_test_attestation_results" key in the rule data.
 # custom:
 #   short_name: no_failed_informative_test_attestations
-#   failure_msg: Informative test attestation %q has a failed result, failed tests %s
+#   failure_msg: 'Informative test attestation %q has a failed result, failures: %s'
 #   solution: >-
 #     An informative test attestation has a failed result. While this does
-#     not block the release, review the failed tests listed in the attestation.
+#     not block the release, review the test attestation output for details.
 #   collections:
 #   - redhat
 #   depends_on:
@@ -72,12 +81,12 @@ _test_list(predicate, key) := result if {
 #
 warn contains result if {
 	some statement in _test_attestations
-	statement.predicate.result in {r | some r in rule_data.get("failed_test_attestation_results")}
+	_has_result(statement.predicate, rule_data.get("failed_test_attestation_results"), "failures")
 	_test_name(statement) in {t | some t in rule_data.get("informative_test_attestations")}
-	failed := _test_list(statement.predicate, "failedTests")
+	detail := _count_detail(statement.predicate, "failures")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), failed],
+		[_test_name(statement), detail],
 		_test_name(statement),
 	)
 }
@@ -91,9 +100,9 @@ warn contains result if {
 #   "warned_test_attestation_results" key in the rule data.
 # custom:
 #   short_name: no_test_warnings
-#   failure_msg: Test attestation %q has warnings, warned tests %s
+#   failure_msg: 'Test attestation %q has warnings, warnings: %s'
 #   solution: >-
-#     Review the warned tests listed in the attestation predicate.
+#     Review the test attestation output for warning details.
 #   collections:
 #   - redhat
 #   depends_on:
@@ -101,11 +110,11 @@ warn contains result if {
 #
 warn contains result if {
 	some statement in _test_attestations
-	statement.predicate.result in {r | some r in rule_data.get("warned_test_attestation_results")}
-	warned := _test_list(statement.predicate, "warnedTests")
+	_has_result(statement.predicate, rule_data.get("warned_test_attestation_results"), "warnings")
+	detail := _count_detail(statement.predicate, "warnings")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), warned],
+		[_test_name(statement), detail],
 		_test_name(statement),
 	)
 }
@@ -120,10 +129,10 @@ warn contains result if {
 #   tests by the "informative_test_attestations" key in the rule data.
 # custom:
 #   short_name: no_failed_tests
-#   failure_msg: Test attestation %q has a failed result, failed tests %s
+#   failure_msg: 'Test attestation %q has a failed result, failures: %s'
 #   solution: >-
 #     Ensure all test attestations have a passing result. Review the
-#     failed tests listed in the attestation predicate.
+#     test attestation output for details.
 #   collections:
 #   - redhat
 #   depends_on:
@@ -131,12 +140,12 @@ warn contains result if {
 #
 deny contains result if {
 	some statement in _test_attestations
-	statement.predicate.result in {r | some r in rule_data.get("failed_test_attestation_results")}
+	_has_result(statement.predicate, rule_data.get("failed_test_attestation_results"), "failures")
 	not _test_name(statement) in {t | some t in rule_data.get("informative_test_attestations")}
-	failed := _test_list(statement.predicate, "failedTests")
+	detail := _count_detail(statement.predicate, "failures")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), failed],
+		[_test_name(statement), detail],
 		_test_name(statement),
 	)
 }
@@ -215,7 +224,7 @@ deny contains result if {
 #
 deny contains result if {
 	some statement in _test_attestations
-	statement.predicate.result in {r | some r in rule_data.get("erred_test_attestation_results")}
+	_has_result(statement.predicate, rule_data.get("erred_test_attestation_results"), "n/a")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[_test_name(statement)],
@@ -244,7 +253,7 @@ deny contains result if {
 #
 deny contains result if {
 	some statement in _test_attestations
-	statement.predicate.result in {r | some r in rule_data.get("skipped_test_attestation_results")}
+	_has_result(statement.predicate, rule_data.get("skipped_test_attestation_results"), "n/a")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[_test_name(statement)],

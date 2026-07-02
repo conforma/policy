@@ -116,13 +116,17 @@ _make_statement(predicate) := json.marshal({
 _mock_blob_passed(_) := _make_statement({
 	"result": "PASSED",
 	"configuration": [{"name": "clair-scan"}],
-	"passedTests": ["test-a", "test-b"],
+	"successes": 2,
+	"failures": 0,
+	"warnings": 0,
 })
 
 _mock_blob_failed_with_details(_) := _make_statement({
 	"result": "FAILED",
 	"configuration": [{"name": "clair-scan"}],
-	"failedTests": ["CVE-2024-1234", "CVE-2024-5678"],
+	"successes": 0,
+	"failures": 2,
+	"warnings": 0,
 })
 
 _mock_blob_failed_no_details(_) := _make_statement({
@@ -133,7 +137,9 @@ _mock_blob_failed_no_details(_) := _make_statement({
 _mock_blob_warned(_) := _make_statement({
 	"result": "WARNED",
 	"configuration": [{"name": "deprecation-check"}],
-	"warnedTests": ["deprecated-api-v1"],
+	"successes": 3,
+	"failures": 0,
+	"warnings": 1,
 })
 
 _mock_blob_erred_result(_) := _make_statement({
@@ -148,7 +154,7 @@ _mock_blob_unknown_result(_) := _make_statement({
 
 _mock_blob_missing_result(_) := _make_statement({
 	"configuration": [{"name": "incomplete-test"}],
-	"passedTests": ["test-a"],
+	"successes": 1,
 })
 
 # --- Multi-attestation infrastructure ---
@@ -207,6 +213,9 @@ _mock_verify_two(ref, _) := {
 _mock_blob_mixed(ref) := _make_statement({
 	"result": "PASSED",
 	"configuration": [{"name": "sanity-check"}],
+	"successes": 1,
+	"failures": 0,
+	"warnings": 0,
 }) if {
 	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000001")
 }
@@ -214,7 +223,9 @@ _mock_blob_mixed(ref) := _make_statement({
 _mock_blob_mixed(ref) := _make_statement({
 	"result": "FAILED",
 	"configuration": [{"name": "clair-scan"}],
-	"failedTests": ["CVE-2024-9999"],
+	"successes": 0,
+	"failures": 1,
+	"warnings": 0,
 }) if {
 	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000002")
 }
@@ -223,7 +234,9 @@ _mock_blob_mixed(ref) := _make_statement({
 _mock_blob_warned_and_failed(ref) := _make_statement({
 	"result": "WARNED",
 	"configuration": [{"name": "deprecation-check"}],
-	"warnedTests": ["old-api"],
+	"successes": 2,
+	"failures": 0,
+	"warnings": 1,
 }) if {
 	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000001")
 }
@@ -231,7 +244,9 @@ _mock_blob_warned_and_failed(ref) := _make_statement({
 _mock_blob_warned_and_failed(ref) := _make_statement({
 	"result": "FAILED",
 	"configuration": [{"name": "clair-scan"}],
-	"failedTests": ["CVE-2024-1111"],
+	"successes": 0,
+	"failures": 1,
+	"warnings": 0,
 }) if {
 	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000002")
 }
@@ -240,7 +255,9 @@ _mock_blob_warned_and_failed(ref) := _make_statement({
 _mock_blob_multi_failed(ref) := _make_statement({
 	"result": "FAILED",
 	"configuration": [{"name": "clair-scan"}],
-	"failedTests": ["CVE-2024-1111"],
+	"successes": 0,
+	"failures": 1,
+	"warnings": 0,
 }) if {
 	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000001")
 }
@@ -248,7 +265,9 @@ _mock_blob_multi_failed(ref) := _make_statement({
 _mock_blob_multi_failed(ref) := _make_statement({
 	"result": "FAILED",
 	"configuration": [{"name": "sanity-check"}],
-	"failedTests": ["format-error"],
+	"successes": 0,
+	"failures": 1,
+	"warnings": 0,
 }) if {
 	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000002")
 }
@@ -257,13 +276,13 @@ _mock_blob_multi_failed(ref) := _make_statement({
 _mock_blob_custom_config(_) := _make_statement({
 	"result": "FAILED",
 	"configuration": [{"name": "my-custom-test", "downloadLocation": "https://example.com"}],
-	"failedTests": ["sub-test-1"],
+	"failures": 1,
 })
 
 # Test Case 10: empty configuration (fallback to "unknown test")
 _mock_blob_no_config(_) := _make_statement({
 	"result": "FAILED",
-	"failedTests": ["sub-test-1"],
+	"failures": 1,
 })
 
 # Test Case 13: non-string result value
@@ -302,7 +321,7 @@ test_all_passed_no_violations if {
 test_failed_with_details if {
 	assertions.assert_equal_results(test_attestation.deny, {{
 		"code": "test_attestation.no_failed_tests",
-		"msg": "Test attestation \"clair-scan\" has a failed result, failed tests CVE-2024-1234, CVE-2024-5678",
+		"msg": "Test attestation \"clair-scan\" has a failed result, failures: 2",
 		"term": "clair-scan",
 	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
@@ -318,7 +337,7 @@ test_failed_with_details if {
 test_failed_no_details if {
 	assertions.assert_equal_results(test_attestation.deny, {{
 		"code": "test_attestation.no_failed_tests",
-		"msg": "Test attestation \"sanity-check\" has a failed result, failed tests (none listed)",
+		"msg": "Test attestation \"sanity-check\" has a failed result, failures: 0",
 		"term": "sanity-check",
 	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
@@ -342,7 +361,7 @@ test_warned_with_details if {
 
 	assertions.assert_equal_results(test_attestation.warn, {{
 		"code": "test_attestation.no_test_warnings",
-		"msg": "Test attestation \"deprecation-check\" has warnings, warned tests deprecated-api-v1",
+		"msg": "Test attestation \"deprecation-check\" has warnings, warnings: 1",
 		"term": "deprecation-check",
 	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
@@ -404,7 +423,7 @@ test_missing_result_field if {
 test_mixed_passed_and_failed if {
 	assertions.assert_equal_results(test_attestation.deny, {{
 		"code": "test_attestation.no_failed_tests",
-		"msg": "Test attestation \"clair-scan\" has a failed result, failed tests CVE-2024-9999",
+		"msg": "Test attestation \"clair-scan\" has a failed result, failures: 1",
 		"term": "clair-scan",
 	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers_two
@@ -468,7 +487,7 @@ test_test_name_fallback if {
 test_warned_and_failed_coexist if {
 	assertions.assert_equal_results(test_attestation.deny, {{
 		"code": "test_attestation.no_failed_tests",
-		"msg": "Test attestation \"clair-scan\" has a failed result, failed tests CVE-2024-1111",
+		"msg": "Test attestation \"clair-scan\" has a failed result, failures: 1",
 		"term": "clair-scan",
 	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers_two
@@ -480,7 +499,7 @@ test_warned_and_failed_coexist if {
 
 	assertions.assert_equal_results(test_attestation.warn, {{
 		"code": "test_attestation.no_test_warnings",
-		"msg": "Test attestation \"deprecation-check\" has warnings, warned tests old-api",
+		"msg": "Test attestation \"deprecation-check\" has warnings, warnings: 1",
 		"term": "deprecation-check",
 	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers_two
@@ -567,83 +586,83 @@ test_missing_predicate if {
 
 # --- Test Case 15: Non-array failedTests value (is_array guard) ---
 
-_mock_blob_non_array_failed_tests(_) := _make_statement({
+_mock_blob_failures_count_only(_) := _make_statement({
 	"result": "FAILED",
-	"configuration": [{"name": "string-tests"}],
-	"failedTests": "not-an-array",
+	"configuration": [{"name": "count-only-test"}],
+	"failures": 3,
 })
 
-test_non_array_failed_tests if {
+test_failures_count_only if {
 	assertions.assert_equal_results(test_attestation.deny, {{
 		"code": "test_attestation.no_failed_tests",
-		"msg": "Test attestation \"string-tests\" has a failed result, failed tests (none listed)",
-		"term": "string-tests",
+		"msg": "Test attestation \"count-only-test\" has a failed result, failures: 3",
+		"term": "count-only-test",
 	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
-		with ec.oci.blob as _mock_blob_non_array_failed_tests
+		with ec.oci.blob as _mock_blob_failures_count_only
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
 }
 
-_mock_blob_non_array_warned_tests(_) := _make_statement({
+_mock_blob_warnings_count_only(_) := _make_statement({
 	"result": "WARNED",
-	"configuration": [{"name": "object-tests"}],
-	"warnedTests": {"not": "an-array"},
+	"configuration": [{"name": "count-warn-test"}],
+	"warnings": 2,
 })
 
-test_non_array_warned_tests if {
+test_warnings_count_only if {
 	assertions.assert_equal_results(test_attestation.warn, {{
 		"code": "test_attestation.no_test_warnings",
-		"msg": "Test attestation \"object-tests\" has warnings, warned tests (none listed)",
-		"term": "object-tests",
+		"msg": "Test attestation \"count-warn-test\" has warnings, warnings: 2",
+		"term": "count-warn-test",
 	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
-		with ec.oci.blob as _mock_blob_non_array_warned_tests
+		with ec.oci.blob as _mock_blob_warnings_count_only
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
 }
 
-# --- Test Case 16: Empty failedTests array boundary ---
+# --- Test Case 16: Zero counts boundary ---
 
-_mock_blob_empty_failed_tests(_) := _make_statement({
+_mock_blob_zero_failures(_) := _make_statement({
 	"result": "FAILED",
-	"configuration": [{"name": "empty-array-test"}],
-	"failedTests": [],
+	"configuration": [{"name": "zero-count-test"}],
+	"failures": 0,
 })
 
-test_empty_failed_tests_array if {
+test_zero_failures_count if {
 	assertions.assert_equal_results(test_attestation.deny, {{
 		"code": "test_attestation.no_failed_tests",
-		"msg": "Test attestation \"empty-array-test\" has a failed result, failed tests (none listed)",
-		"term": "empty-array-test",
+		"msg": "Test attestation \"zero-count-test\" has a failed result, failures: 0",
+		"term": "zero-count-test",
 	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
-		with ec.oci.blob as _mock_blob_empty_failed_tests
+		with ec.oci.blob as _mock_blob_zero_failures
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
 }
 
-_mock_blob_empty_warned_tests(_) := _make_statement({
+_mock_blob_zero_warnings(_) := _make_statement({
 	"result": "WARNED",
-	"configuration": [{"name": "empty-warn-test"}],
-	"warnedTests": [],
+	"configuration": [{"name": "zero-warn-test"}],
+	"warnings": 0,
 })
 
-test_empty_warned_tests_array if {
+test_zero_warnings_count if {
 	assertions.assert_equal_results(test_attestation.warn, {{
 		"code": "test_attestation.no_test_warnings",
-		"msg": "Test attestation \"empty-warn-test\" has warnings, warned tests (none listed)",
-		"term": "empty-warn-test",
+		"msg": "Test attestation \"zero-warn-test\" has warnings, warnings: 0",
+		"term": "zero-warn-test",
 	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
-		with ec.oci.blob as _mock_blob_empty_warned_tests
+		with ec.oci.blob as _mock_blob_zero_warnings
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -708,26 +727,28 @@ test_empty_string_result_value if {
 	r.code == "test_attestation.test_result_known"
 }
 
-# --- Test Case 18: Non-string elements in failedTests array ---
+# --- Test Case 18: Count-based trigger without result string match ---
 
-_mock_blob_non_string_tests(_) := _make_statement({
-	"result": "FAILED",
-	"configuration": [{"name": "bad-array-test"}],
-	"failedTests": ["CVE-2024-1234", 42, true],
+_mock_blob_count_triggers_deny(_) := _make_statement({
+	"result": "PASSED",
+	"configuration": [{"name": "count-trigger-test"}],
+	"successes": 0,
+	"failures": 5,
+	"warnings": 0,
 })
 
-test_non_string_test_list_elements if {
-	assertions.assert_equal_results(test_attestation.deny, {{
-		"code": "test_attestation.no_failed_tests",
-		"msg": "Test attestation \"bad-array-test\" has a failed result, failed tests CVE-2024-1234",
-		"term": "bad-array-test",
-	}}) with input.image.ref as _image_ref
+test_count_triggers_deny if {
+	results := test_attestation.deny with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
-		with ec.oci.blob as _mock_blob_non_string_tests
+		with ec.oci.blob as _mock_blob_count_triggers_deny
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
+
+	some r in results
+	r.code == "test_attestation.no_failed_tests"
+	contains(r.msg, "failures: 5")
 }
 
 # =============================================================================
