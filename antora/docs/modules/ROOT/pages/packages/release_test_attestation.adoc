@@ -18,31 +18,31 @@ Produce a violation if any test result attestation has an erred result. The resu
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q has an erred result`
 * Code: `test_attestation.no_erred_test_attestations`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L199[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L208[Source, window="_blank"]
 
 [#test_attestation__no_failed_informative_test_attestations]
 === link:#test_attestation__no_failed_informative_test_attestations[No failed informative test attestations]
 
 Produce a warning if any informative test attestation has a failed result. Informative tests produce warnings instead of violations, allowing teams to roll out new tests without blocking releases. The list of informative tests is configurable by the "informative_test_attestations" key, and the result type by the "failed_test_attestation_results" key in the rule data.
 
-*Solution*: An informative test attestation has a failed result. While this does not block the release, review the failed tests listed in the attestation.
+*Solution*: An informative test attestation has a failed result. While this does not block the release, review the test attestation output for details.
 
 * Rule type: [rule-type-indicator warning]#WARNING#
-* WARNING message: `Informative test attestation %q has a failed result, failed tests %s`
+* WARNING message: `Informative test attestation %q has a failed result, failures: %s`
 * Code: `test_attestation.no_failed_informative_test_attestations`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L54[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L63[Source, window="_blank"]
 
 [#test_attestation__no_failed_tests]
 === link:#test_attestation__no_failed_tests[No failed test attestations]
 
 Produce a violation if any non-informative test result attestation has a failed result. Failed test names from the attestation predicate are included in the message when available. The result type is configurable by the "failed_test_attestation_results" key, and the list of informative tests by the "informative_test_attestations" key in the rule data.
 
-*Solution*: Ensure all test attestations have a passing result. Review the failed tests listed in the attestation predicate.
+*Solution*: Ensure all test attestations have a passing result. Review the test attestation output for details.
 
 * Rule type: [rule-type-indicator failure]#FAILURE#
-* FAILURE message: `Test attestation %q has a failed result, failed tests %s`
+* FAILURE message: `Test attestation %q has a failed result, failures: %s`
 * Code: `test_attestation.no_failed_tests`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L113[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L122[Source, window="_blank"]
 
 [#test_attestation__no_skipped_test_attestations]
 === link:#test_attestation__no_skipped_test_attestations[No skipped test attestations]
@@ -54,19 +54,19 @@ Produce a violation if any test result attestation has a skipped result. A skipp
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q has a skipped result`
 * Code: `test_attestation.no_skipped_test_attestations`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L226[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L235[Source, window="_blank"]
 
 [#test_attestation__no_test_warnings]
 === link:#test_attestation__no_test_warnings[No test attestation warnings]
 
 Produce a warning if any test result attestation has a warned result. Warned test names from the attestation predicate are included in the message when available. The result type is configurable by the "warned_test_attestation_results" key in the rule data.
 
-*Solution*: Review the warned tests listed in the attestation predicate.
+*Solution*: Review the test attestation output for warning details.
 
 * Rule type: [rule-type-indicator warning]#WARNING#
-* WARNING message: `Test attestation %q has warnings, warned tests %s`
+* WARNING message: `Test attestation %q has warnings, warnings: %s`
 * Code: `test_attestation.no_test_warnings`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L85[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L94[Source, window="_blank"]
 
 [#test_attestation__test_result_known]
 === link:#test_attestation__test_result_known[No unsupported test attestation result values]
@@ -78,7 +78,7 @@ Ensure the result field of each test result attestation is a recognized value. V
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q has an unsupported result value %q`
 * Code: `test_attestation.test_result_known`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L144[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L153[Source, window="_blank"]
 
 [#test_attestation__rule_data_provided]
 === link:#test_attestation__rule_data_provided[Rule data provided]
@@ -90,7 +90,7 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `test_attestation.rule_data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L285[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L294[Source, window="_blank"]
 
 [#test_attestation__test_data_found]
 === link:#test_attestation__test_data_found[Test attestation data includes result]
@@ -102,7 +102,7 @@ Each test result attestation must include a result field in its predicate. Verif
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q is missing the required result field`
 * Code: `test_attestation.test_data_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L173[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L182[Source, window="_blank"]
 
 [#test_attestation__subject_mismatch]
 === link:#test_attestation__subject_mismatch[Test attestation subject matches image]
@@ -114,4 +114,4 @@ Verify that each test-result attestation's subject includes the digest of the im
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q subject does not match image digest %q`
 * Code: `test_attestation.subject_mismatch`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L255[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L264[Source, window="_blank"]
