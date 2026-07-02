@@ -50,7 +50,7 @@ _count_detail(predicate, key) := result if {
 	result := sprintf("%d", [n])
 } else := "0"
 
-_has_result(predicate, results, count_key) if {
+_has_result(predicate, results, _) if {
 	predicate.result in {r | some r in results}
 }
 
