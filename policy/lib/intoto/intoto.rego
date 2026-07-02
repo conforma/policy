@@ -49,6 +49,7 @@ predicate_test_result := "https://in-toto.io/attestation/test-result/v0.1"
 
 predicate_vuln_scan := "https://in-toto.io/attestation/vulns/v0.2"
 
+# Converts a subject digest map (e.g., {"sha256": "abc..."}) to "algorithm:value" format.
 subject_digest(subject) := digest if {
 	some algorithm, value in subject.digest
 	digest := concat(":", [algorithm, value])
