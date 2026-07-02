@@ -838,8 +838,7 @@ test_subject_mismatch_denied if {
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
 
-	some r in results
-	r.code == "test_attestation.subject_mismatch"
+	_has_code(results, "test_attestation.subject_mismatch")
 }
 
 test_subject_match_passes if {
