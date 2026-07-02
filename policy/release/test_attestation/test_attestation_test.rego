@@ -854,6 +854,27 @@ test_subject_match_passes if {
 	not _has_code(results, "test_attestation.subject_mismatch")
 }
 
+_mock_blob_no_subject(_) := json.marshal({
+	"_type": "https://in-toto.io/Statement/v1",
+	"predicateType": "https://in-toto.io/attestation/test-result/v0.1",
+	"predicate": {
+		"result": "PASSED",
+		"configuration": [{"name": "no-subject-test"}],
+	},
+})
+
+test_missing_subject_triggers_mismatch if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_no_subject
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+
+	_has_code(results, "test_attestation.subject_mismatch")
+}
+
 _has_code(results, code) if {
 	some r in results
 	r.code == code
