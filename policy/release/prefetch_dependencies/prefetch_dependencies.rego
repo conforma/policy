@@ -28,6 +28,7 @@ import data.lib.tekton
 #     fetching practices.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -55,6 +56,7 @@ deny contains result if {
 #     'enable-package-registry-proxy' set to 'true'.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #   effective_on: 2026-05-13T00:00:00Z

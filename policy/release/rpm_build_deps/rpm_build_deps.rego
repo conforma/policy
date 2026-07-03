@@ -20,6 +20,7 @@ import data.lib.sbom
 #   failure_msg: RPM build dependency source %s is not in the allowed list %v.
 #   collections:
 #   - redhat_rpms
+#   - redhat_security
 warn contains result if {
 	some s in sbom.spdx_sboms
 	some pkg in s.packages

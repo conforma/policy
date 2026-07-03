@@ -18,7 +18,7 @@ Confirm the SPDX SBOM contains only allowed packages. By default all packages ar
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Package is not allowed: %s`
 * Code: `sbom_spdx.allowed`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L52[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L55[Source, window="_blank"]
 
 [#sbom_spdx__allowed_package_external_references]
 === link:#sbom_spdx__allowed_package_external_references[Allowed package external references]
@@ -30,7 +30,7 @@ Confirm the SPDX SBOM contains only packages with explicitly allowed external re
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Package %s has reference %q of type %q which is not explicitly allowed%s`
 * Code: `sbom_spdx.allowed_package_external_references`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L75[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L79[Source, window="_blank"]
 
 [#sbom_spdx__allowed_package_sources]
 === link:#sbom_spdx__allowed_package_sources[Allowed package sources]
@@ -43,7 +43,7 @@ For each of the packages fetched by Hermeto which define externalReferences, ver
 * FAILURE message: `Package %s fetched by Hermeto was sourced from %q which is not allowed`
 * Code: `sbom_spdx.allowed_package_sources`
 * Effective from: `2025-02-17T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L171[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L181[Source, window="_blank"]
 
 [#sbom_spdx__allowed_proxy_urls]
 === link:#sbom_spdx__allowed_proxy_urls[Allowed proxy URLs]
@@ -56,7 +56,7 @@ For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_type
 * FAILURE message: `Package %s has proxy URL %q which does not match any allowed pattern for PURL type %q`
 * Code: `sbom_spdx.allowed_proxy_urls`
 * Effective from: `2026-06-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L254[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L266[Source, window="_blank"]
 
 [#sbom_spdx__contains_files]
 === link:#sbom_spdx__contains_files[Contains files]
@@ -68,7 +68,7 @@ Check the list of files in the SPDX SBOM is not empty.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The list of files is empty`
 * Code: `sbom_spdx.contains_files`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L138[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L144[Source, window="_blank"]
 
 [#sbom_spdx__contains_packages]
 === link:#sbom_spdx__contains_packages[Contains packages]
@@ -80,7 +80,7 @@ Check the list of packages in the SPDX SBOM is not empty.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The list of packages is empty`
 * Code: `sbom_spdx.contains_packages`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L37[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L38[Source, window="_blank"]
 
 [#sbom_spdx__disallowed_package_attributes]
 === link:#sbom_spdx__disallowed_package_attributes[Disallowed package attributes]
@@ -93,7 +93,7 @@ Confirm the SPDX SBOM contains only packages without disallowed attributes. By d
 * FAILURE message: `Package %s has the attribute %q set%s`
 * Code: `sbom_spdx.disallowed_package_attributes`
 * Effective from: `2025-02-04T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L212[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L223[Source, window="_blank"]
 
 [#sbom_spdx__disallowed_package_external_references]
 === link:#sbom_spdx__disallowed_package_external_references[Disallowed package external references]
@@ -106,7 +106,7 @@ Confirm the SPDX SBOM contains only packages without disallowed external referen
 * FAILURE message: `Package %s has reference %q of type %q which is disallowed%s`
 * Code: `sbom_spdx.disallowed_package_external_references`
 * Effective from: `2024-07-31T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L106[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L111[Source, window="_blank"]
 
 [#sbom_spdx__experimental_hermeto_backend]
 === link:#sbom_spdx__experimental_hermeto_backend[Experimental Hermeto backend]
@@ -119,7 +119,7 @@ Verify that no packages in the SPDX SBOM were fetched using an experimental Herm
 * FAILURE message: `Package %s was fetched using experimental Hermeto backend %q`
 * Code: `sbom_spdx.experimental_hermeto_backend`
 * Effective from: `2026-08-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L359[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L373[Source, window="_blank"]
 
 [#sbom_spdx__matches_image]
 === link:#sbom_spdx__matches_image[Matches image]
@@ -131,7 +131,7 @@ Check the SPDX SBOM targets the image being validated.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Image digest in the SBOM, %q, is not as expected, %q`
 * Code: `sbom_spdx.matches_image`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L153[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L161[Source, window="_blank"]
 
 [#sbom_spdx__proxy_metadata_required]
 === link:#sbom_spdx__proxy_metadata_required[Proxy metadata required]
@@ -144,7 +144,7 @@ For packages found by Hermeto with a PURL type listed in proxy_enabled_purl_type
 * FAILURE message: `Package %s is missing proxy metadata (sourceInfo is empty or missing)`
 * Code: `sbom_spdx.proxy_metadata_required`
 * Effective from: `2026-05-13T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L313[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L326[Source, window="_blank"]
 
 [#sbom_spdx__valid]
 === link:#sbom_spdx__valid[Valid]

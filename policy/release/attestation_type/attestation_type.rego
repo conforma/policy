@@ -29,6 +29,7 @@ import data.lib.rule_data
 #   - redhat
 #   - redhat_rpms
 #   - slsa3
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.pipelinerun_attestation_found
 #
@@ -53,6 +54,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - policy_data
+#   - redhat_security
 #
 deny contains result if {
 	some error in _rule_data_errors
@@ -73,6 +75,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - slsa3
+#   - redhat_security
 #
 deny contains result if {
 	count(lib.pipelinerun_attestations) == 0

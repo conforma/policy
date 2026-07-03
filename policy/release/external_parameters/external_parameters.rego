@@ -24,6 +24,8 @@ import data.lib.rule_data
 # custom:
 #   short_name: pipeline_run_params
 #   failure_msg: PipelineRun params, %v, do not match expectation, %v.
+#   collections:
+#   - redhat_security
 #
 deny contains result if {
 	some provenance in lib.pipelinerun_attestations
@@ -47,6 +49,7 @@ deny contains result if {
 #   solution: Provide a non-empty list of expected PipelineRun parameters.
 #   collections:
 #   - policy_data
+#   - redhat_security
 #
 deny contains result if {
 	some e in _rule_data_errors
@@ -61,6 +64,8 @@ deny contains result if {
 # custom:
 #   short_name: restrict_shared_volumes
 #   failure_msg: PipelineRun uses shared volumes, %v.
+#   collections:
+#   - redhat_security
 #
 deny contains result if {
 	some provenance in lib.pipelinerun_attestations

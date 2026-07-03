@@ -47,6 +47,7 @@ import data.lib.metadata
 #   - slsa3
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -73,6 +74,7 @@ deny contains result if {
 #   - slsa3
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -99,6 +101,7 @@ deny contains result if {
 #   - slsa3
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #

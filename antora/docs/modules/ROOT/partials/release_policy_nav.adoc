@@ -6,6 +6,7 @@
 *** xref:release_policy.adoc#redhat[redhat]
 *** xref:release_policy.adoc#redhat_maven[redhat_maven]
 *** xref:release_policy.adoc#redhat_rpms[redhat_rpms]
+*** xref:release_policy.adoc#redhat_security[redhat_security]
 *** xref:release_policy.adoc#rhtap-multi-ci[rhtap-multi-ci]
 *** xref:release_policy.adoc#slsa3[slsa3]
 ** Release Rules

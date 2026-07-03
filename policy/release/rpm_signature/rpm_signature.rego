@@ -29,6 +29,7 @@ import data.lib.rule_data
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   effective_on: 2024-10-05T00:00:00Z
 #
 deny contains result if {
@@ -47,6 +48,7 @@ deny contains result if {
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   effective_on: 2024-10-05T00:00:00Z
 #
 deny contains result if {
@@ -66,6 +68,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - policy_data
+#   - redhat_security
 #   effective_on: 2024-10-05T00:00:00Z
 #
 deny contains result if {

@@ -57,6 +57,7 @@ warn contains result if {
 #     within it.
 #   collections:
 #   - redhat
+#   - redhat_security
 #
 deny contains result if {
 	manifest := ec.oci.image_manifest(input.image.ref)
@@ -127,6 +128,7 @@ deny contains result if {
 #     Update the image build process to set the required labels.
 #   collections:
 #   - redhat
+#   - redhat_security
 #
 deny contains result if {
 	is_set(_image_labels)
@@ -174,6 +176,7 @@ deny contains result if {
 #   collections:
 #   - redhat
 #   - policy_data
+#   - redhat_security
 #
 deny contains result if {
 	some e in _rule_data_errors
@@ -192,6 +195,7 @@ deny contains result if {
 #     within it.
 #   collections:
 #   - redhat
+#   - redhat_security
 #
 deny contains result if {
 	_has_parent

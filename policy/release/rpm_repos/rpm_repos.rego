@@ -31,6 +31,7 @@ import data.lib.sets
 #   - redhat
 #   - redhat_rpms
 #   - policy_data
+#   - redhat_security
 #
 deny contains result if {
 	some e in _rule_data_errors
@@ -52,6 +53,7 @@ deny contains result if {
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   effective_on: "2024-11-10T00:00:00Z"
 #
 deny contains result if {

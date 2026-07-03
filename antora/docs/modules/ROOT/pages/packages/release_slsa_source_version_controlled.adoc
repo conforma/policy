@@ -33,7 +33,7 @@ Ensure each entry in the predicate.materials array with a SHA-1 digest includes 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Material URI %q is not a git URI`
 * Code: `slsa_source_version_controlled.materials_uri_is_git_repo`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L59[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L60[Source, window="_blank"]
 
 [#slsa_source_version_controlled__materials_format_okay]
 === link:#slsa_source_version_controlled__materials_format_okay[Materials have uri and digest]
@@ -57,4 +57,4 @@ Ensure that each entry in the predicate.materials array with a SHA-1 digest incl
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Material digest %q is not a git commit sha`
 * Code: `slsa_source_version_controlled.materials_include_git_sha`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L85[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_source_version_controlled/slsa_source_version_controlled.rego#L87[Source, window="_blank"]

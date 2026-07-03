@@ -24,6 +24,7 @@ import data.lib.rule_data
 #   failure_msg: 'Missing extension %q'
 #   collections:
 #   - github
+#   - redhat_security
 #
 warn contains result if {
 	some extension in [_TRIGGER, _SHA, _NAME, _REPOSITORY, _REF]
@@ -43,6 +44,7 @@ warn contains result if {
 #   failure_msg: 'Repository %q not in allowed list: %v'
 #   collections:
 #   - github
+#   - redhat_security
 #
 deny contains _check_extension(rego.metadata.chain(), "allowed_gh_workflow_repos", _REPOSITORY)
 
@@ -58,6 +60,7 @@ deny contains _check_extension(rego.metadata.chain(), "allowed_gh_workflow_repos
 #   failure_msg: 'Ref %q not in allowed list: %v'
 #   collections:
 #   - github
+#   - redhat_security
 #
 deny contains _check_extension(rego.metadata.chain(), "allowed_gh_workflow_refs", _REF)
 
@@ -73,6 +76,7 @@ deny contains _check_extension(rego.metadata.chain(), "allowed_gh_workflow_refs"
 #   failure_msg: 'Name %q not in allowed list: %v'
 #   collections:
 #   - github
+#   - redhat_security
 #
 deny contains _check_extension(rego.metadata.chain(), "allowed_gh_workflow_names", _NAME)
 
@@ -88,6 +92,7 @@ deny contains _check_extension(rego.metadata.chain(), "allowed_gh_workflow_names
 #   failure_msg: 'Trigger %q not in allowed list: %v'
 #   collections:
 #   - github
+#   - redhat_security
 #
 deny contains _check_extension(rego.metadata.chain(), "allowed_gh_workflow_triggers", _TRIGGER)
 
@@ -104,6 +109,7 @@ deny contains _check_extension(rego.metadata.chain(), "allowed_gh_workflow_trigg
 #   collections:
 #   - github
 #   - policy_data
+#   - redhat_security
 #
 deny contains result if {
 	some e in _rule_data_errors

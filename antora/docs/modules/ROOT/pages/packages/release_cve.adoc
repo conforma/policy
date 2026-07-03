@@ -53,7 +53,7 @@ The SLSA Provenance attestation for the image is inspected to ensure CVEs that d
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Found %q unpatched vulnerability of %s security level`
 * Code: `cve.unpatched_cve_blockers`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L150[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L151[Source, window="_blank"]
 
 [#cve__cve_results_found]
 === link:#cve__cve_results_found[CVE scan results found]
@@ -65,7 +65,7 @@ Confirm that CVE scan task results (Clair or TPA) are present in the SLSA Proven
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `CVE scan results were not found`
 * Code: `cve.cve_results_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L186[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L188[Source, window="_blank"]
 
 [#cve__cve_warnings]
 === link:#cve__cve_warnings[Non-blocking CVE check]
@@ -101,4 +101,4 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `cve.rule_data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L216[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L219[Source, window="_blank"]

@@ -65,6 +65,7 @@ warn contains result if {
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   effective_on: 2024-05-07T00:00:00Z
 #
 warn contains result if {
@@ -93,6 +94,7 @@ warn contains result if {
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   effective_on: 2024-05-07T00:00:00Z
 #
 warn contains result if {
@@ -154,6 +156,7 @@ warn contains result if {
 #     available.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   effective_on: 2024-05-07T00:00:00Z
 #
 deny contains result if {
@@ -175,6 +178,7 @@ deny contains result if {
 #     from trusted Tasks.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   effective_on: 2021-07-04T00:00:00Z
 #
 deny contains result if {
@@ -212,6 +216,7 @@ deny contains result if {
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -248,6 +253,7 @@ deny contains result if {
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   effective_on: 2024-05-07T00:00:00Z
 #
 deny contains result if {
@@ -267,6 +273,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - policy_data
+#   - redhat_security
 #
 deny contains result if {
 	some error in tekton.data_errors

@@ -32,6 +32,7 @@ import data.lib.strings as string_utils
 #   - rhtap-github
 #   - rhtap-gitlab
 #   - rhtap-jenkins
+#   - redhat_security
 #
 deny contains result if {
 	count(_attestations) < 1
@@ -56,6 +57,7 @@ deny contains result if {
 #   - rhtap-github
 #   - rhtap-gitlab
 #   - rhtap-jenkins
+#   - redhat_security
 #   depends_on:
 #   - rhtap_multi_ci.attestation_found
 #
