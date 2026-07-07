@@ -111,6 +111,14 @@ test_subject_digest if {
 	assertions.assert_equal(intoto.subject_digest({"digest": {"sha512": "def456"}}), "sha512:def456")
 }
 
+test_subject_digests_multi_algorithm if {
+	multi := {"digest": {"sha256": "abc123", "sha512": "def456"}}
+	digests := intoto.subject_digests(multi)
+	assertions.assert_equal(count(digests), 2)
+	"sha256:abc123" in digests
+	"sha512:def456" in digests
+}
+
 test_predicate_constants if {
 	assertions.assert_equal(intoto.predicate_test_result, "https://in-toto.io/attestation/test-result/v0.1")
 	assertions.assert_equal(intoto.predicate_vuln_scan, "https://in-toto.io/attestation/vulns/v0.2")
