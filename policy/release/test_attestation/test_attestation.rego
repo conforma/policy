@@ -282,6 +282,7 @@ deny contains result if {
 deny contains result if {
 	img := image.parse(input.image.ref)
 	img_digest := img.digest
+	img_digest != ""
 	some statement in _test_attestations
 	not _subject_matches(statement, img_digest)
 	result := metadata.result_helper_with_term(
@@ -348,5 +349,5 @@ _rule_data_errors contains error if {
 
 _subject_matches(statement, digest) if {
 	some subject in object.get(statement, "subject", [])
-	intoto.subject_digest(subject) == digest
+	digest in intoto.subject_digests(subject)
 }
