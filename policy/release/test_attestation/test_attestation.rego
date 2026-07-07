@@ -224,6 +224,7 @@ deny contains result if {
 #
 deny contains result if {
 	some statement in _test_attestations
+
 	# "n/a": no count field for erred results in the predicate spec
 	_has_result(statement.predicate, rule_data.get("erred_test_attestation_results"), "n/a")
 	result := metadata.result_helper_with_term(
@@ -254,6 +255,7 @@ deny contains result if {
 #
 deny contains result if {
 	some statement in _test_attestations
+
 	# "n/a": no count field for skipped results in the predicate spec
 	_has_result(statement.predicate, rule_data.get("skipped_test_attestation_results"), "n/a")
 	result := metadata.result_helper_with_term(
