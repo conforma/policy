@@ -25,7 +25,7 @@ readme: |
   OPA policies enforcing standards on a tekton pipeline definition. These policies
   are a work in progress and not yet production ready.
 install: |
-  `conftest pull oci::quay.io/enterprise-contracttract/ec-pipeline-policy:latest`
+  `conftest pull oci::quay.io/conforma/pipeline-policy:latest`
 homeURL: https://conforma.dev/docs/policy/
 keywords:
   - opa

@@ -9,14 +9,14 @@ compatible with the `conftest pull` command.
 
 The latest versions of the bundles can be found in the following repos:
 
-https://quay.io/repository/enterprise-contract/ec-release-policy?tab=tags[`quay.io/enterprise-contract/ec-release-policy`]::
+https://quay.io/repository/conforma/release-policy?tab=tags[`quay.io/conforma/release-policy`]::
 
 Used for validating attestations created by Tekton Chains. Contains the
 contents of https://github.com/conforma/policy/tree/main/policy/release[`policy/release`]
 and https://github.com/conforma/policy/tree/main/policy/lib[`policy/lib`]
 in this repo.
 
-https://quay.io/repository/enterprise-contract/ec-pipeline-policy?tab=tags[`quay.io/enterprise-contract/ec-pipeline-policy`]::
+https://quay.io/repository/conforma/pipeline-policy?tab=tags[`quay.io/conforma/pipeline-policy`]::
 
 Used for validating Tekton Pipeline definitions. Contains the contents of
 https://github.com/conforma/policy/tree/main/policy/pipeline[`policy/pipeline`]
@@ -24,7 +24,7 @@ and https://github.com/conforma/policy/tree/main/policy/lib[`policy/lib`].
 
 == Artifact Hub entries
 
-The bundles mentioned above are also listed in https://artifacthub.io/packages/search?org=enterprise-contract[Artifact Hub].
+The bundles mentioned above are also listed in https://artifacthub.io/packages/search?org=conforma[Artifact Hub].
 
 == Example usage
 
@@ -34,6 +34,6 @@ attestations for the image being validated. For example:
 
 ```
 cosign download attestation quay.io/konflux-ci/ec-golden-image:latest | jq --slurp '{"attestations":[.[].payload|@base64d|fromjson]}' > input.json
-conftest pull -p . quay.io/enterprise-contract/ec-release-policy quay.io/enterprise-contract/ec-policy-data
+conftest pull -p . quay.io/conforma/release-policy quay.io/conforma/policy-data
 conftest test input.json -d data -p policy --all-namespaces -o json | yq -P
 ```

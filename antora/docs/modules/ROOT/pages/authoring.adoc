@@ -17,7 +17,7 @@ rule.
   the `foo` annotation nested under this object.
 * `custom.short_name`: (required) unique name of the policy rule. This is used as the value of the
   `code` attribute when reporting failures and warnings. It is also the value used for skipping
-  the policy rule via the https://github.com/enterprise-contract/enterprise-contract-controller[EnterpriseContractPolicy]. It must not contain spaces. Words must be
+  the policy rule via the https://github.com/conforma/crds[EnterpriseContractPolicy]. It must not contain spaces. Words must be
   joined by `_`, e.g. `snake_case`.
 * `custom.failure_msg`: (required) message indicating the exact cause a policy rule did not pass.
   It should be as informative as possible to guide users towards remediation. The message can be
