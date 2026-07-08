@@ -51,7 +51,7 @@ _intoto_referrers contains referrer if {
 verified_statements contains statement if {
 	some referrer in _intoto_referrers
 	_has_trusted_provenance(referrer)
-	statement := oci.parsed_blob(referrer.ref)
+	statement := oci.parsed_blob_from_image(referrer.ref)
 
 	# regal ignore:leaked-internal-reference
 	statement._type in _known_types
@@ -63,26 +63,12 @@ verified_statements_by_predicate(predicate_type) := {statement |
 }
 
 _has_trusted_provenance(referrer) if {
-	some provenance_referrer in ec.oci.image_referrers(referrer.ref)
-	_verify_provenance(provenance_referrer, referrer.digest)
-}
-
-# Wrapping ec.sigstore.verify_attestation in a helper avoids an OPA v1.12.1
-# type-checker panic (unreachable in ast.unifies) triggered when the return
-# value is assigned and then accessed with dot notation in the same rule body.
-# No upstream OPA issue filed as of May 2026; test removal on OPA upgrade.
-# The object.get defaults below are NOT graceful degradation — they exist
-# solely for the type-checker workaround. Expected schema from EC CLI:
-# {success: bool, errors: [string], attestations: [{statement: any, signatures: [...]}]}
-# If "success" or "attestations" is absent, the defaults cause fail-closed
-# behavior (false == true fails, count([]) > 0 fails).
-_verify_provenance(provenance_referrer, expected_subject_digest) if {
-	verification := ec.sigstore.verify_attestation(provenance_referrer.ref, sigstore.opts)
+	verification := ec.sigstore.verify_attestation(referrer.ref, sigstore.opts)
 	object.get(verification, "success", false) == true
 	atts := object.get(verification, "attestations", [])
 	count(atts) > 0
 	some att in atts
-	_attests_to_subject(att, expected_subject_digest)
+	_attests_to_subject(att, referrer.digest)
 	_all_tasks_trusted(att)
 }
 
