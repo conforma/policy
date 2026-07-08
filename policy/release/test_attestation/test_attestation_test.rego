@@ -25,10 +25,6 @@ _image_ref := "registry.io/repo/image@sha256:abc123"
 
 _statement_digest := "sha256:stmt000000000000000000000000000000000000000000000000000000000001"
 
-_provenance_digest := "sha256:prov000000000000000000000000000000000000000000000000000000000001"
-
-_statement_ref := sprintf("registry.io/repo/image@%s", [_statement_digest])
-
 _bundle_ref := "quay.io/konflux-ci/tekton-catalog/task-verify@sha256:task00000000000000000000000000000000000000000000000000000000001"
 
 _trusted_task_rules := {"trusted_task_rules": {"allow": {"Trusted tasks": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]}}}
@@ -43,15 +39,7 @@ _referrer(digest, artifact_type) := {
 
 _statement_referrer := _referrer(_statement_digest, "application/vnd.in-toto+json")
 
-_provenance_referrer := _referrer(_provenance_digest, "application/vnd.dsse.envelope.v1+json")
-
-_mock_referrers(ref) := [_statement_referrer] if {
-	ref == _image_ref
-}
-
-_mock_referrers(ref) := [_provenance_referrer] if {
-	ref == _statement_ref
-}
+_mock_referrers(_) := [_statement_referrer]
 
 _slsa_v1_task := {
 	"name": "pipelineTask",
@@ -103,6 +91,20 @@ _mock_verify_success(_, _) := {
 }
 
 _mock_manifests(_) := {_bundle_ref: {"annotations": {"org.opencontainers.image.version": "1.0"}}}
+
+_layer_digest := "sha256:1a0e000000000000000000000000000000000000000000000000000000000001"
+
+_layer_digest_2 := "sha256:1a0e000000000000000000000000000000000000000000000000000000000002"
+
+_mock_image_manifest(_) := {"layers": [{"digest": _layer_digest}]}
+
+_mock_image_manifest_multi(ref) := {"layers": [{"digest": _layer_digest}]} if {
+	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000001")
+}
+
+_mock_image_manifest_multi(ref) := {"layers": [{"digest": _layer_digest_2}]} if {
+	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000002")
+}
 
 _make_statement(predicate) := json.marshal({
 	"_type": "https://in-toto.io/Statement/v1",
@@ -161,13 +163,7 @@ _mock_blob_missing_result(_) := _make_statement({
 
 _statement_digest_2 := "sha256:stmt000000000000000000000000000000000000000000000000000000000002"
 
-_statement_ref_2 := sprintf("registry.io/repo/image@%s", [_statement_digest_2])
-
-_provenance_digest_2 := "sha256:prov000000000000000000000000000000000000000000000000000000000002"
-
 _statement_referrer_2 := _referrer(_statement_digest_2, "application/vnd.in-toto+json")
-
-_provenance_referrer_2 := _referrer(_provenance_digest_2, "application/vnd.dsse.envelope.v1+json")
 
 _slsa_v1_provenance_2 := {
 	"statement": {
@@ -181,24 +177,14 @@ _slsa_v1_provenance_2 := {
 	"signatures": [{"keyid": "", "certificate": ""}],
 }
 
-_mock_referrers_two(ref) := [_statement_referrer, _statement_referrer_2] if {
-	ref == _image_ref
-}
-
-_mock_referrers_two(ref) := [_provenance_referrer] if {
-	ref == _statement_ref
-}
-
-_mock_referrers_two(ref) := [_provenance_referrer_2] if {
-	ref == _statement_ref_2
-}
+_mock_referrers_two(_) := [_statement_referrer, _statement_referrer_2]
 
 _mock_verify_two(ref, _) := {
 	"success": true,
 	"errors": [],
 	"attestations": [_slsa_v1_provenance],
 } if {
-	contains(ref, "prov000000000000000000000000000000000000000000000000000000000001")
+	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000001")
 }
 
 _mock_verify_two(ref, _) := {
@@ -206,7 +192,7 @@ _mock_verify_two(ref, _) := {
 	"errors": [],
 	"attestations": [_slsa_v1_provenance_2],
 } if {
-	contains(ref, "prov000000000000000000000000000000000000000000000000000000000002")
+	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000002")
 }
 
 # Test Case 5: mixed PASSED + FAILED
@@ -217,7 +203,7 @@ _mock_blob_mixed(ref) := _make_statement({
 	"failures": 0,
 	"warnings": 0,
 }) if {
-	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000001")
+	contains(ref, "1a0e000000000000000000000000000000000000000000000000000000000001")
 }
 
 _mock_blob_mixed(ref) := _make_statement({
@@ -227,7 +213,7 @@ _mock_blob_mixed(ref) := _make_statement({
 	"failures": 1,
 	"warnings": 0,
 }) if {
-	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000002")
+	contains(ref, "1a0e000000000000000000000000000000000000000000000000000000000002")
 }
 
 # Test Case 11: WARNED + FAILED coexistence
@@ -238,7 +224,7 @@ _mock_blob_warned_and_failed(ref) := _make_statement({
 	"failures": 0,
 	"warnings": 1,
 }) if {
-	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000001")
+	contains(ref, "1a0e000000000000000000000000000000000000000000000000000000000001")
 }
 
 _mock_blob_warned_and_failed(ref) := _make_statement({
@@ -248,7 +234,7 @@ _mock_blob_warned_and_failed(ref) := _make_statement({
 	"failures": 1,
 	"warnings": 0,
 }) if {
-	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000002")
+	contains(ref, "1a0e000000000000000000000000000000000000000000000000000000000002")
 }
 
 # Test Case 12: multiple FAILEDs
@@ -259,7 +245,7 @@ _mock_blob_multi_failed(ref) := _make_statement({
 	"failures": 1,
 	"warnings": 0,
 }) if {
-	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000001")
+	contains(ref, "1a0e000000000000000000000000000000000000000000000000000000000001")
 }
 
 _mock_blob_multi_failed(ref) := _make_statement({
@@ -269,7 +255,7 @@ _mock_blob_multi_failed(ref) := _make_statement({
 	"failures": 1,
 	"warnings": 0,
 }) if {
-	contains(ref, "stmt000000000000000000000000000000000000000000000000000000000002")
+	contains(ref, "1a0e000000000000000000000000000000000000000000000000000000000002")
 }
 
 # Test Case 9: custom configuration name
@@ -303,6 +289,7 @@ test_all_passed_no_violations if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -311,6 +298,7 @@ test_all_passed_no_violations if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -327,6 +315,7 @@ test_failed_with_details if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_failed_with_details
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -343,6 +332,7 @@ test_failed_no_details if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -355,6 +345,7 @@ test_warned_with_details if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_warned
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -367,6 +358,7 @@ test_warned_with_details if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_warned
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -383,6 +375,7 @@ test_unknown_result_value if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_unknown_result
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -397,6 +390,7 @@ test_erred_result if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_erred_result
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -413,6 +407,7 @@ test_missing_result_field if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_missing_result
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -429,6 +424,7 @@ test_mixed_passed_and_failed if {
 		with ec.oci.image_referrers as _mock_referrers_two
 		with ec.sigstore.verify_attestation as _mock_verify_two
 		with ec.oci.blob as _mock_blob_mixed
+		with ec.oci.image_manifest as _mock_image_manifest_multi
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -437,6 +433,7 @@ test_mixed_passed_and_failed if {
 		with ec.oci.image_referrers as _mock_referrers_two
 		with ec.sigstore.verify_attestation as _mock_verify_two
 		with ec.oci.blob as _mock_blob_mixed
+		with ec.oci.image_manifest as _mock_image_manifest_multi
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -459,6 +456,7 @@ test_test_name_from_configuration if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_custom_config
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -474,6 +472,7 @@ test_test_name_fallback if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_no_config
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -493,6 +492,7 @@ test_warned_and_failed_coexist if {
 		with ec.oci.image_referrers as _mock_referrers_two
 		with ec.sigstore.verify_attestation as _mock_verify_two
 		with ec.oci.blob as _mock_blob_warned_and_failed
+		with ec.oci.image_manifest as _mock_image_manifest_multi
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -505,6 +505,7 @@ test_warned_and_failed_coexist if {
 		with ec.oci.image_referrers as _mock_referrers_two
 		with ec.sigstore.verify_attestation as _mock_verify_two
 		with ec.oci.blob as _mock_blob_warned_and_failed
+		with ec.oci.image_manifest as _mock_image_manifest_multi
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -517,6 +518,7 @@ test_multiple_failures_deny if {
 		with ec.oci.image_referrers as _mock_referrers_two
 		with ec.sigstore.verify_attestation as _mock_verify_two
 		with ec.oci.blob as _mock_blob_multi_failed
+		with ec.oci.image_manifest as _mock_image_manifest_multi
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -539,6 +541,7 @@ test_multiple_failures_no_warn if {
 		with ec.oci.image_referrers as _mock_referrers_two
 		with ec.sigstore.verify_attestation as _mock_verify_two
 		with ec.oci.blob as _mock_blob_multi_failed
+		with ec.oci.image_manifest as _mock_image_manifest_multi
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -551,6 +554,7 @@ test_non_string_result if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_non_string_result
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -574,6 +578,7 @@ test_missing_predicate if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_missing_predicate
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -601,6 +606,7 @@ test_failures_count_only if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_failures_count_only
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -621,6 +627,7 @@ test_warnings_count_only if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_warnings_count_only
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -643,6 +650,7 @@ test_zero_failures_count if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_zero_failures
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -663,6 +671,7 @@ test_zero_warnings_count if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_zero_warnings
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -680,6 +689,7 @@ test_false_result_value if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_false_result
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -699,6 +709,7 @@ test_null_result_value if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_null_result
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -718,6 +729,7 @@ test_empty_string_result_value if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_empty_string_result
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -742,6 +754,7 @@ test_count_triggers_deny if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_count_triggers_deny
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -771,6 +784,7 @@ test_skipped_result if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_skipped
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -784,6 +798,7 @@ test_informative_test_warns_instead_of_denies if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_failed_with_details
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -793,6 +808,7 @@ test_informative_test_warns_instead_of_denies if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_failed_with_details
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -808,6 +824,7 @@ test_non_informative_test_still_denies if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_failed_with_details
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -834,6 +851,7 @@ test_subject_mismatch_denied if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_wrong_subject
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -847,6 +865,7 @@ test_subject_match_passes if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -868,6 +887,7 @@ test_missing_subject_triggers_mismatch if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_no_subject
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -887,6 +907,7 @@ test_rule_data_valid_no_errors if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -899,6 +920,7 @@ test_rule_data_invalid_triggers_error if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
@@ -916,6 +938,7 @@ test_custom_failed_results if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_warned
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
