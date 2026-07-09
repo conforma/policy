@@ -51,7 +51,7 @@ _count_detail(predicate, key) := result if {
 } else := "0"
 
 _has_result(predicate, results, _) if {
-	predicate.result in {r | some r in results}
+	predicate.result in results
 }
 
 _has_result(predicate, _, count_key) if {
@@ -82,7 +82,7 @@ _has_result(predicate, _, count_key) if {
 warn contains result if {
 	some statement in _test_attestations
 	_has_result(statement.predicate, rule_data.get("failed_test_attestation_results"), "failures")
-	_test_name(statement) in {t | some t in rule_data.get("informative_test_attestations")}
+	_test_name(statement) in rule_data.get("informative_test_attestations")
 	detail := _count_detail(statement.predicate, "failures")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
@@ -141,7 +141,7 @@ warn contains result if {
 deny contains result if {
 	some statement in _test_attestations
 	_has_result(statement.predicate, rule_data.get("failed_test_attestation_results"), "failures")
-	not _test_name(statement) in {t | some t in rule_data.get("informative_test_attestations")}
+	not _test_name(statement) in rule_data.get("informative_test_attestations")
 	detail := _count_detail(statement.predicate, "failures")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
@@ -171,7 +171,7 @@ deny contains result if {
 deny contains result if {
 	some statement in _test_attestations
 	statement.predicate.result
-	not statement.predicate.result in {r | some r in rule_data.get("supported_test_attestation_results")}
+	not statement.predicate.result in rule_data.get("supported_test_attestation_results")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[_test_name(statement), statement.predicate.result],

@@ -634,6 +634,9 @@ test_warnings_count_only if {
 }
 
 # --- Test Case 16: Zero counts boundary ---
+# Edge case: result string matches "FAILED" but the count field is zero.
+# _has_result has two clauses (result string match OR count > 0), so a
+# FAILED result still triggers a deny even when failures: 0.
 
 _mock_blob_zero_failures(_) := _make_statement({
 	"result": "FAILED",
@@ -656,6 +659,8 @@ test_zero_failures_count if {
 		with data.rule_data.trusted_task_rules_enabled as true
 }
 
+# Same edge case for warnings: result string "WARNED" triggers the warn
+# rule even when warnings: 0.
 _mock_blob_zero_warnings(_) := _make_statement({
 	"result": "WARNED",
 	"configuration": [{"name": "zero-warn-test"}],
@@ -719,6 +724,8 @@ test_null_result_value if {
 	r.code == "test_attestation.test_result_known"
 }
 
+# Edge case: empty string is truthy in Rego (only false/undefined are falsy),
+# so it passes the "result exists" check but fails the "result known" check.
 _mock_blob_empty_string_result(_) := _make_statement({
 	"result": "",
 	"configuration": [{"name": "empty-string-test"}],
