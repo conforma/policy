@@ -32,6 +32,15 @@ defaults := {
 	"skipped_tests_results": ["SKIPPED"],
 	"warned_tests_results": ["WARNING"],
 	#
+	# Used in release/test_attestation.rego
+	# Vocabulary follows the in-toto test-result predicate spec (PASSED/FAILED/WARNED),
+	# not the test.rego vocabulary (SUCCESS/FAILURE/WARNING).
+	"supported_test_attestation_results": ["PASSED", "FAILED", "WARNED", "ERROR", "SKIPPED"],
+	"failed_test_attestation_results": ["FAILED"],
+	"erred_test_attestation_results": ["ERROR"],
+	"skipped_test_attestation_results": ["SKIPPED"],
+	"warned_test_attestation_results": ["WARNED"],
+	#
 	# Used in release/cve.go
 	# Valid levels: "critical", "high", "medium", "low", and "unknown"
 	"restrict_cve_security_levels": ["critical", "high"],

@@ -48,3 +48,13 @@ statements_by_predicate(predicate_type) := {statement |
 predicate_test_result := "https://in-toto.io/attestation/test-result/v0.1"
 
 predicate_vuln_scan := "https://in-toto.io/attestation/vulns/v0.2"
+
+# Converts a subject digest map (e.g., {"sha256": "abc..."}) to a set of "algorithm:value" strings.
+subject_digests(subject) := {concat(":", [algorithm, value]) |
+	some algorithm, value in subject.digest
+}
+
+# Single-digest convenience accessor. Safe when subjects have one digest algorithm.
+subject_digest(subject) := digest if {
+	some digest in subject_digests(subject)
+}
