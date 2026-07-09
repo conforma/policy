@@ -747,6 +747,9 @@ test_empty_string_result_value if {
 }
 
 # --- Test Case 18: Count-based trigger without result string match ---
+# Defensive check: a buggy producer might report result "PASSED" while also
+# reporting failures > 0. The count-based clause of _has_result catches this
+# independently of the result string, so the deny still fires.
 
 _mock_blob_count_triggers_deny(_) := _make_statement({
 	"result": "PASSED",
