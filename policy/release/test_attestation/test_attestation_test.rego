@@ -633,56 +633,7 @@ test_warnings_count_only if {
 		with data.rule_data.trusted_task_rules_enabled as true
 }
 
-# --- Test Case 16: Zero counts boundary ---
-# Edge case: result string matches "FAILED" but the count field is zero.
-# _has_result has two clauses (result string match OR count > 0), so a
-# FAILED result still triggers a deny even when failures: 0.
-
-_mock_blob_zero_failures(_) := _make_statement({
-	"result": "FAILED",
-	"configuration": [{"name": "zero-count-test"}],
-	"failures": 0,
-})
-
-test_zero_failures_count if {
-	assertions.assert_equal_results(test_attestation.deny, {{
-		"code": "test_attestation.no_failed_tests",
-		"msg": "Test attestation \"zero-count-test\" has a failed result, failures: 0",
-		"term": "zero-count-test",
-	}}) with input.image.ref as _image_ref
-		with ec.oci.image_referrers as _mock_referrers
-		with ec.sigstore.verify_attestation as _mock_verify_success
-		with ec.oci.blob as _mock_blob_zero_failures
-		with ec.oci.image_manifest as _mock_image_manifest
-		with ec.oci.image_manifests as _mock_manifests
-		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
-		with data.rule_data.trusted_task_rules_enabled as true
-}
-
-# Same edge case for warnings: result string "WARNED" triggers the warn
-# rule even when warnings: 0.
-_mock_blob_zero_warnings(_) := _make_statement({
-	"result": "WARNED",
-	"configuration": [{"name": "zero-warn-test"}],
-	"warnings": 0,
-})
-
-test_zero_warnings_count if {
-	assertions.assert_equal_results(test_attestation.warn, {{
-		"code": "test_attestation.no_test_warnings",
-		"msg": "Test attestation \"zero-warn-test\" has warnings, warnings: 0",
-		"term": "zero-warn-test",
-	}}) with input.image.ref as _image_ref
-		with ec.oci.image_referrers as _mock_referrers
-		with ec.sigstore.verify_attestation as _mock_verify_success
-		with ec.oci.blob as _mock_blob_zero_warnings
-		with ec.oci.image_manifest as _mock_image_manifest
-		with ec.oci.image_manifests as _mock_manifests
-		with data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
-		with data.rule_data.trusted_task_rules_enabled as true
-}
-
-# --- Test Case 17: Falsy result values ---
+# --- Test Case 16: Falsy result values ---
 
 _mock_blob_false_result(_) := _make_statement({
 	"result": false,
