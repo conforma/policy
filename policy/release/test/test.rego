@@ -88,6 +88,30 @@ deny contains result if {
 }
 
 # METADATA
+# title: RPM Test data found in task results
+# description: >-
+#   This is a temporary duplicate of test_data_found. The RPM build pipeline
+#   will also require TEST_OUTPUT, but initially use a warning until we are certain
+#   everything works without breaking the build pipeline.
+# custom:
+#   short_name: rpm_test_data_found
+#   failure_msg: No RPM test data found
+#   solution: >-
+#     Confirm at least one task in the RPM build pipeline contains a result named TEST_OUTPUT.
+#   collections:
+#   - redhat_rpms
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+warn contains result if {
+	count(lib.pipelinerun_attestations) > 0 # make sure we're looking at a PipelineRun attestation
+	results := lib.results_from_tests
+	count(results) == 0 # there are none at all
+
+	result := metadata.result_helper(rego.metadata.chain(), [])
+}
+
+# METADATA
 # title: Test data includes results key
 # description: >-
 #   Each test result is expected to have a `results` key. Verify that the `results`
