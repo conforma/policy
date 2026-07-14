@@ -20,5 +20,5 @@ xref:pipeline_policy.adoc[Pipeline Policy].
 
 * https://github.com/conforma/policy[github.com/conforma/policy]
 * https://github.com/conforma/cli[github.com/conforma/cli]
-* https://github.com/enterprise-contract[github.com/enterprise-contract]
+* https://github.com/conforma[github.com/conforma]
 * https://github.com/konflux-ci[github.com/konflux-ci]

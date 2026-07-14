@@ -155,7 +155,7 @@ contributing to the definition of policy rules.
 
 * [Policy rule documentation][policydocs]
 * ["Verify Enterprise Contract" task definition][taskdef]
-* [github.com/enterprise-contract][contract]
+* [github.com/conforma][contract]
 * [github.com/konflux-ci][konflux-ci]
 
 [asdf]: https://asdf-vm.com/
@@ -167,7 +167,7 @@ contributing to the definition of policy rules.
 [docs]: https://conforma.dev/
 [policydocs]: https://conforma.dev/docs/policy/release_policy.html
 [taskdef]: https://github.com/conforma/cli/blob/main/tasks/verify-enterprise-contract/0.1/verify-enterprise-contract.yaml
-[contract]: https://github.com/enterprise-contract
+[contract]: https://github.com/conforma
 [ec]: https://github.com/conforma/cli
 [konflux-ci]: https://github.com/konflux-ci
 [builddefs]: https://github.com/konflux-ci/build-definitions
