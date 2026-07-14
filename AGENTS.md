@@ -24,6 +24,10 @@ Single test via the CLI: `ec opa test ./policy -r <test_name>`
 - **Run `make generate-docs` after changing policy annotations.** Commit the regenerated files.
 - All tools (ec, opa, conftest, regal) run via `go run` with versions pinned in go.mod — no local installs needed.
 - Tests run network-isolated when `unshare` is available.
+- **Test attestation mock patterns:** Tests for `test_attestation` require Sigstore/OCI mock
+  infrastructure (referrer descriptors, SLSA provenance builders, verify mocks). See
+  `policy/release/test_attestation/test_attestation_test.rego` and
+  `policy/lib/intoto/trust_test.rego` for the canonical mock patterns.
 
 ## Policy Annotations
 
@@ -50,6 +54,21 @@ attestation formats. Policies consume the normalized form — don't branch on SL
 **Rule data** lives in `example/data/` (required tasks, trusted task bundles, known RPM repos).
 These files have `effective_on` dates — rules with future dates are warnings, not failures.
 
+**Dual test-result validation:** Test results are validated through two parallel paths that must
+maintain feature parity:
+- `policy/release/test/` validates pipeline task results (`TEST_OUTPUT` from SLSA provenance).
+- `policy/release/test_attestation/` validates in-toto test-result attestations verified through
+  Sigstore/SLSA provenance chains (via `policy/lib/intoto/trust.rego`).
+
+When adding or modifying test result rules (e.g. a new result status, changed failure semantics),
+both packages must be updated together.
+
+**Trust verification chain:** `policy/lib/intoto/trust.rego` couples `lib.intoto`, `lib.sigstore`,
+`lib.tekton`, and OCI builtins to verify that in-toto statements were produced by trusted pipelines.
+The trust model is fail-closed: if blob fetching, JSON parsing, or type validation fails for a
+referrer, that statement is silently excluded from `verified_statements` (no error is emitted).
+Consumer deny rules in packages like `test_attestation` surface the absence as a policy violation.
+
 ## Common Change Patterns
 
 | Change | Pattern to follow |
@@ -58,6 +77,8 @@ These files have `effective_on` dates — rules with future dates are warnings, 
 | Add a new pipeline policy rule | `policy/pipeline/` |
 | Add a shared library function | `policy/lib/` (must have test coverage) |
 | Fetch and parse an OCI blob as JSON | Use `oci.parsed_blob(ref)` from `data.lib.oci`, not `json.unmarshal(ec.oci.blob(ref))` directly. A Regal lint rule (`prefer-parsed-blob`) enforces this. |
+| Add/modify test result validation | Update both `policy/release/test/` (pipeline task results) AND `policy/release/test_attestation/` (in-toto attestations). These packages must maintain feature parity. |
+| Modify attestation trust verification | `policy/lib/intoto/trust.rego` couples intoto, sigstore, tekton, and OCI builtins. Fail-closed: if any step fails, the statement is excluded (no error emitted). Consumer deny rules surface the absence. |
 
 ## PR Conventions
 
