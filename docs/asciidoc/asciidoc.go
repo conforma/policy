@@ -362,9 +362,37 @@ func inspect(rego []string) ([]ast.FlatAnnotationsRefSet, error) {
 	return annotations, nil
 }
 
+// removeAdocFiles removes all .adoc files from the given directory.
+// If the directory does not exist, it returns nil.
+func removeAdocFiles(dir string) error {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil
+		}
+		return fmt.Errorf("reading directory %q: %w", dir, err)
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".adoc") {
+			if err := os.Remove(filepath.Join(dir, entry.Name())); err != nil {
+				return fmt.Errorf("removing file %q: %w", entry.Name(), err)
+			}
+		}
+	}
+	return nil
+}
+
 func GenerateAsciidoc(module string, rego ...string) error {
 	annotations, err := inspect(rego)
 	if err != nil {
+		return err
+	}
+
+	// Remove all .adoc files from the packages directory before
+	// regenerating. Everything in this directory is generated, so
+	// removing stale files from deleted packages is safe.
+	packagesDir := filepath.Join(module, "pages", "packages")
+	if err := removeAdocFiles(packagesDir); err != nil {
 		return err
 	}
 

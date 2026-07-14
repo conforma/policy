@@ -17,6 +17,8 @@
 package asciidoc
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -150,4 +152,95 @@ func TestFormatTimeRoundTrip(t *testing.T) {
 	if !original.Equal(parsed) {
 		t.Errorf("Round-trip failed: original %v != parsed %v", original, parsed)
 	}
+}
+
+func TestRemoveAdocFiles(t *testing.T) {
+	t.Run("removes .adoc files", func(t *testing.T) {
+		dir := t.TempDir()
+
+		// Create .adoc files
+		for _, name := range []string{"release_foo.adoc", "pipeline_bar.adoc"} {
+			if err := os.WriteFile(filepath.Join(dir, name), []byte("content"), 0644); err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		if err := removeAdocFiles(dir); err != nil {
+			t.Fatalf("removeAdocFiles() returned error: %v", err)
+		}
+
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(entries) != 0 {
+			t.Errorf("expected empty directory, got %d entries", len(entries))
+		}
+	})
+
+	t.Run("preserves non-adoc files", func(t *testing.T) {
+		dir := t.TempDir()
+
+		// Create a mix of files
+		if err := os.WriteFile(filepath.Join(dir, "stale.adoc"), []byte("stale"), 0644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "keep.txt"), []byte("keep"), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := removeAdocFiles(dir); err != nil {
+			t.Fatalf("removeAdocFiles() returned error: %v", err)
+		}
+
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(entries))
+		}
+		if entries[0].Name() != "keep.txt" {
+			t.Errorf("expected keep.txt, got %s", entries[0].Name())
+		}
+	})
+
+	t.Run("preserves subdirectories", func(t *testing.T) {
+		dir := t.TempDir()
+
+		subDir := filepath.Join(dir, "subdir")
+		if err := os.Mkdir(subDir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "stale.adoc"), []byte("stale"), 0644); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := removeAdocFiles(dir); err != nil {
+			t.Fatalf("removeAdocFiles() returned error: %v", err)
+		}
+
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(entries) != 1 {
+			t.Fatalf("expected 1 entry, got %d", len(entries))
+		}
+		if entries[0].Name() != "subdir" || !entries[0].IsDir() {
+			t.Errorf("expected subdir directory, got %s", entries[0].Name())
+		}
+	})
+
+	t.Run("nonexistent directory is not an error", func(t *testing.T) {
+		if err := removeAdocFiles(filepath.Join(t.TempDir(), "nonexistent")); err != nil {
+			t.Fatalf("removeAdocFiles() returned error for nonexistent dir: %v", err)
+		}
+	})
+
+	t.Run("empty directory is not an error", func(t *testing.T) {
+		if err := removeAdocFiles(t.TempDir()); err != nil {
+			t.Fatalf("removeAdocFiles() returned error for empty dir: %v", err)
+		}
+	})
 }
