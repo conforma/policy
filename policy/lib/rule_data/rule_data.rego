@@ -200,3 +200,14 @@ get(key_name) := value if {
 	# If the key is not found, default to an empty list
 	value := []
 }
+
+# Returns warnings for patterns in the given rule data key that lack ^ anchoring.
+anchoring_errors(key) := {error |
+	some pattern in get(key)
+	is_string(pattern)
+	not startswith(pattern, "^")
+	error := {
+		"message": sprintf("Pattern %q in %s is not anchored with ^", [pattern, key]),
+		"severity": "warning",
+	}
+}

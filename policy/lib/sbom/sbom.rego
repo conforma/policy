@@ -422,6 +422,65 @@ rule_data_errors contains error if {
 	}
 }
 
+# Warn when external_references URL patterns lack ^ anchoring.
+rule_data_errors contains error if {
+	some key in {rule_data_allowed_external_references_key, rule_data_disallowed_external_references_key}
+	some index, ref in rule_data.get(key)
+	pattern := object.get(ref, "url", "")
+	pattern != ""
+	not startswith(pattern, "^")
+	error := {
+		"message": sprintf("Pattern %q at index %d in %s is not anchored with ^", [pattern, index, key]),
+		"severity": "warning",
+	}
+}
+
+# Warn when allowed_package_sources patterns lack ^ anchoring.
+rule_data_errors contains error if {
+	some index, source in rule_data.get(rule_data_allowed_package_sources_key)
+	some pattern in source.patterns
+	is_string(pattern)
+	not startswith(pattern, "^")
+	error := {
+		"message": sprintf(
+			"Pattern %q at index %d in %s is not anchored with ^",
+			[pattern, index, rule_data_allowed_package_sources_key],
+		),
+		"severity": "warning",
+	}
+}
+
+# Warn when allowed_proxy_url_patterns lack ^ anchoring.
+rule_data_errors contains error if {
+	some purl_type, patterns in rule_data.get("allowed_proxy_url_patterns")
+	some pattern in patterns
+	is_string(pattern)
+	not startswith(pattern, "^")
+	error := {
+		"message": sprintf(
+			"Pattern %q for PURL type %q in %s is not anchored with ^",
+			[pattern, purl_type, "allowed_proxy_url_patterns"],
+		),
+		"severity": "warning",
+	}
+}
+
+# Warn when disallowed_attributes except_when patterns lack ^ anchoring.
+rule_data_errors contains error if {
+	some attr_index, attr in rule_data.get(rule_data_attributes_key)
+	some ew in object.get(attr, "except_when", [])
+	some pattern in ew.patterns
+	is_string(pattern)
+	not startswith(pattern, "^")
+	error := {
+		"message": sprintf(
+			"Pattern %q at index %d in %s except_when is not anchored with ^",
+			[pattern, attr_index, rule_data_attributes_key],
+		),
+		"severity": "warning",
+	}
+}
+
 # disallowed_attribute_excepted checks if the package's PURL has a qualifier
 # matching an except_when condition, meaning the violation should be suppressed.
 disallowed_attribute_excepted(disallowed, purl_string) if {

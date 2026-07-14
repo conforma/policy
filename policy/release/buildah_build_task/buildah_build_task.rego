@@ -182,4 +182,8 @@ _rule_data_errors contains error if {
 	}
 }
 
+_rule_data_errors contains error if {
+	some error in rule_data.anchoring_errors(_plat_patterns_rule_data_key)
+}
+
 _plat_patterns_rule_data_key := "disallowed_platform_patterns"

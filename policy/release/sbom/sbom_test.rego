@@ -261,6 +261,30 @@ test_rule_data_validation if {
 			"msg": "Rule data disallowed_packages has unexpected format: 2.exceptions.0.subpath: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Pattern \"example.com\" at index 0 in allowed_external_references is not anchored with ^",
+			"severity": "warning",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Pattern \"badurl\" at index 0 in disallowed_external_references is not anchored with ^",
+			"severity": "warning",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Pattern \"[\" at index 0 in allowed_package_sources is not anchored with ^",
+			"severity": "warning",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Pattern \"[\" at index 8 in disallowed_attributes except_when is not anchored with ^",
+			"severity": "warning",
+		},
 	}
 
 	assertions.assert_equal_results(sbom.deny, expected) with input.attestations as _sbom_attestation
@@ -340,13 +364,121 @@ test_proxy_rule_data_validation if {
 		"proxy_enabled_purl_types": [],
 		"allowed_proxy_url_patterns": {"maven": ["(?=a)?b"]},
 	}
-	expected_bad_regex := {{
-		"code": "sbom.disallowed_packages_provided",
-		"msg": "\"(?=a)?b\" is not a valid regular expression for PURL type \"maven\"",
-		"severity": "failure",
-	}}
+	expected_bad_regex := {
+		{
+			"code": "sbom.disallowed_packages_provided",
+			"msg": "\"(?=a)?b\" is not a valid regular expression for PURL type \"maven\"",
+			"severity": "failure",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Pattern \"(?=a)?b\" for PURL type \"maven\" in allowed_proxy_url_patterns is not anchored with ^",
+			"severity": "warning",
+		},
+	}
 	assertions.assert_equal_results(expected_bad_regex, sbom.deny) with input.attestations as _sbom_attestation
 		with data.rule_data as d_bad_regex
+}
+
+test_anchoring_warnings_external_references if {
+	d := {
+		lib.sbom.rule_data_allowed_external_references_key: [
+			{"type": "distribution", "url": "^https://example\\.com/.*"},
+			{"type": "distribution", "url": "example.com"},
+		],
+		lib.sbom.rule_data_disallowed_external_references_key: [
+			{"type": "vcs", "url": "^https://evil\\.com/.*"},
+			{"type": "vcs", "url": "evil.com"},
+		],
+	}
+
+	expected := {
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Pattern \"example.com\" at index 1 in allowed_external_references is not anchored with ^",
+			"severity": "warning",
+		},
+		{
+			"code": "sbom.disallowed_packages_provided",
+			# regal ignore:line-length
+			"msg": "Pattern \"evil.com\" at index 1 in disallowed_external_references is not anchored with ^",
+			"severity": "warning",
+		},
+	}
+
+	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
+		with data.rule_data as d
+}
+
+test_anchoring_warnings_package_sources if {
+	d := {lib.sbom.rule_data_allowed_package_sources_key: [
+		{"type": "generic", "patterns": ["^https://registry\\.example\\.com/.*"]},
+		{"type": "generic", "patterns": ["registry.example.com"]},
+	]}
+
+	expected := {{
+		"code": "sbom.disallowed_packages_provided",
+		# regal ignore:line-length
+		"msg": "Pattern \"registry.example.com\" at index 1 in allowed_package_sources is not anchored with ^",
+		"severity": "warning",
+	}}
+
+	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
+		with data.rule_data as d
+}
+
+test_anchoring_warnings_proxy_url_patterns if {
+	d := {"allowed_proxy_url_patterns": {
+		"maven": ["^https://proxy\\.example\\.com/.*"],
+		"npm": ["proxy.example.com"],
+	}}
+
+	expected := {{
+		"code": "sbom.disallowed_packages_provided",
+		# regal ignore:line-length
+		"msg": "Pattern \"proxy.example.com\" for PURL type \"npm\" in allowed_proxy_url_patterns is not anchored with ^",
+		"severity": "warning",
+	}}
+
+	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
+		with data.rule_data as d
+}
+
+test_anchoring_warnings_except_when if {
+	d := {lib.sbom.rule_data_attributes_key: [{
+		"name": "test_attr",
+		"value": "true",
+		"except_when": [{"purl_qualifier": "repo", "patterns": ["console\\.redhat\\.com"]}],
+	}]}
+
+	expected := {{
+		"code": "sbom.disallowed_packages_provided",
+		# regal ignore:line-length
+		"msg": "Pattern \"console\\\\.redhat\\\\.com\" at index 0 in disallowed_attributes except_when is not anchored with ^",
+		"severity": "warning",
+	}}
+
+	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
+		with data.rule_data as d
+}
+
+test_no_anchoring_warnings_when_anchored if {
+	d := {
+		lib.sbom.rule_data_allowed_external_references_key: [{"type": "distribution", "url": "^https://example\\.com/.*"}],
+		lib.sbom.rule_data_disallowed_external_references_key: [{"type": "vcs", "url": "^https://evil\\.com/.*"}],
+		lib.sbom.rule_data_allowed_package_sources_key: [{"type": "generic", "patterns": ["^https://registry\\.example\\.com/.*"]}],
+		"allowed_proxy_url_patterns": {"maven": ["^https://proxy\\.example\\.com/.*"]},
+		lib.sbom.rule_data_attributes_key: [{
+			"name": "test_attr",
+			"value": "true",
+			"except_when": [{"purl_qualifier": "repo", "patterns": ["^https://console\\.redhat\\.com/.*"]}],
+		}],
+	}
+
+	assertions.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
+		with data.rule_data as d
 }
 
 _sbom_attestation := [_spdx_sbom_attestation, _cyclonedx_sbom_attestation]

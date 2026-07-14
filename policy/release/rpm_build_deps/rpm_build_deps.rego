@@ -36,3 +36,23 @@ matches_any(branch, valid_locations) if {
 	some pattern in valid_locations
 	regex.match(pattern, branch)
 }
+
+# METADATA
+# title: allowed_rpm_build_dependency_sources format
+# description: >-
+#   Confirm the `allowed_rpm_build_dependency_sources` rule data uses anchored regex patterns.
+# custom:
+#   short_name: allowed_rpm_build_dependency_sources_format
+#   failure_msg: "%s"
+#   collections:
+#   - redhat_rpms
+#   - policy_data
+#
+deny contains result if {
+	some error in _rule_data_errors
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
+}
+
+_rule_data_errors contains error if {
+	some error in rule_data.anchoring_errors("allowed_rpm_build_dependency_sources")
+}

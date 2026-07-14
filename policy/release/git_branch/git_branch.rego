@@ -33,7 +33,27 @@ deny contains result if {
 	result := metadata.result_helper(rego.metadata.chain(), [branch])
 }
 
+# METADATA
+# title: allowed_target_branch_patterns format
+# description: >-
+#   Confirm the `allowed_target_branch_patterns` rule data uses anchored regex patterns.
+# custom:
+#   short_name: allowed_target_branch_patterns_format
+#   failure_msg: "%s"
+#   collections:
+#   - redhat_rpms
+#   - policy_data
+#
+deny contains result if {
+	some error in _rule_data_errors
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
+}
+
 matches_any(branch) if {
 	some pattern in rule_data.get("allowed_target_branch_patterns")
 	regex.match(pattern, branch)
+}
+
+_rule_data_errors contains error if {
+	some error in rule_data.anchoring_errors("allowed_target_branch_patterns")
 }
