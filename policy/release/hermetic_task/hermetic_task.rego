@@ -29,6 +29,7 @@ import data.lib.tekton
 #     'true'.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #

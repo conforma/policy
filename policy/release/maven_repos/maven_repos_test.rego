@@ -62,7 +62,7 @@ test_default_cdx_fail if {
 	expected := {{
 		"code": "release.maven_repos.deny_unpermitted_urls",
 		"msg": expected_msg,
-		"collections": ["redhat_maven"],
+		"collections": ["redhat_maven", "redhat_security"],
 		"effective_on": "2026-05-10T00:00:00Z",
 		"term": "pkg:maven/org.base/no-url@1.0",
 	}}
@@ -86,7 +86,7 @@ test_spdx_default_fail if {
 test_missing_rule_data if {
 	expected := {{
 		"code": "release.maven_repos.policy_data_missing",
-		"collections": ["redhat_maven", "policy_data"],
+		"collections": ["redhat_maven", "redhat_security", "policy_data"],
 		"effective_on": "2022-01-01T00:00:00Z",
 		"msg": "Policy data is missing the required \"allowed_maven_repositories\" list",
 	}}
@@ -170,14 +170,14 @@ test_repo_url_errors_collision_from_mixed_sources if {
 		{
 			"code": "release.maven_repos.deny_unpermitted_urls",
 			"effective_on": "2026-05-10T00:00:00Z",
-			"collections": ["redhat_maven"],
+			"collections": ["redhat_maven", "redhat_security"],
 			"msg": "Package \"pkg:maven/org.example/shared@1.0\" (source: \"https://untrusted-cdx.com\") is not in the permitted list",
 			"term": "pkg:maven/org.example/shared@1.0",
 		},
 		{
 			"code": "release.maven_repos.deny_unpermitted_urls",
 			"effective_on": "2026-05-10T00:00:00Z",
-			"collections": ["redhat_maven"],
+			"collections": ["redhat_maven", "redhat_security"],
 			"msg": "Package \"pkg:maven/org.example/shared@1.0\" (source: \"https://untrusted-spdx.com\") is not in the permitted list",
 			"term": "pkg:maven/org.example/shared@1.0",
 		},
@@ -206,7 +206,7 @@ test_repo_url_errors_mixed_permitted_and_unpermitted if {
 	expected := {{
 		"code": "release.maven_repos.deny_unpermitted_urls",
 		"effective_on": "2026-05-10T00:00:00Z",
-		"collections": ["redhat_maven"],
+		"collections": ["redhat_maven", "redhat_security"],
 		"msg": "Package \"pkg:maven/org.example/shared@1.0\" (source: \"https://untrusted-spdx.com\") is not in the permitted list",
 		"term": "pkg:maven/org.example/shared@1.0",
 	}}

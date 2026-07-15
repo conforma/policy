@@ -21,6 +21,7 @@ import rego.v1
 #   failure_msg: Build target is %s which is not a trusted target branch
 #   collections:
 #   - redhat_rpms
+#   - redhat_security
 #   effective_on: 2025-07-01
 deny contains result if {
 	some task in lib.tasks_from_pipelinerun

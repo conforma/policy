@@ -131,6 +131,7 @@ warn contains result if {
 #   collections:
 #   - minimal
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - cve.cve_results_found
 #
@@ -167,6 +168,7 @@ deny contains result if {
 #   collections:
 #   - minimal
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - cve.cve_results_found
 #
@@ -197,6 +199,7 @@ deny contains result if {
 #   collections:
 #   - minimal
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -227,6 +230,7 @@ deny contains result if {
 #   - minimal
 #   - redhat
 #   - policy_data
+#   - redhat_security
 #
 deny contains result if {
 	some e in _rule_data_errors

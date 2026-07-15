@@ -26,6 +26,7 @@ import data.lib.tekton
 #     Make sure the 'DOCKERFILE' parameter does not come from an external source.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -48,6 +49,7 @@ deny contains result if {
 #     policy config that excludes this policy rule.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   effective_on: 2024-08-31T00:00:00Z
 #   depends_on:
 #   - attestation_type.known_attestation_type
@@ -110,6 +112,7 @@ deny contains result if {
 #     that excludes this policy rule.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #

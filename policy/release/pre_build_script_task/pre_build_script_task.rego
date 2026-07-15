@@ -33,6 +33,7 @@ import data.lib.tekton
 #     xref:cli:ROOT:configuration.adoc#_data_sources[data source].
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #   - base_image_registries.allowed_registries_provided
@@ -61,6 +62,7 @@ deny contains result if {
 #     in the 'SCRIPT_RUNNER_IMAGE_REFERENCE' task result.
 #   collections:
 #   - redhat
+#   - redhat_security
 #
 deny contains result if {
 	some attestation in lib.pipelinerun_attestations
@@ -84,6 +86,7 @@ deny contains result if {
 #     is a valid image reference
 #   collections:
 #   - redhat
+#   - redhat_security
 #
 deny contains result if {
 	some attestation in lib.pipelinerun_attestations
@@ -106,6 +109,7 @@ deny contains result if {
 #     result is included in the SBOM.
 #   collections:
 #   - redhat
+#   - redhat_security
 #
 deny contains result if {
 	# This check does not apply to the image index for multi-arch builds

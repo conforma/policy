@@ -30,6 +30,7 @@ manifestv1 := "operators.operatorframework.io.bundle.manifests.v1"
 #     a valid semver.
 #   collections:
 #   - redhat
+#   - redhat_security
 #
 deny contains result if {
 	some manifest in _csv_manifests
@@ -54,6 +55,7 @@ deny contains result if {
 #     reference. Pinned image reference contains the image digest.
 #   collections:
 #   - redhat
+#   - redhat_security
 #
 deny contains result if {
 	some manifest in _csv_manifests
@@ -145,6 +147,7 @@ deny contains result if {
 #     reference. Pinned image reference contains the image digest.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   effective_on: 2024-08-15T00:00:00Z
 #
 deny contains result if {
@@ -177,6 +180,7 @@ deny contains result if {
 #     with pinned image reference. Pinned image reference contains the image digest
 #   collections:
 #   - redhat
+#   - redhat_security
 #
 deny contains result if {
 	metadata.pipeline_intention_match(rego.metadata.chain())
@@ -243,6 +247,7 @@ deny contains result if {
 #     xref:cli:ROOT:configuration.adoc#_data_sources[policy configuration] to include additional registry prefixes.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   effective_on: 2025-04-15T00:00:00Z
 #
 deny contains result if {
@@ -319,6 +324,7 @@ deny contains result if {
 #     xref:cli:ROOT:configuration.adoc#_data_sources[policy configuration] to include additional registry prefixes.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   effective_on: 2024-09-01T00:00:00Z
 #
 deny contains result if {
@@ -373,6 +379,7 @@ deny contains result if {
 #     Remove any unsupported OLM resource kinds in the bundle manifests.
 #   collections:
 #   - redhat
+#   - redhat_security
 deny contains result if {
 	some path, manifest in input.image.files
 
@@ -406,6 +413,7 @@ deny contains result if {
 #     and its major.minor version to the operator_network_policy_rbac_exceptions rule data key.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   rule_data_fields:
 #   - operator_network_policy_rbac_exceptions
 #   effective_on: 2026-08-07T00:00:00Z

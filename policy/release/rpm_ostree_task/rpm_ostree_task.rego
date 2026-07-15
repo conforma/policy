@@ -29,6 +29,7 @@ import data.lib.tekton
 #     Make sure the rpm-ostree Task uses a pinned image reference from a pre-approved location.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   effective_on: 2024-03-20T00:00:00Z
 #
 deny contains result if {
@@ -49,6 +50,7 @@ deny contains result if {
 #     in the data source.
 #   collections:
 #   - redhat
+#   - redhat_security
 #
 deny contains result if {
 	some e in rule_data_errors

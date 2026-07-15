@@ -18,7 +18,7 @@ Confirm the `allowed_registry_prefixes` rule data was provided, since it's requi
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `base_image_registries.allowed_registries_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/base_image_registries/base_image_registries.rego#L74[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/base_image_registries/base_image_registries.rego#L76[Source, window="_blank"]
 
 [#base_image_registries__base_image_permitted]
 === link:#base_image_registries__base_image_permitted[Base image comes from permitted registry]
@@ -42,4 +42,4 @@ Verify the expected information was provided about which base images were used d
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Base images information is missing`
 * Code: `base_image_registries.base_image_info_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/base_image_registries/base_image_registries.rego#L48[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/base_image_registries/base_image_registries.rego#L49[Source, window="_blank"]

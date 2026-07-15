@@ -33,6 +33,7 @@ import data.lib.rule_data
 #   - slsa3
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 deny contains result if {
 	source := object.get(input, ["image", "source"], {})
 	count(source) == 0
@@ -57,6 +58,7 @@ deny contains result if {
 #   - minimal
 #   - slsa3
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -84,6 +86,7 @@ deny contains result if {
 #   - minimal
 #   - slsa3
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 deny contains result if {
@@ -118,6 +121,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - policy_data
+#   - redhat_security
 deny contains result if {
 	some e in _rule_data_errors
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)

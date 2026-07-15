@@ -22,6 +22,7 @@ import data.lib.tekton
 #   failure_msg: "%s"
 #   collections:
 #   - redhat
+#   - redhat_security
 #   effective_on: 2024-06-05T00:00:00Z
 #
 deny contains result if {
@@ -39,6 +40,7 @@ deny contains result if {
 #   - source_image.exists
 #   collections:
 #   - redhat
+#   - redhat_security
 #   effective_on: 2024-05-04T00:00:00Z
 #
 deny contains result if {

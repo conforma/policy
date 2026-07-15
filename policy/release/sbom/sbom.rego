@@ -24,6 +24,7 @@ import data.lib.metadata
 #   collections:
 #   - minimal
 #   - redhat
+#   - redhat_security
 deny contains result if {
 	# TODO: Workaround until Konflux produces SBOMs for Image Indexes:
 	# https://issues.redhat.com/browse/KONFLUX-4330
@@ -48,6 +49,7 @@ deny contains result if {
 #   - redhat
 #   - policy_data
 #   - redhat_rpms
+#   - redhat_security
 deny contains result if {
 	some error in lib.sbom.rule_data_errors
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)

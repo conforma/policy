@@ -39,6 +39,7 @@ _manifests := ec.oci.image_manifests(lib.pipelinerun_bundle_refs)
 #   - slsa3
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -65,6 +66,7 @@ deny contains result if {
 #   - slsa3
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -90,6 +92,7 @@ deny contains result if {
 #   - slsa3
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -120,6 +123,7 @@ deny contains result if {
 #   solution: Make sure the build Pipeline definition uses a trusted Task to build images.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #

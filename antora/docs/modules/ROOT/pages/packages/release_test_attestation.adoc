@@ -18,7 +18,7 @@ Produce a violation if any test result attestation has an erred result. The resu
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q has an erred result`
 * Code: `test_attestation.no_erred_test_attestations`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L208[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L211[Source, window="_blank"]
 
 [#test_attestation__no_failed_informative_test_attestations]
 === link:#test_attestation__no_failed_informative_test_attestations[No failed informative test attestations]
@@ -54,7 +54,7 @@ Produce a violation if any test result attestation has a skipped result. A skipp
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q has a skipped result`
 * Code: `test_attestation.no_skipped_test_attestations`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L237[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L240[Source, window="_blank"]
 
 [#test_attestation__no_test_warnings]
 === link:#test_attestation__no_test_warnings[No test attestation warnings]
@@ -78,7 +78,7 @@ Ensure the result field of each test result attestation is a recognized value. V
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q has an unsupported result value %q`
 * Code: `test_attestation.test_result_known`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L153[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L154[Source, window="_blank"]
 
 [#test_attestation__rule_data_provided]
 === link:#test_attestation__rule_data_provided[Rule data provided]
@@ -90,7 +90,7 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `test_attestation.rule_data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L299[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L302[Source, window="_blank"]
 
 [#test_attestation__test_data_found]
 === link:#test_attestation__test_data_found[Test attestation data includes result]
@@ -102,7 +102,7 @@ Each test result attestation must include a result field in its predicate. Verif
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q is missing the required result field`
 * Code: `test_attestation.test_data_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L182[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L184[Source, window="_blank"]
 
 [#test_attestation__subject_mismatch]
 === link:#test_attestation__subject_mismatch[Test attestation subject matches image]
@@ -114,4 +114,4 @@ Verify that each test-result attestation's subject includes the digest of the im
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Test attestation %q subject does not match image digest %q`
 * Code: `test_attestation.subject_mismatch`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L268[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/test_attestation/test_attestation.rego#L271[Source, window="_blank"]

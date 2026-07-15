@@ -30,7 +30,7 @@ Confirm the format of the RPMS_DATA result is in the expected format.
 * FAILURE message: `%s`
 * Code: `rpm_signature.result_format`
 * Effective from: `2024-10-05T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L40[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L41[Source, window="_blank"]
 
 [#rpm_signature__rule_data_provided]
 === link:#rpm_signature__rule_data_provided[Rule data provided]
@@ -41,4 +41,4 @@ Confirm the expected `allowed_rpm_signature_keys` rule data key has been provide
 * FAILURE message: `%s`
 * Code: `rpm_signature.rule_data_provided`
 * Effective from: `2024-10-05T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L57[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L59[Source, window="_blank"]

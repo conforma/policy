@@ -26,6 +26,7 @@ import data.lib.sbom
 #     repository URLs.
 #   collections:
 #     - redhat_maven
+#     - redhat_security
 #     - policy_data
 deny contains result if {
 	some key in _rule_data_errors
@@ -50,6 +51,7 @@ deny contains result if {
 #    effective_on: 2026-05-10T00:00:00Z
 #    collections:
 #      - redhat_maven
+#      - redhat_security
 deny contains result if {
 	some err in _repo_url_errors
 	result := metadata.result_helper_with_term(rego.metadata.chain(), [err.msg], err.purl)

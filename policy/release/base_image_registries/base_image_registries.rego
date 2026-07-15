@@ -34,6 +34,7 @@ import data.lib.sbom
 #   collections:
 #   - minimal
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - base_image_registries.base_image_info_found
 #   - base_image_registries.allowed_registries_provided
@@ -59,6 +60,7 @@ deny contains result if {
 #   collections:
 #   - minimal
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -86,6 +88,7 @@ deny contains result if {
 #   - minimal
 #   - redhat
 #   - policy_data
+#   - redhat_security
 #
 deny contains result if {
 	some error in _rule_data_errors

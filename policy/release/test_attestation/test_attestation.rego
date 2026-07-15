@@ -135,6 +135,7 @@ warn contains result if {
 #     test attestation output for details.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -165,6 +166,7 @@ deny contains result if {
 #     Valid values are configurable via rule data.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -192,6 +194,7 @@ deny contains result if {
 #     with a recognized value such as PASSED, WARNED, or FAILED.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #

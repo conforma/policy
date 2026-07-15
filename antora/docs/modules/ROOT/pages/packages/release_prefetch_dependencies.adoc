@@ -31,4 +31,4 @@ Verify that prefetch-dependencies tasks have the enable-package-registry-proxy p
 * FAILURE message: `Task '%s' does not have the enable-package-registry-proxy parameter set to true`
 * Code: `prefetch_dependencies.package_registry_proxy_enabled`
 * Effective from: `2026-05-13T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/prefetch_dependencies/prefetch_dependencies.rego#L43[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/prefetch_dependencies/prefetch_dependencies.rego#L44[Source, window="_blank"]

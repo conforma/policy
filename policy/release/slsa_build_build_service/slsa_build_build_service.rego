@@ -32,6 +32,7 @@ import data.lib.rule_data
 #   collections:
 #   - slsa3
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -57,6 +58,7 @@ deny contains result if {
 #   - slsa3
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -81,6 +83,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - policy_data
+#   - redhat_security
 #
 deny contains result if {
 	some e in _rule_data_errors

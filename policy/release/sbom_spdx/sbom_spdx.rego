@@ -26,6 +26,7 @@ import data.lib.sbom
 #   - minimal
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #
 deny contains result if {
 	some index, s in sbom.spdx_sboms
@@ -42,6 +43,8 @@ deny contains result if {
 #   failure_msg: The list of packages is empty
 #   solution: >-
 #     Verify the SBOM is correctly identifying the package in the image.
+#   collections:
+#   - redhat_security
 #
 deny contains result if {
 	some s in sbom.spdx_sboms
@@ -62,6 +65,7 @@ deny contains result if {
 #   collections:
 #   - redhat
 #   - redhat_rpms
+#   - redhat_security
 #
 deny contains result if {
 	some s in sbom.spdx_sboms
@@ -88,6 +92,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - policy_data
+#   - redhat_security
 #
 deny contains result if {
 	some s in sbom.spdx_sboms
@@ -119,6 +124,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - policy_data
+#   - redhat_security
 #   effective_on: 2024-07-31T00:00:00Z
 deny contains result if {
 	some s in sbom.spdx_sboms
@@ -143,6 +149,8 @@ deny contains result if {
 #   failure_msg: The list of files is empty
 #   solution: >-
 #     Verify the SBOM is correctly identifying the files in the image.
+#   collections:
+#   - redhat_security
 #
 deny contains result if {
 	some s in sbom.spdx_sboms
@@ -159,6 +167,8 @@ deny contains result if {
 #   solution: >-
 #     The SPDX SBOM associated with the image describes a different image.
 #     Verify the integrity of the build system.
+#   collections:
+#   - redhat_security
 #
 deny contains result if {
 	some s in sbom.spdx_sboms
@@ -183,6 +193,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - policy_data
+#   - redhat_security
 #   effective_on: 2025-02-17T00:00:00Z
 deny contains result if {
 	some s in sbom.spdx_sboms
@@ -226,6 +237,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - policy_data
+#   - redhat_security
 #   effective_on: 2025-02-04T00:00:00Z
 deny contains result if {
 	some s in sbom.spdx_sboms
@@ -275,6 +287,7 @@ deny contains result if {
 #   collections:
 #   - redhat
 #   - policy_data
+#   - redhat_security
 #   effective_on: 2026-06-01T00:00:00Z
 #
 deny contains result if {
@@ -327,6 +340,7 @@ deny contains result if {
 #   collections:
 #   - redhat
 #   - policy_data
+#   - redhat_security
 #   effective_on: 2026-05-13T00:00:00Z
 #
 deny contains result if {

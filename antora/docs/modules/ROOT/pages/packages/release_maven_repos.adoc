@@ -19,7 +19,7 @@ Each Maven package listed in an SBOM must specify the repository URL that it com
 * FAILURE message: `%s`
 * Code: `maven_repos.deny_unpermitted_urls`
 * Effective from: `2026-05-10T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/maven_repos/maven_repos.rego#L35[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/maven_repos/maven_repos.rego#L36[Source, window="_blank"]
 
 [#maven_repos__policy_data_missing]
 === link:#maven_repos__policy_data_missing[Policy data validation]
