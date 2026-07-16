@@ -214,6 +214,10 @@ fmt-check: ## Check formatting of Rego files
 	@$(OPA) fmt . --list | xargs -r -n1 echo 'FAIL: Incorrect formatting found in'
 	@$(OPA) fmt . --list --fail >/dev/null 2>&1
 
+.PHONY: regal-test
+regal-test: ## Run tests for custom Regal lint rules
+	@go run github.com/open-policy-agent/regal test .regal/rules/ --verbose
+
 # See config in .regal/config.yaml
 .PHONY: lint
 lint: ## Runs Rego linter
@@ -228,7 +232,7 @@ lint-fix: ## Fix linting issues automagically
 	@go run github.com/google/addlicense -c '$(COPY)' -y '' -s $(LICENSE_IGNORE) .
 
 .PHONY: ci
-ci: quiet-test acceptance opa-check conventions-check fmt-check lint generate-docs ## Runs all checks and tests
+ci: quiet-test acceptance opa-check conventions-check fmt-check lint regal-test generate-docs ## Runs all checks and tests
 
 #--------------------------------------------------------------------
 
