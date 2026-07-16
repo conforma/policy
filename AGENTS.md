@@ -59,7 +59,7 @@ These files have `effective_on` dates — rules with future dates are warnings, 
 
 ## Common Change Patterns
 
-- **Add a release policy rule:** follow the pattern in `policy/release/attestation_type.rego` (rule + `_test.rego` + add to collection)
+- **Add a release policy rule:** follow the pattern in `policy/release/attestation_type/attestation_type.rego` (rule + `_test.rego` in a subdirectory, declare `collections:` in METADATA)
 - **Add a pipeline policy rule:** follow the pattern in `policy/pipeline/required_tasks.rego`
 - **Add a shared library function:** see `policy/lib/tekton/` for reference implementation (must have test coverage)
 - **Fetch and parse an OCI blob:** use `oci.parsed_blob(ref)` from `data.lib.oci`, not `json.unmarshal(ec.oci.blob(ref))` directly. A Regal lint rule (`prefer-parsed-blob`) enforces this
