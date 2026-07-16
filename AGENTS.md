@@ -17,6 +17,13 @@ make generate-docs           # Regenerate Antora docs from annotations (commit c
 
 Single test via the CLI: `ec opa test ./policy -r <test_name>`
 
+## Single-File Verification
+
+```bash
+regal lint path/to/file.rego         # Lint a single Rego file (fast)
+opa check path/to/file.rego          # Parse/type-check a single Rego file
+```
+
 ## Key Conventions
 
 - **100% test coverage is enforced.** Every `.rego` file needs a `_test.rego` file. CI fails otherwise.
@@ -38,7 +45,7 @@ Every policy rule requires METADATA annotations. Missing or malformed annotation
 #   failure_msg: User-facing error message with %s interpolation
 ```
 
-## Architecture (non-obvious parts)
+## Architecture (design rationale and non-obvious parts)
 
 **Collections** (`policy/*/collection/`) group related rules. Each collection imports specific policy
 packages. Examples: `minimal` (basic validation), `slsa3` (SLSA Level 3), `redhat` (Red Hat-specific).
@@ -52,12 +59,11 @@ These files have `effective_on` dates — rules with future dates are warnings, 
 
 ## Common Change Patterns
 
-| Change | Pattern to follow |
-|--------|-------------------|
-| Add a new release policy rule | `policy/release/` (rule + _test + add to collection) |
-| Add a new pipeline policy rule | `policy/pipeline/` |
-| Add a shared library function | `policy/lib/` (must have test coverage) |
-| Fetch and parse an OCI blob as JSON | Use `oci.parsed_blob(ref)` from `data.lib.oci`, not `json.unmarshal(ec.oci.blob(ref))` directly. A Regal lint rule (`prefer-parsed-blob`) enforces this. |
+- **Add a release policy rule:** follow the pattern in `policy/release/attestation_type.rego` (rule + `_test.rego` + add to collection)
+- **Add a pipeline policy rule:** follow the pattern in `policy/pipeline/required_tasks.rego`
+- **Add a shared library function:** see `policy/lib/tekton/` for reference implementation (must have test coverage)
+- **Fetch and parse an OCI blob:** use `oci.parsed_blob(ref)` from `data.lib.oci`, not `json.unmarshal(ec.oci.blob(ref))` directly. A Regal lint rule (`prefer-parsed-blob`) enforces this
+- **Add a new collection:** follow the pattern in `policy/release/collection/` — import specific policy packages
 
 ## PR Conventions
 
