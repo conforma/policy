@@ -18,13 +18,13 @@ import data.lib.sbom
 # METADATA
 # title: Base image comes from permitted registry
 # description: >-
-#   Verify that the base images used when building a container image come from a known
-#   set of trusted registries to reduce potential supply chain attacks. By default this
-#   policy defines trusted registries as registries that are fully maintained by Red
-#   Hat and only contain content produced by Red Hat. The list of permitted registries
-#   can be customized by setting the `allowed_registry_prefixes` list in the rule data.
-#   Base images that are found in the snapshot being validated are also allowed since EC
-#   will also validate those images individually.
+#   Verify that the base images used when building a container image are permitted.
+#   Images can be permitted in three ways: by matching a registry prefix from
+#   `allowed_registry_prefixes` rule data (deprecated), by matching a component digest
+#   in the snapshot, or by having a valid release signature verified against the
+#   `release_public_key` rule data. The preferred approach is signature-based
+#   verification via `release_public_key`. Registry prefix matching is deprecated
+#   and will be removed in a future release.
 # custom:
 #   short_name: base_image_permitted
 #   failure_msg: Base image %q is from a disallowed registry
@@ -74,10 +74,11 @@ deny contains result if {
 }
 
 # METADATA
-# title: Allowed base image registry prefixes list was provided
+# title: Allowed base image registry prefixes list or release public key was provided
 # description: >-
-#   Confirm the `allowed_registry_prefixes` rule data was provided, since it's
-#   required by the policy rules in this package.
+#   Confirm that either the `allowed_registry_prefixes` or `release_public_key`
+#   rule data was provided, since at least one is required by the policy rules
+#   in this package.
 # custom:
 #   short_name: allowed_registries_provided
 #   failure_msg: "%s"
@@ -95,6 +96,33 @@ deny contains result if {
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
 }
 
+# METADATA
+# title: Registry prefix matching is deprecated
+# description: >-
+#   Using `allowed_registry_prefixes` to permit base images is deprecated.
+#   Configure `release_public_key` to verify base image release signatures instead,
+#   which provides stronger cryptographic assurance than registry prefix matching.
+# custom:
+#   short_name: registry_prefix_deprecated
+#   failure_msg: >-
+#     allowed_registry_prefixes is configured without release_public_key. Migrate
+#     to signature-based verification by setting release_public_key in rule data.
+#   solution: >-
+#     Set the `release_public_key` in rule data to enable signature-based base image
+#     verification. The key can be an inline PEM-encoded public key or a k8s://
+#     reference to a secret containing the key.
+#   collections:
+#   - minimal
+#   - redhat
+#   - redhat_security
+#
+warn contains result if {
+	prefixes := rule_data.get(_rule_data_key)
+	count(prefixes) > 0
+	not _release_public_key_provided
+	result := metadata.result_helper(rego.metadata.chain(), [])
+}
+
 _image_ref_permitted(image_ref) if {
 	allowed_prefixes := rule_data.get(_rule_data_key)
 	some allowed_prefix in allowed_prefixes
@@ -105,6 +133,22 @@ _image_ref_permitted(image_ref) if {
 		img := image.parse(component.containerImage)
 	}
 	image.parse(image_ref).digest in allowed_digests
+} else if {
+	key := rule_data.get(_release_key_rule_data_key)
+	is_string(key)
+	key != ""
+	info := ec.sigstore.verify_image(image_ref, {"public_key": key, "ignore_rekor": false})
+	not _has_sig_errors(info)
+}
+
+_has_sig_errors(info) if {
+	some _ in info.errors
+}
+
+_release_public_key_provided if {
+	key := rule_data.get(_release_key_rule_data_key)
+	is_string(key)
+	key != ""
 }
 
 _cyclonedx_base_images := [_cyclonedx_image_ref(component) |
@@ -170,8 +214,8 @@ _cyclonedx_image_ref(component) := image_ref if {
 	image_ref := sbom.image_ref_from_purl(purl)
 }
 
-# Verify allowed_registry_prefixes is a non-empty list of strings
 _rule_data_errors contains error if {
+	not _release_public_key_provided
 	some e in j.validate_schema(
 		rule_data.get(_rule_data_key),
 		{
@@ -188,4 +232,17 @@ _rule_data_errors contains error if {
 	}
 }
 
+_rule_data_errors contains error if {
+	val := rule_data.get(_release_key_rule_data_key)
+	val != []
+	not is_string(val)
+	msg := sprintf(
+		"Rule data %s has unexpected format: expected a string, got %s",
+		[_release_key_rule_data_key, type_name(val)],
+	)
+	error := {"message": msg, "severity": "failure"}
+}
+
 _rule_data_key := "allowed_registry_prefixes"
+
+_release_key_rule_data_key := "release_public_key"

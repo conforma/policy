@@ -29,6 +29,13 @@ rule_data:
   - docker.io/
   - registry.access.redhat.com
 
+  # Usage: https://conforma.dev/docs/policy/packages/release_base_image_registries.html#base_image_registries__base_image_permitted
+  # Verify base image release signatures. Accepts an inline PEM-encoded public key
+  # or a k8s:// reference to a secret (e.g., "k8s://my-namespace/my-secret").
+  # When set, base images with a valid release signature are permitted regardless
+  # of allowed_registry_prefixes.
+  release_public_key: "k8s://openshift-pipelines/release-signing-key"
+
   # Usage: https://conforma.dev/docs/policy/packages/task_step_image_registries.html
   allowed_step_image_registry_prefixes:
   - localhost:5000/

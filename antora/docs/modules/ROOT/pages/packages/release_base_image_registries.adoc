@@ -9,9 +9,9 @@ This package is responsible for verifying the base (parent) images reported in t
 == Rules Included
 
 [#base_image_registries__allowed_registries_provided]
-=== link:#base_image_registries__allowed_registries_provided[Allowed base image registry prefixes list was provided]
+=== link:#base_image_registries__allowed_registries_provided[Allowed base image registry prefixes list or release public key was provided]
 
-Confirm the `allowed_registry_prefixes` rule data was provided, since it's required by the policy rules in this package.
+Confirm that either the `allowed_registry_prefixes` or `release_public_key` rule data was provided, since at least one is required by the policy rules in this package.
 
 *Solution*: Make sure to configure a list of trusted registries as a xref:cli:ROOT:configuration.adoc#_data_sources[data source].
 
@@ -23,7 +23,7 @@ Confirm the `allowed_registry_prefixes` rule data was provided, since it's requi
 [#base_image_registries__base_image_permitted]
 === link:#base_image_registries__base_image_permitted[Base image comes from permitted registry]
 
-Verify that the base images used when building a container image come from a known set of trusted registries to reduce potential supply chain attacks. By default this policy defines trusted registries as registries that are fully maintained by Red Hat and only contain content produced by Red Hat. The list of permitted registries can be customized by setting the `allowed_registry_prefixes` list in the rule data. Base images that are found in the snapshot being validated are also allowed since EC will also validate those images individually.
+Verify that the base images used when building a container image are permitted. Images can be permitted in three ways: by matching a registry prefix from `allowed_registry_prefixes` rule data (deprecated), by matching a component digest in the snapshot, or by having a valid release signature verified against the `release_public_key` rule data. The preferred approach is signature-based verification via `release_public_key`. Registry prefix matching is deprecated and will be removed in a future release.
 
 *Solution*: Make sure the image used in each task comes from a trusted registry. The list of trusted registries is a configurable xref:cli:ROOT:configuration.adoc#_data_sources[data source].
 
@@ -43,3 +43,15 @@ Verify the expected information was provided about which base images were used d
 * FAILURE message: `Base images information is missing`
 * Code: `base_image_registries.base_image_info_found`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/base_image_registries/base_image_registries.rego#L49[Source, window="_blank"]
+
+[#base_image_registries__registry_prefix_deprecated]
+=== link:#base_image_registries__registry_prefix_deprecated[Registry prefix matching is deprecated]
+
+Using `allowed_registry_prefixes` to permit base images is deprecated. Configure `release_public_key` to verify base image release signatures instead, which provides stronger cryptographic assurance than registry prefix matching.
+
+*Solution*: Set the `release_public_key` in rule data to enable signature-based base image verification. The key can be an inline PEM-encoded public key or a k8s:// reference to a secret containing the key.
+
+* Rule type: [rule-type-indicator warning]#WARNING#
+* WARNING message: `allowed_registry_prefixes is configured without release_public_key. Migrate to signature-based verification by setting release_public_key in rule data.`
+* Code: `base_image_registries.registry_prefix_deprecated`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/base_image_registries/base_image_registries.rego#L99[Source, window="_blank"]
