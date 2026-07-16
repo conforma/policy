@@ -16,15 +16,14 @@ import data.lib.rule_data
 import data.lib.sbom
 
 # METADATA
-# title: Base image comes from permitted registry
+# title: Base image is permitted
 # description: >-
 #   Verify that the base images used when building a container image are permitted.
-#   Images can be permitted in three ways: by matching a registry prefix from
-#   `allowed_registry_prefixes` rule data (deprecated), by matching a component digest
-#   in the snapshot, or by having a valid release signature verified against the
-#   `release_public_key` rule data. The preferred approach is signature-based
-#   verification via `release_public_key`. Registry prefix matching is deprecated
-#   and will be removed in a future release.
+#   Images can be permitted in three ways: by having a valid release signature
+#   verified against the `release_public_key` rule data (preferred), by matching
+#   a component digest in the snapshot, or by matching a registry prefix from
+#   `allowed_registry_prefixes` rule data (deprecated). Registry prefix matching
+#   is deprecated and will be removed in a future release.
 # custom:
 #   short_name: base_image_permitted
 #   failure_msg: Base image %q is from a disallowed registry
@@ -94,33 +93,6 @@ deny contains result if {
 deny contains result if {
 	some error in _rule_data_errors
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
-}
-
-# METADATA
-# title: Registry prefix matching is deprecated
-# description: >-
-#   Using `allowed_registry_prefixes` to permit base images is deprecated.
-#   Configure `release_public_key` to verify base image release signatures instead,
-#   which provides stronger cryptographic assurance than registry prefix matching.
-# custom:
-#   short_name: registry_prefix_deprecated
-#   failure_msg: >-
-#     allowed_registry_prefixes is configured without release_public_key. Migrate
-#     to signature-based verification by setting release_public_key in rule data.
-#   solution: >-
-#     Set the `release_public_key` in rule data to enable signature-based base image
-#     verification. The key can be an inline PEM-encoded public key or a k8s://
-#     reference to a secret containing the key.
-#   collections:
-#   - minimal
-#   - redhat
-#   - redhat_security
-#
-warn contains result if {
-	prefixes := rule_data.get(_rule_data_key)
-	count(prefixes) > 0
-	not _release_public_key_provided
-	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 _image_ref_permitted(image_ref) if {
@@ -229,6 +201,16 @@ _rule_data_errors contains error if {
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
 		"severity": e.severity,
+	}
+}
+
+_rule_data_errors contains error if {
+	prefixes := rule_data.get(_rule_data_key)
+	count(prefixes) > 0
+	not _release_public_key_provided
+	error := {
+		"message": "allowed_registry_prefixes is configured without release_public_key. Migrate to signature-based verification by setting release_public_key in rule data.",
+		"severity": "warning",
 	}
 }
 

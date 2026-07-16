@@ -363,6 +363,12 @@ test_rule_data_validation if {
 			"msg": "Rule data allowed_registry_prefixes has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
+		{
+			"code": "base_image_registries.allowed_registries_provided",
+			# regal ignore:line-length
+			"msg": "allowed_registry_prefixes is configured without release_public_key. Migrate to signature-based verification by setting release_public_key in rule data.",
+			"severity": "warning",
+		},
 	}
 
 	assertions.assert_equal_results(base_image_registries.deny, expected) with data.rule_data as d
@@ -435,26 +441,27 @@ test_allowed_with_only_release_key if {
 
 test_deprecation_warning_registry_prefixes_without_key if {
 	expected := {{
-		"code": "base_image_registries.registry_prefix_deprecated",
+		"code": "base_image_registries.allowed_registries_provided",
 		# regal ignore:line-length
 		"msg": "allowed_registry_prefixes is configured without release_public_key. Migrate to signature-based verification by setting release_public_key in rule data.",
+		"severity": "warning",
 	}}
 
 	d := {"allowed_registry_prefixes": ["registry.redhat.io/"]}
 
-	assertions.assert_equal_results(base_image_registries.warn, expected) with lib.sbom.cyclonedx_sboms as [{}]
+	assertions.assert_equal_results(base_image_registries.deny, expected) with lib.sbom.cyclonedx_sboms as [{}]
 		with lib.sbom.spdx_sboms as [{}]
 		with data.rule_data as d
 }
 
 test_no_deprecation_warning_with_key if {
-	assertions.assert_empty(base_image_registries.warn) with lib.sbom.cyclonedx_sboms as [{}]
+	assertions.assert_empty(base_image_registries.deny) with lib.sbom.cyclonedx_sboms as [{}]
 		with lib.sbom.spdx_sboms as [{}]
 		with data.rule_data.release_public_key as "-----BEGIN PUBLIC KEY-----\nMFkwEwYH..."
 }
 
 test_no_deprecation_warning_without_prefixes if {
-	assertions.assert_empty(base_image_registries.warn) with lib.sbom.cyclonedx_sboms as [{}]
+	assertions.assert_empty(base_image_registries.deny) with lib.sbom.cyclonedx_sboms as [{}]
 		with lib.sbom.spdx_sboms as [{}]
 		with data.rule_data as {"release_public_key": "-----BEGIN PUBLIC KEY-----\nMFkwEwYH..."}
 }
@@ -465,12 +472,20 @@ test_release_public_key_validation if {
 		"allowed_registry_prefixes": ["registry.redhat.io/"],
 	}
 
-	expected := {{
-		"code": "base_image_registries.allowed_registries_provided",
-		# regal ignore:line-length
-		"msg": "Rule data release_public_key has unexpected format: expected a string, got number",
-		"severity": "failure",
-	}}
+	expected := {
+		{
+			"code": "base_image_registries.allowed_registries_provided",
+			# regal ignore:line-length
+			"msg": "Rule data release_public_key has unexpected format: expected a string, got number",
+			"severity": "failure",
+		},
+		{
+			"code": "base_image_registries.allowed_registries_provided",
+			# regal ignore:line-length
+			"msg": "allowed_registry_prefixes is configured without release_public_key. Migrate to signature-based verification by setting release_public_key in rule data.",
+			"severity": "warning",
+		},
+	}
 
 	assertions.assert_equal_results(base_image_registries.deny, expected) with data.rule_data as d
 		with lib.sbom.cyclonedx_sboms as [{}]
