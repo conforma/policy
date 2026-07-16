@@ -21,7 +21,7 @@ Single test via the CLI: `ec opa test ./policy -r <test_name>`
 
 ```bash
 regal lint path/to/file.rego         # Lint a single Rego file (fast)
-opa check path/to/file.rego          # Parse/type-check a single Rego file
+opa check --strict path/to/file.rego  # Parse/type-check a single Rego file (matches CI strict mode)
 ```
 
 ## Key Conventions
