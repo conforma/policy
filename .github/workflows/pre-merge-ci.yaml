@@ -53,11 +53,21 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Run checks
+      - name: Run tests with coverage
         run: |
           # allows us to use unshare to restrict network access
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-          make ci
+          make test
+
+      - name: Lint and type-check policies
+        run: |
+          make lint
+          make fmt-check
+          make opa-check
+          make conventions-check
+
+      - name: Generate and verify docs
+        run: make generate-docs
 
       - name: Check for uncommitted changes
         run: |
