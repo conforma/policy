@@ -247,11 +247,20 @@ test_add_capabilities_param if {
 }
 
 test_platform_param_disallowed if {
-	# Test v1.0 attestation with disallowed platform pattern
-	expected := {{
-		"code": "buildah_build_task.platform_param",
-		"msg": "PLATFORM parameter value \"linux-root/arm64\" is disallowed by regex \".*root.*\"",
-	}}
+	_anchoring_warning := {
+		"code": "buildah_build_task.disallowed_platform_patterns_pattern",
+		# regal ignore:line-length
+		"msg": "Pattern \".*root.*\" in disallowed_platform_patterns is not anchored with ^",
+		"severity": "warning",
+	}
+
+	expected := {
+		{
+			"code": "buildah_build_task.platform_param",
+			"msg": "PLATFORM parameter value \"linux-root/arm64\" is disallowed by regex \".*root.*\"",
+		},
+		_anchoring_warning,
+	}
 
 	_task1_base := tekton_test.slsav1_task("buildah")
 	_task1_w_params = tekton_test.with_params(
@@ -297,7 +306,7 @@ test_platform_param_disallowed if {
 	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [tekton_test.slsav1_attestation([task1])]
 		with data.rule_data.disallowed_platform_patterns as [".*root.*"]
 
-	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [tekton_test.slsav1_attestation([task2])]
+	assertions.assert_equal_results({_anchoring_warning}, buildah_build_task.deny) with input.attestations as [tekton_test.slsav1_attestation([task2])]
 		with data.rule_data.disallowed_platform_patterns as [".*root.*"]
 }
 
@@ -334,9 +343,35 @@ test_plat_patterns_rule_data_validation if {
 			"msg": "\"(?=a)?b\" is not a valid regular expression in rego",
 			"severity": "failure",
 		},
+		{
+			"code": "buildah_build_task.disallowed_platform_patterns_pattern",
+			# regal ignore:line-length
+			"msg": "Pattern \".*foo\" in disallowed_platform_patterns is not anchored with ^",
+			"severity": "warning",
+		},
+		{
+			"code": "buildah_build_task.disallowed_platform_patterns_pattern",
+			# regal ignore:line-length
+			"msg": "Pattern \"(?=a)?b\" in disallowed_platform_patterns is not anchored with ^",
+			"severity": "warning",
+		},
 	}
 
 	assertions.assert_equal_results(buildah_build_task.deny, expected) with data.rule_data as d
+}
+
+test_plat_patterns_anchoring_warning if {
+	d_unanchored := {"disallowed_platform_patterns": ["linux/amd64"]}
+	expected_warn := {{
+		"code": "buildah_build_task.disallowed_platform_patterns_pattern",
+		# regal ignore:line-length
+		"msg": "Pattern \"linux/amd64\" in disallowed_platform_patterns is not anchored with ^",
+		"severity": "warning",
+	}}
+	assertions.assert_equal_results(buildah_build_task.deny, expected_warn) with data.rule_data as d_unanchored
+
+	d_anchored := {"disallowed_platform_patterns": ["^linux/amd64$"]}
+	assertions.assert_empty(buildah_build_task.deny) with data.rule_data as d_anchored
 }
 
 test_privileged_nested_param if {

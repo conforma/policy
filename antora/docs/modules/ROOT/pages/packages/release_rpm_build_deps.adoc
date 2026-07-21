@@ -17,3 +17,13 @@ Builds have valid download locations for RPM build dependencies
 * WARNING message: `RPM build dependency source %s is not in the allowed list %v.`
 * Code: `rpm_build_deps.download_location_valid`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_build_deps/rpm_build_deps.rego#L15[Source, window="_blank"]
+
+[#rpm_build_deps__allowed_rpm_build_dependency_sources_format]
+=== link:#rpm_build_deps__allowed_rpm_build_dependency_sources_format[allowed_rpm_build_dependency_sources format]
+
+Confirm the `allowed_rpm_build_dependency_sources` rule data uses anchored regex patterns.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `rpm_build_deps.allowed_rpm_build_dependency_sources_format`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_build_deps/rpm_build_deps.rego#L40[Source, window="_blank"]

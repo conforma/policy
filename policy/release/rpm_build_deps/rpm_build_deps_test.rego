@@ -160,6 +160,22 @@ test_matches_any_multiple_patterns if {
 	rpm_build_deps.matches_any("https://codeload.github.com/user/repo/tar.gz/v1.0", patterns)
 }
 
+test_anchoring_warning_unanchored_pattern if {
+	expected := {{
+		"code": "rpm_build_deps.allowed_rpm_build_dependency_sources_format",
+		# regal ignore:line-length
+		"msg": "Pattern \"download.example.com\" in allowed_rpm_build_dependency_sources is not anchored with ^",
+		"severity": "warning",
+	}}
+	assertions.assert_equal_results(expected, rpm_build_deps.deny) with input.attestations as [_sbom_attestation_with_download_location("NOASSERTION")]
+		with data.rule_data.allowed_rpm_build_dependency_sources as ["download.example.com"]
+}
+
+test_anchoring_warning_anchored_pattern if {
+	assertions.assert_empty(rpm_build_deps.deny) with input.attestations as [_sbom_attestation_with_download_location("NOASSERTION")]
+		with data.rule_data.allowed_rpm_build_dependency_sources as ["^https://download\\.example\\.com/.*"]
+}
+
 # Helper function to create SBOM attestation with specific download location
 _sbom_attestation_with_download_location(location) := {"statement": {
 	"predicateType": "https://spdx.dev/Document",

@@ -59,6 +59,16 @@ The https://conforma.dev/docs/cli/index.html[cli] is reponsible for gathering
 the information to be validated which is made available to policies via the `input` object. Its
 structure is defined https://conforma.dev/docs/cli/policy_input.html[here].
 
+== Regex pattern anchoring
+
+When writing regex patterns for rule data (e.g. `allowed_package_sources`, `allowed_external_references`,
+`allowed_target_branch_patterns`, `disallowed_platform_patterns`), always anchor patterns with `^` and
+where appropriate `$` to prevent unintended substring matches.
+
+For example, use `^https://console\.redhat\.com/.*` instead of `console\.redhat\.com`.
+
+Conforma will emit a warning when it detects unanchored patterns in rule data.
+
 == Pitfalls
 
 Today, EC takes the https://www.conftest.dev/[conftest] approach for asserting violations and

@@ -17,7 +17,7 @@ single_test_case(branch, expected_results) if {
 		"^rhel-10\\.[0-9]+$",
 		"^rhel-[0-9]+\\.[0-9]\\.0$",
 		"^rhel-[0-9]+-main$",
-		"branch[0-9]+-rhel-[0-9]+.[0-9]+.[0-9]+$",
+		"^.*branch[0-9]+-rhel-[0-9]+.[0-9]+.[0-9]+$",
 	]
 
 	mock_tasks := mock_input.attestations[0].statement.predicate.buildConfig.tasks
@@ -270,4 +270,18 @@ test_hotfix_branch_with_extra_suffix_denied if {
 		"msg": "Build target is kernel-5.14.0-570.42.1.el9_6-branch1-rhel-9.6.0-extra which is not a trusted target branch",
 	}}
 	single_test_case("kernel-5.14.0-570.42.1.el9_6-branch1-rhel-9.6.0-extra", expected)
+}
+
+test_anchoring_warning_unanchored_pattern if {
+	expected := {{
+		"code": "git_branch.allowed_target_branch_patterns_format",
+		# regal ignore:line-length
+		"msg": "Pattern \"main\" in allowed_target_branch_patterns is not anchored with ^",
+		"severity": "warning",
+	}}
+	assertions.assert_equal_results(expected, git_branch.deny) with data.rule_data.allowed_target_branch_patterns as ["main"]
+}
+
+test_anchoring_warning_anchored_pattern if {
+	assertions.assert_empty(git_branch.deny) with data.rule_data.allowed_target_branch_patterns as ["^main$"]
 }

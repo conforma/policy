@@ -18,3 +18,13 @@ Build must target a configured branch pattern (e.g., 'c10s')
 * Code: `git_branch.git_branch`
 * Effective from: `2025-07-01T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/git_branch/git_branch.rego#L16[Source, window="_blank"]
+
+[#git_branch__allowed_target_branch_patterns_format]
+=== link:#git_branch__allowed_target_branch_patterns_format[allowed_target_branch_patterns format]
+
+Confirm the `allowed_target_branch_patterns` rule data uses anchored regex patterns.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `git_branch.allowed_target_branch_patterns_format`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/git_branch/git_branch.rego#L36[Source, window="_blank"]
