@@ -11,7 +11,7 @@ make TEST="pattern" test     # Run tests matching regex
 make coverage                # Show uncovered lines
 make fmt                     # Format rego (run before every commit)
 make lint                    # Regal linter + license headers
-make ci                      # Full CI: test + acceptance + fmt-check + lint + opa-check + conventions-check + generate-docs
+make ci                      # Full CI: quiet-test + acceptance + opa-check + conventions-check + fmt-check + lint + regal-test + generate-docs
 make generate-docs           # Regenerate Antora docs from annotations (commit changed files)
 ```
 
