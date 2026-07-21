@@ -63,7 +63,7 @@ These files have `effective_on` dates — rules with future dates are warnings, 
 - **Add a pipeline policy rule:** follow the pattern in `policy/pipeline/required_tasks.rego`
 - **Add a shared library function:** see `policy/lib/tekton/` for reference implementation (must have test coverage)
 - **Fetch and parse an OCI blob:** use `oci.parsed_blob(ref)` from `data.lib.oci`, not `json.unmarshal(ec.oci.blob(ref))` directly. A Regal lint rule (`prefer-parsed-blob`) enforces this
-- **Add a new collection:** follow the pattern in `policy/release/collection/` — import specific policy packages
+- **Add a new collection:** follow the pattern in `policy/release/collection/` — metadata-only definition file; no new tests needed for the collection itself since the CLI repo tests collection filtering and `make conventions-check` validates dependency-collection superset constraints. If new rules are added alongside the collection, those rules need `_test.rego` coverage as usual
 
 ## PR Conventions
 
