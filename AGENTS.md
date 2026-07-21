@@ -47,9 +47,11 @@ Every policy rule requires METADATA annotations. Missing or malformed annotation
 
 ## Architecture (design rationale and non-obvious parts)
 
-**Collections** (`policy/*/collection/`) group related rules. Each collection imports specific policy
-packages. Examples: `minimal` (basic validation), `slsa3` (SLSA Level 3), `redhat` (Red Hat-specific).
-When adding a new rule, you must add it to the appropriate collection(s) or it won't be evaluated.
+**Collections** (`policy/*/collection/`) group related rules. Collection files are minimal package
+declarations (e.g., `package collection.minimal`) — they do not import policy packages. Rules declare
+their own collection membership via a `collections:` list in their METADATA `custom:` annotations
+(see `policy/release/attestation_type/attestation_type.rego` for the pattern). Examples: `minimal`
+(basic validation), `slsa3` (SLSA Level 3), `redhat` (Red Hat-specific).
 
 **SLSA dual-format:** The library in `policy/lib/tekton/` normalizes both SLSA v0.2 and v1.0
 attestation formats. Policies consume the normalized form — don't branch on SLSA version in rules.
@@ -63,7 +65,7 @@ These files have `effective_on` dates — rules with future dates are warnings, 
 - **Add a pipeline policy rule:** follow the pattern in `policy/pipeline/required_tasks.rego`
 - **Add a shared library function:** see `policy/lib/tekton/` for reference implementation (must have test coverage)
 - **Fetch and parse an OCI blob:** use `oci.parsed_blob(ref)` from `data.lib.oci`, not `json.unmarshal(ec.oci.blob(ref))` directly. A Regal lint rule (`prefer-parsed-blob`) enforces this
-- **Add a new collection:** follow the pattern in `policy/release/collection/` — import specific policy packages
+- **Add a new collection:** follow the pattern in `policy/release/collection/` — a minimal package declaration (no imports needed)
 
 ## PR Conventions
 
