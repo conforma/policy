@@ -4,6 +4,19 @@ public/
 node_modules/
 .cache/
 *.swp
+*.swo
 coverage.json
 bin/
 .idea/
+.vscode/
+
+# OS files
+.DS_Store
+
+# Go build artifacts
+*.exe
+*.test
+*.out
+vendor/
+cover.out
+coverage.txt
