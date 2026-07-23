@@ -535,3 +535,78 @@ test_task_effective_on_with_one_of_tasks if {
 	assertions.assert_equal(tekton.task_effective_on(data_with_map, sorted_task), "2024-06-01T00:00:00Z")
 	assertions.assert_equal(tekton.task_effective_on(data_with_map, "buildah"), "2024-01-01T00:00:00Z")
 }
+
+test_pipeline_required_tasks_merges_data_and_rule_data if {
+	task_base := slsav1_task("build-container")
+	task_w_labels := with_labels(task_base, {tekton.task_label: "docker"})
+	task_full := with_results(
+		task_w_labels,
+		[
+			{"name": "IMAGE_URL", "value": "localhost:5000/repo:latest"},
+			# regal ignore:line-length
+			{"name": "IMAGE_DIGEST", "value": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
+		],
+	)
+
+	attestation := slsav1_attestation_full(
+		[task_full],
+		{},
+		{},
+	)
+
+	data_source := {"docker": [{
+		"effective_on": "2024-01-01T00:00:00Z",
+		"tasks": ["buildah", "git-clone"],
+	}]}
+
+	rule_data_config := {"fbc": [{
+		"effective_on": "2024-06-01T00:00:00Z",
+		"tasks": ["fbc-validation"],
+	}]}
+
+	result := tekton.pipeline_required_tasks
+		with data["pipeline-required-tasks"] as data_source
+		with data.rule_data__configuration__["pipeline-required-tasks"] as rule_data_config
+
+	assertions.assert_equal(result, {
+		"docker": [{"effective_on": "2024-01-01T00:00:00Z", "tasks": ["buildah", "git-clone"]}],
+		"fbc": [{"effective_on": "2024-06-01T00:00:00Z", "tasks": ["fbc-validation"]}],
+	})
+}
+
+test_pipeline_required_tasks_rule_data_overrides_on_key_conflict if {
+	task_base := slsav1_task("build-container")
+	task_w_labels := with_labels(task_base, {tekton.task_label: "docker"})
+	task_full := with_results(
+		task_w_labels,
+		[
+			{"name": "IMAGE_URL", "value": "localhost:5000/repo:latest"},
+			# regal ignore:line-length
+			{"name": "IMAGE_DIGEST", "value": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
+		],
+	)
+
+	attestation := slsav1_attestation_full(
+		[task_full],
+		{},
+		{},
+	)
+
+	data_source := {"docker": [{
+		"effective_on": "2024-01-01T00:00:00Z",
+		"tasks": ["buildah", "git-clone"],
+	}]}
+
+	rule_data_config := {"docker": [{
+		"effective_on": "2024-06-01T00:00:00Z",
+		"tasks": ["buildah", "git-clone", "clair-scan"],
+	}]}
+
+	result := tekton.latest_required_pipeline_tasks(attestation)
+		with data["pipeline-required-tasks"] as data_source
+		with data.rule_data__configuration__["pipeline-required-tasks"] as rule_data_config
+
+	# ruleData config overrides data source for the same key
+	assertions.assert_equal(result.tasks, {"buildah", "git-clone", "clair-scan"})
+	assertions.assert_equal(result.effective_on, "2024-06-01T00:00:00Z")
+}

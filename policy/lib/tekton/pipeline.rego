@@ -2,11 +2,14 @@ package lib.tekton
 
 import rego.v1
 
+import data.lib.rule_data
 import data.lib.time as ectime
 
 pipeline_label := "pipelines.openshift.io/runtime"
 
 task_label := "build.appstudio.redhat.com/build_type"
+
+pipeline_required_tasks := object.union(data["pipeline-required-tasks"], rule_data.get("pipeline-required-tasks"))
 
 latest_required_pipeline_tasks(pipeline) := _merged_required_task_list(pipeline, "newest")
 
@@ -19,7 +22,7 @@ required_task_list(pipeline) := pipeline_data if {
 	selectors := pipeline_label_selectors(pipeline)
 	pipeline_data := [entry |
 		some selector in selectors
-		entries := object.get(data["pipeline-required-tasks"], selector, [])
+		entries := object.get(pipeline_required_tasks, selector, [])
 		some entry in entries
 	]
 	count(pipeline_data) > 0
@@ -37,7 +40,7 @@ _merged_required_task_list(pipeline, mode) := {
 
 	resolved := [r |
 		some selector in selectors
-		entries := object.get(data["pipeline-required-tasks"], selector, [])
+		entries := object.get(pipeline_required_tasks, selector, [])
 		count(entries) > 0
 		r := _resolve(entries, mode)
 	]
