@@ -547,8 +547,7 @@ test_pipeline_required_tasks_merges_data_and_rule_data if {
 		"tasks": ["fbc-validation"],
 	}]}
 
-	result := tekton.pipeline_required_tasks
-		with data["pipeline-required-tasks"] as data_source
+	result := tekton.pipeline_required_tasks with data["pipeline-required-tasks"] as data_source
 		with data.rule_data__configuration__["pipeline-required-tasks"] as rule_data_config
 
 	assertions.assert_equal(result, {
@@ -585,8 +584,7 @@ test_pipeline_required_tasks_rule_data_overrides_on_key_conflict if {
 		"tasks": ["buildah", "git-clone", "clair-scan"],
 	}]}
 
-	result := tekton.latest_required_pipeline_tasks(attestation)
-		with data["pipeline-required-tasks"] as data_source
+	result := tekton.latest_required_pipeline_tasks(attestation) with data["pipeline-required-tasks"] as data_source
 		with data.rule_data__configuration__["pipeline-required-tasks"] as rule_data_config
 
 	# ruleData config overrides data source for the same key
