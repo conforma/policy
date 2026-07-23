@@ -441,7 +441,7 @@ _expiry_msg_annotation := "build.appstudio.redhat.com/expiry-message"
 
 _data_errors contains error if {
 	some e in j.validate_schema(
-		data["pipeline-required-tasks"],
+		tekton.pipeline_required_tasks,
 		{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "object",
@@ -481,7 +481,7 @@ _data_errors contains error if {
 }
 
 _data_errors contains error if {
-	some key, entries in data["pipeline-required-tasks"]
+	some key, entries in tekton.pipeline_required_tasks
 	some i, entry in entries
 	effective_on := entry.effective_on
 	not time.parse_rfc3339_ns(effective_on)

@@ -57,6 +57,10 @@ attestation formats. Policies consume the normalized form — don't branch on SL
 **Rule data** lives in `example/data/` (required tasks, trusted task bundles, known RPM repos).
 These files have `effective_on` dates — rules with future dates are warnings, not failures.
 
+**Design docs** in `design/` capture non-obvious design rationale, cross-repo knowledge, and
+architectural constraints that aren't derivable from the code. Check there before reverse-engineering
+a subsystem.
+
 ## Common Change Patterns
 
 - **Add a release policy rule:** follow the pattern in `policy/release/attestation_type/attestation_type.rego` (rule + `_test.rego` in a subdirectory, declare `collections:` in METADATA)

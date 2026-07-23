@@ -145,6 +145,9 @@ defaults := {
 	# using the ruleData key. Make this default to an empty dict so we can conveniently
 	# merge it with with `data.trusted_tasks`
 	"trusted_tasks": {},
+	# Used in lib/tekton/pipeline.rego to merge pipeline-required-tasks from
+	# ruleData with data sources, matching the trusted_tasks merge pattern.
+	"pipeline-required-tasks": {},
 	# Used in lib/tekton/trusted.rego to toggle trusted_task_rules on/off
 	"trusted_task_rules_enabled": false,
 	# Number of days before a version of the Task expires that warnings are reported
