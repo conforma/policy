@@ -537,23 +537,6 @@ test_task_effective_on_with_one_of_tasks if {
 }
 
 test_pipeline_required_tasks_merges_data_and_rule_data if {
-	task_base := slsav1_task("build-container")
-	task_w_labels := with_labels(task_base, {tekton.task_label: "docker"})
-	task_full := with_results(
-		task_w_labels,
-		[
-			{"name": "IMAGE_URL", "value": "localhost:5000/repo:latest"},
-			# regal ignore:line-length
-			{"name": "IMAGE_DIGEST", "value": "sha256:abc0000000000000000000000000000000000000000000000000000000000abc"},
-		],
-	)
-
-	attestation := slsav1_attestation_full(
-		[task_full],
-		{},
-		{},
-	)
-
 	data_source := {"docker": [{
 		"effective_on": "2024-01-01T00:00:00Z",
 		"tasks": ["buildah", "git-clone"],
