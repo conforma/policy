@@ -179,9 +179,17 @@ defaults := {
 #   data.rule_data[key_name]
 #   defaults[key_name]
 #
-# And falls back to an empty list if the key is not found anywhere.
+# And falls back to an empty list if the key is not found anywhere
+# (or an empty map if the key is in the _merged_rule_data_keys set).
 #
 get(key_name) := value if {
+	# Special handling for rule data where we want to merge everything
+	# together rather than use the "first found" and ignore the rest.
+	key_name in _merged_rule_data_keys
+	value := _get_merged(key_name)
+}
+
+else := value if {
 	# Expected to be defined under `configuration.rule_data` in the
 	# ECP configuration data being used when EC is run.
 	value := data.rule_data__configuration__[key_name]
@@ -200,3 +208,25 @@ get(key_name) := value if {
 	# If the key is not found, default to an empty list
 	value := []
 }
+
+_get_merged(key_name) := object.union(
+	object.union(_merge_base(key_name), _merge_custom(key_name)),
+	_merge_conf(key_name),
+)
+
+_merge_base(key_name) := data.rule_data[key_name] if {
+	is_object(data.rule_data[key_name])
+} else := {}
+
+_merge_custom(key_name) := data.rule_data_custom[key_name] if {
+	is_object(data.rule_data_custom[key_name])
+} else := {}
+
+_merge_conf(key_name) := data.rule_data__configuration__[key_name] if {
+	is_object(data.rule_data__configuration__[key_name])
+} else := {}
+
+# We want trusted task rules defined in someone's ECP ruleData
+# to merged in with the main Konflux trusted task rules, not
+# replace them entirely, (and perhaps other keys in future).
+_merged_rule_data_keys := {"trusted_task_rules"}
