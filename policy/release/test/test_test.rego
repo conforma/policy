@@ -769,3 +769,190 @@ test_results_and_counts if {
 }
 
 _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
+
+# --- Test-result attestation mock infrastructure ---
+
+_image_ref := "registry.io/repo/image@sha256:abc123"
+
+_statement_digest := "sha256:stmt000000000000000000000000000000000000000000000000000000000001"
+
+_bundle_ref := "quay.io/konflux-ci/tekton-catalog/task-verify@sha256:task00000000000000000000000000000000000000000000000000000000001"
+
+_trusted_task_rules := {"allow": {"Trusted tasks": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]}}
+
+_referrer := {
+	"mediaType": "application/vnd.oci.image.manifest.v1+json",
+	"size": 100,
+	"digest": _statement_digest,
+	"artifactType": "application/vnd.in-toto+json",
+	"ref": sprintf("registry.io/repo/image@%s", [_statement_digest]),
+}
+
+_mock_referrers(_) := [_referrer]
+
+_mock_no_referrers(_) := []
+
+_mock_verify_fail(_, _) := {"success": false, "errors": ["bad sig"], "attestations": []}
+
+_slsa_v1_task := {
+	"name": "pipelineTask",
+	"content": base64.encode(json.marshal({
+		"metadata": {"labels": {
+			"tekton.dev/task": "verify-task",
+			"tekton.dev/pipelineTask": "verify-task",
+		}},
+		"spec": {"taskRef": {
+			"resolver": "bundles",
+			"params": [
+				{"name": "name", "value": "verify-task"},
+				{"name": "bundle", "value": _bundle_ref},
+				{"name": "kind", "value": "task"},
+			],
+		}},
+		"status": {
+			"results": [{"name": "TEST_OUTPUT", "value": "{}"}],
+			"steps": [{"name": "step1"}],
+		},
+	})),
+}
+
+_parse_digest(digest_str) := {algorithm: value} if {
+	parts := split(digest_str, ":")
+	algorithm := parts[0]
+	value := parts[1]
+}
+
+_slsa_v1_provenance := {
+	"statement": {
+		"predicateType": "https://slsa.dev/provenance/v1",
+		"subject": [{"name": "statement", "digest": _parse_digest(_statement_digest)}],
+		"predicate": {"buildDefinition": {
+			"buildType": "https://tekton.dev/chains/v2/slsa-tekton",
+			"resolvedDependencies": [_slsa_v1_task],
+		}},
+	},
+	"signatures": [{"keyid": "", "certificate": ""}],
+}
+
+_mock_verify_success(_, _) := {
+	"success": true,
+	"errors": [],
+	"attestations": [_slsa_v1_provenance],
+}
+
+_mock_manifests(_) := {_bundle_ref: {"annotations": {"org.opencontainers.image.version": "1.0"}}}
+
+_layer_digest := "sha256:1a0e000000000000000000000000000000000000000000000000000000000001"
+
+_mock_image_manifest(_) := {"layers": [{"digest": _layer_digest}]}
+
+_mock_blob_passed(_) := json.marshal({
+	"_type": "https://in-toto.io/Statement/v1",
+	"predicateType": "https://in-toto.io/attestation/test-result/v0.1",
+	"subject": [{"name": "registry.io/repo/image", "digest": {"sha256": "abc123"}}],
+	"predicate": {
+		"result": "PASSED",
+		"configuration": [{"name": "clair-scan"}],
+		"successes": 1,
+		"failures": 0,
+		"warnings": 0,
+	},
+})
+
+# test_data_found skipped when test-result attestations exist via OCI referrers
+test_data_found_skipped_with_test_result_attestations if {
+	_task_base := tekton_test.slsav1_task("task1")
+	slsav1_task = tekton_test.with_results(
+		_task_base,
+		[{"name": "NOT_TEST_OUTPUT", "type": "string", "value": {}}],
+	)
+
+	attestations := [
+		lib_test.att_mock_helper_ref("NOT_TEST_OUTPUT", {}, "task1", _bundle),
+		tekton_test.slsav1_attestation([slsav1_task]),
+	]
+
+	# No TEST_OUTPUT in pipeline, but test-result attestations exist — no denial
+	assertions.assert_empty(test.deny) with input.attestations as attestations
+		with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+}
+
+# test_data_found fires when neither TEST_OUTPUT nor test-result attestations exist
+test_data_found_fires_without_any_test_data if {
+	_task_base := tekton_test.slsav1_task("task1")
+	slsav1_task = tekton_test.with_results(
+		_task_base,
+		[{"name": "NOT_TEST_OUTPUT", "type": "string", "value": {}}],
+	)
+
+	attestations := [
+		lib_test.att_mock_helper_ref("NOT_TEST_OUTPUT", {}, "task1", _bundle),
+		tekton_test.slsav1_attestation([slsav1_task]),
+	]
+
+	# No TEST_OUTPUT and no test-result attestations — denial fires
+	assertions.assert_equal_results(test.deny, {{
+		"code": "test.test_data_found",
+		"msg": "No test data found",
+	}}) with input.attestations as attestations
+		with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_no_referrers
+}
+
+# test_data_found fires when attestations exist but fail verification
+test_data_found_fires_with_unverified_attestations if {
+	_task_base := tekton_test.slsav1_task("task1")
+	slsav1_task = tekton_test.with_results(
+		_task_base,
+		[{"name": "NOT_TEST_OUTPUT", "type": "string", "value": {}}],
+	)
+
+	attestations := [
+		lib_test.att_mock_helper_ref("NOT_TEST_OUTPUT", {}, "task1", _bundle),
+		tekton_test.slsav1_attestation([slsav1_task]),
+	]
+
+	# Referrers exist but verification fails — denial must still fire
+	assertions.assert_equal_results(test.deny, {{
+		"code": "test.test_data_found",
+		"msg": "No test data found",
+	}}) with input.attestations as attestations
+		with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_fail
+}
+
+# test_data_found skipped when both TEST_OUTPUT and test-result attestations exist
+test_data_found_skipped_with_both if {
+	_task_base := tekton_test.slsav1_task("task1")
+	slsav1_task = tekton_test.with_results(
+		_task_base,
+		[{
+			"name": lib.task_test_result_name,
+			"value": {"result": "SUCCESS"},
+		}],
+	)
+
+	attestations := [
+		lib_test.att_mock_helper_ref(lib.task_test_result_name, {"result": "SUCCESS"}, "task1", _bundle),
+		tekton_test.slsav1_attestation([slsav1_task]),
+	]
+
+	# Both exist — no denial
+	assertions.assert_empty(test.deny) with input.attestations as attestations
+		with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.trusted_task_rules as _trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+}

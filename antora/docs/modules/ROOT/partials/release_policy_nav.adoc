@@ -185,7 +185,7 @@
 **** xref:packages/release_test.adoc#test__no_skipped_tests[No tests were skipped]
 **** xref:packages/release_test.adoc#test__test_results_known[No unsupported test result values found]
 **** xref:packages/release_test.adoc#test__rule_data_provided[Rule data provided]
-**** xref:packages/release_test.adoc#test__test_data_found[Test data found in task results]
+**** xref:packages/release_test.adoc#test__test_data_found[Test data found]
 **** xref:packages/release_test.adoc#test__test_results_found[Test data includes results key]
 *** xref:packages/release_test_attestation.adoc[Test attestation]
 **** xref:packages/release_test_attestation.adoc#test_attestation__no_erred_test_attestations[No erred test attestations]

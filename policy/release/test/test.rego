@@ -12,6 +12,7 @@ import rego.v1
 
 import data.lib
 import data.lib.image
+import data.lib.intoto
 import data.lib.json as j
 import data.lib.metadata
 import data.lib.rule_data
@@ -64,16 +65,19 @@ warn contains result if {
 }
 
 # METADATA
-# title: Test data found in task results
+# title: Test data found
 # description: >-
-#   Ensure that at least one of the tasks in the pipeline includes a
-#   TEST_OUTPUT task result, which is where Conforma expects
-#   to find test result data.
+#   Ensure that test data is available either as a TEST_OUTPUT task result
+#   in the build pipeline or as verified test-result attestations attached
+#   to the image via OCI referrers.
 # custom:
 #   short_name: test_data_found
 #   failure_msg: No test data found
 #   solution: >-
-#     Confirm at least one task in the build pipeline contains a result named TEST_OUTPUT.
+#     Confirm at least one task in the build pipeline contains a result
+#     named TEST_OUTPUT, or that verified test-result attestations
+#     (predicateType https://in-toto.io/attestation/test-result/v0.1)
+#     are attached to the image via OCI referrers.
 #   collections:
 #   - redhat
 #   - redhat_security
@@ -84,6 +88,11 @@ deny contains result if {
 	count(lib.pipelinerun_attestations) > 0 # make sure we're looking at a PipelineRun attestation
 	results := lib.results_from_tests
 	count(results) == 0 # there are none at all
+
+	# When verified test-result attestations exist, enforcement is handled
+	# by the test_attestation package (same collections). Skip this denial
+	# to avoid requiring both TEST_OUTPUT and attestations simultaneously.
+	count(intoto.verified_statements_by_predicate(intoto.predicate_test_result)) == 0
 
 	result := metadata.result_helper(rego.metadata.chain(), [])
 }
