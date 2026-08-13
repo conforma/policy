@@ -880,7 +880,7 @@ test_data_found_skipped_with_test_result_attestations if {
 		with ec.oci.blob as _mock_blob_passed
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
-		with data.trusted_task_rules as _trusted_task_rules
+		with data.rule_data.trusted_task_rules as _trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
 }
 
@@ -953,6 +953,6 @@ test_data_found_skipped_with_both if {
 		with ec.oci.blob as _mock_blob_passed
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
-		with data.trusted_task_rules as _trusted_task_rules
+		with data.rule_data.trusted_task_rules as _trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
 }
