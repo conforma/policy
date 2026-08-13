@@ -222,6 +222,7 @@ deny contains result if {
 #     or execution failure. Review the test attestation and re-run the test.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -253,6 +254,7 @@ deny contains result if {
 #     re-run the test.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -283,6 +285,7 @@ deny contains result if {
 #     with the correct subject digest.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
 #
@@ -312,6 +315,7 @@ deny contains result if {
 #   solution: If provided, ensure the rule data is in the expected format.
 #   collections:
 #   - redhat
+#   - redhat_security
 #   - policy_data
 #
 deny contains result if {
