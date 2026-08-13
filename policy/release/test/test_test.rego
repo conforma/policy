@@ -778,7 +778,7 @@ _statement_digest := "sha256:stmt00000000000000000000000000000000000000000000000
 
 _bundle_ref := "quay.io/konflux-ci/tekton-catalog/task-verify@sha256:task00000000000000000000000000000000000000000000000000000000001"
 
-_trusted_task_rules := {"allow": {"Trusted tasks": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]}}
+_trusted_task_rules := {"trusted_task_rules": {"allow": {"Trusted tasks": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]}}}
 
 _referrer := {
 	"mediaType": "application/vnd.oci.image.manifest.v1+json",
@@ -860,7 +860,7 @@ _mock_blob_passed(_) := json.marshal({
 })
 
 # test_data_found skipped when test-result attestations exist via OCI referrers
-test_data_found_skipped_with_test_result_attestations if {
+test_data_found_skips_attestations if {
 	_task_base := tekton_test.slsav1_task("task1")
 	slsav1_task = tekton_test.with_results(
 		_task_base,
@@ -880,12 +880,12 @@ test_data_found_skipped_with_test_result_attestations if {
 		with ec.oci.blob as _mock_blob_passed
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
-		with data.rule_data.trusted_task_rules as _trusted_task_rules
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # test_data_found fires when neither TEST_OUTPUT nor test-result attestations exist
-test_data_found_fires_without_any_test_data if {
+test_data_found_denies_no_data if {
 	_task_base := tekton_test.slsav1_task("task1")
 	slsav1_task = tekton_test.with_results(
 		_task_base,
@@ -907,7 +907,7 @@ test_data_found_fires_without_any_test_data if {
 }
 
 # test_data_found fires when attestations exist but fail verification
-test_data_found_fires_with_unverified_attestations if {
+test_data_found_denies_unverified if {
 	_task_base := tekton_test.slsav1_task("task1")
 	slsav1_task = tekton_test.with_results(
 		_task_base,
@@ -930,7 +930,7 @@ test_data_found_fires_with_unverified_attestations if {
 }
 
 # test_data_found skipped when both TEST_OUTPUT and test-result attestations exist
-test_data_found_skipped_with_both if {
+test_data_found_skips_both if {
 	_task_base := tekton_test.slsav1_task("task1")
 	slsav1_task = tekton_test.with_results(
 		_task_base,
@@ -953,6 +953,6 @@ test_data_found_skipped_with_both if {
 		with ec.oci.blob as _mock_blob_passed
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
-		with data.rule_data.trusted_task_rules as _trusted_task_rules
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
 }
