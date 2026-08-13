@@ -99,6 +99,12 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
   the pattern.
 - **Test coverage:** Every new rule needs tests in a corresponding `_test.rego` file. CI enforces
   100% coverage.
+- **Enforcement delegation parity.** When a deny rule conditionally skips its
+  denial (bypass path), verify that the package receiving enforcement provides
+  equivalent coverage. Specifically: compare the `collections:` list of the
+  bypassed rule against every rule in the destination package. If the bypassed
+  rule belongs to a collection that the destination rules do not, the delegation
+  creates an enforcement gap for consumers of that collection.
 
 ## PR Conventions
 
