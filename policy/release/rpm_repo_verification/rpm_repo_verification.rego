@@ -96,7 +96,7 @@ deny contains result if {
 #
 deny contains result if {
 	some repo in _repos
-	not repo.gpg_key_id in _allowed_rpm_repo_gpg_keys
+	not lower(repo.gpg_key_id) in {lower(k) | some k in _allowed_rpm_repo_gpg_keys}
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[repo.gpg_key_id, _allowed_rpm_repo_gpg_keys],

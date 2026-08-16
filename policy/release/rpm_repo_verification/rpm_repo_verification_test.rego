@@ -116,11 +116,6 @@ test_multiple_repos if {
 			"code": "rpm_repo_verification.metadata_checksums_verified",
 			"msg": "Yum repository \"https://example.com/repo/x86_64\" metadata checksum verification failed",
 		},
-		{
-			"code": "rpm_repo_verification.allowed_gpg_key",
-			"msg": "Yum repository GPG key \"ABCDEF0123456789\" is not one of the allowed keys: [\"abcdef0123456789\"]",
-			"term": "ABCDEF0123456789",
-		},
 	}
 	assertions.assert_equal_results(rpm_repo_verification.deny, expected) with input.attestations as attestations
 		with data.rule_data.allowed_rpm_repo_gpg_keys as ["abcdef0123456789"]
