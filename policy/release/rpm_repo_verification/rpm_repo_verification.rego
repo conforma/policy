@@ -170,9 +170,11 @@ _result_format_errors contains msg if {
 						"gpg_signature_verified": {"type": "boolean"},
 						"metadata_checksums_verified": {"type": "boolean"},
 					},
+					"required": ["url", "gpg_key_id", "gpg_signature_verified", "metadata_checksums_verified"],
 					"additionalProperties": true,
 				},
 			}},
+			"required": ["repos"],
 			"additionalProperties": true,
 		},
 	)[1]

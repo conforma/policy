@@ -148,6 +148,42 @@ test_result_format_invalid if {
 		with data.rule_data.allowed_rpm_repo_gpg_keys as ["abcdef0123456789"]
 }
 
+test_result_format_missing_fields if {
+	result_value := {"repos": [{}]}
+	attestations := [_attestation_v1_0(result_value), _attestation_v0_2(result_value)]
+	expected := {
+		{
+			"code": "rpm_repo_verification.result_format",
+			"msg": "Task result has unexpected format: repos.0: url is required",
+		},
+		{
+			"code": "rpm_repo_verification.result_format",
+			"msg": "Task result has unexpected format: repos.0: gpg_key_id is required",
+		},
+		{
+			"code": "rpm_repo_verification.result_format",
+			"msg": "Task result has unexpected format: repos.0: gpg_signature_verified is required",
+		},
+		{
+			"code": "rpm_repo_verification.result_format",
+			"msg": "Task result has unexpected format: repos.0: metadata_checksums_verified is required",
+		},
+	}
+	assertions.assert_equal_results(rpm_repo_verification.deny, expected) with input.attestations as attestations
+		with data.rule_data.allowed_rpm_repo_gpg_keys as ["abcdef0123456789"]
+}
+
+test_result_format_missing_repos if {
+	result_value := {}
+	attestations := [_attestation_v1_0(result_value), _attestation_v0_2(result_value)]
+	expected := {{
+		"code": "rpm_repo_verification.result_format",
+		"msg": "Task result has unexpected format: (Root): repos is required",
+	}}
+	assertions.assert_equal_results(rpm_repo_verification.deny, expected) with input.attestations as attestations
+		with data.rule_data.allowed_rpm_repo_gpg_keys as ["abcdef0123456789"]
+}
+
 test_rule_data_provided if {
 	result_value := {"repos": [{
 		"url": "https://example.com/repo/arm64",
