@@ -63,6 +63,18 @@ These files have `effective_on` dates — rules with future dates are warnings, 
 architectural constraints that aren't derivable from the code. Check there before reverse-engineering
 a subsystem.
 
+**Test attestation input contract:** Konflux test-result attestations (evaluated by
+`policy/release/test_attestation/test_attestation.rego`) always include
+`predicate.configuration[0].name` (the test name) and `predicate.timestamp` (RFC 3339 with
+nanosecond precision). The `test_attestation` package relies on these fields for deduplication:
+attestations are grouped by name and only the latest timestamp per group is evaluated. Attestations
+without a valid (non-empty string) `timestamp` are excluded from evaluation by design — this is
+intentional deduplication behavior, not a fail-open path. Missing-timestamp or missing-name edge
+cases in this package are low-severity theoretical concerns, not high-severity vulnerabilities,
+because the Konflux attestation producers guarantee these fields. A separate enforcement story
+exists to require certain test attestations, providing a safety net if the attestation format
+changes.
+
 ## Rego Evaluation Model (for AI reviewers)
 
 Rego is a declarative policy language (Datalog-inspired), not imperative code:
