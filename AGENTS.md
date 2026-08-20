@@ -96,6 +96,10 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
   rule and verify it includes `effective_on: <future RFC 3339 date>`. See existing rules in
   `policy/release/` for the pattern. Rule data entries in `example/data/` YAML files (e.g.,
   `required_tasks.yml`, `trusted_tekton_tasks.yml`) also use `effective_on` for data-driven rules.
+  **Exception:** Rules that are both opt-in (require explicit user configuration to activate) and
+  fail-closed (produce no output when unconfigured) may omit `effective_on`, since unconfigured
+  builds are unaffected. When omitting `effective_on` for this reason, document the rationale in the
+  PR description.
 - **Collection membership:** New rules must declare membership in the appropriate collection(s) via
   the `collections:` key in their METADATA annotation. See existing rules in `policy/release/` for
   the pattern.
