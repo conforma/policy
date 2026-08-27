@@ -59,6 +59,20 @@ attestation formats. Policies consume the normalized form — don't branch on SL
 **Rule data** lives in `example/data/` (required tasks, trusted task bundles, known RPM repos).
 These files have `effective_on` dates — rules with future dates are warnings, not failures.
 
+**Rule data resolution:** `rule_data.get(key)` checks values in this order: ECP configuration
+(`data.rule_data__configuration__`), custom data sources (`data.rule_data_custom`), default data
+sources (`data.rule_data`), and finally the hardcoded `defaults` map in
+`policy/lib/rule_data/rule_data.rego`. A value found at a higher-priority tier replaces the value
+from lower-priority tiers; values are not merged across tiers. If no tier defines the key, the
+function returns an empty list. See [the data-source configuration
+docs](https://conforma.dev/docs/cli/configuration.html#_data_sources) for the supported custom
+data-source mechanisms.
+
+**Hardcoded rule-data defaults:** Values in the `defaults` map apply to every Conforma deployment.
+Only values that are universally appropriate belong there, such as the Tekton-standard values this
+repository targets. Vendor-, organization-, or deployment-specific values belong in custom
+`rule_data` or `rule_data__configuration__` supplied by that deployment instead.
+
 **Design docs** in `design/` capture non-obvious design rationale, cross-repo knowledge, and
 architectural constraints that aren't derivable from the code. Check there before reverse-engineering
 a subsystem.
@@ -101,6 +115,11 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
   the pattern.
 - **Test coverage:** Every new rule needs tests in a corresponding `_test.rego` file. CI enforces
   100% coverage.
+- **Hardcoded rule-data defaults:** When a PR changes the `defaults` map in
+  `policy/lib/rule_data/rule_data.rego`, ask: "Is this value universally appropriate for all
+  Conforma users, or is it specific to a particular vendor, organization, or deployment?" If it is
+  specific, recommend the per-deployment custom `rule_data` or `rule_data__configuration__` mechanism
+  instead.
 
 ## PR Conventions
 
