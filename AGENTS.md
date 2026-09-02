@@ -102,6 +102,18 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
 - **Test coverage:** Every new rule needs tests in a corresponding `_test.rego` file. CI enforces
   100% coverage.
 
+## Security Documentation Maintenance
+
+When a PR modifies trust-boundary code — specifically files in `policy/lib/tekton/`
+that handle trusted task rules, data input paths, or merge/validation logic —
+check whether `THREAT_MODEL.md` describes the affected architecture. If it does,
+update the relevant sections in the same PR. Key sections to check:
+
+- Section 3.3 (trusted task data flow and merge architecture)
+- Threat entries DP-2 and LE-4 (injection and precedence threats)
+- The security-critical rule data keys table
+- Open questions and recommendations referencing the changed components
+
 ## PR Conventions
 
 Conventional commits are encouraged. Run `make ci` before pushing. CI runs on every PR via
