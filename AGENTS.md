@@ -101,6 +101,12 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
   the pattern.
 - **Test coverage:** Every new rule needs tests in a corresponding `_test.rego` file. CI enforces
   100% coverage.
+- **CycloneDX/SPDX parity:** When a rule is implemented in both `sbom_cyclonedx` and `sbom_spdx`,
+  verify that the two implementations enforce equivalent behavior. Check that shared helper functions
+  (e.g., `component_found_by_hermeto` vs `package_found_by_hermeto`) apply the same level of
+  strictness. Verify that test coverage for both format implementations covers all attribution
+  sources (`hermeto:found_by` and `cachi2:found_by`) and edge cases (empty components/packages,
+  mixed attribution, unconfigured rule data).
 
 ## PR Conventions
 
