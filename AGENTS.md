@@ -102,6 +102,19 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
 - **Test coverage:** Every new rule needs tests in a corresponding `_test.rego` file. CI enforces
   100% coverage.
 
+## Cross-file Consistency
+
+When a PR introduces the same pattern (guard clause, helper call, error-handling
+convention) across multiple policy packages, verify it is applied consistently
+in every location. Inconsistencies between repeated patterns are a strong signal
+of copy-paste bugs. Specifically check:
+- Guard clauses (e.g., `is_string()`) are present in all instances, not just some
+- Helper function calls use the same arguments and error severity
+- METADATA annotations follow the same structure
+
+If the same logic appears in 3+ packages, suggest extracting a shared helper
+into `policy/lib/`.
+
 ## PR Conventions
 
 Conventional commits are encouraged. Run `make ci` before pushing. CI runs on every PR via
