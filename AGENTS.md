@@ -102,6 +102,17 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
 - **Test coverage:** Every new rule needs tests in a corresponding `_test.rego` file. CI enforces
   100% coverage.
 
+## Review Checklist for New Policy Rules
+
+- **`effective_on` date required:** New deny/warn rules MUST include an
+  `effective_on` date in their rule data entry (in `example/data/`) to
+  provide a migration window. Rules without `effective_on` enforce
+  immediately on deployment, which can break existing builds without
+  warning. Check that the corresponding rule data file has a future
+  `effective_on` date for every new rule being added.
+- **Collection membership:** New rules must be added to the appropriate
+  collection(s) in `policy/*/collection/` or they won't be evaluated.
+
 ## PR Conventions
 
 Conventional commits are encouraged. Run `make ci` before pushing. CI runs on every PR via
