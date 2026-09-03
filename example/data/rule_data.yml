@@ -160,3 +160,7 @@ rule_data:
 
   allowed_rpm_signature_keys:
   - 199e2f91fd431d51
+
+  # Usage: https://conforma.dev/docs/policy/packages/release_rpm_repo_verification.html
+  allowed_rpm_repo_gpg_keys:
+  - 0123456789abcdef

@@ -85,6 +85,7 @@ Rules included:
 * xref:packages/release_olm.adoc#olm__required_olm_features_annotations_provided[OLM: Required OLM feature annotations list provided]        
 * xref:packages/release_rpm_build_deps.adoc#rpm_build_deps__allowed_rpm_build_dependency_sources_format[RPM Build Dependencies: allowed_rpm_build_dependency_sources format]        
 * xref:packages/release_rpm_repos.adoc#rpm_repos__rule_data_provided[RPM Repos: Known repo id list provided]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__rule_data_provided[RPM Repository Verification: Rule data provided]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__rule_data_provided[RPM Signature: Rule data provided]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_external_references[SBOM CycloneDX: Allowed package external references]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_sources[SBOM CycloneDX: Allowed package sources]        
@@ -169,6 +170,11 @@ Rules included:
 * xref:packages/release_rpm_packages.adoc#rpm_packages__unique_version[RPM Packages: Unique Version]        
 * xref:packages/release_rpm_repos.adoc#rpm_repos__ids_known[RPM Repos: All rpms have known repo ids]        
 * xref:packages/release_rpm_repos.adoc#rpm_repos__rule_data_provided[RPM Repos: Known repo id list provided]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__allowed_gpg_key[RPM Repository Verification: Allowed GPG key]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__gpg_signature_verified[RPM Repository Verification: GPG signature verified]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__metadata_checksums_verified[RPM Repository Verification: Metadata checksums verified]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__result_format[RPM Repository Verification: Result format]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__rule_data_provided[RPM Repository Verification: Rule data provided]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__allowed[RPM Signature: Allowed RPM signature key]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__result_format[RPM Signature: Result format]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__rule_data_provided[RPM Signature: Rule data provided]        
@@ -293,6 +299,11 @@ Rules included:
 * xref:packages/release_rpm_pipeline.adoc#rpm_pipeline__invalid_pipeline[RPM Pipeline: Task version invalid_pipeline]        
 * xref:packages/release_rpm_repos.adoc#rpm_repos__ids_known[RPM Repos: All rpms have known repo ids]        
 * xref:packages/release_rpm_repos.adoc#rpm_repos__rule_data_provided[RPM Repos: Known repo id list provided]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__allowed_gpg_key[RPM Repository Verification: Allowed GPG key]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__gpg_signature_verified[RPM Repository Verification: GPG signature verified]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__metadata_checksums_verified[RPM Repository Verification: Metadata checksums verified]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__result_format[RPM Repository Verification: Result format]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__rule_data_provided[RPM Repository Verification: Rule data provided]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__allowed[RPM Signature: Allowed RPM signature key]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__result_format[RPM Signature: Result format]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__rule_data_provided[RPM Signature: Rule data provided]        
@@ -404,6 +415,11 @@ Rules included:
 * xref:packages/release_rpm_pipeline.adoc#rpm_pipeline__invalid_pipeline[RPM Pipeline: Task version invalid_pipeline]        
 * xref:packages/release_rpm_repos.adoc#rpm_repos__ids_known[RPM Repos: All rpms have known repo ids]        
 * xref:packages/release_rpm_repos.adoc#rpm_repos__rule_data_provided[RPM Repos: Known repo id list provided]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__allowed_gpg_key[RPM Repository Verification: Allowed GPG key]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__gpg_signature_verified[RPM Repository Verification: GPG signature verified]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__metadata_checksums_verified[RPM Repository Verification: Metadata checksums verified]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__result_format[RPM Repository Verification: Result format]        
+* xref:packages/release_rpm_repo_verification.adoc#rpm_repo_verification__rule_data_provided[RPM Repository Verification: Rule data provided]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__allowed[RPM Signature: Allowed RPM signature key]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__result_format[RPM Signature: Result format]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__rule_data_provided[RPM Signature: Rule data provided]        
@@ -623,6 +639,9 @@ a| This package provides rules for verifying the RPMs are built in an approved p
 
 | xref:packages/release_rpm_repos.adoc[rpm_repos]
 a| This package defines rules to confirm that all RPM packages listed in SBOMs specify a known and permitted repository id.
+
+| xref:packages/release_rpm_repo_verification.adoc[rpm_repo_verification]
+a| This package provides rules for verifying yum repository-level GPG signatures and checksum chains as reported in the SLSA Provenance attestation. This is an alternative to individual RPM signature verification for packages distributed via GPG-signed yum repositories.
 
 | xref:packages/release_rpm_signature.adoc[rpm_signature]
 a| This package provides rules for verifying the signatures of RPMs identified in the the SLSA Provenance attestation.
