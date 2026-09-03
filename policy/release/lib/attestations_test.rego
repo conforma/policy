@@ -596,6 +596,39 @@ _attestation_v1_with_finished_on(finished_on, tasks) := {"statement": {
 	},
 }}
 
+# Test PNC SLSA v1 attestation with a non-Tekton buildType.
+_attestation_v1_with_pnc_build_type := {"statement": {
+	"predicateType": "https://slsa.dev/provenance/v1",
+	"predicate": {
+		"buildDefinition": {
+			"buildType": "https://project-ncl.github.io/slsa-pnc-cli-buildtypes/workflow/v1",
+			"externalParameters": {
+				"commandLine": [],
+				"fullVersion": "1.0",
+				"pigConfiguration": {},
+				"prefix": "",
+				"releaseDirName": "",
+				"targetPath": "",
+				"tempBuild": false,
+			},
+			"resolvedDependencies": _mock_materials,
+		},
+		"runDetails": {
+			"builder": {},
+			"metadata": {"finishedOn": "2025-01-20T15:45:00Z"},
+		},
+	},
+}}
+
+test_pipelinerun_attestations_pnc_build_type if {
+	att := _attestation_v1_with_pnc_build_type
+	expected := [att]
+	assertions.assert_equal(
+		expected,
+		lib.pipelinerun_attestations,
+	) with input.attestations as [att] with data.rule_data__configuration__ as {"allowed_provenance_build_types": ["https://project-ncl.github.io/slsa-pnc-cli-buildtypes/workflow/v1"]}
+}
+
 test_pipelinerun_attestations_single_v1_finished_on if {
 	# Single v1.0 attestation using spec-compliant finishedOn - should be returned
 	att := _attestation_v1_with_finished_on("2025-01-20T15:45:00Z", [_build_task])
