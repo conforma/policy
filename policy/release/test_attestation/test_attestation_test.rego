@@ -1104,3 +1104,246 @@ test_dedup_all_missing_timestamps_excluded if {
 		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
 }
+
+# =============================================================================
+# REQUIRED TEST ATTESTATIONS TESTS: EC-1951
+# =============================================================================
+
+_current_time := "2026-08-20T00:00:00Z"
+
+_past_time := "2025-01-01T00:00:00Z"
+
+_future_time := "2027-01-01T00:00:00Z"
+
+# --- Missing required test (current effective_on) ---
+
+test_required_test_missing_current_denies if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as [{"effective_on": _past_time, "tests": ["required-test"]}]
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	some r in results
+	r.code == "test_attestation.required_test_attestations_found"
+	contains(r.msg, "required-test")
+}
+
+# --- Missing required test (latest effective_on in the future) ---
+
+test_required_test_missing_future_warns if {
+	results := test_attestation.warn with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as [{"effective_on": _future_time, "tests": ["future-required-test"]}]
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	some r in results
+	r.code == "test_attestation.future_required_test_attestations_found"
+	contains(r.msg, "future-required-test")
+	contains(r.msg, _future_time)
+}
+
+# --- Required test present ---
+
+test_required_test_present_passes if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as [{"effective_on": _past_time, "tests": ["clair-scan"]}]
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	not _has_code(results, "test_attestation.required_test_attestations_found")
+}
+
+# --- Multiple effective_on dates ---
+
+test_required_tests_multiple_dates if {
+	# Current requirement: test-a, future requirement adds test-b
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as [
+			{"effective_on": _past_time, "tests": ["test-a"]},
+			{"effective_on": _future_time, "tests": ["test-a", "test-b"]},
+		]
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	deny_codes := {r.code | some r in results}
+	"test_attestation.required_test_attestations_found" in deny_codes
+
+	warns := test_attestation.warn with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as [
+			{"effective_on": _past_time, "tests": ["test-a"]},
+			{"effective_on": _future_time, "tests": ["test-a", "test-b"]},
+		]
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	some w in warns
+	w.code == "test_attestation.future_required_test_attestations_found"
+	contains(w.msg, "test-b")
+}
+
+# --- Empty required-test-attestations list is ok (no enforcement) ---
+
+test_required_tests_list_empty_allowed if {
+	# Empty array means no requirement enforcement
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as []
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	not _has_code(results, "test_attestation.required_test_attestations_list_provided")
+}
+
+# --- Provided but unresolvable required-test-attestations denies ---
+
+test_required_tests_list_unresolvable_denies if {
+	# Valid date but no tests field - schema validation passes but resolution fails
+	# This simulates a case where the data structure is wrong
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as [{"effective_on": _past_time}]
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	_has_code(results, "test_attestation.required_test_attestations_list_provided")
+}
+
+# --- Required-test-attestations with invalid effective_on ---
+
+test_required_tests_invalid_effective_on if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as [{"effective_on": "not-a-date", "tests": ["test-a"]}]
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	some r in results
+	r.code == "test_attestation.rule_data_provided"
+	contains(r.msg, "not valid RFC3339 format")
+}
+
+# --- Required-test-attestations schema validation ---
+
+test_required_tests_invalid_schema if {
+	# Missing "tests" field
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as [{"effective_on": _past_time}]
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	some r in results
+	r.code == "test_attestation.rule_data_provided"
+	contains(r.msg, "required-test-attestations has unexpected format")
+}
+
+# --- Required-test-attestations with empty tests array ---
+
+test_required_tests_empty_tests_array if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as [{"effective_on": _past_time, "tests": []}]
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	some r in results
+	r.code == "test_attestation.rule_data_provided"
+	contains(r.msg, "required-test-attestations has unexpected format")
+}
+
+# --- All future effective_on dates (no current requirement) ---
+
+test_required_tests_all_future if {
+	results := test_attestation.deny with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as [{"effective_on": _future_time, "tests": ["future-test"]}]
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	not _has_code(results, "test_attestation.required_test_attestations_found")
+
+	warns := test_attestation.warn with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.rule_data["required-test-attestations"] as [{"effective_on": _future_time, "tests": ["future-test"]}]
+		with time.now_ns as time.parse_rfc3339_ns(_current_time)
+
+	some w in warns
+	w.code == "test_attestation.future_required_test_attestations_found"
+}
+
+# --- Empty effective_on in newest entry (fallback to "") ---
+
+test_latest_effective_on_empty_fallback if {
+	# Test the else clause on line 525: when newest returns undefined
+	# This happens when the required-test-attestations array is actually empty at runtime
+	# We can test this by directly checking the behavior with no data
+	result := test_attestation._latest_effective_on with data.rule_data["required-test-attestations"] as []
+
+	result == ""
+}

@@ -33,6 +33,7 @@ import data.lib.intoto
 import data.lib.json as j
 import data.lib.metadata
 import data.lib.rule_data
+import data.lib.time as ectime
 
 _all_test_attestations := intoto.verified_statements_by_predicate(intoto.predicate_test_result)
 
@@ -141,6 +142,33 @@ warn contains result if {
 		rego.metadata.chain(),
 		[_test_name(statement), detail],
 		_test_name(statement),
+	)
+}
+
+# METADATA
+# title: Future required test attestations were found
+# description: >-
+#   Produce a warning when a test attestation that will be required in the
+#   future is not currently present. This allows teams to prepare for
+#   upcoming requirements without blocking current releases.
+# custom:
+#   short_name: future_required_test_attestations_found
+#   failure_msg: '%s is missing and will be required on %s'
+#   solution: >-
+#     A test attestation that will be required at a future date is missing.
+#     Ensure the test is included before the effective date.
+#   collections:
+#   - redhat
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+warn contains result if {
+	some missing_test in _missing_required_tests(_latest_required_tests)
+	not missing_test in _current_required_tests
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[sprintf("Test attestation %q", [missing_test]), _latest_effective_on],
+		missing_test,
 	)
 }
 
@@ -328,12 +356,69 @@ deny contains result if {
 }
 
 # METADATA
+# title: Required test attestations were found
+# description: >-
+#   Produce a violation if a required test attestation is missing. Required
+#   test attestations are configured via the "required-test-attestations"
+#   rule data key with time-windowed entries. A test attestation is
+#   considered present when a verified test-result statement has
+#   predicate.configuration[0].name matching the required test name.
+# custom:
+#   short_name: required_test_attestations_found
+#   failure_msg: Required test attestation %q is missing
+#   solution: >-
+#     Ensure all required test attestations are produced and attached to
+#     the image. The required test attestation list is configurable via
+#     the "required-test-attestations" key in the rule data.
+#   collections:
+#   - redhat
+#   - redhat_security
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+deny contains result if {
+	some missing_test in _missing_required_tests(_current_required_tests)
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[missing_test],
+		missing_test,
+	)
+}
+
+# METADATA
+# title: Required test attestations list was provided
+# description: >-
+#   Confirm that when the "required-test-attestations" rule data key is
+#   provided, it resolves to a non-empty list of test names. This catches
+#   misconfiguration where the key is present but all entries have empty
+#   test lists or invalid effective_on dates.
+# custom:
+#   short_name: required_test_attestations_list_provided
+#   failure_msg: Missing required required-test-attestations data
+#   solution: >-
+#     Ensure the rule data contains a "required-test-attestations" key
+#     with at least one entry containing a non-empty "tests" array and
+#     a valid "effective_on" date.
+#   collections:
+#   - redhat
+#   - redhat_security
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+deny contains result if {
+	count(_required_test_attestations_data) > 0
+	not _resolved_required_tests
+	result := metadata.result_helper(rego.metadata.chain(), [])
+}
+
+# METADATA
 # title: Rule data provided
 # description: >-
 #   Confirm the expected rule data keys have been provided in the expected format.
 #   The keys are "supported_test_attestation_results", "failed_test_attestation_results",
 #   "erred_test_attestation_results", "skipped_test_attestation_results",
-#   "warned_test_attestation_results", and "informative_test_attestations".
+#   "warned_test_attestation_results", "informative_test_attestations", and
+#   "required-test-attestations".
 # custom:
 #   short_name: rule_data_provided
 #   failure_msg: '%s'
@@ -383,7 +468,88 @@ _rule_data_errors contains error if {
 	}
 }
 
+_rule_data_errors contains error if {
+	some e in j.validate_schema(
+		rule_data.get("required-test-attestations"),
+		_required_test_attestations_schema,
+	)
+	error := {
+		"message": sprintf("Rule data required-test-attestations has unexpected format: %s", [e.message]),
+		"severity": e.severity,
+	}
+}
+
+_rule_data_errors contains error if {
+	some i, entry in rule_data.get("required-test-attestations")
+	effective_on := entry.effective_on
+	not time.parse_rfc3339_ns(effective_on)
+	error := {
+		"message": sprintf(
+			"required-test-attestations[%d].effective_on is not valid RFC3339 format: %q",
+			[i, effective_on],
+		),
+		"severity": "failure",
+	}
+}
+
 _subject_matches(statement, digest) if {
 	some subject in object.get(statement, "subject", [])
 	digest in intoto.subject_digests(subject)
+}
+
+_required_test_attestations_data := rule_data.get("required-test-attestations")
+
+_resolved_required_tests if {
+	ectime.most_current(_required_test_attestations_data).tests
+}
+
+_resolved_required_tests if {
+	ectime.newest(_required_test_attestations_data).tests
+}
+
+default _current_required_tests := []
+
+_current_required_tests := entry.tests if {
+	entry := ectime.most_current(_required_test_attestations_data)
+}
+
+default _latest_required_tests := []
+
+_latest_required_tests := entry.tests if {
+	entry := ectime.newest(_required_test_attestations_data)
+}
+
+default _latest_effective_on := ""
+
+_latest_effective_on := entry.effective_on if {
+	entry := ectime.newest(_required_test_attestations_data)
+}
+
+_present_test_names contains name if {
+	some statement in _test_attestations
+	name := _test_name(statement)
+}
+
+_missing_required_tests(required_tests) := {test |
+	some test in required_tests
+	not test in _present_test_names
+}
+
+_required_test_attestations_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {
+		"type": "object",
+		"properties": {
+			"effective_on": {"type": "string"},
+			"tests": {
+				"type": "array",
+				"items": {"type": "string"},
+				"uniqueItems": true,
+				"minItems": 1,
+			},
+		},
+		"required": ["effective_on", "tests"],
+	},
+	"uniqueItems": true,
 }
