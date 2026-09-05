@@ -300,6 +300,31 @@ test_untrusted_tasks if {
 	count(result) == 0
 }
 
+test_associated_statement_provenances_retain_untrusted_attestations if {
+	no_matching_rules := {"trusted_task_rules": {"allow": {"Other tasks": [{"pattern": "oci://quay.io/other-org/*"}]}}}
+	result := intoto.associated_statement_provenances_by_predicate(intoto.predicate_test_result) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers_with_provenance
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with data.rule_data.trusted_task_rules as no_matching_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+
+	count(result) == 1
+	some associated in result
+	associated.statement.predicateType == intoto.predicate_test_result
+	associated.provenance == _slsa_v1_provenance([_slsa_v1_task])
+}
+
+test_associated_statement_provenances_exclude_failed_verification if {
+	result := intoto.associated_statement_provenances with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers_with_provenance
+		with ec.sigstore.verify_attestation as _mock_verify_failure
+		with ec.oci.blob as _mock_blob
+
+	count(result) == 0
+}
+
 test_denied_tasks if {
 	deny_rules := {"trusted_task_rules": {
 		"allow": {"Allow all": [{"pattern": "oci://quay.io/konflux-ci/tekton-catalog/*"}]},

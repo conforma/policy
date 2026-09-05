@@ -28,6 +28,7 @@ package test_attestation
 
 import rego.v1
 
+import data.lib as release_lib
 import data.lib.image
 import data.lib.intoto
 import data.lib.json as j
@@ -36,37 +37,7 @@ import data.lib.rule_data
 
 _all_test_attestations := intoto.verified_statements_by_predicate(intoto.predicate_test_result)
 
-_attestation_timestamp(statement) := ts if {
-	ts := statement.predicate.timestamp
-	is_string(ts)
-	ts != ""
-}
-
-_test_attestations contains statement if {
-	# Group statements by name first (avoids re-scanning for each attestation)
-	grouped := {name: statements |
-		some name in {_test_name(s) | some s in _all_test_attestations}
-		statements := {s |
-			some s in _all_test_attestations
-			_test_name(s) == name
-		}
-	}
-
-	# For each group, find max timestamp once
-	some name, statements in grouped
-	max_ts := max({_attestation_timestamp(s) | some s in statements})
-
-	# Filter to latest
-	some statement in statements
-	_attestation_timestamp(statement) == max_ts
-}
-
-_test_name(statement) := name if {
-	predicate := object.get(statement, "predicate", {})
-	config := object.get(predicate, "configuration", [])
-	count(config) > 0
-	name := config[0].name
-} else := "unknown test"
+_test_attestations := release_lib.latest_test_attestations(_all_test_attestations)
 
 _count_detail(predicate, key) := result if {
 	n := object.get(predicate, key, 0)
@@ -107,12 +78,12 @@ _has_result(predicate, _, count_key) if {
 warn contains result if {
 	some statement in _test_attestations
 	_has_result(statement.predicate, rule_data.get("failed_test_attestation_results"), "failures")
-	_test_name(statement) in rule_data.get("informative_test_attestations")
+	release_lib.attestation_test_name(statement) in rule_data.get("informative_test_attestations")
 	detail := _count_detail(statement.predicate, "failures")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), detail],
-		_test_name(statement),
+		[release_lib.attestation_test_name(statement), detail],
+		release_lib.attestation_test_name(statement),
 	)
 }
 
@@ -139,8 +110,8 @@ warn contains result if {
 	detail := _count_detail(statement.predicate, "warnings")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), detail],
-		_test_name(statement),
+		[release_lib.attestation_test_name(statement), detail],
+		release_lib.attestation_test_name(statement),
 	)
 }
 
@@ -167,12 +138,12 @@ warn contains result if {
 deny contains result if {
 	some statement in _test_attestations
 	_has_result(statement.predicate, rule_data.get("failed_test_attestation_results"), "failures")
-	not _test_name(statement) in rule_data.get("informative_test_attestations")
+	not release_lib.attestation_test_name(statement) in rule_data.get("informative_test_attestations")
 	detail := _count_detail(statement.predicate, "failures")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), detail],
-		_test_name(statement),
+		[release_lib.attestation_test_name(statement), detail],
+		release_lib.attestation_test_name(statement),
 	)
 }
 
@@ -201,8 +172,8 @@ deny contains result if {
 	not statement.predicate.result in rule_data.get("supported_test_attestation_results")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), statement.predicate.result],
-		_test_name(statement),
+		[release_lib.attestation_test_name(statement), statement.predicate.result],
+		release_lib.attestation_test_name(statement),
 	)
 }
 
@@ -228,8 +199,8 @@ deny contains result if {
 	not statement.predicate.result
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement)],
-		_test_name(statement),
+		[release_lib.attestation_test_name(statement)],
+		release_lib.attestation_test_name(statement),
 	)
 }
 
@@ -258,8 +229,8 @@ deny contains result if {
 	_has_result(statement.predicate, rule_data.get("erred_test_attestation_results"), "n/a")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement)],
-		_test_name(statement),
+		[release_lib.attestation_test_name(statement)],
+		release_lib.attestation_test_name(statement),
 	)
 }
 
@@ -290,8 +261,8 @@ deny contains result if {
 	_has_result(statement.predicate, rule_data.get("skipped_test_attestation_results"), "n/a")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement)],
-		_test_name(statement),
+		[release_lib.attestation_test_name(statement)],
+		release_lib.attestation_test_name(statement),
 	)
 }
 
@@ -322,8 +293,8 @@ deny contains result if {
 	not _subject_matches(statement, img_digest)
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), img_digest],
-		_test_name(statement),
+		[release_lib.attestation_test_name(statement), img_digest],
+		release_lib.attestation_test_name(statement),
 	)
 }
 

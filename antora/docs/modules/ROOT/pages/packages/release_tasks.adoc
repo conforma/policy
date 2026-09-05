@@ -1,6 +1,6 @@
 = Tasks Package
 
-Conforma expects that a set of tasks were included in the pipeline build for each image to be released. This package includes a set of rules to verify that the expected tasks ran in the pipeline when the image was built. Required tasks for a pipeline are specified in a data source provided at runtime. This data source features two primary rule data keys: pipeline-required-tasks and required-tasks. The pipeline-required-tasks key lists all required tasks broken down by pipeline name, while required-tasks details a default or baseline set of tasks. If your pipeline corresponds to an entry under pipeline-required-tasks, those tasks will be prioritized; otherwise, the system will default to the tasks listed under required-tasks. Required tasks are listed by the names given to them within the task definition. Optionally invocation parameter of a Task can be also mandated by including the name and the value in square brackets following the name of the task. For example: name[PARAM=val]. Only single parameter is supported, to assert multiple parameters repeat the required task definition for each parameter seperately. The optional required-test-tasks key uses the same time-gated format and is satisfied by tasks discovered in either the build PipelineRun or trusted ITS PipelineRuns associated with the image. When omitted, test-task enforcement is disabled.
+Conforma expects that a set of tasks were included in the pipeline build for each image to be released. This package includes a set of rules to verify that the expected tasks ran in the pipeline when the image was built. Required tasks for a pipeline are specified in a data source provided at runtime. This data source features two primary rule data keys: pipeline-required-tasks and required-tasks. The pipeline-required-tasks key lists all required tasks broken down by pipeline name, while required-tasks details a default or baseline set of tasks. If your pipeline corresponds to an entry under pipeline-required-tasks, those tasks will be prioritized; otherwise, the system will default to the tasks listed under required-tasks. Required tasks are listed by the names given to them within the task definition. Optionally invocation parameter of a Task can be also mandated by including the name and the value in square brackets following the name of the task. For example: name[PARAM=val]. Only single parameter is supported, to assert multiple parameters repeat the required task definition for each parameter seperately. The optional required-test-tasks key uses the same time-gated format and is satisfied by tasks discovered in either the build PipelineRun or the latest signature-verified ITS PipelineRun for each integration test associated with the image. When omitted, test-task enforcement is disabled.
 
 == Package Name
 
@@ -18,7 +18,7 @@ Ensure that the all required tasks are resolved from trusted tasks.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s is required and present but not from a trusted task`
 * Code: `tasks.required_untrusted_task_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L241[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L287[Source, window="_blank"]
 
 [#tasks__required_tasks_found]
 === link:#tasks__required_tasks_found[All required tasks were included in the pipeline]
@@ -30,12 +30,25 @@ Ensure that the set of required tasks are included in the PipelineRun attestatio
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s is missing`
 * Code: `tasks.required_tasks_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L184[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L197[Source, window="_blank"]
+
+[#tasks__required_untrusted_test_task_found]
+=== link:#tasks__required_untrusted_test_task_found[All required test tasks are from trusted tasks]
+
+Ensure that every required test task found in a build or latest applicable ITS PipelineRun has a trusted execution path. For an ITS PipelineRun, every applicable Task represented in its SLSA provenance must be trusted.
+
+*Solution*: Ensure the required test task runs in a PipelineRun whose applicable Tasks all satisfy the configured trusted task rules.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s is required and present, but PipelineTask %q (Task %q) in its provenance is untrusted`
+* Code: `tasks.required_untrusted_test_task_found`
+* Effective from: `2026-10-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L255[Source, window="_blank"]
 
 [#tasks__required_test_tasks_found]
 === link:#tasks__required_test_tasks_found[All required test tasks were included in a pipeline]
 
-Ensure that every currently required test task is included in either the build PipelineRun or a trusted ITS PipelineRun associated with the image.
+Ensure that every currently required test task is included in either the build PipelineRun or the latest signature-verified ITS PipelineRun for an integration test associated with the image.
 
 *Solution*: Ensure the required test task runs in either the build pipeline or an Integration Test Service pipeline associated with the image.
 
@@ -43,7 +56,7 @@ Ensure that every currently required test task is included in either the build P
 * FAILURE message: `%s is missing`
 * Code: `tasks.required_test_tasks_found`
 * Effective from: `2026-10-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L213[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L226[Source, window="_blank"]
 
 [#tasks__data_provided]
 === link:#tasks__data_provided[Data provided]
@@ -55,7 +68,7 @@ Confirm the expected data keys have been provided in the expected format. The ke
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `tasks.data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L372[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L418[Source, window="_blank"]
 
 [#tasks__future_required_tasks_found]
 === link:#tasks__future_required_tasks_found[Future required tasks were found]
@@ -67,12 +80,12 @@ Produce a warning when a task that will be required in the future was not includ
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `%s is missing and will be required on %s`
 * Code: `tasks.future_required_tasks_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L66[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L78[Source, window="_blank"]
 
 [#tasks__future_required_test_tasks_found]
 === link:#tasks__future_required_test_tasks_found[Future required test tasks were found]
 
-Produce a warning when a test task that will be required in the future was not included in either the build or ITS PipelineRun attestations.
+Produce a warning when a test task that will be required in the future was not included in either the build or latest applicable ITS PipelineRun attestations.
 
 *Solution*: Ensure the test task runs in either the build pipeline or an Integration Test Service pipeline associated with the image.
 
@@ -80,7 +93,7 @@ Produce a warning when a test task that will be required in the future was not i
 * WARNING message: `%s is missing and will be required on %s`
 * Code: `tasks.future_required_test_tasks_found`
 * Effective from: `2026-10-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L96[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L108[Source, window="_blank"]
 
 [#tasks__pinned_task_refs]
 === link:#tasks__pinned_task_refs[Pinned Task references]
@@ -92,7 +105,7 @@ Ensure that all Tasks in the SLSA Provenance attestation use an immuntable refer
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task %s is used by pipeline task %s via an unpinned reference.`
 * Code: `tasks.pinned_task_refs`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L304[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L350[Source, window="_blank"]
 
 [#tasks__pipeline_has_tasks]
 === link:#tasks__pipeline_has_tasks[Pipeline run includes at least one task]
@@ -104,7 +117,7 @@ Ensure that at least one Task is present in the PipelineRun attestation.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `No tasks found in PipelineRun attestation`
 * Code: `tasks.pipeline_has_tasks`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L127[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L140[Source, window="_blank"]
 
 [#tasks__pipeline_required_tasks_list_provided]
 === link:#tasks__pipeline_required_tasks_list_provided[Required tasks list for pipeline was provided]
@@ -116,7 +129,7 @@ Produce a warning if the required tasks list rule data was not provided.
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Required tasks do not exist for pipeline`
 * Code: `tasks.pipeline_required_tasks_list_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L44[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L56[Source, window="_blank"]
 
 [#tasks__required_tasks_list_provided]
 === link:#tasks__required_tasks_list_provided[Required tasks list was provided]
@@ -128,7 +141,7 @@ Confirm the `required-tasks` rule data was provided, since it's required by the 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Missing required required-tasks data`
 * Code: `tasks.required_tasks_list_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L279[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L325[Source, window="_blank"]
 
 [#tasks__successful_pipeline_tasks]
 === link:#tasks__successful_pipeline_tasks[Successful pipeline tasks]
@@ -140,7 +153,7 @@ Ensure that all of the Tasks in the Pipeline completed successfully. Note that s
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Pipeline task %q did not complete successfully, %q`
 * Code: `tasks.successful_pipeline_tasks`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L153[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L166[Source, window="_blank"]
 
 [#tasks__unsupported]
 === link:#tasks__unsupported[Task version unsupported]
@@ -150,4 +163,4 @@ The Tekton Task used is or will be unsupported. The Task is annotated with `buil
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Task %q is used by pipeline task %q is or will be unsupported as of %s. %s`
 * Code: `tasks.unsupported`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L332[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/tasks/tasks.rego#L378[Source, window="_blank"]

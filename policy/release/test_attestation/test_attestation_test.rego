@@ -267,7 +267,7 @@ _mock_blob_custom_config(_) := _make_statement({
 	"failures": 1,
 })
 
-# Test Case 10: empty configuration (fallback to "unknown test")
+# Test Case 10: missing configuration
 _mock_blob_no_config(_) := _make_statement({
 	"result": "FAILED",
 	"failures": 1,
@@ -468,10 +468,10 @@ test_test_name_from_configuration if {
 	contains(r.msg, "\"my-custom-test\"")
 }
 
-# --- Test Case 10: Empty configuration falls back to "unknown test" ---
+# --- Test Case 10: Missing configuration is excluded from result evaluation ---
 
-test_test_name_fallback if {
-	results := test_attestation.deny with input.image.ref as _image_ref
+test_missing_configuration_is_excluded_from_result_evaluation if {
+	assertions.assert_empty(test_attestation.deny) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_no_config
@@ -479,9 +479,6 @@ test_test_name_fallback if {
 		with ec.oci.image_manifests as _mock_manifests
 		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
-
-	some r in results
-	contains(r.msg, "\"unknown test\"")
 }
 
 # --- Test Case 11: WARNED + FAILED coexistence ---
@@ -577,8 +574,8 @@ _mock_blob_missing_predicate(_) := json.marshal({
 	"predicate": {"timestamp": _default_timestamp},
 })
 
-test_missing_predicate if {
-	results := test_attestation.deny with input.image.ref as _image_ref
+test_missing_result_and_configuration_is_excluded_from_result_evaluation if {
+	assertions.assert_empty(test_attestation.deny) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_missing_predicate
@@ -586,11 +583,6 @@ test_missing_predicate if {
 		with ec.oci.image_manifests as _mock_manifests
 		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
-
-	count(results) == 1
-	some r in results
-	r.code == "test_attestation.test_data_found"
-	contains(r.msg, "unknown test")
 }
 
 # --- Test Case 15: Non-array failedTests value (is_array guard) ---

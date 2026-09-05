@@ -41,10 +41,13 @@ The policy rules receive inputs from two sources:
 The rules generally do not perform signature or attestation verification
 themselves. The CLI handles that before evaluation, and the rules assume
 `input.attestations` contains already-verified (or explicitly skip-verified)
-statements. The one exception is the `test_attestation` package, which uses
-`lib/intoto`'s `verified_statements` path to perform its own
-sigstore+trusted-task chain-of-trust check on in-toto referrers (see section
-3.1).
+statements. The `test` and `test_attestation` packages instead use
+`lib/intoto`'s `verified_statements` path to perform their own
+sigstore+trusted-task chain-of-trust checks on in-toto referrers. The `tasks`
+package also uses `lib/intoto` to discover signature-verified test-result
+provenance, select the latest PipelineRun for each integration test by
+`configuration[0].name` and `timestamp`, and then enforce task trust (see
+section 3.1).
 
 ### Evaluation contexts
 
@@ -101,11 +104,14 @@ timestamp.
 
 **Trust boundary**: The rules treat `input.attestations` as pre-verified by
 the CLI. If the CLI's `--skip-att-sig-check` flag is used, unverified
-attestation content flows into ALL rules. The rules have no independent way to
-distinguish verified from unverified statements. Only the `test_attestation`
-package uses the `verified_statements` path through `lib/intoto` (which
-performs its own sigstore+trusted-task chain-of-trust check); all other
-packages consume `input.attestations` directly.
+attestation content flows into all rules that consume it. The `test` and
+`test_attestation` packages use the independently verified `verified_statements`
+path through `lib/intoto`. The `tasks` package uses both that trusted view and
+the signature-verified `associated_statement_provenances` view to discover and
+report test-task trust failures. Retry selection happens before task trust so an
+older trusted run cannot mask an untrusted latest retry, and an older untrusted
+run does not invalidate a trusted latest retry. Other packages consume
+`input.attestations` directly.
 
 See CLI threat model CA-3 for the CLI-side controls on signature skip flags.
 
@@ -323,9 +329,10 @@ developer. See CLI threat model IV-4 for the Snapshot trust model.
    `checks/annotations.rego` validates annotation format, but a rule missing
    the collection annotation entirely would not be caught.
 
-5. **In-toto referrer trust**: the `lib/intoto/trust.rego` discovers in-toto
-   statements via `ec.oci.image_referrers` and verifies provenance via
-   sigstore+trusted-task checks. Can an attacker attach additional referrers
+5. **In-toto referrer trust**: `lib/intoto/trust.rego` discovers in-toto
+   statements via `ec.oci.image_referrers`. It first verifies provenance with
+   Sigstore, then exposes both the signature-verified associations and a view
+   filtered by trusted-task checks. Can an attacker attach additional referrers
    to their image that inject fabricated statements? Does the CLI's attestation
    verification cover referrer-discovered statements, or only
    `input.attestations`?

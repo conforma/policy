@@ -16,6 +16,19 @@ instead of `signatures`. These types are declared in ec-cli at
 `internal/rego/sigstore/sigstore.go` using OPA's `types.NewObject` — they are
 not visible from the ec-policies repo.
 
+## Where does attestation verification stop and policy trust begin?
+
+`ec.sigstore.verify_attestation` verifies the Sigstore signature, applies
+Cosign's in-toto subject claim verifier to the requested OCI reference, and
+returns the parsed attestations. It does not evaluate policy rule data such as
+`trusted_task_rules`; that belongs to the Rego layer.
+
+Policy code must gate on `success` before inspecting an attestation's contents.
+When a policy needs to explain task-trust failures, retain a view of the
+successfully verified attestations before applying task trust, then derive the
+fully trusted view from it. Failed verification results must not enter task
+evaluation merely to improve diagnostics.
+
 ## Why can't I use count() or direct field access on the result?
 
 The built-in declares `errors` as `types.NewArray([]types.Type{types.S}, nil)` —

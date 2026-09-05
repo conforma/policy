@@ -22,9 +22,9 @@
 #   Only single parameter is supported, to assert multiple parameters repeat the
 #   required task definition for each parameter seperately.
 #   The optional required-test-tasks key uses the same time-gated format and is
-#   satisfied by tasks discovered in either the build PipelineRun or trusted ITS
-#   PipelineRuns associated with the image. When omitted, test-task enforcement
-#   is disabled.
+#   satisfied by tasks discovered in either the build PipelineRun or the latest
+#   signature-verified ITS PipelineRun for each integration test associated with
+#   the image. When omitted, test-task enforcement is disabled.
 #
 #
 package tasks
@@ -40,6 +40,18 @@ import data.lib.time as ectime
 
 # Batch fetch all manifests for tasks in the pipelineRun attestation
 _manifests := ec.oci.image_manifests(lib.pipelinerun_bundle_refs)
+
+# Batch fetch manifests for tasks in the latest signature-verified ITS
+# PipelineRun for each integration test before task trust is applied. Bundleless
+# tasks are intentionally omitted from the fetch and fail closed in the Tekton
+# trust helpers.
+_associated_its_bundle_refs contains ref if {
+	some task in lib.tasks_from_associated_its_pipelineruns
+	ref := tekton.task_ref(task).bundle
+	ref != ""
+}
+
+_associated_its_manifests := ec.oci.image_manifests(_associated_its_bundle_refs)
 
 # METADATA
 # title: Required tasks list for pipeline was provided
@@ -97,7 +109,8 @@ warn contains result if {
 # title: Future required test tasks were found
 # description: >-
 #   Produce a warning when a test task that will be required in the future
-#   was not included in either the build or ITS PipelineRun attestations.
+#   was not included in either the build or latest applicable ITS PipelineRun
+#   attestations.
 # custom:
 #   short_name: future_required_test_tasks_found
 #   failure_msg: '%s is missing and will be required on %s'
@@ -214,7 +227,8 @@ deny contains result if {
 # title: All required test tasks were included in a pipeline
 # description: >-
 #   Ensure that every currently required test task is included in either the
-#   build PipelineRun or a trusted ITS PipelineRun associated with the image.
+#   build PipelineRun or the latest signature-verified ITS PipelineRun for an
+#   integration test associated with the image.
 # custom:
 #   short_name: required_test_tasks_found
 #   failure_msg: '%s is missing'
@@ -235,6 +249,38 @@ deny contains result if {
 		rego.metadata.chain(),
 		[_format_missing(required_task, false)],
 		required_task,
+	)
+}
+
+# METADATA
+# title: All required test tasks are from trusted tasks
+# description: >-
+#   Ensure that every required test task found in a build or latest applicable
+#   ITS PipelineRun has a trusted execution path. For an ITS PipelineRun, every
+#   applicable Task represented in its SLSA provenance must be trusted.
+# custom:
+#   short_name: required_untrusted_test_task_found
+#   failure_msg: '%s is required and present, but PipelineTask %q (Task %q) in its provenance is untrusted'
+#   solution: >-
+#     Ensure the required test task runs in a PipelineRun whose applicable Tasks
+#     all satisfy the configured trusted task rules.
+#   collections:
+#   - redhat
+#   - redhat_security
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#   effective_on: 2026-10-01T00:00:00Z
+#
+deny contains result if {
+	some error in _required_test_task_trust_errors
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[
+			_format_missing(error.required, false),
+			error.pipeline_task,
+			error.task,
+		],
+		error.task,
 	)
 }
 
@@ -408,10 +454,47 @@ _missing_tasks(required_tasks) := {task |
 }
 
 # _missing_test_tasks compares required test-task entries with every normalized
-# task name discovered from the build and trusted ITS PipelineRuns.
+# task name discovered from the build and latest signature-verified ITS runs.
 _missing_test_tasks(required_tasks) := {task |
 	some required_task in required_tasks
 	some task in _any_missing(required_task, lib.discovered_task_names)
+}
+
+_required_test_task_trust_errors contains error if {
+	some required in current_required_test_tasks.tasks
+	some untrusted_task in _untrusted_tasks_for_required(required)
+
+	error := {
+		"required": required,
+		"pipeline_task": tekton.pipeline_task_name(untrusted_task),
+		"task": tekton.task_name(untrusted_task),
+	}
+}
+
+# For a build PipelineRun, only an untrusted task matching the requirement is
+# relevant. For an ITS PipelineRun containing the requirement, every untrusted
+# task in that provenance is relevant.
+_untrusted_tasks_for_required(required) := build_tasks | its_tasks if {
+	build_tasks := {task |
+		some task in tekton.untrusted_task_refs(lib.tasks_from_pipelinerun, _manifests)
+		_task_matches_required(task, required)
+	}
+	its_tasks := {task |
+		some attestation in lib.associated_its_pipelinerun_attestations
+		_attestation_contains_required_test_task(attestation, required)
+		some task in tekton.untrusted_task_refs(tekton.tasks(attestation), _associated_its_manifests)
+	}
+}
+
+_attestation_contains_required_test_task(attestation, required) if {
+	some task in tekton.tasks(attestation)
+	_task_matches_required(task, required)
+}
+
+_task_matches_required(task, required) if {
+	required_names := flatten_list_to_sorted_array([required])
+	some task_name in tekton.task_names(task)
+	task_name in required_names
 }
 
 _any_missing(required, tasks) := missing if {

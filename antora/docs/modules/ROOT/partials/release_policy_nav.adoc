@@ -169,6 +169,7 @@
 *** xref:packages/release_tasks.adoc[Tasks]
 **** xref:packages/release_tasks.adoc#tasks__required_untrusted_task_found[All required tasks are from trusted tasks]
 **** xref:packages/release_tasks.adoc#tasks__required_tasks_found[All required tasks were included in the pipeline]
+**** xref:packages/release_tasks.adoc#tasks__required_untrusted_test_task_found[All required test tasks are from trusted tasks]
 **** xref:packages/release_tasks.adoc#tasks__required_test_tasks_found[All required test tasks were included in a pipeline]
 **** xref:packages/release_tasks.adoc#tasks__data_provided[Data provided]
 **** xref:packages/release_tasks.adoc#tasks__future_required_tasks_found[Future required tasks were found]

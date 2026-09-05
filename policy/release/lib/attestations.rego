@@ -159,30 +159,59 @@ tasks_from_attestations(attestations) := [task |
 
 tasks_from_pipelinerun := tasks_from_attestations(pipelinerun_attestations)
 
-# PipelineRun provenance produced by the Integration Test Service (ITS) for
-# verified test-result statements attached to the image being evaluated.
+# Signature-verified ITS PipelineRun associations before retry selection or
+# Tekton task trust is applied.
+_all_associated_its_pipelineruns contains associated if {
+	some associated in intoto.associated_statement_provenances_by_predicate(intoto.predicate_test_result)
+	_statement_subject_matches_image(associated.statement)
+	is_pipelinerun_attestation(associated.provenance)
+}
+
+# Keep only PipelineRun associations whose test-result statement was selected
+# by the shared latest-per-integration-test helper.
+_latest_associated_its_pipelineruns contains associated if {
+	statements := {candidate.statement | some candidate in _all_associated_its_pipelineruns}
+	latest_statements := latest_test_attestations(statements)
+	some associated in _all_associated_its_pipelineruns
+	associated.statement in latest_statements
+}
+
+# PipelineRun provenance produced by ITS for the latest test-result statement
+# of each integration test, after task trust is applied.
 its_pipelinerun_attestations contains provenance if {
-	# This predicate filter returns complete {statement, provenance} records;
-	# verified.provenance is the full SLSA PipelineRun attestation, not the predicate.
-	some verified in intoto.verified_statement_provenances_by_predicate(intoto.predicate_test_result)
-	_statement_subject_matches_image(verified.statement)
-	is_pipelinerun_attestation(verified.provenance)
-	provenance := verified.provenance
+	some associated in _latest_associated_its_pipelineruns
+	associated in intoto.verified_statement_provenances
+	provenance := associated.provenance
 }
 
 tasks_from_its_pipelineruns := tasks_from_attestations(its_pipelinerun_attestations)
+
+# Latest ITS PipelineRun provenance whose signature and statement subject were
+# verified, before Tekton task trust is applied. This view distinguishes a
+# missing required test task from one that ran in an untrusted latest retry.
+associated_its_pipelinerun_attestations contains provenance if {
+	some associated in _latest_associated_its_pipelineruns
+	provenance := associated.provenance
+}
+
+tasks_from_associated_its_pipelineruns := tasks_from_attestations(associated_its_pipelinerun_attestations)
 
 task_names_from_tasks(tasks) := {name |
 	some task in tasks
 	some name in tekton.task_names(task)
 }
 
-# All normalized task names discovered across build and ITS PipelineRuns.
+# All normalized task names discovered across the build and latest ITS runs.
 build_pipelinerun_task_names := task_names_from_tasks(tasks_from_pipelinerun)
 
 its_pipelinerun_task_names := task_names_from_tasks(tasks_from_its_pipelineruns)
 
-discovered_task_names := build_pipelinerun_task_names | its_pipelinerun_task_names
+associated_its_pipelinerun_task_names := task_names_from_tasks(tasks_from_associated_its_pipelineruns)
+
+# Presence discovery includes each integration test's latest signature-verified
+# ITS PipelineRun before task trust. The tasks policy separately rejects required
+# test tasks whose execution did not pass task-trust validation.
+discovered_task_names := build_pipelinerun_task_names | associated_its_pipelinerun_task_names
 
 _statement_subject_matches_image(statement) if {
 	some subject in object.get(statement, "subject", [])
