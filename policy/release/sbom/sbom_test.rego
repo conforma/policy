@@ -9,6 +9,7 @@ import data.sbom
 test_not_found if {
 	expected := {{"code": "sbom.found", "msg": "No SBOM attestations found"}}
 	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as []
+		with lib.sbom._verified_sbom_attestations as []
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
@@ -40,6 +41,7 @@ test_not_found_image_index if {
 	}}
 
 	assertions.assert_empty(sbom.deny) with input.attestations as [att]
+		with lib.sbom._verified_sbom_attestations as [att]
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with input.image.ref as "registry.local/ham@sha256:fff0000000000000000000000000000000000000000000000000000000000fff"
@@ -288,16 +290,19 @@ test_rule_data_validation if {
 	}
 
 	assertions.assert_equal_results(sbom.deny, expected) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d
 
 	# rule data keys are optional
 	assertions.assert_empty(sbom.deny) with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as {}
 	assertions.assert_empty(sbom.deny) with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as {
 			lib.sbom.rule_data_packages_key: [],
 			lib.sbom.rule_data_attributes_key: [],
@@ -308,6 +313,7 @@ test_rule_data_validation if {
 	assertions.assert_empty(sbom.deny) with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as {lib.sbom.rule_data_attributes_key: [{
 			"name": "hermeto:pip:package:binary",
 			"value": "true",
@@ -318,6 +324,7 @@ test_rule_data_validation if {
 test_proxy_rule_data_validation if {
 	# Valid data - no errors
 	assertions.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as {
 			"proxy_enabled_purl_types": ["maven", "npm"],
 			"allowed_proxy_url_patterns": {"maven": ["^https://proxy\\.example\\.com/.*"]},
@@ -343,6 +350,7 @@ test_proxy_rule_data_validation if {
 		},
 	}
 	assertions.assert_equal_results(expected_bad_purl_types, sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d_bad_purl_types
 
 	# Invalid allowed_proxy_url_patterns: wrong value type
@@ -357,6 +365,7 @@ test_proxy_rule_data_validation if {
 		"severity": "failure",
 	}}
 	assertions.assert_equal_results(expected_bad_patterns, sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d_bad_patterns
 
 	# Invalid regex in allowed_proxy_url_patterns
@@ -378,12 +387,14 @@ test_proxy_rule_data_validation if {
 		},
 	}
 	assertions.assert_equal_results(expected_bad_regex, sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d_bad_regex
 }
 
 test_vendored_purl_types_rule_data_validation if {
 	# Valid data - no errors
 	assertions.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as {"vendored_purl_types": ["golang", "cargo"]}
 
 	# Invalid vendored_purl_types: wrong type and duplicate
@@ -403,6 +414,7 @@ test_vendored_purl_types_rule_data_validation if {
 		},
 	}
 	assertions.assert_equal_results(expected_bad, sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d_bad
 }
 
@@ -434,6 +446,7 @@ test_anchoring_warnings_external_references if {
 	}
 
 	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d
 }
 
@@ -447,6 +460,7 @@ test_no_anchoring_warning_for_empty_or_absent_url if {
 	# Empty or absent URL should not trigger anchoring warning
 	warnings := {e | some e in sbom.deny; e.severity == "warning"; contains(e.msg, "anchored")}
 	assertions.assert_empty(warnings) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d
 }
 
@@ -464,6 +478,7 @@ test_anchoring_warnings_package_sources if {
 	}}
 
 	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d
 }
 
@@ -481,6 +496,7 @@ test_anchoring_warnings_proxy_url_patterns if {
 	}}
 
 	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d
 }
 
@@ -499,6 +515,7 @@ test_anchoring_warnings_except_when if {
 	}}
 
 	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d
 }
 
@@ -516,6 +533,7 @@ test_no_anchoring_warnings_when_anchored if {
 	}
 
 	assertions.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d
 }
 
@@ -535,9 +553,11 @@ test_sbom_signature_verification_warn if {
 		"msg": "SBOM referrer signature verification failed for registry.io/repo/img@sha256:a1b2c3d400000000000000000000000000000000000000000000000a1b2c3d4: verification failed",
 	}}
 	assertions.assert_equal_results(expected, sbom.warn) with input.attestations as []
+		with lib.sbom._verified_sbom_attestations as []
 		with input.image.ref as "registry.io/repo/img@sha256:abc123"
 		with ec.oci.image_referrers as mock_referrers
 		with ec.oci.image_tag_refs as []
+		with ec.sigstore.verify_attestation as _mock_verify_attestation_success
 		with ec.sigstore.verify_image as _mock_verify_image_failure
 		with data.rule_data__configuration__ as {"signing_identities": {"sbom": {"public_key": "test-key", "ignore_rekor": true}}}
 }
@@ -553,19 +573,40 @@ test_sbom_signature_verification_no_warn_on_success if {
 		"ref": "registry.io/repo/img@sha256:a1b2c3d400000000000000000000000000000000000000000000000a1b2c3d4",
 	}]
 	assertions.assert_empty(sbom.warn) with input.attestations as []
+		with lib.sbom._verified_sbom_attestations as []
 		with input.image.ref as "registry.io/repo/img@sha256:abc123"
 		with ec.oci.image_referrers as mock_referrers
 		with ec.oci.image_tag_refs as []
+		with ec.sigstore.verify_attestation as _mock_verify_attestation_success
 		with ec.sigstore.verify_image as _mock_verify_image_success
 		with data.rule_data__configuration__ as {"signing_identities": {"sbom": {"public_key": "test-key", "ignore_rekor": true}}}
 }
 
 test_sbom_signature_verification_no_warn_without_identity if {
 	assertions.assert_empty(sbom.warn) with input.attestations as []
+		with lib.sbom._verified_sbom_attestations as []
 		with input.image.ref as "registry.io/repo/img@sha256:abc123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 }
+
+test_sbom_attestation_signature_verification_warn if {
+	expected := {{
+		"code": "sbom.signature_verification",
+		"msg": "SBOM attestation signature verification failed for registry.io/repo/img@sha256:abc123: verification failed",
+	}}
+	assertions.assert_equal_results(expected, sbom.warn) with input.attestations as []
+		with lib.sbom._verified_sbom_attestations as []
+		with input.image.ref as "registry.io/repo/img@sha256:abc123"
+		with ec.oci.image_referrers as []
+		with ec.oci.image_tag_refs as []
+		with ec.sigstore.verify_attestation as _mock_verify_attestation_failure
+		with data.rule_data__configuration__ as {"signing_identities": {"sbom": {"public_key": "test-key", "ignore_rekor": true}}}
+}
+
+_mock_verify_attestation_success(_, _) := {"success": true, "errors": [], "attestations": []}
+
+_mock_verify_attestation_failure(_, _) := {"success": false, "errors": ["verification failed"], "attestations": []}
 
 _mock_verify_image_success(_, _) := {"errors": []}
 

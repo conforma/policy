@@ -9,7 +9,8 @@ Feature: SBOM proxy rules
                     {
                         "policy": [
                             "$GITROOT/policy/lib",
-                            "$GITROOT/policy/release"
+                            "$GITROOT/policy/release",
+                            "$GITROOT/acceptance/policy/sbom_proxy"
                         ],
                         "data": [
                             "$GITROOT/acceptance/testdata/proxy-rules"
@@ -38,7 +39,8 @@ Feature: SBOM proxy rules
                     {
                         "policy": [
                             "$GITROOT/policy/lib",
-                            "$GITROOT/policy/release"
+                            "$GITROOT/policy/release",
+                            "$GITROOT/acceptance/policy/sbom_proxy"
                         ],
                         "data": [
                             "$GITROOT/acceptance/testdata/proxy-rules-npm-only"
@@ -65,7 +67,8 @@ Feature: SBOM proxy rules
                     {
                         "policy": [
                             "$GITROOT/policy/lib",
-                            "$GITROOT/policy/release"
+                            "$GITROOT/policy/release",
+                            "$GITROOT/acceptance/policy/sbom_proxy"
                         ],
                         "data": [
                             "$GITROOT/acceptance/testdata/proxy-rules"
@@ -94,7 +97,8 @@ Feature: SBOM proxy rules
                     {
                         "policy": [
                             "$GITROOT/policy/lib",
-                            "$GITROOT/policy/release"
+                            "$GITROOT/policy/release",
+                            "$GITROOT/acceptance/policy/sbom_proxy"
                         ],
                         "data": [
                             "$GITROOT/acceptance/testdata/proxy-rules"
@@ -122,7 +126,8 @@ Feature: SBOM proxy rules
                     {
                         "policy": [
                             "$GITROOT/policy/lib",
-                            "$GITROOT/policy/release"
+                            "$GITROOT/policy/release",
+                            "$GITROOT/acceptance/policy/sbom_proxy"
                         ],
                         "data": [
                             "$GITROOT/acceptance/testdata/proxy-rules"
@@ -151,7 +156,8 @@ Feature: SBOM proxy rules
                     {
                         "policy": [
                             "$GITROOT/policy/lib",
-                            "$GITROOT/policy/release"
+                            "$GITROOT/policy/release",
+                            "$GITROOT/acceptance/policy/sbom_proxy"
                         ],
                         "data": [
                             "$GITROOT/acceptance/testdata/proxy-rules-npm-only"
@@ -178,7 +184,8 @@ Feature: SBOM proxy rules
                     {
                         "policy": [
                             "$GITROOT/policy/lib",
-                            "$GITROOT/policy/release"
+                            "$GITROOT/policy/release",
+                            "$GITROOT/acceptance/policy/sbom_proxy"
                         ],
                         "data": [
                             "$GITROOT/acceptance/testdata/proxy-rules"
@@ -207,7 +214,8 @@ Feature: SBOM proxy rules
                     {
                         "policy": [
                             "$GITROOT/policy/lib",
-                            "$GITROOT/policy/release"
+                            "$GITROOT/policy/release",
+                            "$GITROOT/acceptance/policy/sbom_proxy"
                         ],
                         "data": [
                             "$GITROOT/acceptance/testdata/proxy-rules"

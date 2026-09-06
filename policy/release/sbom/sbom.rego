@@ -58,9 +58,9 @@ deny contains result if {
 # METADATA
 # title: SBOM signature verification failed
 # description: >-
-#   Report when signature verification fails for SBOMs discovered via OCI
-#   referrers or image-tag refs. The SBOM is excluded (fail-closed), but
-#   the user should know why.
+#   Report when signature verification fails for attached SBOM attestations or
+#   SBOMs discovered via OCI referrers or image-tag refs. The SBOM is excluded
+#   (fail-closed), but the user should know why.
 # custom:
 #   short_name: signature_verification
 #   failure_msg: "%s"
