@@ -39,7 +39,7 @@ jobs:
       id-token: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
         with:
           egress-policy: audit
           disable-telemetry: true
@@ -74,7 +74,7 @@ jobs:
       #   run: ./hack/validate-acceptable-bundles.sh
 
       - name: Upload test coverage report
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        uses: codecov/codecov-action@0fb7174895f61a3b6b78fc075e0cd60383518dac # v5.5.5
         if: always()
         with:
           use_oidc: true
