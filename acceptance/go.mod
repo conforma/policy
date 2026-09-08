@@ -3,8 +3,8 @@ module github.com/conforma/policy/acceptance
 go 1.23.6
 
 require (
-	github.com/conforma/cli v0.7.95
-	github.com/cucumber/godog v0.13.0
+	github.com/conforma/cli v0.10.3
+	github.com/cucumber/godog v0.16.0
 )
 
 require (
