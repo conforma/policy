@@ -1,9 +1,8 @@
 # METADATA
 # description: |
 #   Prefer oci.parsed_blob(ref) over json.unmarshal(ec.oci.blob(ref)).
-#   The parsed_blob wrapper centralizes blob parsing and will use a cached
-#   builtin (ec.oci.parsed_blob) once available, avoiding redundant
-#   json.unmarshal calls across policy namespace evaluations.
+#   The parsed_blob wrapper uses the ec.oci.parsed_blob builtin which
+#   caches parsed JSON across policy namespace evaluations.
 # related_resources:
 #   - description: EC-1836
 #     ref: https://redhat.atlassian.net/browse/EC-1836
