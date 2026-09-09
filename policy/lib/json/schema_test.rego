@@ -34,7 +34,7 @@ test_validate_args if {
 	)
 	assertions.assert_equal(
 		[{
-			"message": "Provided schema is not a valid JSON Schema: jsonschema: wrong type, expected string or object",
+			"message": "Provided schema is not a valid JSON Schema: jsonschema: schema is invalid",
 			"severity": "failure",
 		}],
 		j.validate_schema({}, ["something"]),
