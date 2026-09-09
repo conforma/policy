@@ -109,7 +109,7 @@ warn contains result if {
 #   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
-#   effective_on: 2026-10-01T00:00:00Z
+#   effective_on: 2027-01-16T00:00:00Z
 #
 warn contains result if {
 	some required_task in _missing_test_tasks(latest_required_test_tasks.tasks)
@@ -226,7 +226,7 @@ deny contains result if {
 #   - redhat_security
 #   depends_on:
 #   - attestation_type.known_attestation_type
-#   effective_on: 2026-10-01T00:00:00Z
+#   effective_on: 2027-01-15T00:00:00Z
 #
 deny contains result if {
 	some required_task in _missing_test_tasks(current_required_test_tasks.tasks)

@@ -262,7 +262,7 @@ test_required_test_task_missing if {
 
 	assertions.assert_equal_results(expected, matching_denies)
 	some result in matching_denies
-	result.effective_on == "2026-10-01T00:00:00Z"
+	result.effective_on == "2027-01-15T00:00:00Z"
 }
 
 test_future_required_test_task_missing if {
@@ -279,7 +279,7 @@ test_future_required_test_task_missing if {
 
 	assertions.assert_equal_results(expected, matching_warns)
 	some result in matching_warns
-	result.effective_on == "2026-10-01T00:00:00Z"
+	result.effective_on == "2027-01-16T00:00:00Z"
 }
 
 test_current_required_test_task_is_not_also_future_warning if {

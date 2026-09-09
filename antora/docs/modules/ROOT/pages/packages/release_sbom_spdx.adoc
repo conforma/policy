@@ -131,7 +131,7 @@ Registry dependencies with a PURL type listed in vendored_purl_types must be pro
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Package %s has PURL type %q which requires Hermeto attribution but was not processed by Hermeto`
 * Code: `sbom_spdx.hermeto_attribution_required`
-* Effective from: `2026-10-01T00:00:00Z`
+* Effective from: `2027-01-15T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom_spdx/sbom_spdx.rego#L408[Source, window="_blank"]
 
 [#sbom_spdx__matches_image]
