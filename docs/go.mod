@@ -1,6 +1,6 @@
 module github.com/conforma/policy/docs
 
-go 1.24.6
+go 1.26.7
 
 toolchain go1.27.1
 
