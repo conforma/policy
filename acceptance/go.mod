@@ -1,6 +1,6 @@
 module github.com/conforma/policy/acceptance
 
-go 1.25.3
+go 1.26.7
 
 toolchain go1.27.1
 
