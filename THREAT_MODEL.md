@@ -132,7 +132,7 @@ can contribute to.
 
 | Key | Effect if weakened |
 |-----|---------------------|
-| `trusted_tasks` / `trusted_task_rules` | Malicious task bundles treated as trusted |
+| `trusted_tasks` / `trusted_task_rules` | Malicious task bundles treated as trusted (both flow exclusively through `rule_data`) |
 | `allowed_registry_prefixes` | Base images from untrusted registries permitted |
 | `allowed_builder_ids` | Builds from non-Tekton builders accepted |
 | `restrict_cve_security_levels` | CVE blocking thresholds raised |
@@ -142,11 +142,11 @@ can contribute to.
 | `pipeline_run_params` | Expected build parameters relaxed |
 | `pipeline_intention` | Operational mode of certain rules changed |
 
-### 3.3 Trusted task data (`data.trusted_tasks`, `data.trusted_task_rules`)
+### 3.3 Trusted task data
 
-**Source**: OCI data bundles maintained by release engineering (e.g.,
-`quay.io/konflux-ci/tekton-catalog/data-acceptable-bundles`), merged with
-ruleData-provided `trusted_tasks` / `trusted_task_rules`.
+**Source**: `trusted_tasks` and `trusted_task_rules` flow exclusively through
+`lib_rule_data` (see section 3.2 for the 4-level precedence cascade). There is
+no separate direct `data.*` input path for trusted task configuration.
 
 **What the rules do**: `lib/tekton/trusted.rego` implements two systems.
 The **rules system** (preferred) uses pattern-based allow/deny rules with glob
@@ -154,12 +154,13 @@ matching, semver version constraints, and `effective_on` dates. The **legacy
 system** (being phased out) is a pure allowlist with expiry dates. The rules
 system takes priority when data is present.
 
-**Trust boundary**: The merge is additive. `_trusted_task_rules_data`
-concatenates system-level rules (`data.trusted_task_rules`) with ruleData-level
-rules (`rule_data.get("trusted_task_rules")`). An attacker who can add entries
-to the ruleData-level data can expand the set of trusted tasks without
-modifying the system-level data source. For allow rules, ALL version
-constraints must be satisfied; for deny rules, ANY constraint suffices.
+**Trust boundary**: `_trusted_task_rules_data` reads `trusted_task_rules`
+via `lib_rule_data("trusted_task_rules")`, which resolves through the standard
+rule data precedence cascade (ECP configuration → custom → standard → defaults).
+An attacker who can influence a data source at any level of the cascade can
+expand the set of trusted tasks, subject to higher-priority levels taking
+precedence. For allow rules, ALL version constraints must be satisfied; for deny
+rules, ANY constraint suffices.
 
 ### 3.4 Sigstore configuration (`data.config.default_sigstore_opts`)
 
@@ -261,7 +262,7 @@ developer. See CLI threat model IV-4 for the Snapshot trust model.
 | ID | Threat | Impact | Likelihood | Existing Mitigation |
 |----|--------|--------|------------|---------------------|
 | DP-1 | **Rule data override via influenceable data source**: attacker adds permissive entries to `rule_data_custom` via a data source they can influence (e.g., a git repo referenced in the ECP). | High: weakens thresholds, expands trusted lists. | Low at release gate (SRE controls ECP and data sources), Medium at integration gate. | The `rule_data.get()` priority chain means `rule_data__configuration__` takes precedence. Custom data can only override if higher-priority keys are absent. |
-| DP-2 | **Trusted task injection via ruleData merge**: attacker adds entries to ruleData-level `trusted_tasks` or `trusted_task_rules` to mark malicious task bundles as trusted. The merge in `lib/tekton/trusted.rego` is additive: ruleData entries are concatenated with system data. | Critical: malicious build tasks treated as trusted, undermining provenance guarantees. | Low at release gate (SRE controls ECP), Medium at integration gate. | Schema validation checks format but not semantic correctness of task references. The rules system supports deny rules that take precedence over allow rules, providing a mechanism for system-level blocks. |
+| DP-2 | **Trusted task injection via rule data**: attacker adds entries to `trusted_tasks` or `trusted_task_rules` via an influenceable data source in the rule data precedence cascade to mark malicious task bundles as trusted. | Critical: malicious build tasks treated as trusted, undermining provenance guarantees. | Low at release gate (SRE controls ECP), Medium at integration gate. | Schema validation checks format but not semantic correctness of task references. The rules system supports deny rules that take precedence over allow rules, providing a mechanism for system-level blocks. Higher-priority rule data levels (ECP configuration) override lower-priority ones. |
 | DP-3 | **Config namespace injection**: attacker injects new keys into `data.config.*` via OPA deep merge, adding fields not present in the CLI's config structs. | High: can alter sigstore verification behavior or introduce unexpected config. | Medium: requires the ECP to reference a data source the attacker can contribute to. | The CLI serializes a fixed set of config fields. OPA merge can only add new keys, not override existing ones. But any field consumed by a builtin but not serialized by the CLI becomes an injection vector. |
 | DP-4 | **Unbounded numeric rule data**: attacker manipulates `cve_leeway` values or `task_expiry_warning_days` to grant extended grace periods. | High: known critical CVEs or expired tasks pass the release gate. | Low at release gate, Medium at integration gate. | Leeway computation trusts configured values without upper-bound enforcement. `task_expiry_warning_days` has schema validation for type (integer, minimum 0) but no maximum. |
 
@@ -272,7 +273,7 @@ developer. See CLI threat model IV-4 for the Snapshot trust model.
 | LE-1 | **Implicit pass from Rego semantics**: a rule with an unmet precondition produces no output, which OPA treats as "no violation". This is inherent to Rego's design and the primary logic-class risk. | High: silent pass for unexpected input shapes. | Medium: new rules are at risk of this unless the author explicitly follows the guard-rule pattern. | Some packages implement guard rules (e.g., `test_data_found`, `base_image_info_found`). Pattern is not formally documented or enforced by linting or CI. |
 | LE-2 | **`effective_on` time manipulation**: rule annotations with `effective_on` dates cause new rules to be demoted from deny to warn until the date arrives. The CLI's `--effective-time` flag controls what "now" means. At the integration gate, the developer sets this. | Medium: time-gated security rules silently demoted. | Medium at integration gate, Low at release gate. | At the release gate, `EFFECTIVE_TIME` defaults to "now" and is controlled by the pipeline definition. `--allow-past-effective-time` defaults to false in the CLI. |
 | LE-3 | **Collection membership gap**: rule collection membership is declared in OPA annotations. A rule accidentally omitted from a collection (e.g., `@redhat_security`) will never run when that collection is selected. | High: security rule silently excluded from enforcement. | Low: code review process exists, and the repo recently added 18 rules to `redhat_security`. | Collection stub packages exist for CI. Annotation consistency checked by `checks/annotations.rego`. No automated exhaustive check that every security-relevant deny rule is in the right collections. |
-| LE-4 | **Trusted task rule precedence confusion**: deny rules take precedence in the rules system, but the interaction between system-level deny and ruleData-level allow is determined by concatenation order. Both are flattened into a single list in `_trusted_task_rules_data`. | Medium: ruleData allow rules could interact unexpectedly with system deny rules depending on pattern specificity. | Low: deny is checked first in `is_trusted_task_rules` (deny match blocks trust regardless of allow matches). | `_task_matches_deny_rule` is evaluated before `_task_matches_allow_rule`, so deny takes precedence. This is correct but not obviously documented. |
+| LE-4 | **Trusted task rule precedence confusion**: deny rules take precedence in the rules system. All allow and deny rules are loaded from a single source via `lib_rule_data("trusted_task_rules")` and flattened into `_trusted_task_rules_data`. | Medium: allow rules could interact unexpectedly with deny rules depending on pattern specificity. | Low: deny is checked first in `is_trusted_task_rules` (deny match blocks trust regardless of allow matches). | `_task_matches_deny_rule` is evaluated before `_task_matches_allow_rule`, so deny takes precedence. This is correct but not obviously documented. |
 
 ### 4.4 Supply Chain (Policy Bundle)
 
@@ -311,11 +312,11 @@ developer. See CLI threat model IV-4 for the Snapshot trust model.
    consumed via `rule_data.get()` have corresponding JSON schema validation in
    their consuming packages. Which keys lack validation?
 
-3. **Trusted task rules merge precedence**: ruleData-level allow and deny
-   rules are concatenated with system-level rules in
-   `_trusted_task_rules_data`. Can a ruleData-level allow rule effectively
-   override a system-level deny rule for a different pattern? The current code
-   evaluates deny before allow, but pattern specificity interactions are not
+3. **Trusted task rules precedence interactions**: allow and deny rules are
+   loaded from a single source via `lib_rule_data("trusted_task_rules")` and
+   flattened into `_trusted_task_rules_data`. Deny is evaluated before allow
+   (deny match blocks trust regardless of allow matches), but pattern
+   specificity interactions between overlapping allow and deny rules are not
    well documented.
 
 4. **Collection membership exhaustive check**: is there automated testing that
@@ -365,9 +366,9 @@ developer. See CLI threat model IV-4 for the Snapshot trust model.
 3. **Complete rule data schema validation**: make JSON schema validation
    mandatory for every security-critical key consumed via `rule_data.get()`.
    Several packages already do this (e.g., `lib/tekton/trusted.rego` validates
-   `trusted_tasks` and `trusted_task_rules`). Keys like `cve_leeway`,
-   `allowed_registry_prefixes`, and `allowed_rpm_signature_keys` need the same
-   treatment. (Addresses DP-1, DP-4.)
+   `trusted_tasks` and `trusted_task_rules` via `lib_rule_data`). Keys like
+   `cve_leeway`, `allowed_registry_prefixes`, and `allowed_rpm_signature_keys`
+   need the same treatment. (Addresses DP-1, DP-4.)
 
 ### Medium priority
 
@@ -383,8 +384,8 @@ developer. See CLI threat model IV-4 for the Snapshot trust model.
 
 6. **Document trusted task rules precedence**: the deny-before-allow evaluation
    order in `is_trusted_task_rules` is correct but not documented outside the
-   code. Add explicit documentation on precedence semantics and the interaction
-   between system-level and ruleData-level rules. (Addresses LE-4, open
+   code. Add explicit documentation on precedence semantics, including how
+   overlapping allow and deny patterns interact. (Addresses LE-4, open
    question 3.)
 
 ### Lower priority
