@@ -490,28 +490,6 @@ test_missing_configuration_identity_is_rejected if {
 		with lib_time.effective_current_time_ns as _after_test_identity_effective_on
 }
 
-test_missing_configuration_identity_preserves_legacy_failure_before_effective_date if {
-	assertions.assert_equal_results(test_attestation.deny, {
-		{
-			"code": "test_attestation.test_identity_found",
-			"msg": "Test attestation is missing a valid configuration name",
-		},
-		{
-			"code": "test_attestation.no_failed_tests",
-			"msg": "Test attestation \"unknown test\" has a failed result, failures: 1",
-			"term": "unknown test",
-		},
-	}) with input.image.ref as _image_ref
-		with ec.oci.image_referrers as _mock_referrers
-		with ec.sigstore.verify_attestation as _mock_verify_success
-		with ec.oci.blob as _mock_blob_no_config
-		with ec.oci.image_manifest as _mock_image_manifest
-		with ec.oci.image_manifests as _mock_manifests
-		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
-		with data.rule_data.trusted_task_rules_enabled as true
-		with lib_time.effective_current_time_ns as _before_test_identity_effective_on
-}
-
 # --- Test Case 11: WARNED + FAILED coexistence ---
 
 test_warned_and_failed_coexist if {

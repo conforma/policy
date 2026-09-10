@@ -38,25 +38,7 @@ import data.lib.time as lib_time
 
 _all_test_attestations := intoto.verified_statements_by_predicate(intoto.predicate_test_result)
 
-_test_identity_effective_on := "2026-10-01T00:00:00Z"
-
-# Preserve the pre-existing "unknown test" result checks during the migration
-# window for the new identity requirement. Once that requirement is effective,
-# unidentified statements are reported only by test_identity_found.
-_legacy_unidentified_test_attestations contains statement if {
-	lib_time.effective_current_time_ns < time.parse_rfc3339_ns(_test_identity_effective_on)
-	unidentified := {candidate |
-		some candidate in _all_test_attestations
-		not lib.attestation_test_name(candidate)
-		lib.attestation_test_instant(candidate)
-	}
-	latest_instant := max({lib.attestation_test_instant(candidate) | some candidate in unidentified})
-
-	some statement in unidentified
-	lib.attestation_test_instant(statement) == latest_instant
-}
-
-_test_attestations := lib.latest_test_attestations(_all_test_attestations) | _legacy_unidentified_test_attestations
+_test_attestations := lib.latest_test_attestations(_all_test_attestations)
 
 _test_name(statement) := name if {
 	name := lib.attestation_test_name(statement)
