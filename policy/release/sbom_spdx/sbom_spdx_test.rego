@@ -8,6 +8,7 @@ import data.sbom_spdx
 
 test_all_good if {
 	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+		with sbom._verified_sbom_attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -20,6 +21,7 @@ test_all_good_marshaled if {
 		"value": json.marshal(_sbom_attestation.statement.predicate),
 	}])
 	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -33,6 +35,7 @@ test_missing_packages if {
 		"value": [],
 	}])
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -46,6 +49,7 @@ test_missing_files if {
 		"value": [],
 	}])
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -58,6 +62,7 @@ test_digest_mismatch if {
 		"msg": "Image digest in the SBOM, \"sha256:1230000000000000000000000000000000000000000000000000000000000123\", is not as expected, \"sha256:abc0000000000000000000000000000000000000000000000000000000000abc\"",
 	}}
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+		with sbom._verified_sbom_attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:abc0000000000000000000000000000000000000000000000000000000000abc"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -74,6 +79,7 @@ test_not_valid if {
 		"value": "spam",
 	}])
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 }
@@ -109,6 +115,7 @@ assert_allowed(purl, disallowed_packages) if {
 	}])
 
 	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att] # regal ignore:with-outside-test-context
+		with sbom._verified_sbom_attestations as [att]
 		with data.rule_data.disallowed_packages as disallowed_packages # regal ignore:with-outside-test-context
 		with data.rule_data.vendored_purl_types as [] # regal ignore:with-outside-test-context
 		with ec.oci.image_referrers as [] # regal ignore:with-outside-test-context
@@ -128,6 +135,7 @@ assert_not_allowed(purl, disallowed_packages) if {
 
 	# regal ignore:with-outside-test-context
 	assertions.assert_equal_results(sbom_spdx.deny, expected) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att] # regal ignore:with-outside-test-context
 		with ec.oci.image_referrers as [] # regal ignore:with-outside-test-context
 		with ec.oci.image_tag_refs as [] # regal ignore:with-outside-test-context
 		with data.rule_data.disallowed_packages as disallowed_packages # regal ignore:with-outside-test-context
@@ -137,6 +145,7 @@ assert_not_allowed(purl, disallowed_packages) if {
 test_external_references_allowed_regex_with_no_rules_is_allowed if {
 	expected := {}
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+		with sbom._verified_sbom_attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -151,6 +160,7 @@ test_external_references_allowed_regex if {
 	}}
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+		with sbom._verified_sbom_attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -168,6 +178,7 @@ test_external_references_disallowed_regex if {
 	}}
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+		with sbom._verified_sbom_attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -253,6 +264,7 @@ test_allowed_package_sources if {
 	])
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
 		with data.rule_data as {sbom.rule_data_allowed_package_sources_key: [
@@ -277,6 +289,7 @@ test_attributes_not_allowed_pair if {
 	}}
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+		with sbom._verified_sbom_attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -293,6 +306,7 @@ test_attributes_not_allowed_value if {
 	}}
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom_attestation]
+		with sbom._verified_sbom_attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -320,6 +334,7 @@ test_attributes_not_allowed_effective_on if {
 	}
 
 	raw_results := sbom_spdx.deny with input.attestations as [_sbom_attestation]
+		with sbom._verified_sbom_attestations as [_sbom_attestation]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -363,6 +378,7 @@ test_attributes_multiple_external_refs if {
 	}
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [_sbom]
+		with sbom._verified_sbom_attestations as [_sbom]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -443,6 +459,7 @@ test_attributes_except_when_match_suppresses_violation if {
 	}])
 
 	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -469,6 +486,7 @@ test_attributes_except_when_no_match_produces_violation if {
 	}])
 
 	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -495,6 +513,7 @@ test_attributes_except_when_missing_qualifier_produces_violation if {
 	}])
 
 	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -532,6 +551,7 @@ test_attributes_except_when_no_purl_ref_produces_violation if {
 	}])
 
 	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -576,6 +596,7 @@ test_attributes_except_when_multiple_external_refs if {
 	}])
 
 	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -633,6 +654,7 @@ test_attributes_except_when_without_except_when_unchanged if {
 	])
 
 	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -645,14 +667,17 @@ test_attributes_except_when_without_except_when_unchanged if {
 }
 
 test_proxy_url_spdx_allowed if {
-	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
+	att := json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:npm/example-lib@2.0",
 			"https://proxy.example.com/npm/example-lib-2.0.tgz",
 		),
-	}])]
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -662,14 +687,17 @@ test_proxy_url_spdx_allowed if {
 }
 
 test_proxy_url_spdx_denied if {
-	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
+	att := json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:npm/example-lib@2.0",
 			"https://evil.com/example-lib-2.0.tgz",
 		),
-	}])]
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -680,14 +708,17 @@ test_proxy_url_spdx_denied if {
 }
 
 test_proxy_url_spdx_empty_source_info_skipped if {
-	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
+	att := json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:maven/org.example/lib@1.0",
 			"",
 		),
-	}])]
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -697,14 +728,17 @@ test_proxy_url_spdx_empty_source_info_skipped if {
 }
 
 test_proxy_url_spdx_non_proxy_purl_type if {
-	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
+	att := json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:golang/example.com/lib@1.0",
 			"https://anything.com/lib-1.0.tar.gz",
 		),
-	}])]
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -731,6 +765,7 @@ test_proxy_url_spdx_not_hermeto_skipped if {
 	}])
 
 	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -750,6 +785,7 @@ test_proxy_url_spdx_download_url_skipped if {
 	}])
 
 	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -759,14 +795,17 @@ test_proxy_url_spdx_download_url_skipped if {
 }
 
 test_proxy_url_spdx_semicolon_separated if {
-	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
+	att := json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_proxy_package(
 			"pkg:npm/example-lib@2.0",
 			"https://proxy.example.com/npm/example-lib-2.0.tgz;https://evil.com/lib.tgz",
 		),
-	}])]
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -784,6 +823,7 @@ test_proxy_url_spdx_bundled_skipped if {
 	}])
 
 	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -800,6 +840,7 @@ test_proxy_metadata_required_spdx_bundled_passes if {
 	}])
 
 	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -897,6 +938,7 @@ test_proxy_metadata_required_spdx_denied if {
 	}])
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -904,14 +946,17 @@ test_proxy_metadata_required_spdx_denied if {
 }
 
 test_proxy_metadata_required_spdx_with_source_info_passes if {
-	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
+	att := json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_hermeto_package(
 			"pkg:maven/org.example/lib@1.0",
 			"acquired package from proxy https://proxy.example.com/maven/",
 		),
-	}])]
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -940,6 +985,7 @@ test_proxy_metadata_required_spdx_absent_source_info_denied if {
 	}])
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -970,6 +1016,7 @@ test_proxy_metadata_required_spdx_not_hermeto_passes if {
 	}])
 
 	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -984,6 +1031,7 @@ test_proxy_metadata_required_spdx_non_proxy_purl_type_passes if {
 	}])
 
 	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -991,14 +1039,17 @@ test_proxy_metadata_required_spdx_non_proxy_purl_type_passes if {
 }
 
 test_proxy_metadata_required_spdx_download_url_passes if {
-	results := sbom_spdx.deny with input.attestations as [json.patch(_sbom_attestation, [{
+	att := json.patch(_sbom_attestation, [{
 		"op": "add",
 		"path": "/statement/predicate/packages/-",
 		"value": _spdx_hermeto_package(
 			"pkg:maven/org.example/lib@1.0?download_url=https://example.com/lib.jar",
 			"",
 		),
-	}])]
+	}])
+
+	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1018,6 +1069,7 @@ test_proxy_metadata_required_spdx_vcs_url_passes if {
 	}])
 
 	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1041,6 +1093,7 @@ test_experimental_hermeto_backend_spdx_denied if {
 	}])
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1054,6 +1107,7 @@ test_experimental_hermeto_backend_spdx_stable_passes if {
 	}])
 
 	results := sbom_spdx.deny with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1076,6 +1130,7 @@ test_experimental_hermeto_backend_spdx_no_purl_denied if {
 	}])
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1096,6 +1151,7 @@ test_experimental_hermeto_backend_spdx_mixed_annotations if {
 	}])
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1137,6 +1193,7 @@ test_hermeto_attribution_required_spdx_with_hermeto_passes if {
 	}])
 
 	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1158,6 +1215,7 @@ test_hermeto_attribution_required_spdx_without_hermeto_denied if {
 	}])
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1186,6 +1244,7 @@ test_hermeto_attribution_required_spdx_mixed if {
 	])
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1200,6 +1259,7 @@ test_hermeto_attribution_required_spdx_unconfigured_type_passes if {
 	}])
 
 	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1214,6 +1274,7 @@ test_hermeto_attribution_required_spdx_local_dep_passes if {
 	}])
 
 	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1228,6 +1289,7 @@ test_hermeto_attribution_required_spdx_empty_rule_data_passes if {
 	}])
 
 	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -1249,6 +1311,7 @@ test_hermeto_attribution_required_spdx_cargo_denied if {
 	}])
 
 	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
+		with sbom._verified_sbom_attestations as [att]
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []

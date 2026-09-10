@@ -35,7 +35,7 @@ Confirm an SBOM attestation exists.
 [#sbom__signature_verification]
 === link:#sbom__signature_verification[SBOM signature verification failed]
 
-Report when signature verification fails for SBOMs discovered via OCI referrers or image-tag refs. The SBOM is excluded (fail-closed), but the user should know why.
+Report when signature verification fails for attached SBOM attestations or SBOMs discovered via OCI referrers or image-tag refs. The SBOM is excluded (fail-closed), but the user should know why.
 
 *Solution*: Check that the SBOM was signed with the key or certificate configured in the "sbom" entry of the signing_identities rule data, or that the signing identity matches.
 

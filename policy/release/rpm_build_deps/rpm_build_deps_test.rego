@@ -15,6 +15,7 @@ import data.rpm_build_deps
 test_valid_download_location_noassertion if {
 	att := _sbom_attestation_with_download_location("NOASSERTION")
 	assertions.assert_empty(rpm_build_deps.warn) with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as _mock_allowed_locations
 }
 
@@ -22,6 +23,7 @@ test_valid_download_location_noassertion if {
 test_valid_download_location_brewroot if {
 	att := _sbom_attestation_with_download_location("https://download.devel.redhat.com/brewroot/repos/some-package.rpm")
 	assertions.assert_empty(rpm_build_deps.warn) with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as _mock_allowed_locations
 }
 
@@ -29,6 +31,7 @@ test_valid_download_location_brewroot if {
 test_valid_download_location_codeload if {
 	att := _sbom_attestation_with_download_location("https://codeload.github.com/user/repo/tar.gz/v1.0.0")
 	assertions.assert_empty(rpm_build_deps.warn) with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as _mock_allowed_locations
 }
 
@@ -36,6 +39,7 @@ test_valid_download_location_codeload if {
 test_valid_download_location_pypi if {
 	att := _sbom_attestation_with_download_location("https://files.pythonhosted.org/packages/some-package-1.0.tar.gz")
 	assertions.assert_empty(rpm_build_deps.warn) with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as _mock_allowed_locations
 }
 
@@ -44,6 +48,7 @@ test_valid_download_location_maven if {
 	location := "https://repo.maven.apache.org/maven2/org/example/artifact/1.0/artifact-1.0.jar"
 	att := _sbom_attestation_with_download_location(location)
 	assertions.assert_empty(rpm_build_deps.warn) with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as _mock_allowed_locations
 }
 
@@ -60,6 +65,7 @@ test_invalid_download_location if {
 		),
 	}}
 	assertions.assert_equal_results(expected, rpm_build_deps.warn) with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as _mock_allowed_locations
 }
 
@@ -71,6 +77,7 @@ test_multiple_packages_all_valid if {
 		"https://codeload.github.com/org/repo/tar.gz/v2.0",
 	])
 	assertions.assert_empty(rpm_build_deps.warn) with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as _mock_allowed_locations
 }
 
@@ -82,6 +89,7 @@ test_multiple_packages_one_invalid if {
 		"https://download.devel.redhat.com/brewroot/repos/package2.rpm",
 	])
 	results := rpm_build_deps.warn with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as _mock_allowed_locations
 	count(results) == 1
 }
@@ -93,6 +101,7 @@ test_multiple_packages_all_invalid if {
 		"https://untrusted2.example.com/package2.rpm",
 	])
 	results := rpm_build_deps.warn with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as _mock_allowed_locations
 	count(results) == 2
 }
@@ -107,6 +116,7 @@ test_empty_sbom if {
 		},
 	}}
 	assertions.assert_empty(rpm_build_deps.warn) with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as _mock_allowed_locations
 }
 
@@ -114,6 +124,7 @@ test_empty_sbom if {
 test_empty_rule_data_warns_urls if {
 	att := _sbom_attestation_with_download_location("https://download.devel.redhat.com/brewroot/repos/package.rpm")
 	results := rpm_build_deps.warn with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as []
 	count(results) == 1
 }
@@ -122,6 +133,7 @@ test_empty_rule_data_warns_urls if {
 test_noassertion_allowed_with_empty_rule_data if {
 	att := _sbom_attestation_with_download_location("NOASSERTION")
 	assertions.assert_empty(rpm_build_deps.warn) with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as []
 }
 
@@ -130,6 +142,7 @@ test_custom_rule_data if {
 	custom_locations := ["^https://custom\\.example\\.com/.*", "^https://archive\\.example\\.org/.*"]
 	att := _sbom_attestation_with_download_location("https://custom.example.com/packages/foo.rpm")
 	assertions.assert_empty(rpm_build_deps.warn) with input.attestations as [att]
+		with data.lib.sbom._verified_sbom_attestations as [att]
 		with data.rule_data.allowed_rpm_build_dependency_sources as custom_locations
 }
 
@@ -168,11 +181,13 @@ test_anchoring_warning_unanchored_pattern if {
 		"severity": "warning",
 	}}
 	assertions.assert_equal_results(expected, rpm_build_deps.deny) with input.attestations as [_sbom_attestation_with_download_location("NOASSERTION")]
+		with data.lib.sbom._verified_sbom_attestations as [_sbom_attestation_with_download_location("NOASSERTION")]
 		with data.rule_data.allowed_rpm_build_dependency_sources as ["download.example.com"]
 }
 
 test_anchoring_warning_anchored_pattern if {
 	assertions.assert_empty(rpm_build_deps.deny) with input.attestations as [_sbom_attestation_with_download_location("NOASSERTION")]
+		with data.lib.sbom._verified_sbom_attestations as [_sbom_attestation_with_download_location("NOASSERTION")]
 		with data.rule_data.allowed_rpm_build_dependency_sources as ["^https://download\\.example\\.com/.*"]
 }
 

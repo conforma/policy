@@ -38,9 +38,11 @@ rule_data:
     rh-release:
       public_key: "k8s://openshift-pipelines/release-signing-key"
       ignore_rekor: true
-    # Add an "sbom" identity to gate SBOM discovery via OCI referrers and
-    # image-tag refs: SBOMs are only accepted when their signatures verify
-    # against it, and excluded (fail-closed) when it is absent. Left
+    # An "sbom" identity is required to expose attached SBOM attestations and
+    # SBOMs discovered via OCI referrers or image-tag refs. Previously,
+    # attached attestations from policy input were exposed without this
+    # policy-side verification. SBOMs are now excluded (fail-closed) when the
+    # identity is absent or their signatures do not verify. Left
     # unconfigured by default; uncomment and set to your signing key to
     # enable, for example:
     # sbom:
