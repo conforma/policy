@@ -215,7 +215,7 @@ func validateInputWithPolicyConfig(ctx context.Context) (context.Context, error)
 		"json",
 	}
 	if ts.effectiveTime != "" {
-		args = append(args, "--effective-time", ts.effectiveTime)
+		args = append(args, "--effective-time", ts.effectiveTime, "--allow-past-effective-time")
 	}
 
 	cmd := exec.Command(ecBinary, args...)

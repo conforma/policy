@@ -4,10 +4,7 @@ import data.lib.image
 import data.lib.sigstore
 import rego.v1
 
-# parsed_blob fetches and parses a JSON blob. Once the CLI ships the
-# ec.oci.parsed_blob builtin (EC-1836), swap this to use it for
-# cross-eval caching.
-parsed_blob(ref) := json.unmarshal(ec.oci.blob(ref))
+parsed_blob(ref) := ec.oci.parsed_blob(ref)
 
 # parsed_blob_if_valid is a tolerant variant that returns undefined
 # instead of erroring when the blob is missing or not valid JSON.

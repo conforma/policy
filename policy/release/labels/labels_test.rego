@@ -29,6 +29,7 @@ test_all_good if {
 	})
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	assertions.assert_empty(labels.deny | labels.warn) with input.image.ref as _test_ref_with_labels({
@@ -40,6 +41,7 @@ test_all_good if {
 	})
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 }
 
@@ -61,11 +63,13 @@ test_deprecated_image_labels if {
 	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	_assert_effective_on_date(labels.deny) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data_with_date
 }
 
@@ -85,11 +89,13 @@ test_required_image_labels if {
 	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	_assert_effective_on_date(labels.deny) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data_with_date
 }
 
@@ -110,11 +116,13 @@ test_fbc_required_image_labels if {
 	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	_assert_effective_on_date(labels.deny) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data_with_date
 }
 
@@ -135,11 +143,13 @@ test_required_image_labels_with_values if {
 	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	_assert_effective_on_date(labels.deny) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data_with_date
 }
 
@@ -162,11 +172,13 @@ test_fbc_required_image_labels_with_values if {
 	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	_assert_effective_on_date(labels.deny) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data_with_date
 }
 
@@ -186,11 +198,13 @@ test_optional_image_labels if {
 	assertions.assert_equal_results(labels.warn, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	_assert_effective_on_date(labels.warn) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data_with_date
 }
 
@@ -211,11 +225,13 @@ test_fbc_optional_image_labels if {
 	assertions.assert_equal_results(labels.warn, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	_assert_effective_on_date(labels.warn) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data_with_date
 }
 
@@ -246,11 +262,13 @@ test_disallowed_inherited_image_labels if {
 	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	_assert_effective_on_date(labels.deny) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data_with_date
 
 	# A missing label on either image does not trigger a violation.
@@ -271,6 +289,7 @@ test_disallowed_inherited_image_labels if {
 	)
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	assertions.assert_empty(labels.deny) with input.image.ref as _test_ref_with_labels_and_parent_labels(
@@ -290,6 +309,7 @@ test_disallowed_inherited_image_labels if {
 	)
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 }
 
@@ -321,11 +341,13 @@ test_fbc_disallowed_inherited_image_labels if {
 	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	_assert_effective_on_date(labels.deny) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data_with_date
 
 	# A missing label on either image does not trigger a violation.
@@ -347,6 +369,7 @@ test_fbc_disallowed_inherited_image_labels if {
 	)
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 
 	assertions.assert_empty(labels.deny) with input.image.ref as _test_ref_with_labels_and_parent_labels(
@@ -367,6 +390,7 @@ test_fbc_disallowed_inherited_image_labels if {
 	)
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 }
 
@@ -379,6 +403,7 @@ test_image_manifest_inaccessible if {
 	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as "fail@"
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 }
 
@@ -397,6 +422,7 @@ test_image_config_inaccessible if {
 	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 }
 
@@ -422,6 +448,7 @@ test_parent_image_manifest_inaccessible if {
 	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 }
 
@@ -453,6 +480,7 @@ test_parent_image_config_inaccessible if {
 	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as _rule_data
 }
 
@@ -576,6 +604,7 @@ test_rule_data_provided if {
 	})
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as d
 }
 
@@ -616,6 +645,10 @@ _mock_blob(ref) := blob if {
 
 _mock_blob(ref) := null if {
 	contains(ref, "#fail")
+}
+
+_mock_parsed_blob(ref) := json.unmarshal(_mock_blob(ref)) if {
+	not contains(ref, "#fail")
 }
 
 _test_ref_with_labels(labels) := _test_ref_patches([_config(_add_labels(labels))])

@@ -51,6 +51,7 @@ test_cyclonedx_sboms if {
 	assertions.assert_equal(sbom.cyclonedx_sboms, expected) with input.attestations as attestations
 		with input.image as _cyclonedx_image
 		with ec.oci.blob as mock_ec_oci_cyclonedx_blob
+		with ec.oci.parsed_blob as mock_ec_oci_parsed_cyclonedx_blob
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -95,6 +96,7 @@ test_spdx_sboms if {
 	assertions.assert_equal(sbom.spdx_sboms, expected) with input.attestations as attestations
 		with input.image as _spdx_image
 		with ec.oci.blob as mock_ec_oci_spdx_blob
+		with ec.oci.parsed_blob as mock_ec_oci_parsed_spdx_blob
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
@@ -165,6 +167,10 @@ mock_ec_oci_cyclonedx_blob := `{"sbom": "from oci blob", "bomFormat": "CycloneDX
 
 mock_ec_oci_spdx_blob := `{"sbom": "from oci blob", "SPDXID": "SPDXRef-DOCUMENT"}`
 
+mock_ec_oci_parsed_cyclonedx_blob(_) := json.unmarshal(mock_ec_oci_cyclonedx_blob)
+
+mock_ec_oci_parsed_spdx_blob(_) := json.unmarshal(mock_ec_oci_spdx_blob)
+
 _cyclonedx_image := {
 	"ref": "registry.io/repository/image@sha256:284e3029000000000000000000000000000000000000000000000000284e3029",
 	"config": {"Labels": {"vendor": "Red Hat, Inc."}},
@@ -203,6 +209,7 @@ test_cyclonedx_sboms_from_referrers if {
 		with ec.oci.image_referrers as mock_referrers
 		with ec.oci.image_tag_refs as []
 		with ec.oci.blob as mock_ec_oci_cyclonedx_blob
+		with ec.oci.parsed_blob as mock_ec_oci_parsed_cyclonedx_blob
 		with ec.sigstore.verify_image as _mock_verify_image_success
 		with data.rule_data__configuration__ as {"signing_identities": {"sbom": _mock_sbom_opts}}
 }
@@ -224,6 +231,7 @@ test_spdx_sboms_from_referrers if {
 		with ec.oci.image_referrers as mock_referrers
 		with ec.oci.image_tag_refs as []
 		with ec.oci.blob as mock_ec_oci_spdx_blob
+		with ec.oci.parsed_blob as mock_ec_oci_parsed_spdx_blob
 		with ec.sigstore.verify_image as _mock_verify_image_success
 		with data.rule_data__configuration__ as {"signing_identities": {"sbom": _mock_sbom_opts}}
 }
@@ -241,6 +249,7 @@ test_cyclonedx_sboms_from_tag_refs if {
 		with ec.oci.image_tag_refs as mock_tag_refs
 		with ec.oci.image_manifest as _mock_sbom_manifest
 		with ec.oci.blob as mock_ec_oci_cyclonedx_blob
+		with ec.oci.parsed_blob as mock_ec_oci_parsed_cyclonedx_blob
 		with ec.sigstore.verify_image as _mock_verify_image_success
 		with data.rule_data__configuration__ as {"signing_identities": {"sbom": _mock_sbom_opts}}
 }
@@ -255,6 +264,7 @@ test_spdx_sboms_from_tag_refs if {
 		with ec.oci.image_tag_refs as mock_tag_refs
 		with ec.oci.image_manifest as _mock_sbom_manifest
 		with ec.oci.blob as mock_ec_oci_spdx_blob
+		with ec.oci.parsed_blob as mock_ec_oci_parsed_spdx_blob
 		with ec.sigstore.verify_image as _mock_verify_image_success
 		with data.rule_data__configuration__ as {"signing_identities": {"sbom": _mock_sbom_opts}}
 }
@@ -549,6 +559,7 @@ test_referrer_sbom_excluded_when_verification_fails if {
 		with ec.oci.image_referrers as mock_referrers
 		with ec.oci.image_tag_refs as []
 		with ec.oci.blob as mock_ec_oci_cyclonedx_blob
+		with ec.oci.parsed_blob as mock_ec_oci_parsed_cyclonedx_blob
 		with ec.sigstore.verify_image as _mock_verify_image_failure
 		with data.rule_data__configuration__ as {"signing_identities": {"sbom": _mock_sbom_opts}}
 }
@@ -562,6 +573,7 @@ test_tag_ref_sbom_excluded_when_verification_fails if {
 		with ec.oci.image_tag_refs as mock_tag_refs
 		with ec.oci.image_manifest as _mock_sbom_manifest
 		with ec.oci.blob as mock_ec_oci_cyclonedx_blob
+		with ec.oci.parsed_blob as mock_ec_oci_parsed_cyclonedx_blob
 		with ec.sigstore.verify_image as _mock_verify_image_failure
 		with data.rule_data__configuration__ as {"signing_identities": {"sbom": _mock_sbom_opts}}
 }
@@ -585,6 +597,7 @@ test_referrer_sbom_excluded_when_no_opts if {
 		with ec.oci.image_referrers as mock_referrers
 		with ec.oci.image_tag_refs as []
 		with ec.oci.blob as mock_ec_oci_cyclonedx_blob
+		with ec.oci.parsed_blob as mock_ec_oci_parsed_cyclonedx_blob
 		with ec.sigstore.verify_image as _mock_verify_image_success
 		with data.rule_data as {}
 }
@@ -598,6 +611,7 @@ test_tag_ref_sbom_excluded_when_no_opts if {
 		with ec.oci.image_tag_refs as mock_tag_refs
 		with ec.oci.image_manifest as _mock_sbom_manifest
 		with ec.oci.blob as mock_ec_oci_cyclonedx_blob
+		with ec.oci.parsed_blob as mock_ec_oci_parsed_cyclonedx_blob
 		with ec.sigstore.verify_image as _mock_verify_image_success
 		with data.rule_data as {}
 }
@@ -624,6 +638,7 @@ test_keyless_sbom_verification if {
 		with ec.oci.image_referrers as mock_referrers
 		with ec.oci.image_tag_refs as []
 		with ec.oci.blob as mock_ec_oci_cyclonedx_blob
+		with ec.oci.parsed_blob as mock_ec_oci_parsed_cyclonedx_blob
 		with ec.sigstore.verify_image as _mock_verify_image_success
 		with data.rule_data__configuration__ as {"signing_identities": {"sbom": keyless_opts}}
 }

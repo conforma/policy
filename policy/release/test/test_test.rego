@@ -846,6 +846,8 @@ _layer_digest := "sha256:1a0e000000000000000000000000000000000000000000000000000
 
 _mock_image_manifest(_) := {"layers": [{"digest": _layer_digest}]}
 
+_mock_parsed_blob_passed(ref) := json.unmarshal(_mock_blob_passed(ref))
+
 _mock_blob_passed(_) := json.marshal({
 	"_type": "https://in-toto.io/Statement/v1",
 	"predicateType": "https://in-toto.io/attestation/test-result/v0.1",
@@ -878,6 +880,7 @@ test_data_found_skips_attestations if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.parsed_blob as _mock_parsed_blob_passed
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
@@ -951,6 +954,7 @@ test_data_found_skips_both if {
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_passed
+		with ec.oci.parsed_blob as _mock_parsed_blob_passed
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.image_manifests as _mock_manifests
 		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules

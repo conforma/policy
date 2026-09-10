@@ -418,6 +418,7 @@ test_unpinned_related_images if {
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_unpinned_image_partial
 		with ec.oci.blob as _mock_unpinned_blob
+		with ec.oci.parsed_blob as _mock_parsed_unpinned_blob
 		with ec.oci.descriptor as mock_ec_oci_image_descriptor
 }
 
@@ -435,6 +436,7 @@ test_inaccessible_related_images if {
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_partial
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with ec.oci.descriptor as mock_ec_oci_image_descriptor
 }
 
@@ -544,6 +546,7 @@ test_allowed_registries_related if {
 		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
 		with ec.oci.image_manifest as _mock_image_all
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with ec.oci.descriptor as mock_ec_oci_image_descriptor
 }
 
@@ -592,6 +595,10 @@ _mock_unpinned_image_partial(ref) := _manifests_unpinned[ref]
 _mock_blob(ref) := _blobs[ref]
 
 _mock_unpinned_blob(ref) := _unpinned_blobs[ref]
+
+_mock_parsed_blob(ref) := json.unmarshal(_mock_blob(ref))
+
+_mock_parsed_unpinned_blob(ref) := json.unmarshal(_mock_unpinned_blob(ref))
 
 _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
 

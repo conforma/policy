@@ -13,6 +13,7 @@ test_success_cyclonedx if {
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 }
 
 test_success_spdx if {
@@ -22,6 +23,7 @@ test_success_spdx if {
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 }
 
 test_failure_cyclonedx if {
@@ -40,6 +42,7 @@ test_failure_cyclonedx if {
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 }
 
 test_failure_spdx if {
@@ -58,6 +61,7 @@ test_failure_spdx if {
 		with input.image.ref as "registry.local/image-index@sha256:image-index-digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 }
 
 test_non_image_index if {
@@ -67,6 +71,7 @@ test_non_image_index if {
 		with input.image.ref as "registry.local/image-manifest@sha256:image-manifest-digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.manifest.v1+json"}
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 }
 
 test_ignore_names if {
@@ -76,6 +81,7 @@ test_ignore_names if {
 		with input.image.ref as "registry.local/image-index@sha256:image-index-digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data.non_unique_rpm_names as ["spam"]
 }
 
@@ -87,6 +93,7 @@ test_success_multiple_versions_same_across_platforms if {
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 }
 
 test_failure_multiple_versions_different_across_platforms if {
@@ -106,6 +113,7 @@ test_failure_multiple_versions_different_across_platforms if {
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 }
 
 test_failure_with_platform_grouping if {
@@ -125,6 +133,7 @@ test_failure_with_platform_grouping if {
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 }
 
 # Test that lockfile entries (with repository_id but no distro) are filtered out
@@ -139,6 +148,7 @@ test_lockfile_entries_filtered if {
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 }
 
 # Test that actual version mismatch is still detected even with lockfile noise
@@ -158,6 +168,7 @@ test_mismatch_detected_with_lockfile_noise if {
 		with input.image.ref as "registry.local/image-index@sha256:image_index_digest"
 		with ec.oci.descriptor as {"mediaType": "application/vnd.oci.image.index.v1+json"}
 		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
 }
 
 # CycloneDX mock blobs - purls must have distro= qualifier to be considered installed
@@ -357,5 +368,7 @@ _attestation_with_sboms(sbom_urls) := attestation if {
 
 	attestation := tekton_test.slsav1_attestation(tasks)
 }
+
+_mock_parsed_blob(ref) := json.unmarshal(_mock_blob(ref))
 
 _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"

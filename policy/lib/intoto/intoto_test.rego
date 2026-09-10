@@ -28,6 +28,7 @@ test_statements_from_referrer if {
 			"application/vnd.in-toto+json",
 		)]
 		with ec.oci.blob as _mock_blob_test_result
+		with ec.oci.parsed_blob as _mock_parsed_blob_test_result
 
 	count(result) == 1
 	some statement in result
@@ -42,6 +43,7 @@ test_statements_from_referrer_v01 if {
 			"application/vnd.in-toto+json",
 		)]
 		with ec.oci.blob as _mock_blob_v01
+		with ec.oci.parsed_blob as _mock_parsed_blob_v01
 
 	count(result) == 1
 	some statement in result
@@ -63,6 +65,7 @@ test_statements_filters_unrelated_referrers if {
 	result := intoto.statements with input.image.ref as "registry.io/repo/image@sha256:abc123"
 		with ec.oci.image_referrers as mock_referrers
 		with ec.oci.blob as _mock_blob_test_result
+		with ec.oci.parsed_blob as _mock_parsed_blob_test_result
 
 	count(result) == 1
 }
@@ -81,6 +84,7 @@ test_statements_skips_non_intoto_json if {
 			"application/vnd.in-toto+json",
 		)]
 		with ec.oci.blob as _mock_blob_not_intoto
+		with ec.oci.parsed_blob as _mock_parsed_blob_not_intoto
 
 	count(result) == 0
 }
@@ -100,6 +104,7 @@ test_statements_by_predicate_filters_correctly if {
 	result := intoto.statements_by_predicate(intoto.predicate_test_result) with input.image.ref as "registry.io/repo/image@sha256:abc123"
 		with ec.oci.image_referrers as mock_referrers
 		with ec.oci.blob as _mock_blob_mixed_predicates
+		with ec.oci.parsed_blob as _mock_parsed_blob_mixed_predicates
 
 	count(result) == 1
 	some statement in result
@@ -166,3 +171,11 @@ _mock_blob_mixed_predicates(ref) := json.marshal({
 }) if {
 	contains(ref, "ddd")
 }
+
+_mock_parsed_blob_test_result(ref) := json.unmarshal(_mock_blob_test_result(ref))
+
+_mock_parsed_blob_v01(ref) := json.unmarshal(_mock_blob_v01(ref))
+
+_mock_parsed_blob_not_intoto(ref) := json.unmarshal(_mock_blob_not_intoto(ref))
+
+_mock_parsed_blob_mixed_predicates(ref) := json.unmarshal(_mock_blob_mixed_predicates(ref))
