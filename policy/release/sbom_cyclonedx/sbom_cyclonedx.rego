@@ -432,7 +432,7 @@ deny contains result if {
 #   - redhat
 #   - policy_data
 #   - redhat_security
-#   effective_on: 2026-10-01T00:00:00Z
+#   effective_on: 2027-01-15T00:00:00Z
 deny contains result if {
 	vendored := {t | some t in rule_data.get("vendored_purl_types")}
 
