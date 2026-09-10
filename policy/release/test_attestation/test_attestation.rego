@@ -34,10 +34,33 @@ import data.lib.intoto
 import data.lib.json as j
 import data.lib.metadata
 import data.lib.rule_data
+import data.lib.time as lib_time
 
 _all_test_attestations := intoto.verified_statements_by_predicate(intoto.predicate_test_result)
 
-_test_attestations := lib.latest_test_attestations(_all_test_attestations)
+_test_identity_effective_on := "2026-10-01T00:00:00Z"
+
+# Preserve the pre-existing "unknown test" result checks during the migration
+# window for the new identity requirement. Once that requirement is effective,
+# unidentified statements are reported only by test_identity_found.
+_legacy_unidentified_test_attestations contains statement if {
+	lib_time.effective_current_time_ns < time.parse_rfc3339_ns(_test_identity_effective_on)
+	unidentified := {candidate |
+		some candidate in _all_test_attestations
+		not lib.attestation_test_name(candidate)
+		lib.attestation_test_instant(candidate)
+	}
+	latest_instant := max({lib.attestation_test_instant(candidate) | some candidate in unidentified})
+
+	some statement in unidentified
+	lib.attestation_test_instant(statement) == latest_instant
+}
+
+_test_attestations := lib.latest_test_attestations(_all_test_attestations) | _legacy_unidentified_test_attestations
+
+_test_name(statement) := name if {
+	name := lib.attestation_test_name(statement)
+} else := "unknown test"
 
 _count_detail(predicate, key) := result if {
 	n := object.get(predicate, key, 0)
@@ -78,7 +101,7 @@ _has_result(predicate, _, count_key) if {
 warn contains result if {
 	some statement in _test_attestations
 	_has_result(statement.predicate, rule_data.get("failed_test_attestation_results"), "failures")
-	test_name := lib.attestation_test_name(statement)
+	test_name := _test_name(statement)
 	test_name in rule_data.get("informative_test_attestations")
 	detail := _count_detail(statement.predicate, "failures")
 	result := metadata.result_helper_with_term(
@@ -108,7 +131,7 @@ warn contains result if {
 warn contains result if {
 	some statement in _test_attestations
 	_has_result(statement.predicate, rule_data.get("warned_test_attestation_results"), "warnings")
-	test_name := lib.attestation_test_name(statement)
+	test_name := _test_name(statement)
 	detail := _count_detail(statement.predicate, "warnings")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
@@ -165,7 +188,7 @@ deny contains result if {
 deny contains result if {
 	some statement in _test_attestations
 	_has_result(statement.predicate, rule_data.get("failed_test_attestation_results"), "failures")
-	test_name := lib.attestation_test_name(statement)
+	test_name := _test_name(statement)
 	not test_name in rule_data.get("informative_test_attestations")
 	detail := _count_detail(statement.predicate, "failures")
 	result := metadata.result_helper_with_term(
@@ -198,7 +221,7 @@ deny contains result if {
 	some statement in _test_attestations
 	statement.predicate.result
 	not statement.predicate.result in rule_data.get("supported_test_attestation_results")
-	test_name := lib.attestation_test_name(statement)
+	test_name := _test_name(statement)
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[test_name, statement.predicate.result],
@@ -226,7 +249,7 @@ deny contains result if {
 deny contains result if {
 	some statement in _test_attestations
 	not statement.predicate.result
-	test_name := lib.attestation_test_name(statement)
+	test_name := _test_name(statement)
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[test_name],
@@ -257,7 +280,7 @@ deny contains result if {
 
 	# "n/a": no count field for erred results in the predicate spec
 	_has_result(statement.predicate, rule_data.get("erred_test_attestation_results"), "n/a")
-	test_name := lib.attestation_test_name(statement)
+	test_name := _test_name(statement)
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[test_name],
@@ -290,7 +313,7 @@ deny contains result if {
 
 	# "n/a": no count field for skipped results in the predicate spec
 	_has_result(statement.predicate, rule_data.get("skipped_test_attestation_results"), "n/a")
-	test_name := lib.attestation_test_name(statement)
+	test_name := _test_name(statement)
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[test_name],
@@ -323,7 +346,7 @@ deny contains result if {
 	img_digest != ""
 	some statement in _test_attestations
 	not _subject_matches(statement, img_digest)
-	test_name := lib.attestation_test_name(statement)
+	test_name := _test_name(statement)
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[test_name, img_digest],

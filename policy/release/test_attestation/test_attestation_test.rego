@@ -19,6 +19,7 @@ package test_attestation_test
 import rego.v1
 
 import data.lib.assertions
+import data.lib.time as lib_time
 import data.test_attestation
 
 _image_ref := "registry.io/repo/image@sha256:abc123"
@@ -107,6 +108,10 @@ _mock_image_manifest_multi(ref) := {"layers": [{"digest": _layer_digest_2}]} if 
 }
 
 _default_timestamp := "2025-01-01T00:00:00Z"
+
+_before_test_identity_effective_on := time.parse_rfc3339_ns("2026-09-30T23:59:59Z")
+
+_after_test_identity_effective_on := time.parse_rfc3339_ns("2026-10-01T00:00:01Z")
 
 _make_statement(predicate) := json.marshal({
 	"_type": "https://in-toto.io/Statement/v0.1",
@@ -482,6 +487,29 @@ test_missing_configuration_identity_is_rejected if {
 		with ec.oci.image_manifests as _mock_manifests
 		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
+		with lib_time.effective_current_time_ns as _after_test_identity_effective_on
+}
+
+test_missing_configuration_identity_preserves_legacy_failure_before_effective_date if {
+	assertions.assert_equal_results(test_attestation.deny, {
+		{
+			"code": "test_attestation.test_identity_found",
+			"msg": "Test attestation is missing a valid configuration name",
+		},
+		{
+			"code": "test_attestation.no_failed_tests",
+			"msg": "Test attestation \"unknown test\" has a failed result, failures: 1",
+			"term": "unknown test",
+		},
+	}) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_no_config
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with lib_time.effective_current_time_ns as _before_test_identity_effective_on
 }
 
 # --- Test Case 11: WARNED + FAILED coexistence ---
@@ -589,6 +617,7 @@ test_missing_result_and_configuration_reports_invalid_identity if {
 		with ec.oci.image_manifests as _mock_manifests
 		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
 		with data.rule_data.trusted_task_rules_enabled as true
+		with lib_time.effective_current_time_ns as _after_test_identity_effective_on
 }
 
 # --- Test Case 15: Non-array failedTests value (is_array guard) ---
