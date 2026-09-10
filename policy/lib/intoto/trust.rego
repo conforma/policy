@@ -25,10 +25,12 @@
 # Cross-file dependency: this file references _artifact_type and
 # _known_types defined in intoto.rego (same package).
 #
-# Trust model: "one valid provenance chain suffices." A statement is
-# verified if ANY provenance referrer attached to the statement referrer
+# Trust model: "one valid provenance chain suffices." A statement enters the
+# trusted view if ANY provenance referrer attached to the statement referrer
 # provides valid Sigstore-attested SLSA provenance (as produced by Tekton
-# Chains) with all tasks trusted. Not all referrers must verify.
+# Chains) with all tasks trusted. The associated view intentionally stops after
+# signature verification so consumers can diagnose task-trust failures; it must
+# not be treated as trusted. Not all referrers must verify.
 #
 # Fail-closed behavior: if blob fetching, JSON parsing, or _type
 # validation fails for a referrer, that statement and its provenance are
@@ -48,9 +50,12 @@ _intoto_referrers contains referrer if {
 	referrer.artifactType == _artifact_type
 }
 
-verified_statement_provenances contains result if {
+# Signature-verified statement/provenance associations before Tekton task trust
+# is applied. Consumers must explicitly enforce task trust before treating a
+# record from this view as trusted.
+associated_statement_provenances contains result if {
 	some referrer in _intoto_referrers
-	some provenance in _trusted_provenances(referrer)
+	some provenance in _verified_provenances(referrer)
 
 	statement := oci.parsed_blob_from_image(referrer.ref)
 
@@ -61,6 +66,11 @@ verified_statement_provenances contains result if {
 		"statement": statement,
 		"provenance": provenance,
 	}
+}
+
+verified_statement_provenances contains result if {
+	some result in associated_statement_provenances
+	_all_tasks_trusted(result.provenance)
 }
 
 verified_statements contains statement if {
@@ -81,13 +91,20 @@ verified_statement_provenances_by_predicate(predicate_type) := {result |
 	result.statement.predicateType == predicate_type
 }
 
-_trusted_provenances(referrer) := {att |
+# Filter signature-verified statement/provenance associations by the statement's
+# predicate type without applying Tekton task trust. Consumers must explicitly
+# enforce task trust before treating these records as trusted.
+associated_statement_provenances_by_predicate(predicate_type) := {result |
+	some result in associated_statement_provenances
+	result.statement.predicateType == predicate_type
+}
+
+_verified_provenances(referrer) := {att |
 	verification := ec.sigstore.verify_attestation(referrer.ref, sigstore.opts)
 	object.get(verification, "success", false) == true
 	atts := object.get(verification, "attestations", [])
 	some att in atts
 	_attests_to_subject(att, referrer.digest)
-	_all_tasks_trusted(att)
 }
 
 _attests_to_subject(att, expected_digest) if {

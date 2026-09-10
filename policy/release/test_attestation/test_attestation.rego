@@ -28,45 +28,19 @@ package test_attestation
 
 import rego.v1
 
+import data.lib
 import data.lib.image
 import data.lib.intoto
 import data.lib.json as j
 import data.lib.metadata
 import data.lib.rule_data
+import data.lib.time as lib_time
 
 _all_test_attestations := intoto.verified_statements_by_predicate(intoto.predicate_test_result)
 
-_attestation_timestamp(statement) := ts if {
-	ts := statement.predicate.timestamp
-	is_string(ts)
-	ts != ""
-}
+_test_attestations := lib.latest_test_attestations(_all_test_attestations)
 
-_test_attestations contains statement if {
-	# Group statements by name first (avoids re-scanning for each attestation)
-	grouped := {name: statements |
-		some name in {_test_name(s) | some s in _all_test_attestations}
-		statements := {s |
-			some s in _all_test_attestations
-			_test_name(s) == name
-		}
-	}
-
-	# For each group, find max timestamp once
-	some name, statements in grouped
-	max_ts := max({_attestation_timestamp(s) | some s in statements})
-
-	# Filter to latest
-	some statement in statements
-	_attestation_timestamp(statement) == max_ts
-}
-
-_test_name(statement) := name if {
-	predicate := object.get(statement, "predicate", {})
-	config := object.get(predicate, "configuration", [])
-	count(config) > 0
-	name := config[0].name
-} else := "unknown test"
+_test_name(statement) := lib.attestation_test_name(statement)
 
 _count_detail(predicate, key) := result if {
 	n := object.get(predicate, key, 0)
@@ -107,12 +81,13 @@ _has_result(predicate, _, count_key) if {
 warn contains result if {
 	some statement in _test_attestations
 	_has_result(statement.predicate, rule_data.get("failed_test_attestation_results"), "failures")
-	_test_name(statement) in rule_data.get("informative_test_attestations")
+	test_name := _test_name(statement)
+	test_name in rule_data.get("informative_test_attestations")
 	detail := _count_detail(statement.predicate, "failures")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), detail],
-		_test_name(statement),
+		[test_name, detail],
+		test_name,
 	)
 }
 
@@ -136,12 +111,38 @@ warn contains result if {
 warn contains result if {
 	some statement in _test_attestations
 	_has_result(statement.predicate, rule_data.get("warned_test_attestation_results"), "warnings")
+	test_name := _test_name(statement)
 	detail := _count_detail(statement.predicate, "warnings")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), detail],
-		_test_name(statement),
+		[test_name, detail],
+		test_name,
 	)
+}
+
+# METADATA
+# title: Test attestation includes an identity
+# description: >-
+#   Ensure every test-result attestation provides a non-empty string in
+#   predicate.configuration[0].name. The name identifies repeated executions
+#   of the same integration test when selecting its latest result.
+# custom:
+#   short_name: test_identity_found
+#   failure_msg: Test attestation is missing a valid configuration name
+#   solution: >-
+#     Set predicate.configuration[0].name to the stable name of the integration
+#     test that produced the attestation.
+#   collections:
+#   - redhat
+#   - redhat_security
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#   effective_on: 2026-10-01T00:00:00Z
+#
+deny contains result if {
+	some statement in _all_test_attestations
+	not lib.attestation_test_name(statement)
+	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
 # METADATA
@@ -167,12 +168,13 @@ warn contains result if {
 deny contains result if {
 	some statement in _test_attestations
 	_has_result(statement.predicate, rule_data.get("failed_test_attestation_results"), "failures")
-	not _test_name(statement) in rule_data.get("informative_test_attestations")
+	test_name := _test_name(statement)
+	not test_name in rule_data.get("informative_test_attestations")
 	detail := _count_detail(statement.predicate, "failures")
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), detail],
-		_test_name(statement),
+		[test_name, detail],
+		test_name,
 	)
 }
 
@@ -199,10 +201,11 @@ deny contains result if {
 	some statement in _test_attestations
 	statement.predicate.result
 	not statement.predicate.result in rule_data.get("supported_test_attestation_results")
+	test_name := _test_name(statement)
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), statement.predicate.result],
-		_test_name(statement),
+		[test_name, statement.predicate.result],
+		test_name,
 	)
 }
 
@@ -226,10 +229,11 @@ deny contains result if {
 deny contains result if {
 	some statement in _test_attestations
 	not statement.predicate.result
+	test_name := _test_name(statement)
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement)],
-		_test_name(statement),
+		[test_name],
+		test_name,
 	)
 }
 
@@ -256,10 +260,11 @@ deny contains result if {
 
 	# "n/a": no count field for erred results in the predicate spec
 	_has_result(statement.predicate, rule_data.get("erred_test_attestation_results"), "n/a")
+	test_name := _test_name(statement)
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement)],
-		_test_name(statement),
+		[test_name],
+		test_name,
 	)
 }
 
@@ -288,10 +293,11 @@ deny contains result if {
 
 	# "n/a": no count field for skipped results in the predicate spec
 	_has_result(statement.predicate, rule_data.get("skipped_test_attestation_results"), "n/a")
+	test_name := _test_name(statement)
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement)],
-		_test_name(statement),
+		[test_name],
+		test_name,
 	)
 }
 
@@ -320,10 +326,11 @@ deny contains result if {
 	img_digest != ""
 	some statement in _test_attestations
 	not _subject_matches(statement, img_digest)
+	test_name := _test_name(statement)
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
-		[_test_name(statement), img_digest],
-		_test_name(statement),
+		[test_name, img_digest],
+		test_name,
 	)
 }
 

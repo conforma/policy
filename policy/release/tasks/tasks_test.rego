@@ -5,9 +5,15 @@ import rego.v1
 
 import data.lib
 import data.lib.assertions
+import data.lib.intoto
 import data.lib.tekton
 import data.lib.tekton_test
 import data.tasks
+
+_results_with_code(results, code) := {result |
+	some result in results
+	result.code == code
+}
 
 test_no_tasks_present if {
 	expected := {{
@@ -246,6 +252,186 @@ test_required_test_tasks_met if {
 
 	assertions.assert_empty(tasks._missing_test_tasks(tasks.latest_required_test_tasks.tasks)) with data["required-test-tasks"] as _required_test_tasks
 		with lib.discovered_task_names as {"clair-scan", "sast-snyk-check"}
+}
+
+test_required_test_task_from_untrusted_its_pipelinerun if {
+	clair_task := tekton_test.with_bundle(tekton_test.slsav1_task("clair-scan"), _untrusted_bundle)
+	attestation := tekton_test.slsav1_attestation([clair_task])
+
+	matching_denies := _results_with_code(tasks.deny, "tasks.required_untrusted_test_task_found") with data["required-test-tasks"] as _required_test_tasks
+		with lib.discovered_task_names as {"clair-scan"}
+		with lib.associated_its_pipelinerun_attestations as {attestation}
+		with lib.its_pipelinerun_attestations as set()
+		with data.rule_data.trusted_task_rules as _trusted_test_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.oci.image_manifests as _mock_image_manifests
+
+	expected := {{
+		"code": "tasks.required_untrusted_test_task_found",
+		# regal ignore:line-length
+		"msg": `Required task "clair-scan" is required and present, but PipelineTask "clair-scan" (Task "clair-scan") in its provenance is untrusted`,
+		"term": "clair-scan",
+	}}
+	assertions.assert_equal_results(expected, matching_denies)
+	some result in matching_denies
+	result.effective_on == "2026-10-01T00:00:00Z"
+}
+
+test_required_test_task_from_untrusted_build_pipelinerun if {
+	clair_task := tekton_test.with_bundle(tekton_test.slsav1_task("clair-scan"), _untrusted_bundle)
+	build_attestation := tekton_test.slsav1_attestation([clair_task])
+
+	matching_denies := _results_with_code(tasks.deny, "tasks.required_untrusted_test_task_found") with data["required-test-tasks"] as _required_test_tasks
+		with input.attestations as [build_attestation]
+		with lib.discovered_task_names as {"clair-scan"}
+		with lib.associated_its_pipelinerun_attestations as set()
+		with lib.its_pipelinerun_attestations as set()
+		with data.rule_data.trusted_task_rules as _trusted_test_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.oci.image_manifests as _mock_image_manifests
+
+	assertions.assert_equal(
+		{"clair-scan"},
+		{result.term | some result in matching_denies},
+	)
+}
+
+test_required_test_task_rejects_untrusted_its_helper_task if {
+	clair_task := tekton_test.with_bundle(tekton_test.slsav1_task("clair-scan"), _bundle)
+	helper_task := tekton_test.with_bundle(tekton_test.slsav1_task("prepare-test"), _untrusted_bundle)
+	attestation := tekton_test.slsav1_attestation([clair_task, helper_task])
+
+	matching_denies := _results_with_code(tasks.deny, "tasks.required_untrusted_test_task_found") with data["required-test-tasks"] as _required_test_tasks
+		with lib.discovered_task_names as {"clair-scan", "prepare-test"}
+		with lib.associated_its_pipelinerun_attestations as {attestation}
+		with lib.its_pipelinerun_attestations as set()
+		with data.rule_data.trusted_task_rules as _trusted_test_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.oci.image_manifests as _mock_image_manifests
+
+	assertions.assert_equal(
+		{"prepare-test"},
+		{result.term | some result in matching_denies},
+	)
+}
+
+test_required_test_task_rejects_unknown_bundleless_its_task if {
+	clair_task := tekton_test.with_bundle(tekton_test.slsav1_task("clair-scan"), _bundle)
+	unknown_task := tekton_test.with_bundle(tekton_test.slsav1_task("unknown-helper"), "")
+	attestation := tekton_test.slsav1_attestation([clair_task, unknown_task])
+
+	matching_denies := _results_with_code(tasks.deny, "tasks.required_untrusted_test_task_found") with data["required-test-tasks"] as _required_test_tasks
+		with lib.discovered_task_names as {"clair-scan", "unknown-helper"}
+		with lib.associated_its_pipelinerun_attestations as {attestation}
+		with lib.its_pipelinerun_attestations as set()
+		with data.rule_data.trusted_task_rules as _trusted_test_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.oci.image_manifests as _mock_image_manifests
+
+	assertions.assert_equal(
+		{"unknown-helper"},
+		{result.term | some result in matching_denies},
+	)
+}
+
+# Exercise the composed intoto -> release lib -> tasks path rather than mocking
+# the discovered names and ITS PipelineRun views at the tasks package boundary.
+test_required_test_task_rejects_untrusted_associated_provenance if {
+	clair_task := tekton_test.with_bundle(tekton_test.slsav1_task("clair-scan"), _bundle)
+	unknown_task := tekton_test.with_bundle(tekton_test.slsav1_task("unknown-helper"), "")
+	provenance := tekton_test.slsav1_attestation([clair_task, unknown_task])
+	associations := {{
+		"statement": {
+			"_type": "https://in-toto.io/Statement/v1",
+			"predicateType": intoto.predicate_test_result,
+			"subject": [{"name": "registry.io/repo/image", "digest": {"sha256": "abc123"}}],
+			"predicate": {
+				"configuration": [{"name": "clair-integration"}],
+				"timestamp": "2026-01-01T00:00:00Z",
+			},
+		},
+		"provenance": provenance,
+	}}
+
+	matching_denies := _results_with_code(tasks.deny, "tasks.required_untrusted_test_task_found") with data["required-test-tasks"] as _required_test_tasks
+		with input.image.digest as "sha256:abc123"
+		with intoto.associated_statement_provenances as associations
+		with data.rule_data.trusted_task_rules as _trusted_test_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.oci.image_manifests as _mock_image_manifests
+
+	assertions.assert_equal(
+		{"unknown-helper"},
+		{result.term | some result in matching_denies},
+	)
+}
+
+test_required_test_task_rejects_untrusted_duplicate_from_another_its_pipelinerun if {
+	trusted_task := tekton_test.with_bundle(tekton_test.slsav1_task("clair-scan"), _bundle)
+	trusted_attestation := tekton_test.slsav1_attestation([trusted_task])
+	untrusted_task := tekton_test.with_bundle(tekton_test.slsav1_task("clair-scan"), _untrusted_bundle)
+	untrusted_attestation := tekton_test.slsav1_attestation([untrusted_task])
+
+	matching_denies := _results_with_code(tasks.deny, "tasks.required_untrusted_test_task_found") with data["required-test-tasks"] as _required_test_tasks
+		with lib.discovered_task_names as {"clair-scan"}
+		with lib.its_pipelinerun_attestations as {trusted_attestation}
+		with lib.associated_its_pipelinerun_attestations as {trusted_attestation, untrusted_attestation}
+		with data.rule_data.trusted_task_rules as _trusted_test_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.oci.image_manifests as _mock_image_manifests
+
+	assertions.assert_equal(
+		{"clair-scan"},
+		{result.term | some result in matching_denies},
+	)
+}
+
+test_one_of_required_test_tasks_rejects_untrusted_alternative if {
+	required_test_tasks := [{
+		"effective_on": "2022-01-01T00:00:00Z",
+		"tasks": [["clair-scan", "sast-snyk-check"]],
+	}]
+	clair_task := tekton_test.with_bundle(tekton_test.slsav1_task("clair-scan"), _untrusted_bundle)
+	clair_attestation := tekton_test.slsav1_attestation([clair_task])
+	sast_task := tekton_test.with_bundle(tekton_test.slsav1_task("sast-snyk-check"), _bundle)
+	sast_attestation := tekton_test.slsav1_attestation([sast_task])
+
+	matching_denies := _results_with_code(tasks.deny, "tasks.required_untrusted_test_task_found") with data["required-test-tasks"] as required_test_tasks
+		with lib.discovered_task_names as {"clair-scan", "sast-snyk-check"}
+		with lib.its_pipelinerun_attestations as {sast_attestation}
+		with lib.associated_its_pipelinerun_attestations as {clair_attestation, sast_attestation}
+		with data.rule_data.trusted_task_rules as _trusted_test_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.oci.image_manifests as _mock_image_manifests
+
+	assertions.assert_equal(
+		{"clair-scan"},
+		{result.term | some result in matching_denies},
+	)
+}
+
+test_one_of_required_test_tasks_rejects_all_untrusted_alternatives if {
+	required_test_tasks := [{
+		"effective_on": "2022-01-01T00:00:00Z",
+		"tasks": [["clair-scan", "sast-snyk-check"]],
+	}]
+	clair_task := tekton_test.with_bundle(tekton_test.slsav1_task("clair-scan"), _untrusted_bundle)
+	clair_attestation := tekton_test.slsav1_attestation([clair_task])
+	sast_task := tekton_test.with_bundle(tekton_test.slsav1_task("sast-snyk-check"), _untrusted_bundle)
+	sast_attestation := tekton_test.slsav1_attestation([sast_task])
+
+	matching_denies := _results_with_code(tasks.deny, "tasks.required_untrusted_test_task_found") with data["required-test-tasks"] as required_test_tasks
+		with lib.discovered_task_names as {"clair-scan", "sast-snyk-check"}
+		with lib.its_pipelinerun_attestations as set()
+		with lib.associated_its_pipelinerun_attestations as {clair_attestation, sast_attestation}
+		with data.rule_data.trusted_task_rules as _trusted_test_task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.oci.image_manifests as _mock_image_manifests
+
+	assertions.assert_equal(
+		{"clair-scan", "sast-snyk-check"},
+		{result.term | some result in matching_denies},
+	)
 }
 
 test_required_test_task_missing if {
@@ -1461,6 +1647,8 @@ _trusted_tasks := {"oci://registry.img/spam:0.1": [{
 	"ref": "sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb",
 	"effective_on": "2000-01-01T00:00:00Z",
 }]}
+
+_trusted_test_task_rules := {"allow": {"Trusted test tasks": [{"pattern": "oci://registry.img/*"}]}}
 
 # Mock function for ec.oci.image_manifests
 _mock_image_manifests(refs) := {ref: {} | some ref in refs}

@@ -44,7 +44,10 @@ const (
 	policyConfigFilename = "policy.json"
 )
 
-var ecBinary string
+var (
+	ecBinary       string
+	itsTestFixture *itsFixture
+)
 
 func TestMain(m *testing.M) {
 	tmpBin, err := os.CreateTemp("", "ec-test-*")
@@ -64,7 +67,14 @@ func TestMain(m *testing.M) {
 	}
 	log.Printf("ec binary built in %s", time.Since(start))
 
+	itsTestFixture, err = newITSFixture()
+	if err != nil {
+		os.Remove(ecBinary)
+		log.Fatalf("creating ITS acceptance fixture: %v", err)
+	}
+
 	code := m.Run()
+	itsTestFixture.close()
 	os.Remove(ecBinary)
 	os.Exit(code)
 }
@@ -154,7 +164,11 @@ func writeSampleGCPolicyInput(ctx context.Context, sampleName string) (context.C
 	case "cdx-sbom":
 		content = sampleCDXSBOM
 	default:
-		return ctx, fmt.Errorf("%q is not a known sample name", sampleName)
+		var ok bool
+		content, ok = itsTestFixture.inputs[sampleName]
+		if !ok {
+			return ctx, fmt.Errorf("%q is not a known sample name", sampleName)
+		}
 	}
 
 	if _, err := f.WriteString(content); err != nil {
@@ -219,6 +233,7 @@ func validateInputWithPolicyConfig(ctx context.Context) (context.Context, error)
 	}
 
 	cmd := exec.Command(ecBinary, args...)
+	cmd.Env = append(os.Environ(), "SIGSTORE_REKOR_PUBLIC_KEY="+itsTestFixture.rekorPublicKeyFile)
 
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -391,6 +406,32 @@ func thereShouldBeNoViolationsWithCodeInTheResult(ctx context.Context, code stri
 	return nil
 }
 
+func thereShouldBeAViolationWithCodeTermAndMessageContaining(
+	ctx context.Context, code, term, message string,
+) error {
+	ts, err := getTestState(ctx)
+	if err != nil {
+		return fmt.Errorf("reading test state: %w", err)
+	}
+
+	for _, filepath := range ts.report.FilePaths {
+		for _, violation := range filepath.Violations {
+			if violation.Metadata.Code == code &&
+				violation.Metadata.Term == term &&
+				strings.Contains(violation.Message, message) {
+				return nil
+			}
+		}
+	}
+
+	return fmt.Errorf(
+		"expected a violation with code %q, term %q, and message containing %q",
+		code,
+		term,
+		message,
+	)
+}
+
 func prettifyResults(msg string, results []result) string {
 	for _, violation := range results {
 		code := violation.Metadata.Code
@@ -431,7 +472,8 @@ func setupScenario(ctx context.Context, sc *godog.Scenario) (context.Context, er
 		inputFileName:        path.Join(tempDir, policyInputFilename),
 		configFileName:       path.Join(tempDir, policyConfigFilename),
 		variables: map[string]string{
-			"GITROOT": gitroot,
+			"GITROOT":        gitroot,
+			"ITS_PUBLIC_KEY": itsTestFixture.publicKeyJSON,
 		},
 	}
 
@@ -476,6 +518,10 @@ func InitializeScenario(sc *godog.ScenarioContext) {
 	sc.Step(`^there should be no warnings with "([^"]*)" package in the result$`, thereShouldBeNoWarningsWithPackageInTheResult)
 	sc.Step(`^there should be violations with "([^"]*)" code in the result$`, thereShouldBeViolationsWithCodeInTheResult)
 	sc.Step(`^there should be no violations with "([^"]*)" code in the result$`, thereShouldBeNoViolationsWithCodeInTheResult)
+	sc.Step(
+		`^there should be a violation with "([^"]*)" code, "([^"]*)" term, and a message containing "([^"]*)"$`,
+		thereShouldBeAViolationWithCodeTermAndMessageContaining,
+	)
 
 	sc.After(tearDownScenario)
 }
