@@ -109,8 +109,6 @@ _mock_image_manifest_multi(ref) := {"layers": [{"digest": _layer_digest_2}]} if 
 
 _default_timestamp := "2025-01-01T00:00:00Z"
 
-_before_test_identity_effective_on := time.parse_rfc3339_ns("2026-09-30T23:59:59Z")
-
 _after_test_identity_effective_on := time.parse_rfc3339_ns("2026-10-01T00:00:01Z")
 
 _make_statement(predicate) := json.marshal({

@@ -292,6 +292,7 @@ test_untrusted_tasks if {
 	result := intoto.verified_statements with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers_with_provenance
 		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with ec.oci.image_manifests as _mock_manifests
 		with data.rule_data.trusted_task_rules as no_matching_rules.trusted_task_rules
@@ -333,6 +334,7 @@ test_denied_tasks if {
 	result := intoto.verified_statements with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers_with_provenance
 		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with ec.oci.image_manifests as _mock_manifests
 		with data.rule_data.trusted_task_rules as deny_rules.trusted_task_rules
@@ -345,6 +347,7 @@ test_empty_tasks_vacuous_truth_guard if {
 	result := intoto.verified_statements with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers_with_provenance
 		with ec.sigstore.verify_attestation as _mock_verify_empty_tasks
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with ec.oci.image_manifests as _mock_manifests
 		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
@@ -357,6 +360,7 @@ test_bundleless_tasks if {
 	result := intoto.verified_statements with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers_with_provenance
 		with ec.sigstore.verify_attestation as _mock_verify_bundleless_tasks
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with ec.oci.image_manifests as _mock_manifests
 		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules
@@ -416,6 +420,7 @@ test_mixed_bundle_and_inline_tasks if {
 	result := intoto.verified_statements with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers_with_provenance
 		with ec.sigstore.verify_attestation as _mock_verify_mixed_bundle_inline
+		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with ec.oci.image_manifests as _mock_manifests
 		with data.rule_data.trusted_task_rules as _trusted_task_rules.trusted_task_rules

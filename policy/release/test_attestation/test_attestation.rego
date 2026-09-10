@@ -40,9 +40,7 @@ _all_test_attestations := intoto.verified_statements_by_predicate(intoto.predica
 
 _test_attestations := lib.latest_test_attestations(_all_test_attestations)
 
-_test_name(statement) := name if {
-	name := lib.attestation_test_name(statement)
-} else := "unknown test"
+_test_name(statement) := lib.attestation_test_name(statement)
 
 _count_detail(predicate, key) := result if {
 	n := object.get(predicate, key, 0)
