@@ -206,12 +206,10 @@ build_pipelinerun_task_names := task_names_from_tasks(tasks_from_pipelinerun)
 
 its_pipelinerun_task_names := task_names_from_tasks(tasks_from_its_pipelineruns)
 
-associated_its_pipelinerun_task_names := task_names_from_tasks(tasks_from_associated_its_pipelineruns)
-
-# Presence discovery includes each integration test's latest signature-verified
-# ITS PipelineRun before task trust. The tasks policy separately rejects required
-# test tasks whose execution did not pass task-trust validation.
-discovered_task_names := build_pipelinerun_task_names | associated_its_pipelinerun_task_names
+# Presence discovery includes each integration test's latest task-trusted ITS
+# PipelineRun. An untrusted ITS run therefore remains missing even if the
+# separate detailed task-trust rule is disabled.
+discovered_task_names := build_pipelinerun_task_names | its_pipelinerun_task_names
 
 _statement_subject_matches_image(statement) if {
 	some subject in object.get(statement, "subject", [])

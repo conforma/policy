@@ -400,6 +400,17 @@ test_discovered_task_names_unions_and_deduplicates_sources if {
 	) with input.attestations as [build_att]
 		with input.image.digest as "sha256:abc123"
 		with intoto.associated_statement_provenances as associated
+		with intoto.verified_statement_provenances as associated
+}
+
+test_discovered_task_names_excludes_untrusted_its_runs if {
+	its_att := tekton_test.slsav1_attestation([tekton_test.slsav1_task("clair-scan")])
+	associated := {_verified_statement_provenance("tests", its_att)}
+
+	assertions.assert_empty(lib.discovered_task_names) with input.attestations as []
+		with input.image.digest as "sha256:abc123"
+		with intoto.associated_statement_provenances as associated
+		with intoto.verified_statement_provenances as set()
 }
 
 test_discovered_task_names_empty_without_sources if {

@@ -36,11 +36,13 @@ Feature: Trusted tasks in Integration Test Service PipelineRuns
         Given a sample policy input "its-untrusted-helper"
         When input is validated
         Then there should be a violation with "tasks.required_untrusted_test_task_found" code, "prepare-test" term, and a message containing "in its provenance is untrusted"
+        And there should be violations with "tasks.required_test_tasks_found" code in the result
 
     Scenario: A bundleless helper task fails closed
         Given a sample policy input "its-unknown-helper"
         When input is validated
         Then there should be a violation with "tasks.required_untrusted_test_task_found" code, "unknown-helper" term, and a message containing "in its provenance is untrusted"
+        And there should be violations with "tasks.required_test_tasks_found" code in the result
 
     Scenario: A test result without SLSA provenance does not satisfy the required test task
         Given a sample policy input "its-missing-provenance"
@@ -62,3 +64,4 @@ Feature: Trusted tasks in Integration Test Service PipelineRuns
         Given a sample policy input "its-latest-retry-untrusted"
         When input is validated
         Then there should be a violation with "tasks.required_untrusted_test_task_found" code, "clair-scan" term, and a message containing "in its provenance is untrusted"
+        And there should be violations with "tasks.required_test_tasks_found" code in the result

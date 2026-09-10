@@ -468,10 +468,13 @@ test_test_name_from_configuration if {
 	contains(r.msg, "\"my-custom-test\"")
 }
 
-# --- Test Case 10: Missing configuration is excluded from result evaluation ---
+# --- Test Case 10: Missing configuration identity is rejected ---
 
-test_missing_configuration_is_excluded_from_result_evaluation if {
-	assertions.assert_empty(test_attestation.deny) with input.image.ref as _image_ref
+test_missing_configuration_identity_is_rejected if {
+	assertions.assert_equal_results(test_attestation.deny, {{
+		"code": "test_attestation.test_identity_found",
+		"msg": "Test attestation is missing a valid configuration name",
+	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_no_config
@@ -574,8 +577,11 @@ _mock_blob_missing_predicate(_) := json.marshal({
 	"predicate": {"timestamp": _default_timestamp},
 })
 
-test_missing_result_and_configuration_is_excluded_from_result_evaluation if {
-	assertions.assert_empty(test_attestation.deny) with input.image.ref as _image_ref
+test_missing_result_and_configuration_reports_invalid_identity if {
+	assertions.assert_equal_results(test_attestation.deny, {{
+		"code": "test_attestation.test_identity_found",
+		"msg": "Test attestation is missing a valid configuration name",
+	}}) with input.image.ref as _image_ref
 		with ec.oci.image_referrers as _mock_referrers
 		with ec.sigstore.verify_attestation as _mock_verify_success
 		with ec.oci.blob as _mock_blob_missing_predicate

@@ -1,6 +1,6 @@
 = Tasks Package
 
-Conforma expects that a set of tasks were included in the pipeline build for each image to be released. This package includes a set of rules to verify that the expected tasks ran in the pipeline when the image was built. Required tasks for a pipeline are specified in a data source provided at runtime. This data source features two primary rule data keys: pipeline-required-tasks and required-tasks. The pipeline-required-tasks key lists all required tasks broken down by pipeline name, while required-tasks details a default or baseline set of tasks. If your pipeline corresponds to an entry under pipeline-required-tasks, those tasks will be prioritized; otherwise, the system will default to the tasks listed under required-tasks. Required tasks are listed by the names given to them within the task definition. Optionally invocation parameter of a Task can be also mandated by including the name and the value in square brackets following the name of the task. For example: name[PARAM=val]. Only single parameter is supported, to assert multiple parameters repeat the required task definition for each parameter seperately. The optional required-test-tasks key uses the same time-gated format and is satisfied by tasks discovered in either the build PipelineRun or the latest signature-verified ITS PipelineRun for each integration test associated with the image. When omitted, test-task enforcement is disabled.
+Conforma expects that a set of tasks were included in the pipeline build for each image to be released. This package includes a set of rules to verify that the expected tasks ran in the pipeline when the image was built. Required tasks for a pipeline are specified in a data source provided at runtime. This data source features two primary rule data keys: pipeline-required-tasks and required-tasks. The pipeline-required-tasks key lists all required tasks broken down by pipeline name, while required-tasks details a default or baseline set of tasks. If your pipeline corresponds to an entry under pipeline-required-tasks, those tasks will be prioritized; otherwise, the system will default to the tasks listed under required-tasks. Required tasks are listed by the names given to them within the task definition. Optionally invocation parameter of a Task can be also mandated by including the name and the value in square brackets following the name of the task. For example: name[PARAM=val]. Only single parameter is supported, to assert multiple parameters repeat the required task definition for each parameter seperately. The optional required-test-tasks key uses the same time-gated format and is satisfied by tasks discovered in either the build PipelineRun or the latest task-trusted ITS PipelineRun for each integration test associated with the image. When omitted, test-task enforcement is disabled.
 
 == Package Name
 
@@ -48,7 +48,7 @@ Ensure that every required test task found in a build or latest applicable ITS P
 [#tasks__required_test_tasks_found]
 === link:#tasks__required_test_tasks_found[All required test tasks were included in a pipeline]
 
-Ensure that every currently required test task is included in either the build PipelineRun or the latest signature-verified ITS PipelineRun for an integration test associated with the image.
+Ensure that every currently required test task is included in either the build PipelineRun or the latest task-trusted ITS PipelineRun for an integration test associated with the image.
 
 *Solution*: Ensure the required test task runs in either the build pipeline or an Integration Test Service pipeline associated with the image.
 
@@ -85,7 +85,7 @@ Produce a warning when a task that will be required in the future was not includ
 [#tasks__future_required_test_tasks_found]
 === link:#tasks__future_required_test_tasks_found[Future required test tasks were found]
 
-Produce a warning when a test task that will be required in the future was not included in either the build or latest applicable ITS PipelineRun attestations.
+Produce a warning when a test task that will be required in the future was not included in either the build or latest task-trusted ITS PipelineRun attestations.
 
 *Solution*: Ensure the test task runs in either the build pipeline or an Integration Test Service pipeline associated with the image.
 

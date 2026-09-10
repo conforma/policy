@@ -200,6 +200,7 @@
 **** xref:packages/release_test_attestation.adoc#test_attestation__test_result_known[No unsupported test attestation result values]
 **** xref:packages/release_test_attestation.adoc#test_attestation__rule_data_provided[Rule data provided]
 **** xref:packages/release_test_attestation.adoc#test_attestation__test_data_found[Test attestation data includes result]
+**** xref:packages/release_test_attestation.adoc#test_attestation__test_identity_found[Test attestation includes an identity]
 **** xref:packages/release_test_attestation.adoc#test_attestation__subject_mismatch[Test attestation subject matches image]
 *** xref:packages/release_trusted_task.adoc[Trusted Task checks]
 **** xref:packages/release_trusted_task.adoc#trusted_task__data_format[Data format]

@@ -23,8 +23,8 @@
 #   required task definition for each parameter seperately.
 #   The optional required-test-tasks key uses the same time-gated format and is
 #   satisfied by tasks discovered in either the build PipelineRun or the latest
-#   signature-verified ITS PipelineRun for each integration test associated with
-#   the image. When omitted, test-task enforcement is disabled.
+#   task-trusted ITS PipelineRun for each integration test associated with the
+#   image. When omitted, test-task enforcement is disabled.
 #
 #
 package tasks
@@ -109,7 +109,7 @@ warn contains result if {
 # title: Future required test tasks were found
 # description: >-
 #   Produce a warning when a test task that will be required in the future
-#   was not included in either the build or latest applicable ITS PipelineRun
+#   was not included in either the build or latest task-trusted ITS PipelineRun
 #   attestations.
 # custom:
 #   short_name: future_required_test_tasks_found
@@ -227,7 +227,7 @@ deny contains result if {
 # title: All required test tasks were included in a pipeline
 # description: >-
 #   Ensure that every currently required test task is included in either the
-#   build PipelineRun or the latest signature-verified ITS PipelineRun for an
+#   build PipelineRun or the latest task-trusted ITS PipelineRun for an
 #   integration test associated with the image.
 # custom:
 #   short_name: required_test_tasks_found
@@ -454,7 +454,7 @@ _missing_tasks(required_tasks) := {task |
 }
 
 # _missing_test_tasks compares required test-task entries with every normalized
-# task name discovered from the build and latest signature-verified ITS runs.
+# task name discovered from the build and latest task-trusted ITS runs.
 _missing_test_tasks(required_tasks) := {task |
 	some required_task in required_tasks
 	some task in _any_missing(required_task, lib.discovered_task_names)

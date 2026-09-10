@@ -2,6 +2,8 @@ package lib
 
 import rego.v1
 
+import data.lib.time as lib_time
+
 # The integration-test identity defined by the in-toto test-result predicate.
 attestation_test_name(statement) := name if {
 	predicate := object.get(statement, "predicate", {})
@@ -12,12 +14,12 @@ attestation_test_name(statement) := name if {
 	name != ""
 }
 
-# A timestamp suitable for ordering test-result attestations. Statements with a
-# missing or empty timestamp are not candidates when selecting the latest run.
-attestation_test_timestamp(statement) := timestamp if {
+# The instant represented by a test-result timestamp. Statements with a
+# missing, empty, or invalid RFC 3339 timestamp are not latest-run candidates.
+attestation_test_instant(statement) := instant if {
 	timestamp := statement.predicate.timestamp
 	is_string(timestamp)
-	timestamp != ""
+	instant := lib_time.parse_rfc3339_safe(timestamp)
 }
 
 # Keep the statement with the greatest timestamp for each integration-test
@@ -28,8 +30,8 @@ latest_test_attestations(statements) := {statement |
 		some candidate in statements
 		attestation_test_name(candidate) == test_name
 	}
-	latest_timestamp := max({attestation_test_timestamp(candidate) | some candidate in test_runs})
+	latest_instant := max({attestation_test_instant(candidate) | some candidate in test_runs})
 
 	some statement in test_runs
-	attestation_test_timestamp(statement) == latest_timestamp
+	attestation_test_instant(statement) == latest_instant
 }
