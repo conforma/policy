@@ -102,7 +102,7 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
 
 - **Add a release policy rule:** follow the pattern in `policy/release/attestation_type/attestation_type.rego` (rule + `_test.rego` in a subdirectory, declare `collections:` in METADATA)
 - **Add a pipeline policy rule:** follow the pattern in `policy/pipeline/required_tasks.rego`
-- **Add a shared library function:** see `policy/lib/tekton/` for reference implementation (must have test coverage)
+- **Add a shared library function:** see `policy/lib/tekton/` for reference implementation. Must have direct unit tests in the corresponding `_test.rego` file — indirect coverage through callers is not sufficient
 - **Fetch and parse an OCI blob:** use `oci.parsed_blob(ref)` from `data.lib.oci`, not `json.unmarshal(ec.oci.blob(ref))` directly. A Regal lint rule (`prefer-parsed-blob`) enforces this
 - **Add a new collection:** `policy/*/collection/<name>/` — a minimal package declaration (no imports needed). No new tests needed for the collection itself; the CLI repo tests collection filtering and `make conventions-check` validates dependency-collection superset constraints. If new rules are added alongside the collection, those rules need `_test.rego` coverage as usual
 - **Add/modify test result validation:** update both `policy/release/test/` (pipeline task results) AND `policy/release/test_attestation/` (in-toto attestations). These packages must maintain feature parity
@@ -122,6 +122,12 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
   the pattern.
 - **Test coverage:** Every new rule needs tests in a corresponding `_test.rego` file. CI enforces
   100% coverage.
+- **Direct unit tests for new helper functions:** New public helper functions in `policy/lib/` must
+  have direct unit tests in the corresponding `_test.rego` file — not just indirect coverage through
+  consuming rules. 100% coverage through indirect tests alone is not sufficient for functions with
+  multiple logical branches. Direct tests should exercise each logical branch, edge cases (empty
+  strings, non-string values, boundary conditions), and the function's contract independent of any
+  specific caller.
 
 ## PR Conventions
 
