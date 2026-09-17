@@ -1159,6 +1159,146 @@ untrusted_git_task := {
 }
 
 # =============================================================================
+# SIGNATURE VERIFICATION TESTS
+# =============================================================================
+
+# Test: Allow rule without signing_identity works as before (backward compat)
+test_allow_rule_without_signing_identity if {
+	rules := {"allow": {"test-group": [{"pattern": "oci://registry.local/trusty*"}]}}
+
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+}
+
+# Test: Allow rule with signing_identity passes when signature is valid
+test_allow_rule_with_valid_signature if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+		},
+	}]}}
+
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_success
+}
+
+# Test: Allow rule with signing_identity fails when signature is invalid
+test_allow_rule_with_invalid_signature if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+		},
+	}]}}
+
+	not tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+}
+
+# Test: Multiple allow rules - task passes if any rule's pattern+signature match
+test_multiple_allow_rules_different_sig_configs if {
+	rules := {"allow": {
+		"signed-catalog": [{
+			"pattern": "oci://registry.local/trusty*",
+			"signing_identity": {
+				"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+				"certificate_oidc_issuer": "https://accounts.google.com",
+			},
+		}],
+		"unsigned-catalog": [{"pattern": "oci://registry.local/trusty*"}],
+	}}
+
+	# Passes because the unsigned-catalog rule has no sig verification requirement
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+}
+
+# Test: Git-resolved tasks are exempt from signature verification
+test_git_tasks_exempt_from_signing_identity if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "git\\+git\\.local/repo\\.git//*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+		},
+	}]}}
+
+	# Git task should pass even though ec.sigstore.verify_image would fail,
+	# because git tasks are exempt from signature verification
+	tekton.is_trusted_task(trusted_git_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+}
+
+# Test: denial_reason returns signing_identity_failed when pattern matches but sig fails
+test_denial_reason_signing_identity_failed if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+		},
+	}]}}
+
+	reason := tekton.denial_reason(trusted_bundle_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+
+	assertions.assert_equal("signing_identity_failed", reason.type)
+	assertions.assert_equal(["oci://registry.local/trusty*"], reason.pattern)
+	count(reason.messages) == 1
+	contains(reason.messages[0], "failed signature verification")
+	contains(reason.messages[0], "oci://registry.local/trusty*")
+	contains(reason.messages[0], "certificate_identity_regexp")
+}
+
+# Test: Schema validation accepts valid signing_identity on allow rules
+test_schema_accepts_signing_identity if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+			"ignore_rekor": true,
+		},
+	}]}}
+
+	# No data errors should be produced for valid signing_identity
+	assertions.assert_empty(tekton.data_errors) with data.rule_data.trusted_task_rules as rules
+}
+
+# Test: Schema validation rejects empty signing_identity (would be silently permissive)
+test_schema_rejects_empty_signing_identity if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {},
+	}]}}
+
+	count(tekton.data_errors) > 0 with data.rule_data.trusted_task_rules as rules
+}
+
+# Test: Schema validation rejects signing_identity with only non-identity fields
+test_schema_rejects_signing_identity_without_identity if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {"ignore_rekor": true},
+	}]}}
+
+	count(tekton.data_errors) > 0 with data.rule_data.trusted_task_rules as rules
+}
+
+# Mock helpers for signature verification tests
+_mock_verify_image_success(_, _) := {"success": true, "errors": []}
+
+_mock_verify_image_failure(_, _) := {"success": false, "errors": ["signature verification failed"]}
+
+# =============================================================================
 # BEGIN LEGACY TEST DATA (trusted_tasks)
 # DELETE THIS SECTION when removing legacy support.
 # =============================================================================
