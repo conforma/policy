@@ -231,8 +231,12 @@ lint: ## Runs Rego linter
 lint-fix: ## Fix linting issues automagically
 	@go run github.com/google/addlicense -c '$(COPY)' -y '' -s $(LICENSE_IGNORE) .
 
+.PHONY: lint-acceptance
+lint-acceptance: ## Check acceptance shims that declare a production package carry an ACCEPTANCE-ONLY marker (see AGENTS.md)
+	@hack/lint-acceptance.sh
+
 .PHONY: ci
-ci: quiet-test acceptance opa-check conventions-check fmt-check lint regal-test generate-docs ## Runs all checks and tests
+ci: quiet-test acceptance opa-check conventions-check fmt-check lint lint-acceptance regal-test generate-docs ## Runs all checks and tests
 
 #--------------------------------------------------------------------
 
