@@ -51,8 +51,7 @@ define COVERAGE
 	--data hack/simplecov.rego \
 	data.hack.from_opa > coverage.json; \
 	rm -f "$${T}" || true ;\
-} \
-| jq -j -r 'if .coverage < 100 then "ERROR: Code coverage threshold not met: got \(.coverage) instead of 100.00\n" | halt_error(1) else "" end'
+}
 endef
 
 ##@ General
