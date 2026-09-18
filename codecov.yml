@@ -15,9 +15,6 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
-codecov:
-  require_ci_to_pass: false
-
 coverage:
   status:
     project:
