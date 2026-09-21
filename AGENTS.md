@@ -138,6 +138,17 @@ When a PR modifies trust-boundary code — specifically files in `policy/lib/tek
 - **Security-critical rule data keys table:** ensure new or removed keys are reflected
 - **Open questions and recommendations:** update or close entries referencing the changed components
 
+## Review Checklist for New Policy Rules
+
+- **`effective_on` date required:** New deny/warn rules MUST include an
+  `effective_on` date in their rule data entry (in `example/data/`) to
+  provide a migration window. Rules without `effective_on` enforce
+  immediately on deployment, which can break existing builds without
+  warning. Check that the corresponding rule data file has a future
+  `effective_on` date for every new rule being added.
+- **Collection membership:** New rules must be added to the appropriate
+  collection(s) in `policy/*/collection/` or they won't be evaluated.
+
 ## PR Conventions
 
 Conventional commits are encouraged. Run `make ci` before pushing. CI runs on every PR via
