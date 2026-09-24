@@ -138,6 +138,53 @@ When a PR modifies trust-boundary code — specifically files in `policy/lib/tek
 - **Security-critical rule data keys table:** ensure new or removed keys are reflected
 - **Open questions and recommendations:** update or close entries referencing the changed components
 
+## Rego Evaluation Model (for AI reviewers)
+
+Rego is a declarative policy language (Datalog-inspired), not imperative code.
+Understanding its evaluation model is critical for accurate code review.
+
+### Evaluation Semantics
+
+- Multiple rule bodies with the same name are **disjunctions** (OR). Conditions
+  within a body are **conjunctions** (AND).
+- Rules evaluate to `true` or `undefined` — there are no "return values" or
+  control flow. Do not describe Rego rules as "returning" values or having a
+  "public API" in the imperative sense.
+- There is no call/return mechanism, no early returns, and no try/catch.
+
+### Testing Idioms
+
+- Testing each conjunction term independently is **sufficient and idiomatic**.
+  Because rules compose declaratively (AND/OR), full coverage of individual
+  clauses provides equivalent assurance to testing the composed rule.
+- Do not request integration tests through higher-level rules (e.g.,
+  `is_registry_dependency`) when individual clause tests exist and `make test`
+  enforces 100% coverage.
+- This repo enforces 100% test coverage via `make test`. If coverage is met,
+  the tests are sufficient.
+
+### Idiomatic Patterns to Suggest
+
+When reviewing Rego code, prefer these idiomatic patterns over verbose alternatives:
+
+| Instead of | Suggest |
+|------------|---------|
+| Explicit iteration / index-based loops | `some x in collection` |
+| Manual key-existence checks | `object.get(obj, key, default)` |
+| Chained equality (`x == "a"; x == "b"`) | `x in {"a", "b"}` |
+| Verbose negation | `not rule_name` |
+
+### What NOT to Suggest
+
+- **Early returns or control flow** — Rego has none.
+- **Try/catch or error handling** — Rego has no exceptions.
+- **Null guards for parser-guaranteed keys** — if the input schema guarantees a
+  key exists (e.g., from `ec.oci.blob` or SLSA attestation structure), do not
+  suggest defensive key-existence checks.
+- **Integration tests through higher-level rules** — when individual clause tests
+  exist and coverage is 100%, this adds no value and reflects imperative testing
+  assumptions.
+
 ## PR Conventions
 
 Conventional commits are encouraged. Run `make ci` before pushing. CI runs on every PR via
