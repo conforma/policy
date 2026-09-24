@@ -138,6 +138,18 @@ When a PR modifies trust-boundary code — specifically files in `policy/lib/tek
 - **Security-critical rule data keys table:** ensure new or removed keys are reflected
 - **Open questions and recommendations:** update or close entries referencing the changed components
 
+## Testing New Helper Functions
+
+When a PR introduces a new public helper function in `policy/lib/`, it must have
+direct unit tests in the corresponding `_test.rego` file — not just indirect
+coverage through consuming rules. Direct tests should exercise:
+- Each logical branch of the function
+- Edge cases (empty strings, non-string values, boundary conditions)
+- The function's contract independent of any specific caller
+
+100% coverage through indirect tests alone is not sufficient for functions with
+multiple logical branches.
+
 ## PR Conventions
 
 Conventional commits are encouraged. Run `make ci` before pushing. CI runs on every PR via
