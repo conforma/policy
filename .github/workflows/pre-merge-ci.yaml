@@ -79,4 +79,4 @@ jobs:
         with:
           use_oidc: true
           flags: unit-tests
-          fail_ci_if_error: false
+          fail_ci_if_error: true
