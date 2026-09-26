@@ -1166,7 +1166,8 @@ untrusted_git_task := {
 test_allow_rule_without_signature_verification if {
 	rules := {"allow": {"test-group": [{"pattern": "oci://registry.local/trusty*"}]}}
 
-	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 }
 
 # Test: Allow rule with signature_verification passes when signature is valid
@@ -1176,10 +1177,12 @@ test_allow_rule_with_valid_signature if {
 		"signature_verification": {
 			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
 			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
 		},
 	}]}}
 
-	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 		with ec.sigstore.verify_image as _mock_verify_image_success
 }
 
@@ -1190,10 +1193,12 @@ test_allow_rule_with_invalid_signature if {
 		"signature_verification": {
 			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
 			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
 		},
 	}]}}
 
-	not tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+	not tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 		with ec.sigstore.verify_image as _mock_verify_image_failure
 }
 
@@ -1211,7 +1216,8 @@ test_multiple_allow_rules_different_sig_configs if {
 	}}
 
 	# Passes because the unsigned-catalog rule has no sig verification requirement
-	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 		with ec.sigstore.verify_image as _mock_verify_image_failure
 }
 
@@ -1222,12 +1228,14 @@ test_git_tasks_exempt_from_signature_verification if {
 		"signature_verification": {
 			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
 			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
 		},
 	}]}}
 
 	# Git task should pass even though ec.sigstore.verify_image would fail,
 	# because git tasks are exempt from signature verification
-	tekton.is_trusted_task(trusted_git_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+	tekton.is_trusted_task(trusted_git_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 		with ec.sigstore.verify_image as _mock_verify_image_failure
 }
 
@@ -1238,10 +1246,12 @@ test_denial_reason_signature_verification_failed if {
 		"signature_verification": {
 			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
 			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
 		},
 	}]}}
 
-	reason := tekton.denial_reason(trusted_bundle_task, _empty_bundle_manifests) with data.trusted_task_rules as rules
+	reason := tekton.denial_reason(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
 		with ec.sigstore.verify_image as _mock_verify_image_failure
 
 	assertions.assert_equal("signature_verification_failed", reason.type)
@@ -1257,7 +1267,7 @@ test_schema_accepts_signature_verification if {
 		"signature_verification": {
 			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
 			"certificate_oidc_issuer": "https://accounts.google.com",
-			"ignore_rekor": true,
+			"rekor_url": "https://rekor.sigstore.dev",
 		},
 	}]}}
 

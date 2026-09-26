@@ -4,6 +4,7 @@ import rego.v1
 
 import data.lib.arrays
 import data.lib.json as j
+import data.lib.sigstore
 import data.lib.time as time_lib
 
 # regal ignore:prefer-package-imports
@@ -263,6 +264,23 @@ data_errors contains error if {
 	some rule_type in ["allow", "deny"]
 	some group, rules in rule_data_rules[rule_type]
 	some i, rule in rules
+	"signature_verification" in object.keys(rule)
+	some e in sigstore.validate(rule.signature_verification)
+	error := {
+		"message": sprintf(
+			"trusted_task_rules.%s.%s[%d].signature_verification %s",
+			[rule_type, group, i, e.message],
+		),
+		"severity": e.severity,
+	}
+}
+
+data_errors contains error if {
+	rule_data_rules := lib_rule_data("trusted_task_rules")
+	is_object(rule_data_rules)
+	some rule_type in ["allow", "deny"]
+	some group, rules in rule_data_rules[rule_type]
+	some i, rule in rules
 	"effective_on" in object.keys(rule)
 	not time.parse_rfc3339_ns(rule.effective_on)
 	error := {
@@ -497,27 +515,7 @@ _trusted_task_rule_entry_schema := {
 			"description": "List of version constraints",
 			"items": {"type": "string"},
 		},
-		"signature_verification": {
-			"type": "object",
-			# regal ignore:line-length
-			"description": "Sigstore verification options. When present, bundles matching this allow rule must also have a verified signature.",
-			"properties": {
-				"certificate_identity": {"type": "string", "minLength": 1},
-				"certificate_identity_regexp": {"type": "string", "minLength": 1},
-				"certificate_oidc_issuer": {"type": "string", "minLength": 1},
-				"certificate_oidc_issuer_regexp": {"type": "string", "minLength": 1},
-				"ignore_rekor": {"type": "boolean"},
-				"public_key": {"type": "string", "minLength": 1},
-				"rekor_url": {"type": "string", "minLength": 1},
-			},
-			"additionalProperties": false,
-			# regal ignore:line-length
-			"anyOf": [
-				{"required": ["certificate_identity"]},
-				{"required": ["certificate_identity_regexp"]},
-				{"required": ["public_key"]},
-			],
-		},
+		"signature_verification": sigstore.opts_schema,
 	},
 	"additionalProperties": true,
 }
