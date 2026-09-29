@@ -138,6 +138,51 @@ When a PR modifies trust-boundary code — specifically files in `policy/lib/tek
 - **Security-critical rule data keys table:** ensure new or removed keys are reflected
 - **Open questions and recommendations:** update or close entries referencing the changed components
 
+## Acceptance shims must not extend production packages
+
+In Rego, rules declared in the same package are unioned across all loaded
+files. An acceptance-only shim that declares a production package name (e.g.
+`package lib.sbom`, `package release.foo`) and is colocated on the production
+`ec eval` load path would silently extend production behavior.
+
+Production `ec eval` invocations for this repository load `./policy` (see
+`POLICY_DIR` / `TEST_FILES` in the `Makefile`); they do not include
+`acceptance/policy/**`. Acceptance shims are therefore safe **only** as long
+as they stay under the `acceptance/` subtree. Because the package-name
+overlap is deliberate — the acceptance harness relies on it to override
+rules under test — the guardrail is a required marker comment rather than a
+rename.
+
+**Rule.** Any Rego file under `acceptance/` that declares a package matching
+`^package (lib|release)(\.|$)` MUST include a comment of the form:
+
+```rego
+# ACCEPTANCE-ONLY: <justification of why this does not leak to production>
+```
+
+The justification should record (a) which acceptance feature or scenario
+loads the file, and (b) why it is not on the production `ec eval` load path
+(typically: the file lives under `acceptance/policy/...` and production
+loads only `./policy`).
+
+**Example.** `acceptance/policy/sbom_proxy/lib/sbom_acceptance_shim.rego`
+declares `package lib.sbom` — the same package as production
+`policy/lib/sbom/sbom.rego`. It is safe because it is scoped to the
+`sbom_proxy` acceptance feature under `acceptance/policy/sbom_proxy/` and is
+never loaded by production `ec eval`. The file carries the marker comment
+documenting this.
+
+**Enforcement.** `make lint-acceptance` (invoked by `make ci`) runs
+`hack/lint-acceptance.sh`, which fails the build if any acceptance rego
+declares a production `lib.*` / `release.*` package without the marker.
+The check ignores commented-out `package` lines and does not fire on
+non-production package prefixes.
+
+If you are introducing an acceptance shim that legitimately needs to
+redeclare a production package, add the marker comment with a specific
+justification and mention it in the PR description so reviewers can confirm
+the load-path scoping still holds.
+
 ## PR Conventions
 
 Conventional commits are encouraged. Run `make ci` before pushing. CI runs on every PR via
