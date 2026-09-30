@@ -122,6 +122,32 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
 - Do NOT suggest imperative patterns that Rego does not provide: early returns, try/catch, or
   exception handling. These concepts do not exist in Rego.
 
+## Product and Tool Name Conventions
+
+Use the canonical casing for product and tool names in documentation, code comments, and policy
+annotations. Incorrect casing is a review finding.
+
+| Name | Correct | Incorrect examples | Reference |
+|------|---------|-------------------|-----------|
+| roxctl | `roxctl` | Roxctl, ROXCTL | [Red Hat ACS docs](https://docs.redhat.com/en/documentation/red_hat_advanced_cluster_security_for_kubernetes/4.0/html-single/roxctl_cli/index) |
+| cosign | `cosign` | Cosign, COSIGN | [Sigstore project](https://docs.sigstore.dev/) |
+| Sigstore | `Sigstore` | sigstore, SIGSTORE | [Sigstore project](https://www.sigstore.dev/) |
+| Rekor | `Rekor` | rekor, REKOR | [Sigstore project](https://docs.sigstore.dev/logging/overview/) |
+| Fulcio | `Fulcio` | fulcio, FULCIO | [Sigstore project](https://docs.sigstore.dev/certificate_authority/overview/) |
+| Tekton | `Tekton` | tekton, TEKTON | [Tekton project](https://tekton.dev/) |
+| SLSA | `SLSA` | slsa, Slsa | [SLSA spec](https://slsa.dev/) |
+| Conforma | `Conforma` | conforma (when referring to the product) | Project convention |
+| Clair | `Clair` | clair, CLAIR | [Clair project](https://quay.github.io/clair/) |
+| OPA | `OPA` | opa (when referring to the product) | [Open Policy Agent](https://www.openpolicyagent.org/) |
+| Rego | `Rego` | rego (when referring to the language) | [OPA docs](https://www.openpolicyagent.org/docs/latest/policy-language/) |
+
+**Notes:**
+- CLI tool names used as commands (e.g., `opa check`, `cosign verify`) naturally appear in
+  lowercase — that is correct. The table above applies when referring to the tool or project
+  by name in prose.
+- Package paths, variable names, and Rego identifiers follow their own naming conventions and
+  are not subject to these rules (e.g., `data.lib.sigstore` is a valid package path).
+
 ## Common Change Patterns
 
 - **Add a release policy rule:** follow the pattern in `policy/release/attestation_type/attestation_type.rego` (rule + `_test.rego` in a subdirectory, declare `collections:` in METADATA)
@@ -141,6 +167,10 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
   rule and verify it includes `effective_on: <future RFC 3339 date>`. See existing rules in
   `policy/release/` for the pattern. Rule data entries in `example/data/` YAML files (e.g.,
   `required_tasks.yml`, `trusted_tekton_tasks.yml`) also use `effective_on` for data-driven rules.
+  **Exception:** Rules that are both opt-in (require explicit user configuration to activate) and
+  fail-closed (produce no output when unconfigured) may omit `effective_on`, since unconfigured
+  builds are unaffected. When omitting `effective_on` for this reason, document the rationale in the
+  PR description.
 - **Collection membership:** New rules must declare membership in the appropriate collection(s) via
   the `collections:` key in their METADATA annotation. See existing rules in `policy/release/` for
   the pattern.
@@ -167,4 +197,12 @@ When a PR modifies trust-boundary code — specifically files in `policy/lib/tek
 Conventional commits are encouraged. Run `make ci` before pushing. CI runs on every PR via
 `.github/workflows/pre-merge-ci.yaml`. Policy bundles are published on merge to main via
 `.github/workflows/push-bundles.yaml`.
+
+## Retro filing
+
+When running as the `retro` agent, invoke the `retro-filing-policy` skill
+before writing output. It is loaded by the derived retro harness and is the
+enforcement layer; this pointer is only reinforcement. Scores 0–3 are
+summary-only, while scores 4–5 remain subject to the upstream duplicate and
+recently-closed checks before filing.
 
