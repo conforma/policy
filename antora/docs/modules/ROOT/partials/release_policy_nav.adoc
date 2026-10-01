@@ -213,6 +213,7 @@
 **** xref:packages/release_trusted_task.adoc#trusted_task__current[Tasks using the latest versions]
 **** xref:packages/release_trusted_task.adoc#trusted_task__valid_trusted_artifact_inputs[Trusted Artifact produced in pipeline]
 **** xref:packages/release_trusted_task.adoc#trusted_task__trusted_parameters[Trusted parameters]
+**** xref:packages/release_trusted_task.adoc#trusted_task__grandfathered_deny_rule[Trusted task deny rule is grandfathered]
 *** xref:packages/release_volatile_config.adoc[Volatile Configuration Warnings]
 **** xref:packages/release_volatile_config.adoc#volatile_config__expiring_rule[Volatile rule expiring soon]
 **** xref:packages/release_volatile_config.adoc#volatile_config__expired_rule[Volatile rule has expired]
