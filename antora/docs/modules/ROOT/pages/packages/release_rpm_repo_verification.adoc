@@ -1,0 +1,70 @@
+= RPM Repository Verification Package
+
+This package provides rules for verifying yum repository-level GPG signatures and checksum chains as reported in the SLSA Provenance attestation. This is an alternative to individual RPM signature verification for packages distributed via GPG-signed yum repositories.
+
+== Package Name
+
+* `rpm_repo_verification`
+
+== Rules Included
+
+[#rpm_repo_verification__allowed_gpg_key]
+=== link:#rpm_repo_verification__allowed_gpg_key[Allowed GPG key]
+
+Each yum repository's GPG key must be in the list of allowed keys. The list of allowed keys can be set via the `allowed_rpm_repo_gpg_keys` rule data.
+
+*Solution*: Ensure the yum repository is signed with one of the allowed GPG keys configured in the allowed_rpm_repo_gpg_keys rule data.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Yum repository GPG key %q is not one of the allowed keys: %s`
+* Code: `rpm_repo_verification.allowed_gpg_key`
+* Effective from: `2026-11-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_repo_verification/rpm_repo_verification.rego#L80[Source, window="_blank"]
+
+[#rpm_repo_verification__gpg_signature_verified]
+=== link:#rpm_repo_verification__gpg_signature_verified[GPG signature verified]
+
+Each yum repository in the verification results must have a verified GPG signature on its repomd.xml metadata file.
+
+*Solution*: Ensure the yum repository metadata (repomd.xml) is signed with a valid GPG key and that the signature can be verified.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Yum repository %q GPG signature verification failed`
+* Code: `rpm_repo_verification.gpg_signature_verified`
+* Effective from: `2026-11-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_repo_verification/rpm_repo_verification.rego#L34[Source, window="_blank"]
+
+[#rpm_repo_verification__metadata_checksums_verified]
+=== link:#rpm_repo_verification__metadata_checksums_verified[Metadata checksums verified]
+
+Each yum repository in the verification results must have verified metadata checksum chains, ensuring the integrity of metadata files listed in repomd.xml.
+
+*Solution*: Ensure the yum repository metadata checksum chain is intact. The checksums in repomd.xml must match the actual metadata files.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Yum repository %q metadata checksum verification failed`
+* Code: `rpm_repo_verification.metadata_checksums_verified`
+* Effective from: `2026-11-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_repo_verification/rpm_repo_verification.rego#L57[Source, window="_blank"]
+
+[#rpm_repo_verification__result_format]
+=== link:#rpm_repo_verification__result_format[Result format]
+
+Confirm the format of the RPM_REPO_VERIFICATION result is in the expected format.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `rpm_repo_verification.result_format`
+* Effective from: `2026-11-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_repo_verification/rpm_repo_verification.rego#L107[Source, window="_blank"]
+
+[#rpm_repo_verification__rule_data_provided]
+=== link:#rpm_repo_verification__rule_data_provided[Rule data provided]
+
+Confirm the expected `allowed_rpm_repo_gpg_keys` rule data key has been provided in the expected format.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `rpm_repo_verification.rule_data_provided`
+* Effective from: `2026-11-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_repo_verification/rpm_repo_verification.rego#L125[Source, window="_blank"]
