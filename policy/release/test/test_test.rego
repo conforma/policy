@@ -26,6 +26,24 @@ test_needs_non_empty_data if {
 	}}) with input.attestations as attestations
 }
 
+# Because TEST_OUTPUT isn't in the task results, the lib.results_from_tests will be empty
+test_rpm_needs_non_empty_data if {
+	_task_base := tekton_test.slsav1_task("task2")
+	slsav1_task = tekton_test.with_results(
+		_task_base,
+		[{"name": "NOT_TEST_OUTPUT", "type": "string", "value": {}}],
+	)
+
+	attestations := [
+		lib_test.att_mock_helper_ref("NOT_TEST_OUTPUT", {}, "task1", _bundle),
+		tekton_test.slsav1_attestation([slsav1_task]),
+	]
+	assertions.assert_equal_results(test.warn, {{
+		"code": "test.rpm_test_data_found",
+		"msg": "No RPM test data found",
+	}}) with input.attestations as attestations
+}
+
 # There is a test result, but the data inside it doesn't include the "result" key
 test_needs_tests_with_results if {
 	_task_base := tekton_test.slsav1_task("task2")
