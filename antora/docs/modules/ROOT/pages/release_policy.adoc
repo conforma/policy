@@ -262,6 +262,7 @@ Rules included:
 * xref:packages/release_trusted_task.adoc#trusted_task__current[Trusted Task checks: Tasks using the latest versions]        
 * xref:packages/release_trusted_task.adoc#trusted_task__valid_trusted_artifact_inputs[Trusted Task checks: Trusted Artifact produced in pipeline]        
 * xref:packages/release_trusted_task.adoc#trusted_task__trusted_parameters[Trusted Task checks: Trusted parameters]        
+* xref:packages/release_trusted_task.adoc#trusted_task__grandfathered_deny_rule[Trusted Task checks: Trusted task deny rule is grandfathered]        
 * xref:packages/release_volatile_config.adoc#volatile_config__expiring_rule[Volatile Configuration Warnings: Volatile rule expiring soon]        
 * xref:packages/release_volatile_config.adoc#volatile_config__expired_rule[Volatile Configuration Warnings: Volatile rule has expired]        
 * xref:packages/release_volatile_config.adoc#volatile_config__invalid_config[Volatile Configuration Warnings: Volatile rule has invalid configuration]        
@@ -342,7 +343,8 @@ Rules included:
 * xref:packages/release_trusted_task.adoc#trusted_task__tagged[Trusted Task checks: Task references are tagged]        
 * xref:packages/release_trusted_task.adoc#trusted_task__data[Trusted Task checks: Task tracking data was provided]        
 * xref:packages/release_trusted_task.adoc#trusted_task__current[Trusted Task checks: Tasks using the latest versions]        
-* xref:packages/release_trusted_task.adoc#trusted_task__valid_trusted_artifact_inputs[Trusted Task checks: Trusted Artifact produced in pipeline]
+* xref:packages/release_trusted_task.adoc#trusted_task__valid_trusted_artifact_inputs[Trusted Task checks: Trusted Artifact produced in pipeline]        
+* xref:packages/release_trusted_task.adoc#trusted_task__grandfathered_deny_rule[Trusted Task checks: Trusted task deny rule is grandfathered]
 
 | [#redhat_security]`redhat_security`
 a| Include the set of policy rules mapped to a Red Hat ProdSec requirement.
@@ -503,6 +505,7 @@ Rules included:
 * xref:packages/release_trusted_task.adoc#trusted_task__current[Trusted Task checks: Tasks using the latest versions]        
 * xref:packages/release_trusted_task.adoc#trusted_task__valid_trusted_artifact_inputs[Trusted Task checks: Trusted Artifact produced in pipeline]        
 * xref:packages/release_trusted_task.adoc#trusted_task__trusted_parameters[Trusted Task checks: Trusted parameters]        
+* xref:packages/release_trusted_task.adoc#trusted_task__grandfathered_deny_rule[Trusted Task checks: Trusted task deny rule is grandfathered]        
 * xref:packages/release_rpm_ostree_task.adoc#rpm_ostree_task__builder_image_param[rpm-ostree Task: Builder image parameter]        
 * xref:packages/release_rpm_ostree_task.adoc#rpm_ostree_task__rule_data[rpm-ostree Task: Rule data]
 

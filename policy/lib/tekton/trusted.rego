@@ -101,6 +101,26 @@ is_trusted_task(task, _) if {
 	is_trusted_task_legacy(task)
 }
 
+# Returns true when a task is trusted for a specific build attestation. Tasks
+# denied by a rule can remain trusted temporarily when every matching deny rule
+# grandfathers builds completed before its effective_on cutoff.
+is_trusted_task_for_attestation(task, bundle_manifests, _) if {
+	is_trusted_task(task, bundle_manifests)
+}
+
+is_trusted_task_for_attestation(task, bundle_manifests, attestation) if {
+	not missing_trusted_task_rules_data
+	ref := task_ref(task)
+	_task_matches_allow_rule(ref, bundle_manifests)
+
+	matching_rules := _matching_effective_deny_rules(ref, bundle_manifests)
+	count(matching_rules) > 0
+	count([rule |
+		some rule in matching_rules
+		not _rule_grandfathers_attestation(rule, attestation)
+	]) == 0
+}
+
 # Returns a subset of tasks that do not use a trusted Task reference.
 # Routes to the appropriate system based on data presence.
 # bundle_manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
@@ -109,6 +129,13 @@ untrusted_task_refs(tasks, bundle_manifests) := result if {
 	result := untrusted_task_refs_rules(tasks, bundle_manifests)
 } else := result if {
 	result := untrusted_task_refs_legacy(tasks)
+}
+
+# Returns untrusted tasks for a specific build attestation, including any
+# grandfathering configured on matching trusted_task_rules deny records.
+untrusted_task_refs_for_attestation(tasks, bundle_manifests, attestation) := {task |
+	some task in tasks
+	not is_trusted_task_for_attestation(task, bundle_manifests, attestation)
 }
 
 # =============================================================================
@@ -188,6 +215,73 @@ data_errors contains error if {
 	error := {
 		"message": sprintf("trusted_tasks data has unexpected format: %s", [e.message]),
 		"severity": e.severity,
+	}
+}
+
+data_errors contains error if {
+	rule_data_rules := lib_rule_data("trusted_task_rules")
+	is_object(rule_data_rules)
+	some rule_type in ["allow", "deny"]
+	some group, rules in rule_data_rules[rule_type]
+	some i, rule in rules
+	"grandfather_until" in object.keys(rule)
+	rule_type != "deny"
+	error := {
+		"message": sprintf(
+			"trusted_task_rules.%s.%s[%d].grandfather_until is only supported on deny rules",
+			[rule_type, group, i],
+		),
+		"severity": "failure",
+	}
+}
+
+data_errors contains error if {
+	rule_data_rules := lib_rule_data("trusted_task_rules")
+	is_object(rule_data_rules)
+	some group, rules in rule_data_rules.deny
+	some i, rule in rules
+	"grandfather_until" in object.keys(rule)
+	not "effective_on" in object.keys(rule)
+	error := {
+		"message": sprintf(
+			"trusted_task_rules.deny.%s[%d].grandfather_until requires effective_on",
+			[group, i],
+		),
+		"severity": "failure",
+	}
+}
+
+data_errors contains error if {
+	rule_data_rules := lib_rule_data("trusted_task_rules")
+	is_object(rule_data_rules)
+	some group, rules in rule_data_rules.deny
+	some i, rule in rules
+	"grandfather_until" in object.keys(rule)
+	not time.parse_rfc3339_ns(rule.grandfather_until)
+	error := {
+		"message": sprintf(
+			"trusted_task_rules.deny.%s[%d].grandfather_until is not valid RFC3339 format: %q",
+			[group, i, rule.grandfather_until],
+		),
+		"severity": "failure",
+	}
+}
+
+data_errors contains error if {
+	rule_data_rules := lib_rule_data("trusted_task_rules")
+	is_object(rule_data_rules)
+	some group, rules in rule_data_rules.deny
+	some i, rule in rules
+	"grandfather_until" in object.keys(rule)
+	effective_on_ns := time_lib.parse_rfc3339_safe(object.get(rule, "effective_on", ""))
+	grandfather_until_ns := time_lib.parse_rfc3339_safe(rule.grandfather_until)
+	grandfather_until_ns <= effective_on_ns
+	error := {
+		"message": sprintf(
+			"trusted_task_rules.deny.%s[%d].grandfather_until must be later than effective_on",
+			[group, i],
+		),
+		"severity": "failure",
 	}
 }
 
@@ -280,12 +374,6 @@ _effective_allow_rules := [rule |
 	_rule_is_effective(rule)
 ]
 
-# Filter deny rules to only include those that are currently effective (not in the future)
-_effective_deny_rules := [rule |
-	some rule in _trusted_task_rules_data.deny
-	_rule_is_effective(rule)
-]
-
 # Filter deny rules to only include those that will become effective in the future
 future_deny_rules := [rule |
 	some rule in _trusted_task_rules_data.deny
@@ -310,6 +398,36 @@ future_deny_rules_for_task(task, bundle_manifests) := matching_rules if {
 	]
 }
 
+# Returns matching deny rules that grandfather the task for the given build
+# attestation. This includes future rules so callers can report the real
+# deadline before effective_on. An empty result means the task is not eligible.
+grandfathered_deny_rules_for_task(task, bundle_manifests, attestation) := matching_rules if {
+	is_trusted_task_for_attestation(task, bundle_manifests, attestation)
+	ref := task_ref(task)
+	matching_rules := [rule |
+		some rule in _matching_deny_rules(ref, bundle_manifests)
+		_rule_grandfathers_attestation(rule, attestation)
+	]
+}
+
+_rule_grandfathers_attestation(rule, attestation) if {
+	finished_on_ns := _attestation_finished_on_ns(attestation)
+	effective_on_ns := time.parse_rfc3339_ns(rule.effective_on)
+	finished_on_ns < effective_on_ns
+
+	grandfather_until_ns := time.parse_rfc3339_ns(rule.grandfather_until)
+	effective_on_ns < grandfather_until_ns
+	time_lib.effective_current_time_ns < grandfather_until_ns
+}
+
+_attestation_finished_on_ns(attestation) := time.parse_rfc3339_ns(finished_on) if {
+	attestation.statement.predicateType == "https://slsa.dev/provenance/v1"
+	finished_on := attestation.statement.predicate.runDetails.metadata.finishedOn
+} else := time.parse_rfc3339_ns(finished_on) if {
+	attestation.statement.predicateType == "https://slsa.dev/provenance/v0.2"
+	finished_on := attestation.statement.predicate.metadata.buildFinishedOn
+}
+
 # Returns true if a rule is currently effective (either has no effective_on date, or the date is not in the future)
 _rule_is_effective(rule) if {
 	not "effective_on" in object.keys(rule)
@@ -321,19 +439,26 @@ _rule_is_effective(rule) if {
 # Returns true if the task reference matches a deny rule pattern and version constraints (if specified)
 # bundle_manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
 _task_matches_deny_rule(ref, bundle_manifests) if {
-	some rule in _effective_deny_rules
+	count(_matching_effective_deny_rules(ref, bundle_manifests)) > 0
+}
+
+_matching_effective_deny_rules(ref, bundle_manifests) := [rule |
+	some rule in _matching_deny_rules(ref, bundle_manifests)
+	_rule_is_effective(rule)
+]
+
+_matching_deny_rules(ref, bundle_manifests) := [rule |
+	some rule in _trusted_task_rules_data.deny
 	_pattern_matches(ref.key, rule.pattern)
 	_version_satisfies_any_rule_constraints(ref, rule, bundle_manifests)
-}
+]
 
 # Returns a list of patterns from deny rules that match the task, or an empty list if no deny rules match.
 # This only applies to trusted_task_rules (not legacy trusted_tasks).
 # bundle_manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
 denying_pattern(task, bundle_manifests) := [rule.pattern |
 	ref := task_ref(task)
-	some rule in _effective_deny_rules
-	_pattern_matches(ref.key, rule.pattern)
-	_version_satisfies_any_rule_constraints(ref, rule, bundle_manifests)
+	some rule in _matching_effective_deny_rules(ref, bundle_manifests)
 ]
 
 # Returns the reason a task is denied, or nothing if trusted.
@@ -383,11 +508,7 @@ _denying_rules_info(task, bundle_manifests) := {"patterns": patterns, "messages"
 	ref := task_ref(task)
 
 	# Get all matching deny rules
-	matching_rules := [rule |
-		some rule in _effective_deny_rules
-		_pattern_matches(ref.key, rule.pattern)
-		_version_satisfies_any_rule_constraints(ref, rule, bundle_manifests)
-	]
+	matching_rules := _matching_effective_deny_rules(ref, bundle_manifests)
 
 	patterns := [rule.pattern | some rule in matching_rules]
 	messages := [rule.message | some rule in matching_rules; "message" in object.keys(rule)]
@@ -430,6 +551,12 @@ _trusted_task_rule_entry_schema := {
 			"format": "date-time",
 			# regal ignore:line-length
 			"description": "Date when this rule becomes effective. If omitted, rule is effective immediately.",
+		},
+		"grandfather_until": {
+			"type": "string",
+			"format": "date-time",
+			# regal ignore:line-length
+			"description": "Absolute deadline for releasing builds completed before this deny rule's effective_on cutoff.",
 		},
 		"message": {
 			"type": "string",

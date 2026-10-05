@@ -182,6 +182,109 @@ test_untrusted_task_refs_routes_to_rules if {
 		with data.rule_data.trusted_task_rules_enabled as true
 }
 
+test_attestation_scoped_grandfathering if {
+	rules := _grandfathering_rules
+
+	# The ordinary two-argument API remains strict for callers without build provenance.
+	not tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-20T00:00:00Z")
+
+	# Both supported provenance formats grandfather the same pre-cutoff build.
+	v1_attestation := _v1_attestation_finished_on("2025-01-14T23:59:59Z")
+	v02_attestation := _v02_attestation_finished_on("2025-01-14T23:59:59Z")
+	every attestation in [v1_attestation, v02_attestation] {
+		tekton.is_trusted_task_for_attestation(trusted_bundle_task, _empty_bundle_manifests, attestation) with data.rule_data.trusted_task_rules as rules
+			with data.rule_data.trusted_task_rules_enabled as true
+			with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-20T00:00:00Z")
+
+		assertions.assert_empty(tekton.untrusted_task_refs_for_attestation([trusted_bundle_task], _empty_bundle_manifests, attestation)) with data.rule_data.trusted_task_rules as rules
+			with data.rule_data.trusted_task_rules_enabled as true
+			with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-20T00:00:00Z")
+
+		grandfathered := tekton.grandfathered_deny_rules_for_task(
+			trusted_bundle_task,
+			_empty_bundle_manifests,
+			attestation,
+		) with data.rule_data.trusted_task_rules as rules
+			with data.rule_data.trusted_task_rules_enabled as true
+			with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-20T00:00:00Z")
+		assertions.assert_equal(1, count(grandfathered))
+	}
+
+	# The deadline is discoverable before the deny becomes effective, so callers
+	# do not incorrectly report effective_on as the violation date.
+	future_grandfathered := tekton.grandfathered_deny_rules_for_task(
+		trusted_bundle_task,
+		_empty_bundle_manifests,
+		v1_attestation,
+	) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-10T00:00:00Z")
+	assertions.assert_equal(1, count(future_grandfathered))
+}
+
+test_attestation_scoped_grandfathering_boundaries if {
+	rules := _grandfathering_rules
+
+	# A build at the exact cutoff is not grandfathered.
+	not tekton.is_trusted_task_for_attestation(
+		trusted_bundle_task,
+		_empty_bundle_manifests,
+		_v1_attestation_finished_on("2025-01-15T00:00:00Z"),
+	) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-20T00:00:00Z")
+
+	# Every matching deny rule must grandfather the build; an immediate deny wins.
+	overlapping_rules := object.union(rules, {"deny": {
+		"deprecated": rules.deny.deprecated,
+		"emergency": [{"pattern": "oci://registry.local/trusty:*"}],
+	}})
+	not tekton.is_trusted_task_for_attestation(
+		trusted_bundle_task,
+		_empty_bundle_manifests,
+		_v1_attestation_finished_on("2025-01-14T23:59:59Z"),
+	) with data.rule_data.trusted_task_rules as overlapping_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-20T00:00:00Z")
+
+	# At the fixed deadline the grandfathering ends for every eligible build.
+	not tekton.is_trusted_task_for_attestation(
+		trusted_bundle_task,
+		_empty_bundle_manifests,
+		_v1_attestation_finished_on("2025-01-14T23:59:59Z"),
+	) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-02-01T00:00:00Z")
+
+	# Missing or malformed provenance timestamps fail closed.
+	every attestation in [{}, _v1_attestation_finished_on("not-a-timestamp")] {
+		not tekton.is_trusted_task_for_attestation(trusted_bundle_task, _empty_bundle_manifests, attestation) with data.rule_data.trusted_task_rules as rules
+			with data.rule_data.trusted_task_rules_enabled as true
+			with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-20T00:00:00Z")
+	}
+}
+
+_grandfathering_rules := {
+	"allow": {"catalog": [{"pattern": "oci://registry.local/*"}]},
+	"deny": {"deprecated": [{
+		"pattern": "oci://registry.local/trusty:*",
+		"effective_on": "2025-01-15T00:00:00Z",
+		"grandfather_until": "2025-02-01T00:00:00Z",
+	}]},
+}
+
+_v1_attestation_finished_on(finished_on) := {"statement": {
+	"predicateType": "https://slsa.dev/provenance/v1",
+	"predicate": {"runDetails": {"metadata": {"finishedOn": finished_on}}},
+}}
+
+_v02_attestation_finished_on(finished_on) := {"statement": {
+	"predicateType": "https://slsa.dev/provenance/v0.2",
+	"predicate": {"metadata": {"buildFinishedOn": finished_on}},
+}}
+
 test_trusted_task_rules_enabled_toggle if {
 	task_rules := {
 		"allow": {"trusty-tasks": [{"pattern": "oci://registry.local/*"}]},
@@ -824,6 +927,54 @@ test_trusted_task_rules_data_errors if {
 	}
 	assertions.assert_equal(tekton.data_errors, expected_unparseable) with data.rule_data.trusted_task_rules as unparseable_date_rules
 		with data.rule_data.trusted_task_rules_enabled as true
+}
+
+test_grandfather_until_data_errors if {
+	allow_rule := {"allow": {"catalog": [{
+		"pattern": "oci://registry.local/*",
+		"effective_on": "2025-01-15T00:00:00Z",
+		"grandfather_until": "2025-02-01T00:00:00Z",
+	}]}}
+	assertions.assert_equal(tekton.data_errors, {{
+		"message": "trusted_task_rules.allow.catalog[0].grandfather_until is only supported on deny rules",
+		"severity": "failure",
+	}}) with data.rule_data.trusted_task_rules as allow_rule
+
+	missing_cutoff := {"deny": {"deprecated": [{
+		"pattern": "oci://registry.local/trusty:*",
+		"grandfather_until": "2025-02-01T00:00:00Z",
+	}]}}
+	assertions.assert_equal(tekton.data_errors, {{
+		"message": "trusted_task_rules.deny.deprecated[0].grandfather_until requires effective_on",
+		"severity": "failure",
+	}}) with data.rule_data.trusted_task_rules as missing_cutoff
+
+	invalid_deadline := {"deny": {"deprecated": [{
+		"pattern": "oci://registry.local/trusty:*",
+		"effective_on": "2025-01-15T00:00:00Z",
+		"grandfather_until": "not-a-date",
+	}]}}
+	expected_invalid_deadline := {
+		{
+			"message": "trusted_task_rules data has unexpected format: deny.deprecated.0.grandfather_until: Does not match format 'date-time'",
+			"severity": "failure",
+		},
+		{
+			"message": `trusted_task_rules.deny.deprecated[0].grandfather_until is not valid RFC3339 format: "not-a-date"`,
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal(tekton.data_errors, expected_invalid_deadline) with data.rule_data.trusted_task_rules as invalid_deadline
+
+	non_extending_deadline := {"deny": {"deprecated": [{
+		"pattern": "oci://registry.local/trusty:*",
+		"effective_on": "2025-01-15T00:00:00Z",
+		"grandfather_until": "2025-01-15T00:00:00Z",
+	}]}}
+	assertions.assert_equal(tekton.data_errors, {{
+		"message": "trusted_task_rules.deny.deprecated[0].grandfather_until must be later than effective_on",
+		"severity": "failure",
+	}}) with data.rule_data.trusted_task_rules as non_extending_deadline
 }
 
 # Test denying_pattern with invalid task (covers else branch at line 337)
