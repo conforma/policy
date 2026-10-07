@@ -11,7 +11,7 @@ Rules that verify the current date conform to a given schedule.
 [#schedule__date_restriction]
 === link:#schedule__date_restriction[Date Restriction]
 
-Check if the current date is not allowed based on the rule data value from the key `disallowed_dates`. By default, the list is empty in which case *any* day is allowed. This check is enforced only for a "release" or "production" pipeline, as determined by the value of the `pipeline_intention` rule data.
+Check if the current UTC date is disallowed by the unique string array `disallowed_dates`. For example: `["2026-12-31", "from:2026-12-19 to:2026-12-31", "*-12-31", "from:*-12-20 to:*-01-06"]`. Only the year may be `*`. Ranges must use exact lowercase `from:X to:Y` syntax with one space; surrounding or extra whitespace, alternate order, and case variants are invalid. Concrete range ends must be later than their starts, and both endpoints are included. A later wildcard month/day end stays in one year; an earlier end wraps into the next year. Wildcard ranges use the effective UTC date, including `config.policy.when_ns` overrides. An early-January date uses the occurrence begun in the prior December. Mixed concrete/wildcard endpoints, equal wildcard endpoints, and `*-02-29` are invalid. Concrete February 29 is valid only in an explicit leap year. The list is empty by default. This check runs only for a "release" or "production" pipeline, as determined by `pipeline_intention`.
 
 *Solution*: Try again on a different day.
 
@@ -23,14 +23,14 @@ Check if the current date is not allowed based on the rule data value from the k
 [#schedule__rule_data_provided]
 === link:#schedule__rule_data_provided[Rule data provided]
 
-Confirm the expected rule data keys have been provided in the expected format. The keys are `disallowed_weekdays` and `disallowed_dates`.
+Confirm schedule rule data keys use the expected formats. `disallowed_dates` must be a unique array of strings; see Date Restriction for supported date and range formats. `disallowed_weekdays` remains a unique array of weekday names.
 
 *Solution*: If provided, ensure the rule data is in the expected format.
 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `schedule.rule_data_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/schedule/schedule.rego#L68[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/schedule/schedule.rego#L81[Source, window="_blank"]
 
 [#schedule__weekday_restriction]
 === link:#schedule__weekday_restriction[Weekday Restriction]
