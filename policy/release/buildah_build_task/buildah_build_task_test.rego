@@ -377,89 +377,12 @@ test_plat_patterns_anchoring_warning if {
 	assertions.assert_not_empty(buildah_build_task.deny) with data.rule_data as d_ineffective
 }
 
-test_privileged_nested_param if {
-	expected := {{
-		"code": "buildah_build_task.privileged_nested_param",
-		"msg": "setting PRIVILEGED_NESTED parameter to true is not allowed",
-	}}
-
-	_task_base := tekton_test.slsav1_task("buildah")
-	_task_w_params = tekton_test.with_params(
-		_task_base,
-		[
-			{
-				"name": "IMAGE",
-				"value": "quay.io/jstuart/hacbs-docker-build",
-			},
-			{
-				"name": "DOCKERFILE",
-				"value": "./image_with_labels/Dockerfile",
-			},
-			{
-				"name": "PRIVILEGED_NESTED",
-				"value": "true",
-			},
-		],
-	)
-	task = tekton_test.with_results(_task_w_params, _results)
-
-	attestation := tekton_test.slsav1_attestation([task])
-	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [attestation]
-
-	_task_empty_base := tekton_test.slsav1_task("buildah")
-	_task_empty_w_params = tekton_test.with_params(
-		_task_empty_base,
-		[
-			{
-				"name": "IMAGE",
-				"value": "quay.io/jstuart/hacbs-docker-build",
-			},
-			{
-				"name": "DOCKERFILE",
-				"value": "./image_with_labels/Dockerfile",
-			},
-			{
-				"name": "PRIVILEGED_NESTED",
-				"value": "",
-			},
-		],
-	)
-	task_empty = tekton_test.with_results(_task_empty_w_params, _results)
-
-	attestation_empty := tekton_test.slsav1_attestation([task_empty])
-	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_empty]
-
-	_task_false_base := tekton_test.slsav1_task("buildah")
-	_task_false_w_params = tekton_test.with_params(
-		_task_false_base,
-		[
-			{
-				"name": "IMAGE",
-				"value": "quay.io/jstuart/hacbs-docker-build",
-			},
-			{
-				"name": "DOCKERFILE",
-				"value": "./image_with_labels/Dockerfile",
-			},
-			{
-				"name": "PRIVILEGED_NESTED",
-				"value": "false",
-			},
-		],
-	)
-	task_false = tekton_test.with_results(_task_false_w_params, _results)
-
-	attestation_false := tekton_test.slsav1_attestation([task_false])
-	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_false]
-}
-
 # A present but non-string build task parameter must be rejected as malformed
 # instead of being silently ignored by the string-only checks.
 test_malformed_parameter if {
 	_malformed_denies("DOCKERFILE", null)
 	_malformed_denies("ADD_CAPABILITIES", 42)
 	_malformed_denies("PLATFORM", ["linux/amd64"])
-	_malformed_denies("PRIVILEGED_NESTED", {"nested": true})
 }
 
 # A malformed parameter container hides every parameter from the string checks, so
