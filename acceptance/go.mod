@@ -1,6 +1,6 @@
 module github.com/conforma/policy/acceptance
 
-go 1.26.7
+go 1.26.8
 
 toolchain go1.27.1
 
@@ -106,10 +106,10 @@ require (
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be // indirect
 	github.com/conforma/crds/api v0.1.7 // indirect
 	github.com/conforma/go-gather v1.2.0 // indirect
-	github.com/containerd/containerd/v2 v2.3.2 // indirect
+	github.com/containerd/containerd/v2 v2.3.6 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
-	github.com/containerd/platforms v1.0.0-rc.4 // indirect
+	github.com/containerd/platforms v1.0.0-rc.5 // indirect
 	github.com/containerd/stargz-snapshotter/estargz v0.18.2 // indirect
 	github.com/containerd/ttrpc v1.2.8 // indirect
 	github.com/containerd/typeurl/v2 v2.2.3 // indirect
@@ -367,10 +367,10 @@ require (
 	gopkg.in/ini.v1 v1.67.3 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/api v0.36.0 // indirect
+	k8s.io/api v0.36.3 // indirect
 	k8s.io/apiextensions-apiserver v0.36.0 // indirect
-	k8s.io/apimachinery v0.36.0 // indirect
-	k8s.io/client-go v0.36.0 // indirect
+	k8s.io/apimachinery v0.36.3 // indirect
+	k8s.io/client-go v0.36.3 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260319004828-5883c5ee87b9 // indirect
 	k8s.io/utils v0.0.0-20260319190234-28399d86e0b5 // indirect
@@ -381,7 +381,7 @@ require (
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/release-utils v0.12.4 // indirect
-	sigs.k8s.io/structured-merge-diff/v6 v6.3.2 // indirect
+	sigs.k8s.io/structured-merge-diff/v6 v6.3.3 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
