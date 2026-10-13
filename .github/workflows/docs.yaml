@@ -27,6 +27,7 @@ permissions:
 
 jobs:
   website_update:
+    if: ${{ github.repository == 'conforma/policy' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
