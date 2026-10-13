@@ -31,6 +31,7 @@ env:
 jobs:
 
   get_info:
+    if: github.repository == 'conforma/policy'
 
     runs-on: ubuntu-latest
     outputs:
@@ -83,7 +84,7 @@ jobs:
   generate_release_notes:
 
     needs: get_info
-    if: ${{ needs.get_info.outputs.changed == 'true' && needs.get_info.outputs.changelog != '' }}
+    if: ${{ github.repository == 'conforma/policy' && needs.get_info.outputs.changed == 'true' && needs.get_info.outputs.changelog != '' }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
     permissions: {}
@@ -132,7 +133,7 @@ jobs:
 
   create_release:
     needs: [get_info, generate_release_notes]
-    if: ${{ needs.get_info.outputs.changed == 'true' && needs.generate_release_notes.result == 'success' && needs.generate_release_notes.outputs.release_notes != '' }}
+    if: ${{ github.repository == 'conforma/policy' && needs.get_info.outputs.changed == 'true' && needs.generate_release_notes.result == 'success' && needs.generate_release_notes.outputs.release_notes != '' }}
     permissions:
       contents: write
     runs-on: ubuntu-latest
