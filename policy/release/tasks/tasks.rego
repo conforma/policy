@@ -307,8 +307,8 @@ deny contains result if {
 	# flatten into a single array of strings
 	flattened_required_tasks := flatten_list_to_sorted_array(required_task_names)
 
-	some att in lib.pipelinerun_attestations
-	some untrusted_task in tekton.untrusted_task_refs(lib.tasks_from_pipelinerun, _manifests)
+	some attestation in lib.pipelinerun_attestations
+	some untrusted_task in tekton.untrusted_task_refs_for_attestation(tekton.tasks(attestation), _manifests, attestation)
 
 	# Check if any untrusted task matches a required task
 	some required_task_name in flattened_required_tasks
@@ -476,13 +476,18 @@ _required_test_task_trust_errors contains error if {
 # task in that provenance is relevant.
 _untrusted_tasks_for_required(required) := build_tasks | its_tasks if {
 	build_tasks := {task |
-		some task in tekton.untrusted_task_refs(lib.tasks_from_pipelinerun, _manifests)
+		some attestation in lib.pipelinerun_attestations
+		some task in tekton.untrusted_task_refs_for_attestation(tekton.tasks(attestation), _manifests, attestation)
 		_task_matches_required(task, required)
 	}
 	its_tasks := {task |
 		some attestation in lib.associated_its_pipelinerun_attestations
 		_attestation_contains_required_test_task(attestation, required)
-		some task in tekton.untrusted_task_refs(tekton.tasks(attestation), _associated_its_manifests)
+		some task in tekton.untrusted_task_refs_for_attestation(
+			tekton.tasks(attestation),
+			_associated_its_manifests,
+			attestation,
+		)
 	}
 }
 

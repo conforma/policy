@@ -157,7 +157,10 @@ _trusted_build_task_error(tasks) := error if {
 	count(tasks) == 0
 	error := "No Pipeline Tasks built the image"
 } else := error if {
-	untrusted_tasks := tekton.untrusted_task_refs(lib.tasks_from_pipelinerun, _manifests)
+	untrusted_tasks := {task |
+		some attestation in lib.pipelinerun_attestations
+		some task in tekton.untrusted_task_refs_for_attestation(tekton.tasks(attestation), _manifests, attestation)
+	}
 	untrusted_build_tasks = untrusted_tasks & tasks
 	count(untrusted_build_tasks) > 0
 

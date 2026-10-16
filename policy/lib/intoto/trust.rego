@@ -120,6 +120,6 @@ _all_tasks_trusted(att) if {
 		tekton.task_ref(task).bundle != ""
 	}
 	manifests := ec.oci.image_manifests(bundle_refs)
-	untrusted := tekton.untrusted_task_refs(all_tasks, manifests)
+	untrusted := tekton.untrusted_task_refs_for_attestation(all_tasks, manifests, att)
 	count(untrusted) == 0
 }

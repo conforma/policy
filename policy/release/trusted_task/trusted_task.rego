@@ -128,11 +128,45 @@ warn contains result if {
 #
 warn contains result if {
 	not tekton.missing_trusted_task_rules_data
-	some task in lib.tasks_from_pipelinerun
+	some attestation in lib.pipelinerun_attestations
+	some task in tekton.tasks(attestation)
 	some rule in tekton.future_deny_rules_for_task(task, _manifests)
+	grandfathered_rules := tekton.grandfathered_deny_rules_for_task(task, _manifests, attestation)
+	not rule in grandfathered_rules
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
 		[tekton.pipeline_task_name(task), rule.pattern, rule.effective_on],
+		tekton.task_name(task),
+	)
+}
+
+# METADATA
+# title: Trusted task deny rule is grandfathered
+# description: >-
+#   Warn when a task is allowed temporarily because its build completed before a trusted-task
+#   deny rule became effective. The task remains trusted only until the rule's fixed
+#   grandfather_until deadline.
+# custom:
+#   short_name: grandfathered_deny_rule
+#   failure_msg: >-
+#     Task %q was built before deny rule pattern %q became effective on %s and is
+#     grandfathered until %s.
+#   solution: >-
+#     Rebuild with a trusted Task version before the grandfathering deadline.
+#   collections:
+#   - redhat
+#   - redhat_rpms
+#   - redhat_security
+#   effective_on: 2026-10-20T00:00:00Z
+#
+warn contains result if {
+	not tekton.missing_trusted_task_rules_data
+	some attestation in lib.pipelinerun_attestations
+	some task in tekton.tasks(attestation)
+	some rule in tekton.grandfathered_deny_rules_for_task(task, _manifests, attestation)
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[tekton.pipeline_task_name(task), rule.pattern, rule.effective_on, rule.grandfather_until],
 		tekton.task_name(task),
 	)
 }
@@ -380,7 +414,7 @@ _task_info(task) := info if {
 _trusted_build_digests contains digest if {
 	some attestation in lib.pipelinerun_attestations
 	some build_task in tekton.build_tasks(attestation)
-	tekton.is_trusted_task(build_task, _manifests)
+	tekton.is_trusted_task_for_attestation(build_task, _manifests, attestation)
 	some result in tekton.task_results(build_task)
 	some digest in _digests_from_values(lib.result_values(result))
 }
@@ -397,7 +431,7 @@ _trusted_build_digests contains digest if {
 _trusted_build_digests contains digest if {
 	some attestation in lib.pipelinerun_attestations
 	some task in tekton.pre_build_tasks(attestation)
-	tekton.is_trusted_task(task, _manifests)
+	tekton.is_trusted_task_for_attestation(task, _manifests, attestation)
 	runner_image_result_value := tekton.task_result(task, _pre_build_run_script_runner_image_result)
 	some digest in _digests_from_values({runner_image_result_value})
 }
@@ -434,7 +468,7 @@ _trust_errors_rules contains error if {
 		link == tekton.pipeline_task_name(task)
 	]
 
-	some untrusted_task in tekton.untrusted_task_refs_rules(chain, _manifests)
+	some untrusted_task in tekton.untrusted_task_refs_for_attestation(chain, _manifests, attestation)
 
 	error := _format_trust_error_rules_ta(untrusted_task, dependency_chain)
 }
@@ -442,7 +476,8 @@ _trust_errors_rules contains error if {
 # Collects trust errors using trusted_task_rules (without Trusted Artifacts)
 _trust_errors_rules contains error if {
 	not _uses_trusted_artifacts
-	some untrusted_task in tekton.untrusted_task_refs_rules(lib.tasks_from_pipelinerun, _manifests)
+	some attestation in lib.pipelinerun_attestations
+	some untrusted_task in tekton.untrusted_task_refs_for_attestation(tekton.tasks(attestation), _manifests, attestation)
 	error := _format_trust_error_rules(untrusted_task)
 }
 

@@ -324,6 +324,47 @@ test_future_deny_rule_warning if {
 		with ec.oci.image_manifest as _mock_image_manifest
 }
 
+test_grandfathered_deny_rule_warning if {
+	att := _rules_make_attestation([trusted_bundle_pipeline_task])
+	task_rules := {
+		"allow": {"trusty-tasks": [{"pattern": "oci://registry.local/trusty*"}]},
+		"deny": {"deprecated": [{
+			"pattern": "oci://registry.local/trusty:1.0*",
+			"effective_on": "2025-01-15T00:00:00Z",
+			"grandfather_until": "2025-02-01T00:00:00Z",
+		}]},
+	}
+
+	assertions.assert_empty(trusted_task.deny) with data.rule_data.trusted_task_rules as task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-20T00:00:00Z")
+		with input.attestations as [att]
+		with ec.oci.image_manifests as _mock_image_manifests
+		with ec.oci.image_manifest as _mock_image_manifest
+
+	expected := {{
+		"code": "trusted_task.grandfathered_deny_rule",
+		# regal ignore:line-length
+		"msg": `Task "trusty-p" was built before deny rule pattern "oci://registry.local/trusty:1.0*" became effective on 2025-01-15T00:00:00Z and is grandfathered until 2025-02-01T00:00:00Z.`,
+		"term": "trusty",
+	}}
+	assertions.assert_equal_results(trusted_task.warn, expected) with data.rule_data.trusted_task_rules as task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-20T00:00:00Z")
+		with input.attestations as [att]
+		with ec.oci.image_manifests as _mock_image_manifests
+		with ec.oci.image_manifest as _mock_image_manifest
+
+	# Before effective_on, report the fixed deadline instead of the ordinary
+	# future-deny warning's earlier and incorrect date.
+	assertions.assert_equal_results(trusted_task.warn, expected) with data.rule_data.trusted_task_rules as task_rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with data.config.policy.when_ns as time.parse_rfc3339_ns("2025-01-10T00:00:00Z")
+		with input.attestations as [att]
+		with ec.oci.image_manifests as _mock_image_manifests
+		with ec.oci.image_manifest as _mock_image_manifest
+}
+
 # Test that deny rules without effective_on do not produce a future deny warning
 test_future_deny_rule_no_warning_when_already_effective if {
 	att := {"statement": {
@@ -1368,6 +1409,7 @@ _rules_make_attestation(tasks) := {"statement": {
 	"predicate": {
 		"buildType": lib.tekton_pipeline_run,
 		"buildConfig": {"tasks": tasks},
+		"metadata": {"buildFinishedOn": "2025-01-10T00:00:00Z"},
 	},
 }}
 
