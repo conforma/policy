@@ -11,7 +11,7 @@ Policies to verify that a Tekton build task definition has the required build ty
 [#build_labels__build_type_label_set]
 === link:#build_labels__build_type_label_set[Build task has build type label]
 
-Confirm the build task definition has the required build type label.
+Confirm the build task definition has the required build type label. A defined but malformed `metadata.labels` (for example a list, string, number or null) is treated as not having the label, so that a malformed value cannot silently bypass this check.
 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The required build label '%s' is missing`
@@ -26,4 +26,4 @@ Confirm that the build task definition includes at least one label.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The task definition does not include any labels`
 * Code: `build_labels.build_task_has_label`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/build_task/build_labels/build_labels.rego#L33[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/build_task/build_labels/build_labels.rego#L39[Source, window="_blank"]

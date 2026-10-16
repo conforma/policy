@@ -453,6 +453,47 @@ test_privileged_nested_param if {
 	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_false]
 }
 
+# A present but non-string build task parameter must be rejected as malformed
+# instead of being silently ignored by the string-only checks.
+test_malformed_parameter if {
+	_malformed_denies("DOCKERFILE", null)
+	_malformed_denies("ADD_CAPABILITIES", 42)
+	_malformed_denies("PLATFORM", ["linux/amd64"])
+	_malformed_denies("PRIVILEGED_NESTED", {"nested": true})
+}
+
+# Omitted optional parameters remain optional and do not produce a malformed result.
+test_malformed_parameter_absent_ok if {
+	attestation := _attestation("buildah", {"parameters": {"DOCKERFILE": "./Dockerfile"}}, _results)
+	assertions.assert_empty(buildah_build_task._malformed_params) with input.attestations as [attestation]
+}
+
+# _malformed_denies asserts that a non-string value for the named parameter emits
+# the malformed_parameter denial, for both the v0.2 parameter map and the v1
+# parameter array representations.
+_malformed_denies(pname, pvalue) if {
+	expected := {{
+		"code": "buildah_build_task.malformed_parameter",
+		"effective_on": "2024-09-01T00:00:00Z",
+		"msg": sprintf("The %q parameter of the buildah build task must be a string", [pname]),
+	}}
+
+	# v0.2 parameter map
+	v02 := _attestation("buildah", {"parameters": {pname: pvalue}}, _results)
+
+	# regal ignore:with-outside-test-context
+	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [v02]
+
+	# v1 parameter array
+	v1_base := tekton_test.slsav1_task("buildah")
+	v1_params := tekton_test.with_params(v1_base, [{"name": pname, "value": pvalue}])
+	v1_task := tekton_test.with_results(v1_params, _results)
+	v1_att := tekton_test.slsav1_attestation([v1_task])
+
+	# regal ignore:with-outside-test-context
+	assertions.assert_equal_results(expected, buildah_build_task.deny) with input.attestations as [v1_att]
+}
+
 _attestation(task_name, params, results) := {"statement": {
 	"predicateType": "https://slsa.dev/provenance/v0.2",
 	"predicate": {

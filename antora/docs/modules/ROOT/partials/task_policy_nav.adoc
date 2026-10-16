@@ -16,3 +16,4 @@
 *** xref:packages/task_trusted_artifacts.adoc#trusted_artifacts__parameter[Parameter]
 *** xref:packages/task_trusted_artifacts.adoc#trusted_artifacts__result[Result]
 *** xref:packages/task_trusted_artifacts.adoc#trusted_artifacts__workspace[Workspace]
+*** xref:packages/task_trusted_artifacts.adoc#trusted_artifacts__workspaces_format[Workspaces format]

@@ -54,7 +54,7 @@ _errors(task) := {err |
 		not r.version
 	}
 	found := [r |
-		some r in task.spec.results
+		some r in _declared_results(task)
 		r.name == required.result
 	]
 	count(found) == 0
@@ -67,12 +67,20 @@ _errors(task) := {err |
 		r.version == version
 	}
 	found := [r |
-		some r in task.spec.results
+		some r in _declared_results(task)
 		r.name == required.result
 	]
 	count(found) == 0
 	err := sprintf("%q result not found in %q Task/v%s", [required.result, required.task, version])
 }
+
+# _declared_results returns the Task's results only when `spec.results` is a
+# proper array. A wrong-container value (e.g. an object) or an absent value
+# yields no results, so a malformed `spec.results` cannot mask a required result
+# that is actually missing.
+_declared_results(task) := task.spec.results if {
+	is_array(task.spec.results)
+} else := []
 
 _rule_data_errors contains error if {
 	schema := {

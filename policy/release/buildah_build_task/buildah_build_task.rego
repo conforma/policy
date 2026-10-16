@@ -122,6 +122,31 @@ deny contains result if {
 	result := metadata.result_helper(rego.metadata.chain(), [])
 }
 
+# METADATA
+# title: Build task parameters are well-formed
+# description: >-
+#   Verify that the DOCKERFILE, ADD_CAPABILITIES, PLATFORM and PRIVILEGED_NESTED
+#   parameters of a builder Task, when present, are provided as strings. A
+#   non-string value (null, number, object or array) would otherwise be silently
+#   ignored by the parameter checks, allowing a malformed value to look like a
+#   pass.
+# custom:
+#   short_name: malformed_parameter
+#   failure_msg: The %q parameter of the buildah build task must be a string
+#   solution: >-
+#     Provide the parameter as a string value, or unset it if it is optional.
+#   collections:
+#   - redhat
+#   - redhat_security
+#   effective_on: 2026-12-09T00:00:00Z
+#   depends_on:
+#   - attestation_type.known_attestation_type
+#
+deny contains result if {
+	some name in _malformed_params
+	result := metadata.result_helper(rego.metadata.chain(), [name])
+}
+
 _not_allowed_prefix(search) if {
 	not_allowed_prefixes := ["http://", "https://"]
 	some not_allowed_prefix in not_allowed_prefixes
@@ -133,24 +158,42 @@ _buildah_tasks contains task if {
 	some task in tekton.build_tasks(att)
 }
 
+# The parameter collectors only yield string values. Non-string values are
+# rejected separately by the malformed_parameter rule so that a
+# malformed value is never silently coerced into an empty/valid result by the
+# string-only checks below.
 _dockerfile_params contains param if {
 	some buildah_task in _buildah_tasks
 	param := tekton.task_param(buildah_task, "DOCKERFILE")
+	is_string(param)
 }
 
 _add_capabilities_params contains param if {
 	some buildah_task in _buildah_tasks
 	param := tekton.task_param(buildah_task, "ADD_CAPABILITIES")
+	is_string(param)
 }
 
 _platform_params contains param if {
 	some buildah_task in _buildah_tasks
 	param := tekton.task_param(buildah_task, "PLATFORM")
+	is_string(param)
 }
 
 _privileged_nested_params contains param if {
 	some buildah_task in _buildah_tasks
 	param := tekton.task_param(buildah_task, "PRIVILEGED_NESTED")
+	is_string(param)
+}
+
+# The build task parameters that must be strings when present.
+_string_param_names := {"DOCKERFILE", "ADD_CAPABILITIES", "PLATFORM", "PRIVILEGED_NESTED"}
+
+_malformed_params contains name if {
+	some buildah_task in _buildah_tasks
+	some name in _string_param_names
+	value := tekton.task_param(buildah_task, name)
+	not is_string(value)
 }
 
 # Verify disallowed_platform_patterns is a list of strings. Empty list is fine.

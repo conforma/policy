@@ -38,3 +38,14 @@ Tasks that implement the Trusted Artifacts pattern should not allow general purp
 * Code: `trusted_artifacts.workspace`
 * Effective from: `2024-07-07T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/trusted_artifacts/trusted_artifacts.rego#L47[Source, window="_blank"]
+
+[#trusted_artifacts__workspaces_format]
+=== link:#trusted_artifacts__workspaces_format[Workspaces format]
+
+Confirm that a Task implementing the Trusted Artifacts pattern declares its workspaces as a list. A present but malformed `spec.workspaces` (for example an object, a scalar or null) would otherwise silently skip the general purpose workspace check.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `The Task %q defines a malformed spec.workspaces, expecting a list`
+* Code: `trusted_artifacts.workspaces_format`
+* Effective from: `2026-12-09T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/trusted_artifacts/trusted_artifacts.rego#L70[Source, window="_blank"]

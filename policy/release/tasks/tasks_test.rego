@@ -1377,6 +1377,44 @@ test_data_errors_on_pipeline_required_tasks if {
 	assertions.assert_equal_results(tasks.deny, expected) with data["pipeline-required-tasks"] as pipeline_required_tasks
 }
 
+# A malformed `.tasks` entry (null, scalar, wrong container, or a missing `tasks`
+# key) must emit a named data-shape rejection (tasks.data_provided)
+# rather than being silently accepted as an empty required-task set. This is
+# enforced by the JSON-schema validation of `pipeline-required-tasks`. The audit's
+# fallback evaluator missed this; these regressions lock in the real engine's
+# behavior. A deliberately empty `tasks: []` entry is intentionally NOT covered
+# here: its classification is a separate product-contract decision and its current
+# handling is left unchanged.
+test_malformed_pipeline_required_tasks_rejected if {
+	null_entry := {"generic": [{"effective_on": "2099-01-02T00:00:00Z", "tasks": null}]}
+	assertions.assert_equal_results(tasks.deny, {{
+		"code": "tasks.data_provided",
+		"msg": "Data pipeline-required-tasks has unexpected format: generic.0.tasks: Invalid type. Expected: array, given: null",
+		"severity": "failure",
+	}}) with data["pipeline-required-tasks"] as null_entry
+
+	scalar_entry := {"generic": [{"effective_on": "2099-01-02T00:00:00Z", "tasks": "buildah"}]}
+	assertions.assert_equal_results(tasks.deny, {{
+		"code": "tasks.data_provided",
+		"msg": "Data pipeline-required-tasks has unexpected format: generic.0.tasks: Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}) with data["pipeline-required-tasks"] as scalar_entry
+
+	object_entry := {"generic": [{"effective_on": "2099-01-02T00:00:00Z", "tasks": {"a": "buildah"}}]}
+	assertions.assert_equal_results(tasks.deny, {{
+		"code": "tasks.data_provided",
+		"msg": "Data pipeline-required-tasks has unexpected format: generic.0.tasks: Invalid type. Expected: array, given: object",
+		"severity": "failure",
+	}}) with data["pipeline-required-tasks"] as object_entry
+
+	missing_entry := {"generic": [{"effective_on": "2099-01-02T00:00:00Z"}]}
+	assertions.assert_equal_results(tasks.deny, {{
+		"code": "tasks.data_provided",
+		"msg": "Data pipeline-required-tasks has unexpected format: generic.0: tasks is required",
+		"severity": "failure",
+	}}) with data["pipeline-required-tasks"] as missing_entry
+}
+
 # Direct test of _missing_tasks function behavior
 test_missing_tasks_function_behavior if {
 	# Test with all required tasks present from trusted sources

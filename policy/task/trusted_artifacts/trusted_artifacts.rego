@@ -61,9 +61,38 @@ deny contains result if {
 #
 deny contains result if {
 	_uses_trusted_artifacts(input)
+	is_array(input.spec.workspaces)
 	some workspace in input.spec.workspaces
 	not workspace.name in rule_data.get("allowed_trusted_artifacts_workspaces")
 	result := metadata.result_helper(rego.metadata.chain(), [workspace.name])
+}
+
+# METADATA
+# title: Workspaces format
+# description: >-
+#   Confirm that a Task implementing the Trusted Artifacts pattern declares its
+#   workspaces as a list. A present but malformed `spec.workspaces` (for example
+#   an object, a scalar or null) would otherwise silently skip the general
+#   purpose workspace check.
+# custom:
+#   short_name: workspaces_format
+#   failure_msg: The Task %q defines a malformed spec.workspaces, expecting a list
+#   effective_on: 2026-12-09T00:00:00Z
+#   collections:
+#   - redhat_security
+#
+deny contains result if {
+	_uses_trusted_artifacts(input)
+	_malformed_workspaces(input)
+	result := metadata.result_helper(rego.metadata.chain(), [k8s.name_version(input)])
+}
+
+# _malformed_workspaces is true when spec.workspaces is present but is not a list.
+# An absent spec.workspaces is a no-op. Presence is checked via the key so that a
+# present null (or any non-array) value is still detected.
+_malformed_workspaces(task) if {
+	"workspaces" in object.keys(task.spec)
+	not is_array(task.spec.workspaces)
 }
 
 _ta_parameters contains param_name if {

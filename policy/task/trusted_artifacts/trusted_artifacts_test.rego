@@ -56,6 +56,46 @@ test_workspaces if {
 	assertions.assert_empty(trusted_artifacts.deny) with input as json.patch(_non_ta_task, [add_workspace])
 }
 
+# A wrong-typed spec.workspaces on a Trusted Artifacts Task must not silently
+# skip the general purpose workspace check.
+test_malformed_workspaces if {
+	expected := {{
+		"code": "trusted_artifacts.workspaces_format",
+		"msg": "The Task \"spam-oci-ta/0.1\" defines a malformed spec.workspaces, expecting a list",
+	}}
+	assertions.assert_equal_results(trusted_artifacts.deny, expected) with input as json.patch(
+		_task,
+		[{"op": "add", "path": "/spec/workspaces", "value": {"name": "spam"}}],
+	)
+	assertions.assert_equal_results(trusted_artifacts.deny, expected) with input as json.patch(
+		_task,
+		[{"op": "add", "path": "/spec/workspaces", "value": null}],
+	)
+	assertions.assert_equal_results(trusted_artifacts.deny, expected) with input as json.patch(
+		_task,
+		[{"op": "add", "path": "/spec/workspaces", "value": "spam"}],
+	)
+
+	# A present non-array object of any shape is detected via key presence.
+	assertions.assert_equal_results(trusted_artifacts.deny, expected) with input as json.patch(
+		_task,
+		[{"op": "add", "path": "/spec/workspaces", "value": {"__ec_absent__": true}}],
+	)
+
+	# An absent or empty workspaces list stays an ordinary no-workspace control.
+	assertions.assert_empty(trusted_artifacts.deny) with input as _task
+	assertions.assert_empty(trusted_artifacts.deny) with input as json.patch(
+		_task,
+		[{"op": "add", "path": "/spec/workspaces", "value": []}],
+	)
+
+	# A malformed workspaces on a non-TA Task is not flagged (activation unchanged).
+	assertions.assert_empty(trusted_artifacts.deny) with input as json.patch(
+		_non_ta_task,
+		[{"op": "add", "path": "/spec/workspaces", "value": {"name": "spam"}}],
+	)
+}
+
 _task := {
 	"apiVersion": "tekton.dev/v1",
 	"kind": "Task",
