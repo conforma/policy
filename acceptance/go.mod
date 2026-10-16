@@ -2,7 +2,7 @@ module github.com/conforma/policy/acceptance
 
 go 1.26.8
 
-toolchain go1.27.1
+toolchain go1.27.2
 
 require (
 	github.com/conforma/cli v0.10.5
