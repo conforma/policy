@@ -4,6 +4,7 @@ import rego.v1
 
 import data.lib.arrays
 import data.lib.json as j
+import data.lib.sigstore
 import data.lib.time as time_lib
 
 # regal ignore:prefer-package-imports
@@ -263,6 +264,23 @@ data_errors contains error if {
 	some rule_type in ["allow", "deny"]
 	some group, rules in rule_data_rules[rule_type]
 	some i, rule in rules
+	"signature_verification" in object.keys(rule)
+	some e in sigstore.validate(rule.signature_verification)
+	error := {
+		"message": sprintf(
+			"trusted_task_rules.%s.%s[%d].signature_verification %s",
+			[rule_type, group, i, e.message],
+		),
+		"severity": e.severity,
+	}
+}
+
+data_errors contains error if {
+	rule_data_rules := lib_rule_data("trusted_task_rules")
+	is_object(rule_data_rules)
+	some rule_type in ["allow", "deny"]
+	some group, rules in rule_data_rules[rule_type]
+	some i, rule in rules
 	"effective_on" in object.keys(rule)
 	not time.parse_rfc3339_ns(rule.effective_on)
 	error := {
@@ -352,6 +370,22 @@ denial_reason(task, bundle_manifests) := reason if {
 		"messages": deny_info.messages,
 	}
 } else := reason if {
+	# Case: Matches pattern+version on an allow rule but fails signature verification
+	ref := task_ref(task)
+	not _task_matches_deny_rule(ref, bundle_manifests)
+
+	some rule in _effective_allow_rules
+	_task_matches_allow_rule_pattern_version(ref, rule, bundle_manifests)
+
+	# But no allow rule passes signature verification
+	not _task_matches_allow_rule(ref, bundle_manifests)
+
+	reason := {
+		"type": "signature_verification_failed",
+		"pattern": [],
+		"messages": [sprintf("Task bundle %s failed signature verification", [ref.bundle])],
+	}
+} else := reason if {
 	# Case 2: Doesn't match any allow rule
 	# Only applies if there are effective allow rules defined
 	ref := task_ref(task)
@@ -397,8 +431,49 @@ _denying_rules_info(task, bundle_manifests) := {"patterns": patterns, "messages"
 # bundle_manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
 _task_matches_allow_rule(ref, bundle_manifests) if {
 	some rule in _effective_allow_rules
+	_task_matches_allow_rule_pattern_version(ref, rule, bundle_manifests)
+	_signature_verified_for_rule(ref, rule)
+}
+
+_task_matches_allow_rule_pattern_version(ref, rule, bundle_manifests) if {
 	_pattern_matches(ref.key, rule.pattern)
 	_version_satisfies_all_rule_constraints(ref, rule, bundle_manifests)
+}
+
+# Build sigstore opts object from a rule's signature_verification config.
+# Only includes keys that are explicitly set to non-default values to avoid
+# empty strings being interpreted as "no constraint" by Sigstore.
+_sigstore_opts_for_rule(rule) := opts if {
+	sv := rule.signature_verification
+	is_object(sv)
+	opts := {k: v |
+		some k, v in sv
+		v != ""
+		v != false
+	}
+}
+
+# A ref is signature-verified for a given rule if:
+# 1. The rule has no signature_verification config (pass through), OR
+# 2. The ref is not an OCI bundle (git tasks are exempt), OR
+# 3. The bundle passes sigstore verification with the rule's opts
+_signature_verified_for_rule(_, rule) if {
+	not rule.signature_verification
+}
+
+_signature_verified_for_rule(ref, _) if {
+	not ref.bundle
+}
+
+_signature_verified_for_rule(ref, rule) if {
+	ref.bundle
+	opts := _sigstore_opts_for_rule(rule)
+	not _sigstore_verify_has_errors(ref.bundle, opts)
+}
+
+_sigstore_verify_has_errors(bundle, opts) if {
+	info := ec.sigstore.verify_image(bundle, opts)
+	some _ in info.errors
 }
 
 # Checks if the key matches the wildcard pattern using glob matching.
@@ -440,6 +515,7 @@ _trusted_task_rule_entry_schema := {
 			"description": "List of version constraints",
 			"items": {"type": "string"},
 		},
+		"signature_verification": sigstore.opts_schema,
 	},
 	"additionalProperties": true,
 }
