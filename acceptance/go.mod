@@ -3,8 +3,8 @@ module github.com/conforma/policy/acceptance
 go 1.26.0
 
 require (
-	github.com/conforma/cli v0.8.129
-	github.com/cucumber/godog v0.15.1
+	github.com/conforma/cli v0.10.38
+	github.com/cucumber/godog v0.16.0
 )
 
 require (
@@ -392,4 +392,4 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-replace github.com/google/go-containerregistry => github.com/conforma/go-containerregistry v0.20.7
+replace github.com/google/go-containerregistry => github.com/conforma/go-containerregistry v0.21.7
