@@ -21,6 +21,19 @@ Verify the ADD_CAPABILITIES parameter of a builder Tasks was not used.
 * Effective from: `2024-08-31T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/buildah_build_task/buildah_build_task.rego#L39[Source, window="_blank"]
 
+[#buildah_build_task__malformed_parameter]
+=== link:#buildah_build_task__malformed_parameter[Build task parameters are well-formed]
+
+Verify that the DOCKERFILE, ADD_CAPABILITIES, PLATFORM and PRIVILEGED_NESTED parameters of a builder Task, when present, are provided as strings. A non-string value (null, number, object or array) would otherwise be silently ignored by the parameter checks, allowing a malformed value to look like a pass.
+
+*Solution*: Provide the parameter as a string value, or unset it if it is optional.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `The %q parameter of the buildah build task must be a string`
+* Code: `buildah_build_task.malformed_parameter`
+* Effective from: `2026-12-09T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/buildah_build_task/buildah_build_task.rego#L125[Source, window="_blank"]
+
 [#buildah_build_task__buildah_uses_local_dockerfile]
 === link:#buildah_build_task__buildah_uses_local_dockerfile[Buildah task uses a local Dockerfile]
 

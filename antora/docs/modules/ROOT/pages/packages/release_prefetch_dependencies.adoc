@@ -11,12 +11,12 @@ This package verifies that the prefetch-dependencies task is invoked with approp
 [#prefetch_dependencies__mode_not_permissive]
 === link:#prefetch_dependencies__mode_not_permissive[Prefetch dependencies mode parameter check]
 
-Verify the prefetch-dependencies task in the PipelineRun attestation was not invoked with the "permissive" mode parameter, which could compromise security.
+Verify the prefetch-dependencies task in the PipelineRun attestation was not invoked with the "permissive" mode parameter, which could compromise security. A present but wrong-typed `mode` value (for example a list or a number) is treated as insecure as well, so that a malformed value cannot silently bypass this check.
 
-*Solution*: Change the mode parameter of the prefetch-dependencies task from 'permissive' to a more secure value. The permissive mode may allow insecure dependency fetching practices.
+*Solution*: Change the mode parameter of the prefetch-dependencies task from 'permissive' to a more secure value, and make sure it is provided as a string. The permissive mode may allow insecure dependency fetching practices.
 
 * Rule type: [rule-type-indicator failure]#FAILURE#
-* FAILURE message: `Task '%s' was invoked with mode parameter set to 'permissive'`
+* FAILURE message: `Task '%s' was invoked with an insecure or malformed mode parameter`
 * Code: `prefetch_dependencies.mode_not_permissive`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/prefetch_dependencies/prefetch_dependencies.rego#L16[Source, window="_blank"]
 
@@ -31,4 +31,4 @@ Verify that prefetch-dependencies tasks have the enable-package-registry-proxy p
 * FAILURE message: `Task '%s' does not have the enable-package-registry-proxy parameter set to true`
 * Code: `prefetch_dependencies.package_registry_proxy_enabled`
 * Effective from: `2026-05-13T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/prefetch_dependencies/prefetch_dependencies.rego#L44[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/prefetch_dependencies/prefetch_dependencies.rego#L47[Source, window="_blank"]

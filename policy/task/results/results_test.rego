@@ -97,6 +97,23 @@ test_required_result_defined if {
 
 	assertions.assert_equal_results(results.deny, expected) with data.rule_data as _rule_data
 		with input as json.remove(_mock_task, ["spec/results/0"])
+
+	# A wrong-container object at spec.results that contains a matching result
+	# name must NOT satisfy the required result.
+	assertions.assert_equal_results(results.deny, expected) with data.rule_data as _rule_data
+		with input as json.patch(_mock_task, [{
+			"op": "add",
+			"path": "spec/results",
+			"value": {"GRILLED": {"name": "GRILLED"}},
+		}])
+
+	# A null spec.results is likewise malformed and must still deny.
+	assertions.assert_equal_results(results.deny, expected) with data.rule_data as _rule_data
+		with input as json.patch(_mock_task, [{
+			"op": "add",
+			"path": "spec/results",
+			"value": null,
+		}])
 }
 
 test_rule_data_provided if {

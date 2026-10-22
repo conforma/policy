@@ -11,7 +11,7 @@ test_mode_permissive_violation if {
 	expected := {{
 		"code": "prefetch_dependencies.mode_not_permissive",
 		"effective_on": "2022-01-01T00:00:00Z",
-		"msg": "Task 'prefetch-dependencies' was invoked with mode parameter set to 'permissive'",
+		"msg": "Task 'prefetch-dependencies' was invoked with an insecure or malformed mode parameter",
 	}}
 	assertions.assert_equal_results(expected, prefetch_dependencies.deny) with input as _attestation("prefetch-dependencies", "permissive", "true")
 	assertions.assert_equal_results(expected, prefetch_dependencies.deny) with input as _slsav1_attestation("prefetch-dependencies", "permissive", "true")
@@ -20,6 +20,21 @@ test_mode_permissive_violation if {
 test_mode_not_permissive_pass if {
 	assertions.assert_empty(prefetch_dependencies.deny) with input as _attestation("prefetch-dependencies", "strict", "true")
 	assertions.assert_empty(prefetch_dependencies.deny) with input as _slsav1_attestation("prefetch-dependencies", "strict", "true")
+}
+
+# A present but wrong-typed mode (e.g. a list) must not be able to bypass the
+# check by being neither the literal string "permissive" nor a valid
+# non-permissive string.
+test_mode_wrong_type_violation if {
+	expected := {{
+		"code": "prefetch_dependencies.mode_not_permissive",
+		"effective_on": "2022-01-01T00:00:00Z",
+		"msg": "Task 'prefetch-dependencies' was invoked with an insecure or malformed mode parameter",
+	}}
+	assertions.assert_equal_results(expected, prefetch_dependencies.deny) with input as _attestation("prefetch-dependencies", ["permissive"], "true")
+	assertions.assert_equal_results(expected, prefetch_dependencies.deny) with input as _slsav1_attestation("prefetch-dependencies", ["permissive"], "true")
+	assertions.assert_equal_results(expected, prefetch_dependencies.deny) with input as _attestation("prefetch-dependencies", 42, "true")
+	assertions.assert_equal_results(expected, prefetch_dependencies.deny) with input as _slsav1_attestation("prefetch-dependencies", {"nested": "object"}, "true")
 }
 
 test_missing_mode_param_pass if {
@@ -36,7 +51,7 @@ test_oci_ta_mode_permissive_violation if {
 	expected := {{
 		"code": "prefetch_dependencies.mode_not_permissive",
 		"effective_on": "2022-01-01T00:00:00Z",
-		"msg": "Task 'prefetch-dependencies-oci-ta' was invoked with mode parameter set to 'permissive'",
+		"msg": "Task 'prefetch-dependencies-oci-ta' was invoked with an insecure or malformed mode parameter",
 	}}
 	assertions.assert_equal_results(expected, prefetch_dependencies.deny) with input as _attestation("prefetch-dependencies-oci-ta", "permissive", "true")
 	assertions.assert_equal_results(expected, prefetch_dependencies.deny) with input as _slsav1_attestation("prefetch-dependencies-oci-ta", "permissive", "true")

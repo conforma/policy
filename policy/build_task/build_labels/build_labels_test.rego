@@ -23,3 +23,16 @@ test_no_labels if {
 		"msg": "The task definition does not include any labels",
 	}}) with input as {"metadata": {"name": "no_labels"}}
 }
+
+# A defined but non-object metadata.labels must not suppress both label checks.
+# It emits build_type_label_set rather than silently passing.
+test_malformed_labels if {
+	expected := {{
+		"code": "build_labels.build_type_label_set",
+		"msg": "The required build label 'build.appstudio.redhat.com/build_type' is missing",
+	}}
+	assertions.assert_equal_results(build_labels.deny, expected) with input as {"metadata": {"labels": null}}
+	assertions.assert_equal_results(build_labels.deny, expected) with input as {"metadata": {"labels": ["build.appstudio.redhat.com/build_type"]}}
+	assertions.assert_equal_results(build_labels.deny, expected) with input as {"metadata": {"labels": "build.appstudio.redhat.com/build_type"}}
+	assertions.assert_equal_results(build_labels.deny, expected) with input as {"metadata": {"labels": 1}}
+}

@@ -18,14 +18,17 @@ import data.lib.tekton
 # description: >-
 #   Verify the prefetch-dependencies task in the PipelineRun attestation was not
 #   invoked with the "permissive" mode parameter, which could compromise security.
+#   A present but wrong-typed `mode` value (for example a list or a number) is
+#   treated as insecure as well, so that a malformed value cannot silently bypass
+#   this check.
 # custom:
 #   short_name: mode_not_permissive
 #   failure_msg: >-
-#     Task '%s' was invoked with mode parameter set to 'permissive'
+#     Task '%s' was invoked with an insecure or malformed mode parameter
 #   solution: >-
 #     Change the mode parameter of the prefetch-dependencies task from 'permissive'
-#     to a more secure value. The permissive mode may allow insecure dependency
-#     fetching practices.
+#     to a more secure value, and make sure it is provided as a string. The
+#     permissive mode may allow insecure dependency fetching practices.
 #   collections:
 #   - redhat
 #   - redhat_security
@@ -37,7 +40,7 @@ deny contains result if {
 	some task in tekton.tasks(attestation)
 	some name in {"prefetch-dependencies", "prefetch-dependencies-oci-ta"}
 	name in tekton.task_names(task)
-	tekton.task_param(task, "mode") == "permissive"
+	_insecure_mode(task)
 	result := metadata.result_helper(rego.metadata.chain(), [name])
 }
 
@@ -72,4 +75,16 @@ deny contains result if {
 
 _task_has_proxy_enabled(task) if {
 	tekton.task_param(task, "enable-package-registry-proxy") == "true"
+}
+
+# The "permissive" mode is explicitly insecure.
+_insecure_mode(task) if {
+	tekton.task_param(task, "mode") == "permissive"
+}
+
+# A present but non-string mode is malformed and must not be trusted. An absent
+# mode leaves task_param undefined, so this remains a no-op in that case.
+_insecure_mode(task) if {
+	mode := tekton.task_param(task, "mode")
+	not is_string(mode)
 }
