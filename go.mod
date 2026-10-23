@@ -334,7 +334,7 @@ require (
 	github.com/sigstore/cosign/v2 v2.4.1 // indirect
 	github.com/sigstore/fulcio v1.6.3 // indirect
 	github.com/sigstore/protobuf-specs v0.3.2 // indirect
-	github.com/sigstore/rekor v1.3.6 // indirect
+	github.com/sigstore/rekor v1.5.2 // indirect
 	github.com/sigstore/sigstore v1.8.10 // indirect
 	github.com/sigstore/sigstore/pkg/signature/kms/aws v1.8.10 // indirect
 	github.com/sigstore/sigstore/pkg/signature/kms/azure v1.8.10 // indirect
