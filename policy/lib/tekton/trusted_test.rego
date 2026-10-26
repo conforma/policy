@@ -1159,6 +1159,248 @@ untrusted_git_task := {
 }
 
 # =============================================================================
+# SIGNATURE VERIFICATION TESTS
+# =============================================================================
+
+# Test: Allow rule without signing_identity works as before (backward compat)
+test_allow_rule_without_signing_identity if {
+	rules := {"allow": {"test-group": [{"pattern": "oci://registry.local/trusty*"}]}}
+
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+}
+
+# Test: Allow rule with signing_identity passes when signature is valid
+test_allow_rule_with_valid_signature if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
+		},
+	}]}}
+
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_success
+}
+
+# Test: Allow rule with signing_identity fails when signature is invalid
+test_allow_rule_with_invalid_signature if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
+		},
+	}]}}
+
+	not tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+}
+
+# Test: Multiple allow rules - task passes if any rule's pattern+signature match
+test_multiple_allow_rules_different_sig_configs if {
+	rules := {"allow": {
+		"signed-catalog": [{
+			"pattern": "oci://registry.local/trusty*",
+			"signing_identity": {
+				"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+				"certificate_oidc_issuer": "https://accounts.google.com",
+			},
+		}],
+		"unsigned-catalog": [{"pattern": "oci://registry.local/trusty*"}],
+	}}
+
+	# Passes because the unsigned-catalog rule has no sig verification requirement
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+}
+
+# Test: Git-resolved tasks are exempt from signature verification
+test_git_tasks_exempt_from_signing_identity if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "git\\+git\\.local/repo\\.git//*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
+		},
+	}]}}
+
+	# Git task should pass even though ec.sigstore.verify_image would fail,
+	# because git tasks are exempt from signature verification
+	tekton.is_trusted_task(trusted_git_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+}
+
+# Test: denial_reason returns signing_identity_verification_failed when pattern matches but sig fails
+test_denial_reason_signing_identity_verification_failed if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
+		},
+	}]}}
+
+	reason := tekton.denial_reason(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_failure
+
+	assertions.assert_equal("signing_identity_verification_failed", reason.type)
+	assertions.assert_equal([], reason.pattern)
+	assertions.assert_equal(1, count(reason.messages))
+	contains(reason.messages[0], "failed signature verification")
+}
+
+# Test: Schema validation accepts valid signing_identity on allow rules
+test_schema_accepts_signing_identity if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
+		},
+	}]}}
+
+	# No data errors should be produced for valid signing_identity
+	assertions.assert_empty(tekton.data_errors) with data.rule_data.trusted_task_rules as rules
+}
+
+# Test: Schema validation rejects empty signing_identity (would be silently permissive).
+# Asserts the specific data_error path/severity so the sigstore.validate wiring and
+# message formatting (allow-only iteration, group+index) are covered, not just count.
+test_schema_rejects_empty_signing_identity if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {},
+	}]}}
+
+	errors := tekton.data_errors with data.rule_data.trusted_task_rules as rules
+	some e in errors
+	startswith(e.message, "trusted_task_rules.allow.signed-catalog[0].signing_identity ")
+	assertions.assert_equal("failure", e.severity)
+}
+
+# Test: Schema validation rejects signing_identity with only non-identity fields
+test_schema_rejects_signing_identity_without_identity if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {"ignore_rekor": true},
+	}]}}
+
+	errors := tekton.data_errors with data.rule_data.trusted_task_rules as rules
+	some e in errors
+	startswith(e.message, "trusted_task_rules.allow.signed-catalog[0].signing_identity ")
+	assertions.assert_equal("failure", e.severity)
+}
+
+# Test: a signing_identity that omits ignore_rekor still has it supplied to the verifier.
+# ec.sigstore.verify_image requires ignore_rekor to be present (a required static property),
+# so the policy must default it even when the rule leaves it out.
+test_signing_identity_omitting_ignore_rekor_supplies_default if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
+		},
+	}]}}
+
+	tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_requires_ignore_rekor
+}
+
+# Test: a verifier result reporting failure with no error messages must not be treated as
+# verified. Guards against gating on an empty errors list instead of the success flag.
+test_signing_identity_failure_without_error_messages if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
+		},
+	}]}}
+
+	not tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_failure_no_errors
+}
+
+# Test: a verifier result reporting success=true but a non-empty errors list must not be
+# treated as verified. Exercises the belt-and-suspenders errors-list check alongside success.
+test_signing_identity_success_with_error_messages if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
+		},
+	}]}}
+
+	not tekton.is_trusted_task(trusted_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_success_with_errors
+}
+
+# Test: a tag-only (unpinned) bundle cannot satisfy a signing_identity, even when the verifier
+# would succeed — a signature can only be verified against a digest-pinned bundle.
+test_signing_identity_requires_pinned_bundle if {
+	rules := {"allow": {"signed-catalog": [{
+		"pattern": "oci://registry.local/trusty*",
+		"signing_identity": {
+			"certificate_identity_regexp": "https://tekton.dev/chains/.*",
+			"certificate_oidc_issuer": "https://accounts.google.com",
+			"rekor_url": "https://rekor.sigstore.dev",
+		},
+	}]}}
+
+	not tekton.is_trusted_task(_unpinned_bundle_task, _empty_bundle_manifests) with data.rule_data.trusted_task_rules as rules
+		with data.rule_data.trusted_task_rules_enabled as true
+		with ec.sigstore.verify_image as _mock_verify_image_success
+}
+
+# A bundle task referenced by tag only (no digest), i.e. not pinned.
+_unpinned_bundle_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
+	{"name": "bundle", "value": "registry.local/trusty:1.0"},
+	{"name": "name", "value": "trusty"},
+	{"name": "kind", "value": "task"},
+]}}}
+
+# Mock helpers for signature verification tests
+_mock_verify_image_success(_, _) := {"success": true, "errors": []}
+
+_mock_verify_image_failure(_, _) := {"success": false, "errors": ["signature verification failed"]}
+
+# Failure result with an empty errors list, to verify the gate relies on the success flag.
+_mock_verify_image_failure_no_errors(_, _) := {"success": false, "errors": []}
+
+# Success flag set true but with a non-empty errors list, to verify the belt-and-suspenders
+# errors-list check still rejects the bundle.
+_mock_verify_image_success_with_errors(_, _) := {"success": true, "errors": ["unexpected error"]}
+
+# Mirrors ec-cli's requirement that opts always include ignore_rekor (a required static
+# property); reports an error (treated as a verification failure) when the key is absent
+# from the opts the policy passes. Written branch-free (the error list is always built, then
+# sliced to length 0 or 1) so coverage stays complete whichever outcome the test exercises.
+_mock_verify_requires_ignore_rekor(_, opts) := {"success": count(errs) == 0, "errors": errs} if {
+	has_ignore_rekor := count(opts) - count(object.remove(opts, {"ignore_rekor"}))
+	errs := array.slice(["ignore_rekor missing from opts"], 0, 1 - has_ignore_rekor)
+}
+
+# =============================================================================
 # BEGIN LEGACY TEST DATA (trusted_tasks)
 # DELETE THIS SECTION when removing legacy support.
 # =============================================================================

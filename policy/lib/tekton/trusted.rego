@@ -4,6 +4,7 @@ import rego.v1
 
 import data.lib.arrays
 import data.lib.json as j
+import data.lib.sigstore
 import data.lib.time as time_lib
 
 # regal ignore:prefer-package-imports
@@ -257,6 +258,24 @@ data_errors contains error if {
 	}
 }
 
+# If there is a signing_identity present, use sigstore.validate to
+# make sure it is well-formed, and has the right combination of fields
+data_errors contains error if {
+	rule_data_rules := lib_rule_data("trusted_task_rules")
+	is_object(rule_data_rules)
+	some group, rules in rule_data_rules.allow
+	some i, rule in rules
+	"signing_identity" in object.keys(rule)
+	some e in sigstore.validate(rule.signing_identity)
+	error := {
+		"message": sprintf(
+			"trusted_task_rules.allow.%s[%d].signing_identity %s",
+			[group, i, e.message],
+		),
+		"severity": e.severity,
+	}
+}
+
 data_errors contains error if {
 	rule_data_rules := lib_rule_data("trusted_task_rules")
 	is_object(rule_data_rules)
@@ -352,6 +371,22 @@ denial_reason(task, bundle_manifests) := reason if {
 		"messages": deny_info.messages,
 	}
 } else := reason if {
+	# Case: Matches pattern+version on an allow rule but fails signature verification
+	ref := task_ref(task)
+	not _task_matches_deny_rule(ref, bundle_manifests)
+
+	some rule in _effective_allow_rules
+	_task_matches_allow_rule_pattern_version(ref, rule, bundle_manifests)
+
+	# But no allow rule passes signature verification
+	not _task_matches_allow_rule(ref, bundle_manifests)
+
+	reason := {
+		"type": "signing_identity_verification_failed",
+		"pattern": [],
+		"messages": [sprintf("Task bundle %s failed signature verification", [ref.bundle])],
+	}
+} else := reason if {
 	# Case 2: Doesn't match any allow rule
 	# Only applies if there are effective allow rules defined
 	ref := task_ref(task)
@@ -397,8 +432,55 @@ _denying_rules_info(task, bundle_manifests) := {"patterns": patterns, "messages"
 # bundle_manifests is a map of bundle_ref -> manifest from ec.oci.image_manifests
 _task_matches_allow_rule(ref, bundle_manifests) if {
 	some rule in _effective_allow_rules
+	_task_matches_allow_rule_pattern_version(ref, rule, bundle_manifests)
+	_signature_verified_for_rule(ref, rule)
+}
+
+_task_matches_allow_rule_pattern_version(ref, rule, bundle_manifests) if {
 	_pattern_matches(ref.key, rule.pattern)
 	_version_satisfies_all_rule_constraints(ref, rule, bundle_manifests)
+}
+
+# A ref is signature-verified for a given rule if:
+# 1. The rule has no signing_identity config (pass through), OR
+# 2. The ref is not an OCI bundle (git tasks are exempt), OR
+# 3. The bundle passes sigstore verification with the rule's signing_identity
+#    (passed as sigstore opts; see design/sigstore-verification.md)
+_signature_verified_for_rule(_, rule) if {
+	not rule.signing_identity
+}
+
+_signature_verified_for_rule(ref, _) if {
+	not ref.bundle
+}
+
+_signature_verified_for_rule(ref, rule) if {
+	ref.bundle
+	is_object(rule.signing_identity)
+
+	# A signature can only be verified against a digest-pinned bundle: sigstore signatures
+	# attach to digests, and ec.sigstore.verify_image requires a digest reference. An unpinned
+	# (tag-only) bundle therefore cannot satisfy a signing_identity and is not trusted here
+	# (it is also flagged separately as an unpinned task reference).
+	ref.pinned
+
+	# ec.sigstore.verify_image requires ignore_rekor to always be present (it is a
+	# required static property of the builtin's opts), so default it when the rule
+	# omits it while preserving an explicitly configured value.
+	opts := object.union({"ignore_rekor": false}, rule.signing_identity)
+	_sigstore_verify_succeeds(ref.bundle, opts)
+}
+
+# Gate on the verifier's success flag, per design/sigstore-verification.md. object.get avoids
+# the strict type-checker panic that direct field access on the built-in's result triggers.
+_sigstore_verify_succeeds(bundle, opts) if {
+	verify_result := ec.sigstore.verify_image(bundle, opts)
+	object.get(verify_result, "success", false) == true
+
+	# Actually the implementation of ec.sigstore.verify_image sets the "success" field based on
+	# whether the error list is empty, so this check is almost certainly redundant. But anyway
+	# let's be defensive and pretend we don't know that.
+	object.get(verify_result, "errors", []) == []
 }
 
 # Checks if the key matches the wildcard pattern using glob matching.
@@ -440,6 +522,7 @@ _trusted_task_rule_entry_schema := {
 			"description": "List of version constraints",
 			"items": {"type": "string"},
 		},
+		"signing_identity": sigstore.opts_schema,
 	},
 	"additionalProperties": true,
 }
