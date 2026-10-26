@@ -25,7 +25,7 @@ require (
 	cloud.google.com/go/storage v1.62.0 // indirect
 	cuelang.org/go v0.16.0 // indirect
 	dario.cat/mergo v1.0.2 // indirect
-	filippo.io/edwards25519 v1.1.1 // indirect
+	filippo.io/edwards25519 v1.2.0 // indirect
 	github.com/AlecAivazis/survey/v2 v2.3.7 // indirect
 	github.com/AliyunContainerService/ack-ram-tool/pkg/credentials/provider v0.15.0 // indirect
 	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible // indirect
@@ -210,7 +210,7 @@ require (
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/btree v1.1.3 // indirect
-	github.com/google/cel-go v0.28.0 // indirect
+	github.com/google/cel-go v0.29.0 // indirect
 	github.com/google/certificate-transparency-go v1.3.3 // indirect
 	github.com/google/flatbuffers v25.9.23+incompatible // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
@@ -437,7 +437,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.11.0 // indirect
 	go.starlark.net v0.0.0-20240123142251-f86470692795 // indirect
-	go.step.sm/crypto v0.75.0 // indirect
+	go.step.sm/crypto v0.81.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
