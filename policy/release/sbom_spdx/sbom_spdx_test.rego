@@ -117,7 +117,6 @@ assert_allowed(purl, disallowed_packages) if {
 	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att] # regal ignore:with-outside-test-context
 		with sbom._verified_sbom_attestations as [att]
 		with data.rule_data.disallowed_packages as disallowed_packages # regal ignore:with-outside-test-context
-		with data.rule_data.vendored_purl_types as [] # regal ignore:with-outside-test-context
 		with ec.oci.image_referrers as [] # regal ignore:with-outside-test-context
 		with ec.oci.image_tag_refs as [] # regal ignore:with-outside-test-context
 }
@@ -139,7 +138,6 @@ assert_not_allowed(purl, disallowed_packages) if {
 		with ec.oci.image_referrers as [] # regal ignore:with-outside-test-context
 		with ec.oci.image_tag_refs as [] # regal ignore:with-outside-test-context
 		with data.rule_data.disallowed_packages as disallowed_packages # regal ignore:with-outside-test-context
-		with data.rule_data.vendored_purl_types as [] # regal ignore:with-outside-test-context
 }
 
 test_external_references_allowed_regex_with_no_rules_is_allowed if {
@@ -1182,177 +1180,6 @@ _spdx_backend_package_mixed(purl) := {
 	],
 	"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
 }
-
-# hermeto_attribution_required tests
-
-test_hermeto_attribution_required_spdx_with_hermeto_passes if {
-	att := json.patch(_sbom_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/packages/-",
-		"value": _spdx_vendored_package("pkg:golang/example.com/lib@1.0", true),
-	}])
-
-	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _spdx_vendored_rule_data
-}
-
-test_hermeto_attribution_required_spdx_without_hermeto_denied if {
-	expected := {{
-		"code": "sbom_spdx.hermeto_attribution_required",
-		"term": "pkg:golang/example.com/lib@1.0",
-		# regal ignore:line-length
-		"msg": `Package pkg:golang/example.com/lib@1.0 has PURL type "golang" which requires Hermeto attribution but was not processed by Hermeto`,
-	}}
-
-	att := json.patch(_sbom_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/packages/-",
-		"value": _spdx_vendored_package("pkg:golang/example.com/lib@1.0", false),
-	}])
-
-	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _spdx_vendored_rule_data
-}
-
-test_hermeto_attribution_required_spdx_mixed if {
-	expected := {{
-		"code": "sbom_spdx.hermeto_attribution_required",
-		"term": "pkg:golang/example.com/bad@2.0",
-		# regal ignore:line-length
-		"msg": `Package pkg:golang/example.com/bad@2.0 has PURL type "golang" which requires Hermeto attribution but was not processed by Hermeto`,
-	}}
-
-	att := json.patch(_sbom_attestation, [
-		{
-			"op": "add",
-			"path": "/statement/predicate/packages/-",
-			"value": _spdx_vendored_package("pkg:golang/example.com/good@1.0", true),
-		},
-		{
-			"op": "add",
-			"path": "/statement/predicate/packages/-",
-			"value": _spdx_vendored_package("pkg:golang/example.com/bad@2.0", false),
-		},
-	])
-
-	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _spdx_vendored_rule_data
-}
-
-test_hermeto_attribution_required_spdx_unconfigured_type_passes if {
-	att := json.patch(_sbom_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/packages/-",
-		"value": _spdx_vendored_package("pkg:npm/example-lib@2.0", false),
-	}])
-
-	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _spdx_vendored_rule_data
-}
-
-test_hermeto_attribution_required_spdx_local_dep_passes if {
-	att := json.patch(_sbom_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/packages/-",
-		"value": _spdx_vendored_package("pkg:golang/example.com/lib@1.0?vcs_url=https://github.com/example/lib.git", false),
-	}])
-
-	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _spdx_vendored_rule_data
-}
-
-test_hermeto_attribution_required_spdx_empty_rule_data_passes if {
-	att := json.patch(_sbom_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/packages/-",
-		"value": _spdx_vendored_package("pkg:golang/example.com/lib@1.0", false),
-	}])
-
-	assertions.assert_empty(sbom_spdx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as {"vendored_purl_types": []}
-}
-
-test_hermeto_attribution_required_spdx_cargo_denied if {
-	expected := {{
-		"code": "sbom_spdx.hermeto_attribution_required",
-		"term": "pkg:cargo/serde@1.0.0",
-		# regal ignore:line-length
-		"msg": `Package pkg:cargo/serde@1.0.0 has PURL type "cargo" which requires Hermeto attribution but was not processed by Hermeto`,
-	}}
-
-	att := json.patch(_sbom_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/packages/-",
-		"value": _spdx_vendored_package("pkg:cargo/serde@1.0.0", false),
-	}])
-
-	assertions.assert_equal_results(expected, sbom_spdx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _spdx_vendored_rule_data
-}
-
-_spdx_vendored_package(purl, with_hermeto) := pkg if {
-	with_hermeto == true
-	pkg := {
-		"name": "vendored-package",
-		"SPDXID": "SPDXRef-vendored-package",
-		"downloadLocation": "NOASSERTION",
-		"externalRefs": [{
-			"referenceCategory": "PACKAGE-MANAGER",
-			"referenceType": "purl",
-			"referenceLocator": purl,
-		}],
-		"annotations": [{
-			"annotator": "Tool: hermeto:jsonencoded",
-			"comment": "{\"name\":\"hermeto:found_by\",\"value\":\"hermeto\"}",
-			"annotationDate": "2024-12-09T12:00:00Z",
-			"annotationType": "OTHER",
-		}],
-		"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
-	}
-} else := pkg if {
-	pkg := {
-		"name": "vendored-package",
-		"SPDXID": "SPDXRef-vendored-package",
-		"downloadLocation": "NOASSERTION",
-		"externalRefs": [{
-			"referenceCategory": "PACKAGE-MANAGER",
-			"referenceType": "purl",
-			"referenceLocator": purl,
-		}],
-		"annotations": [],
-		"checksums": [{"algorithm": "SHA256", "checksumValue": "abc123"}],
-	}
-}
-
-_spdx_vendored_rule_data := {"vendored_purl_types": ["golang", "cargo"]}
 
 _spdx_backend_package(purl, backend_annotation) := {
 	"name": "backend-package",

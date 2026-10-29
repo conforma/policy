@@ -432,51 +432,6 @@ deny contains result if {
 	)
 }
 
-# METADATA
-# title: Hermeto attribution required
-# description: >-
-#   Registry dependencies with a PURL type listed in vendored_purl_types must
-#   be processed by Hermeto. When a hermetic build omits prefetch-input for a
-#   vendored ecosystem, Hermeto never runs and the SBOM contains only
-#   Syft-reported module-level data, which is insufficient for CVE analysis.
-#   This rule denies any such component that lacks the hermeto:found_by (or
-#   cachi2:found_by) property.
-# custom:
-#   short_name: hermeto_attribution_required
-#   failure_msg: >-
-#     Package %s has PURL type %q which requires Hermeto attribution but was
-#     not processed by Hermeto
-#   solution: >-
-#     Set the prefetch-input pipeline parameter to the Hermeto package manager
-#     name for the ecosystem (e.g. "gomod" for pkg:golang, "cargo" for
-#     pkg:cargo) so Hermeto processes the project's dependencies during the
-#     prefetch-dependencies task.
-#   collections:
-#   - redhat
-#   - policy_data
-#   - redhat_security
-#   effective_on: 2027-01-15T00:00:00Z
-deny contains result if {
-	vendored := {t | some t in rule_data.get("vendored_purl_types")}
-
-	some s in sbom.cyclonedx_sboms
-	some component in s.components
-
-	purl := component.purl
-	parsed_purl := ec.purl.parse(purl)
-	parsed_purl.type in vendored
-
-	sbom.is_registry_dependency(parsed_purl, component)
-
-	not sbom.component_found_by_hermeto(component)
-
-	result := metadata.result_helper_with_term(
-		rego.metadata.chain(),
-		[purl, parsed_purl.type],
-		purl,
-	)
-}
-
 _has_distribution_reference(component) if {
 	some reference in component.externalReferences
 	reference.type == "distribution"
