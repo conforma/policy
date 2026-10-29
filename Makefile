@@ -45,13 +45,17 @@ else
 endif
 
 define COVERAGE
-@$(COVERAGE_CMD) | { \
+@set -o pipefail; \
+$(COVERAGE_CMD) | { \
 	T=$$(mktemp); tee "$${T}"; $(OPA) eval --format pretty \
 	--input "$${T}" \
 	--data hack/simplecov.rego \
 	data.hack.from_opa > coverage.json; \
-	rm -f "$${T}" || true ;\
-}
+	status=$$?; \
+	rm -f "$${T}" || true; \
+	exit "$${status}"; \
+} \
+| jq -j -r 'if .coverage < 100 then "ERROR: Code coverage threshold not met: got \(.coverage) instead of 100.00\n" | halt_error(1) else "" end'
 endef
 
 ##@ General
