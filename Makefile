@@ -230,8 +230,12 @@ lint: ## Runs Rego linter
 lint-fix: ## Fix linting issues automagically
 	@go run github.com/google/addlicense -c '$(COPY)' -y '' -s $(LICENSE_IGNORE) .
 
+.PHONY: check-go-directive
+check-go-directive: ## Check that all go.mod files declare the same go directive as the root
+	@hack/check-go-directive.sh
+
 .PHONY: ci
-ci: quiet-test acceptance opa-check conventions-check fmt-check lint regal-test generate-docs ## Runs all checks and tests
+ci: quiet-test acceptance opa-check conventions-check fmt-check lint regal-test generate-docs check-go-directive ## Runs all checks and tests
 
 #--------------------------------------------------------------------
 
