@@ -113,3 +113,31 @@ test_is_image_index if {
 
 	not image.is_image_index(ref) with ec.oci.descriptor as false
 }
+
+# G43: syntax validation is independent of parse/equal_ref's existing contract.
+test_valid_digest if {
+	every pair in [["sha256", 64], ["sha384", 96], ["sha512", 128], ["blake3", 64]] {
+		encoded := concat("", ["a" | some _ in numbers.range(1, pair[1])])
+		image.valid_digest(sprintf("%s:%s", [pair[0], encoded]))
+		not image.valid_digest(sprintf("%s:%s", [pair[0], substring(encoded, 1, -1)]))
+		not image.valid_digest(sprintf("%s:%s0", [pair[0], encoded]))
+		not image.valid_digest(sprintf("%s:%s", [pair[0], upper(encoded)]))
+		not image.valid_digest(sprintf("%s:%s", [pair[0], replace(encoded, "a", "g")]))
+	}
+	every digest in ["multihash+base58:QmRZxt2b1F", "sha256+b64u:LCa0a2j_xo_5m0U8HTBBNBNCLXBkg7-g-YpeiGJm564"] {
+		image.valid_digest(digest)
+	}
+	every digest in [null, 1, true, {}, [], "", "not-a-digest", "sha256:", ":abc", "sha256:ab:cd", "sha256:abc@def", "SHA256:abc", "sha256+:abc", "sha256:abc def"] {
+		not image.valid_digest(digest)
+	}
+}
+
+test_is_pinned if {
+	digest := "sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+	every ref in [sprintf("registry.local/task:1.0@%s", [digest]), sprintf("localhost:5000/repo/task@%s", [digest]), sprintf(" registry.local/task@%s ", [digest])] {
+		image.is_pinned(ref)
+	}
+	every ref in [null, 1, true, {}, [], "", "registry.local/task:1.0", "registry.local/task:1.0@", "registry.local/task:1.0@not-a-digest", "registry.local/task:1.0@sha256:", sprintf("registry.local/task@%s@extra", [digest]), sprintf("http://registry.local/task@%s", [digest])] {
+		not image.is_pinned(ref)
+	}
+}

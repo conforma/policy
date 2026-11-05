@@ -55,7 +55,8 @@ warn contains result if {
 # description: >-
 #   Check if all Tekton Tasks use a Task definition by a pinned reference. When using the git
 #   resolver, a commit ID is expected for the revision parameter. When using the bundles resolver,
-#   the bundle parameter is expected to include an image reference with a digest.
+#   the bundle parameter is expected to include an image reference with a syntactically valid OCI
+#   digest.
 # custom:
 #   short_name: pinned
 #   failure_msg: Pipeline task %q uses an unpinned task reference, %s

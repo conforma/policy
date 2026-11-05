@@ -30,6 +30,7 @@ Rules included:
         
 * xref:packages/release_attestation_type.adoc#attestation_type__deprecated_policy_attestation_format[Attestation type: Deprecated policy attestation format]        
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type[Attestation type: Known attestation type found]        
+* xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type_v2[Attestation type: Known attestation type found (v2)]        
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_types_provided[Attestation type: Known attestation types provided]        
 * xref:packages/release_attestation_type.adoc#attestation_type__pipelinerun_attestation_found[Attestation type: PipelineRun attestation found]        
 * xref:packages/release_base_image_registries.adoc#base_image_registries__allowed_registries_provided[Base image checks: Allowed base image registry prefixes list or signing identity was provided]        
@@ -118,6 +119,7 @@ Rules included:
         
 * xref:packages/release_attestation_type.adoc#attestation_type__deprecated_policy_attestation_format[Attestation type: Deprecated policy attestation format]        
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type[Attestation type: Known attestation type found]        
+* xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type_v2[Attestation type: Known attestation type found (v2)]        
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_types_provided[Attestation type: Known attestation types provided]        
 * xref:packages/release_attestation_type.adoc#attestation_type__pipelinerun_attestation_found[Attestation type: PipelineRun attestation found]        
 * xref:packages/release_base_image_registries.adoc#base_image_registries__allowed_registries_provided[Base image checks: Allowed base image registry prefixes list or signing identity was provided]        
@@ -289,6 +291,7 @@ Rules included:
         
 * xref:packages/release_attestation_type.adoc#attestation_type__deprecated_policy_attestation_format[Attestation type: Deprecated policy attestation format]        
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type[Attestation type: Known attestation type found]        
+* xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type_v2[Attestation type: Known attestation type found (v2)]        
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_types_provided[Attestation type: Known attestation types provided]        
 * xref:packages/release_attestation_type.adoc#attestation_type__pipelinerun_attestation_found[Attestation type: PipelineRun attestation found]        
 * xref:packages/release_git_branch.adoc#git_branch__git_branch[Git branch checks: Builds have a trusted target branch]        
@@ -357,6 +360,7 @@ Rules included:
 * xref:packages/release_maven_repos.adoc#maven_repos__deny_unpermitted_urls[All maven artifacts have known repository URLs: Known Repository URLs]        
 * xref:packages/release_maven_repos.adoc#maven_repos__policy_data_missing[All maven artifacts have known repository URLs: Policy data validation]        
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type[Attestation type: Known attestation type found]        
+* xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type_v2[Attestation type: Known attestation type found (v2)]        
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_types_provided[Attestation type: Known attestation types provided]        
 * xref:packages/release_attestation_type.adoc#attestation_type__pipelinerun_attestation_found[Attestation type: PipelineRun attestation found]        
 * xref:packages/release_base_image_registries.adoc#base_image_registries__allowed_registries_provided[Base image checks: Allowed base image registry prefixes list or signing identity was provided]        
@@ -479,9 +483,11 @@ Rules included:
 * xref:packages/release_tasks.adoc#tasks__successful_pipeline_tasks[Tasks: Successful pipeline tasks]        
 * xref:packages/release_tasks.adoc#tasks__unsupported[Tasks: Task version unsupported]        
 * xref:packages/stepaction_stepaction_image.adoc#stepaction_image__permitted[Tekton StepAction images policies: Image comes from permitted registry]        
+* xref:packages/stepaction_stepaction_image.adoc#stepaction_image__permitted_v2[Tekton StepAction images policies: Image comes from permitted registry (v2)]        
 * xref:packages/stepaction_stepaction_image.adoc#stepaction_image__rule_data[Tekton StepAction images policies: Rule data provided]        
 * xref:packages/task_step_image_registries.adoc#step_image_registries__step_image_registry_prefix_list_provided[Tekton Task Step image registry policies: Permitted step image registry prefix list provided]        
 * xref:packages/task_step_image_registries.adoc#step_image_registries__step_images_permitted[Tekton Task Step image registry policies: Step images come from permitted registry]        
+* xref:packages/task_step_image_registries.adoc#step_image_registries__step_images_permitted_v2[Tekton Task Step image registry policies: Step images come from permitted registry (v2)]        
 * xref:packages/build_task_build_labels.adoc#build_labels__build_type_label_set[Tekton task build type label checks: Build task has build type label]        
 * xref:packages/build_task_build_labels.adoc#build_labels__build_type_label_set_v2[Tekton task build type label checks: Build task has build type label (v2)]        
 * xref:packages/build_task_build_labels.adoc#build_labels__build_task_has_label[Tekton task build type label checks: Build task has label]        
@@ -530,6 +536,7 @@ a| Includes policy rules required to meet SLSA Level 3.
 Rules included:
         
 * xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type[Attestation type: Known attestation type found]        
+* xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type_v2[Attestation type: Known attestation type found (v2)]        
 * xref:packages/release_attestation_type.adoc#attestation_type__pipelinerun_attestation_found[Attestation type: PipelineRun attestation found]        
 * xref:packages/release_slsa_build_build_service.adoc#slsa_build_build_service__allowed_builder_ids_provided[SLSA - Build - Build Service: Allowed builder IDs provided]        
 * xref:packages/release_slsa_build_build_service.adoc#slsa_build_build_service__slsa_builder_id_found[SLSA - Build - Build Service: SLSA Builder ID found]        

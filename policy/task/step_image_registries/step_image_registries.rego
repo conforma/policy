@@ -47,6 +47,36 @@ deny contains result if {
 }
 
 # METADATA
+# title: Step images come from permitted registry (v2)
+# description: >-
+#   Confirm every existing Task step has a nonempty string image reference from an allowed
+#   registry. Missing and wrong-typed image values are rejected.
+# custom:
+#   short_name: step_images_permitted_v2
+#   effective_on: 2027-01-11T00:00:00Z
+#   failure_msg: Step %d uses missing or disallowed image ref '%v'
+#   solution: >-
+#     Make sure the container image used in each step of the Task comes from an approved registry.
+#   collections:
+#   - redhat_security
+#
+deny contains result if {
+	some task in tkn_bundle.tasks
+	task.kind == "Task"
+
+	some step_index, step in task.spec.steps
+	image_ref := object.get(step, "image", null)
+	allowed_registry_prefixes := rule_data.get(_rule_data_key)
+	not _image_ref_permitted_v2(image_ref, allowed_registry_prefixes)
+
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[step_index, image_ref],
+		k8s.name_version(task),
+	)
+}
+
+# METADATA
 # title: Permitted step image registry prefix list provided
 # description: >-
 #   Confirm the `allowed_step_image_registry_prefixes` rule data was provided, since it's
@@ -89,3 +119,10 @@ _rule_data_errors contains error if {
 }
 
 _rule_data_key := "allowed_step_image_registry_prefixes"
+
+# The v2 check requires an image string before invoking the registry-prefix check.
+_image_ref_permitted_v2(image_ref, allowed_prefixes) if {
+	is_string(image_ref)
+	trim_space(image_ref) != ""
+	image_ref_permitted(image_ref, allowed_prefixes)
+}
