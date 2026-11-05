@@ -12,7 +12,7 @@ test_image_accessible if {
 		"spec": {"image": "registry.io/repository/ok:1"},
 	}
 
-	assertions.assert_empty(image.deny) with input as stepaction
+	assertions.assert_empty(_legacy_denies) with input as stepaction
 		with ec.oci.image_manifest as mock_image_manifest
 		with data.rule_data as default_rule_data
 }
@@ -29,7 +29,7 @@ test_image_not_accessible if {
 		"term": "registry.io/repository/not_ok:1",
 	}}
 
-	assertions.assert_equal_results(expected, image.deny) with input as stepaction
+	assertions.assert_equal_results(expected, _legacy_denies) with input as stepaction
 		with ec.oci.image_manifest as mock_image_manifest
 		with data.rule_data as default_rule_data
 }
@@ -48,7 +48,7 @@ test_image_not_permitted if {
 		"term": "noname/noversion",
 	}}
 
-	assertions.assert_equal_results(expected, image.deny) with input as stepaction
+	assertions.assert_equal_results(expected, _legacy_denies) with input as stepaction
 		with ec.oci.image_manifest as mock_image_manifest
 		with data.rule_data as rule_data
 }
@@ -61,7 +61,7 @@ test_rule_data_list_empty if {
 		"severity": "failure",
 	}}
 
-	assertions.assert_equal_results(expected, image.deny) with data.rule_data as {}
+	assertions.assert_equal_results(expected, _legacy_denies) with data.rule_data as {}
 }
 
 test_rule_data_list_format if {
@@ -88,7 +88,7 @@ test_rule_data_list_format if {
 		},
 	}
 
-	assertions.assert_equal_results(expected, image.deny) with data.rule_data as d
+	assertions.assert_equal_results(expected, _legacy_denies) with data.rule_data as d
 }
 
 mock_image_manifest(ref) := {} if {
@@ -96,3 +96,44 @@ mock_image_manifest(ref) := {} if {
 }
 
 default_rule_data := {"allowed_step_image_registry_prefixes": ["registry.io/"]}
+
+# Preserve the legacy contract during the v2 migration window.
+_legacy_denies contains result if {
+	some result in image.deny
+	not endswith(result.code, "_v2")
+}
+
+# G18 / RA05-STEPACTION-IMAGE-MISSING-001: spec remains selected.
+test_stepaction_image_missing_v2 if {
+	stepaction := {"kind": "StepAction", "spec": {"image": "registry.io/repository/ok:1"}}
+	assertions.assert_empty(image.deny) with input as stepaction
+		with ec.oci.image_manifest as mock_image_manifest with data.rule_data as default_rule_data
+	missing := json.remove(stepaction, ["spec/image"])
+	results := image.deny with input as missing
+		with ec.oci.image_manifest as mock_image_manifest with data.rule_data as default_rule_data
+	assertions.assert_equal({r.code | some r in results}, {"stepaction_image.accessible_v2", "stepaction_image.permitted_v2"})
+	every result in results {
+		result.term == "noname/noversion"
+		result.effective_on == "2027-01-11T00:00:00Z"
+	}
+}
+
+test_stepaction_image_wrong_type_v2 if {
+	every value in [null, 1, true, {}, [], "", " "] {
+		results := image.deny with input as {"kind": "StepAction", "spec": {"image": value}}
+			with ec.oci.image_manifest as mock_image_manifest with data.rule_data as default_rule_data
+		codes := {r.code | some r in results}
+		"stepaction_image.accessible_v2" in codes
+		"stepaction_image.permitted_v2" in codes
+	}
+}
+
+test_stepaction_image_adverse_controls_v2 if {
+	results := image.deny with input as {"kind": "StepAction", "spec": {"image": "registry.io/repository/not_ok:1"}}
+		with ec.oci.image_manifest as mock_image_manifest with data.rule_data as default_rule_data
+	assertions.assert_equal({r.code | some r in results}, {"stepaction_image.accessible", "stepaction_image.accessible_v2"})
+	disallowed := image.deny with input as {"kind": "StepAction", "spec": {"image": "registry.io/repository/ok:1"}}
+		with ec.oci.image_manifest as mock_image_manifest
+		with data.rule_data.allowed_step_image_registry_prefixes as ["other.registry/"]
+	assertions.assert_equal({r.code | some r in disallowed}, {"stepaction_image.permitted", "stepaction_image.permitted_v2"})
+}

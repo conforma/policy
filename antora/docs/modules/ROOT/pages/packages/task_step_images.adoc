@@ -19,4 +19,17 @@ Confirm that each step in the Task uses a container image that is accessible.
 * FAILURE message: `Step %d uses inaccessible image ref '%s'`
 * Code: `step_images.step_images_accessible`
 * Effective from: `2025-02-10T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_images/step_images.rego#L15[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_images/step_images.rego#L16[Source, window="_blank"]
+
+[#step_images__step_images_accessible_v2]
+=== link:#step_images__step_images_accessible_v2[Step images are valid (v2)]
+
+Confirm every existing Task step has a nonempty string image reference that is accessible. Missing and wrong-typed image values are rejected.
+
+*Solution*: Make sure the container image used in each step of the Task is pushed to the registry and that it can be fetched.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Step %d uses missing or inaccessible image ref '%v'`
+* Code: `step_images.step_images_accessible_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_images/step_images.rego#L43[Source, window="_blank"]

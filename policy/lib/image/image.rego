@@ -2,6 +2,38 @@ package lib.image
 
 import rego.v1
 
+# is_pinned checks digest syntax without changing parse's permissive contract.
+# Algorithm-specific encodings follow the OCI descriptor digest specification:
+# https://github.com/opencontainers/image-spec/blob/main/descriptor.md#digests
+is_pinned(ref) if {
+	is_string(ref)
+	parts := split(trim_space(ref), "@")
+	count(parts) == 2
+	parse(ref)
+	valid_digest(parts[1])
+}
+
+# valid_digest accepts OCI digest grammar and validates the length and lowercase
+# hex encoding of known algorithms. Unrecognized algorithms retain OCI's
+# extensible encoding grammar; this checks syntax, not content integrity.
+valid_digest(digest) if {
+	is_string(digest)
+	regex.match(`^[a-z0-9]+(?:[+._-][a-z0-9]+)*:[A-Za-z0-9=_-]+$`, digest)
+	parts := split(digest, ":")
+	_valid_digest_encoding(parts[0], parts[1])
+}
+
+_digest_lengths := {"sha256": 64, "sha384": 96, "sha512": 128, "blake3": 64}
+
+_valid_digest_encoding(algorithm, encoded) if {
+	count(encoded) == _digest_lengths[algorithm]
+	regex.match(`^[a-f0-9]+$`, encoded)
+}
+
+_valid_digest_encoding(algorithm, _) if {
+	not algorithm in object.keys(_digest_lengths)
+}
+
 # parse returns a data structure representing the different portions
 # of the OCI image reference.
 parse(ref) := d if {

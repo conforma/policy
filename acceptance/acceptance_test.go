@@ -117,7 +117,7 @@ type (
 		Description string   `json:"description"`
 		Title       string   `json:"title"`
 		Solution    string   `json:"solution"`
-		Term        string   `json:"term"`
+		Term        any      `json:"term"`
 		Collections []string `json:"collections"`
 	}
 	result struct {

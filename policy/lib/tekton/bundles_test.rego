@@ -41,3 +41,12 @@ test_unpinned_task_bundle if {
 	expected := sets.to_set(tasks)
 	assertions.assert_equal(tekton.unpinned_task_bundle(tasks), expected) with data["task-bundles"] as []
 }
+
+test_unpinned_task_bundle_digest_shape if {
+	valid := "registry.local/task:1.0@sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+	assertions.assert_empty(tekton.unpinned_task_bundle([{"name": "task", "taskRef": {"bundle": valid}}]))
+	every ref in ["registry.local/task:1.0", "registry.local/task:1.0@not-a-digest", "registry.local/task:1.0@sha256:"] {
+		task := {"name": "task", "taskRef": {"bundle": ref}}
+		assertions.assert_equal(tekton.unpinned_task_bundle([task]), {task})
+	}
+}

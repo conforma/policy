@@ -171,6 +171,13 @@ matching, semver version constraints, and `effective_on` dates. The **legacy
 system** (being phased out) is a pure allowlist with expiry dates. The rules
 system takes priority when data is present.
 
+**Pinning advisories**: `task_bundle.unpinned_task_bundle` and
+`trusted_task.pinned` validate OCI digest syntax through `lib.image.is_pinned`.
+An arbitrary nonempty suffix after `@` does not suppress these warnings. This
+syntax check is separate from reference normalization and trust enforcement:
+it does not alter allow/deny precedence, legacy reference matching, or signature
+verification, and does not prove that referenced content exists or is trusted.
+
 **Trust boundary**: The two systems have different data flows.
 
 - **Rules system (`trusted_task_rules`)**: single-source. `_trusted_task_rules_data`

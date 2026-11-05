@@ -19,7 +19,7 @@ The Conforma CLI now places the attestation data in a different location. This c
 * FAILURE message: `Deprecated policy attestation format found`
 * Code: `attestation_type.deprecated_policy_attestation_format`
 * Effective from: `2023-08-31T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L85[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L115[Source, window="_blank"]
 
 [#attestation_type__known_attestation_type]
 === link:#attestation_type__known_attestation_type[Known attestation type found]
@@ -33,6 +33,19 @@ Confirm the attestation found for the image has a known attestation type.
 * Code: `attestation_type.known_attestation_type`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L16[Source, window="_blank"]
 
+[#attestation_type__known_attestation_type_v2]
+=== link:#attestation_type__known_attestation_type_v2[Known attestation type found (v2)]
+
+Confirm each selected PipelineRun statement has a known attestation type, including a named rejection when the _type field is missing.
+
+*Solution*: Make sure the "_type" field in the attestation is supported. Supported types are configured in xref:cli:ROOT:configuration.adoc#_data_sources[data sources].
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Unknown or missing attestation type '%v'`
+* Code: `attestation_type.known_attestation_type_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L45[Source, window="_blank"]
+
 [#attestation_type__known_attestation_types_provided]
 === link:#attestation_type__known_attestation_types_provided[Known attestation types provided]
 
@@ -43,7 +56,7 @@ Confirm the `known_attestation_types` rule data was provided.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%s`
 * Code: `attestation_type.known_attestation_types_provided`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L45[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L75[Source, window="_blank"]
 
 [#attestation_type__pipelinerun_attestation_found]
 === link:#attestation_type__pipelinerun_attestation_found[PipelineRun attestation found]
@@ -55,4 +68,4 @@ Confirm at least one PipelineRun attestation is present.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Missing pipelinerun attestation`
 * Code: `attestation_type.pipelinerun_attestation_found`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L64[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/attestation_type/attestation_type.rego#L94[Source, window="_blank"]

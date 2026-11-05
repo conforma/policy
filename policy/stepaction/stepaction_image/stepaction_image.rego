@@ -38,6 +38,30 @@ deny contains result if {
 }
 
 # METADATA
+# title: Image is accessible (v2)
+# description: >-
+#   Confirm the StepAction has a nonempty string spec.image reference that is accessible.
+#   Missing and wrong-typed image values are rejected.
+# custom:
+#   short_name: accessible_v2
+#   effective_on: 2027-01-11T00:00:00Z
+#   failure_msg: Image ref %v is missing or inaccessible
+#   solution: >-
+#     Make sure the container image used in the StepTemplate is pushed to the registry and that it
+#     can be fetched.
+#
+deny contains result if {
+	image_ref := object.get(input.spec, "image", null)
+	not _image_accessible_v2(image_ref)
+
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[image_ref],
+		k8s.name_version(input),
+	)
+}
+
+# METADATA
 # title: Image comes from permitted registry
 # description: >-
 #   Confirm the StepAction uses a container image with a URL that matches one of the prefixes in the
@@ -55,6 +79,32 @@ deny contains result if {
 	image_ref := input.spec.image
 	allowed_registry_prefixes := rule_data.get(_rule_data_key)
 	not ref_permitted(image_ref, allowed_registry_prefixes)
+
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[image_ref],
+		k8s.name_version(input),
+	)
+}
+
+# METADATA
+# title: Image comes from permitted registry (v2)
+# description: >-
+#   Confirm the StepAction has a nonempty string spec.image reference from an allowed registry.
+#   Missing and wrong-typed image values are rejected.
+# custom:
+#   short_name: permitted_v2
+#   effective_on: 2027-01-11T00:00:00Z
+#   failure_msg: Image ref %v is missing or disallowed
+#   solution: >-
+#     Make sure the container image used comes from an approved registry.
+#   collections:
+#   - redhat_security
+#
+deny contains result if {
+	image_ref := object.get(input.spec, "image", null)
+	allowed_registry_prefixes := rule_data.get(_rule_data_key)
+	not _ref_permitted_v2(image_ref, allowed_registry_prefixes)
 
 	result := metadata.result_helper_with_term(
 		rego.metadata.chain(),
@@ -104,3 +154,15 @@ _rule_data_errors contains error if {
 }
 
 _rule_data_key := "allowed_step_image_registry_prefixes"
+
+_image_accessible_v2(image_ref) if {
+	is_string(image_ref)
+	trim_space(image_ref) != ""
+	ec.oci.image_manifest(image_ref)
+}
+
+_ref_permitted_v2(image_ref, allowed_prefixes) if {
+	is_string(image_ref)
+	trim_space(image_ref) != ""
+	ref_permitted(image_ref, allowed_prefixes)
+}
