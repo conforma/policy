@@ -129,6 +129,10 @@ Rego is a declarative policy language (Datalog-inspired), not imperative code:
   aggregation, fallback selection, or final violation output.
 - Prefer `some x in collection` over explicit iteration, `object.get(obj, key, default)` over
   key-existence checks, and `x in {a, b}` over chained equality.
+- **Undefined propagation:** When a rule body references a field that does not exist or has an
+  unexpected type, the reference evaluates to undefined, which causes the entire body to produce no
+  result. This is not an error — it is silent. Policy rules that do not guard against unexpected
+  input types can be bypassed by malformed input.
 - Do NOT suggest imperative patterns that Rego does not provide: early returns, try/catch, or
   exception handling. These concepts do not exist in Rego.
 
@@ -192,6 +196,17 @@ annotations. Incorrect casing is a review finding.
   multiple logical branches. Direct tests should exercise each logical branch, edge cases (empty
   strings, non-string values, boundary conditions), and the function's contract independent of any
   specific caller.
+- **Undefined-propagation completeness:** For each input field referenced in a new deny/warn rule
+  body, verify what happens when that field is (a) entirely missing from the input, (b) present but
+  a different type than expected (e.g., array instead of object, scalar instead of array), or
+  (c) has unexpected internal structure (e.g., list entries that are not objects, objects missing
+  required keys). In Rego, accessing a missing or wrong-typed field causes the clause to evaluate
+  to undefined, making the entire rule body produce no result — effectively turning a policy check
+  into a silent pass. Use guards like `is_object(x)`, `is_array(x)`, or `is_string(x)` before
+  accessing fields, or add dedicated validation clauses that fire on malformed input. See PR #1871
+  for examples of this pattern in `policy/lib/tekton/task.rego` (`malformed_params`),
+  `policy/task/trusted_artifacts/trusted_artifacts.rego` (`_malformed_workspaces`), and
+  `policy/pipeline/basic/basic.rego` (`input_format`).
 
 ## Security Documentation Maintenance
 
