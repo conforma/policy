@@ -92,6 +92,8 @@ rules:
         - data.rule_data.*
         - data.rule_data__configuration__
         - data.rule_data__configuration__.*
+        - data.rule_data__runtime__
+        - data.rule_data__runtime__.*
         - data.rule_data_custom
         - data.trusted_tasks
         - data.trusted_tasks.*

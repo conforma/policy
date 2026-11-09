@@ -87,6 +87,7 @@ Rules included:
 * xref:packages/release_rpm_build_deps.adoc#rpm_build_deps__allowed_rpm_build_dependency_sources_format[RPM Build Dependencies: allowed_rpm_build_dependency_sources format]        
 * xref:packages/release_rpm_repos.adoc#rpm_repos__rule_data_provided[RPM Repos: Known repo id list provided]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__rule_data_provided[RPM Signature: Rule data provided]        
+* xref:packages/release_release_time_cve.adoc#release_time_cve__rule_data_provided[Release-time CVE checks: Release-time CVE leeway rule data provided]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_external_references[SBOM CycloneDX: Allowed package external references]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_sources[SBOM CycloneDX: Allowed package sources]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_proxy_urls[SBOM CycloneDX: Allowed proxy URLs]        
@@ -175,6 +176,9 @@ Rules included:
 * xref:packages/release_rpm_signature.adoc#rpm_signature__allowed[RPM Signature: Allowed RPM signature key]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__result_format[RPM Signature: Result format]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__rule_data_provided[RPM Signature: Rule data provided]        
+* xref:packages/release_release_time_cve.adoc#release_time_cve__advisory_grace_period_expired[Release-time CVE checks: CVEs past their release-time grace period]        
+* xref:packages/release_release_time_cve.adoc#release_time_cve__runtime_data_format[Release-time CVE checks: Release-time CVE data format]        
+* xref:packages/release_release_time_cve.adoc#release_time_cve__rule_data_provided[Release-time CVE checks: Release-time CVE leeway rule data provided]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed[SBOM CycloneDX: Allowed]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_external_references[SBOM CycloneDX: Allowed package external references]        
 * xref:packages/release_sbom_cyclonedx.adoc#sbom_cyclonedx__allowed_package_sources[SBOM CycloneDX: Allowed package sources]        
@@ -376,8 +380,8 @@ Rules included:
 * xref:packages/release_git_branch.adoc#git_branch__git_branch[Git branch checks: Builds have a trusted target branch]        
 * xref:packages/release_github_certificate.adoc#github_certificate__gh_workflow_extensions[GitHub Certificate Checks: GitHub Workflow Certificate Extensions]        
 * xref:packages/release_github_certificate.adoc#github_certificate__gh_workflow_name[GitHub Certificate Checks: GitHub Workflow Name]        
-* xref:packages/release_github_certificate.adoc#github_certificate__gh_workflow_ref[GitHub Certificate Checks: GitHub Workflow Repository]        
 * xref:packages/release_github_certificate.adoc#github_certificate__gh_workflow_repository[GitHub Certificate Checks: GitHub Workflow Repository]        
+* xref:packages/release_github_certificate.adoc#github_certificate__gh_workflow_ref[GitHub Certificate Checks: GitHub Workflow Repository]        
 * xref:packages/release_github_certificate.adoc#github_certificate__gh_workflow_trigger[GitHub Certificate Checks: GitHub Workflow Trigger]        
 * xref:packages/release_github_certificate.adoc#github_certificate__rule_data_provided[GitHub Certificate Checks: Rule data provided]        
 * xref:packages/release_hermetic_task.adoc#hermetic_task__hermetic[Hermetic task: Task called with hermetic param set]        
@@ -417,6 +421,9 @@ Rules included:
 * xref:packages/release_rpm_signature.adoc#rpm_signature__allowed[RPM Signature: Allowed RPM signature key]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__result_format[RPM Signature: Result format]        
 * xref:packages/release_rpm_signature.adoc#rpm_signature__rule_data_provided[RPM Signature: Rule data provided]        
+* xref:packages/release_release_time_cve.adoc#release_time_cve__advisory_grace_period_expired[Release-time CVE checks: CVEs past their release-time grace period]        
+* xref:packages/release_release_time_cve.adoc#release_time_cve__runtime_data_format[Release-time CVE checks: Release-time CVE data format]        
+* xref:packages/release_release_time_cve.adoc#release_time_cve__rule_data_provided[Release-time CVE checks: Release-time CVE leeway rule data provided]        
 * xref:packages/pipeline_required_tasks.adoc#required_tasks__missing_required_task[Required tasks: Missing required task]        
 * xref:packages/pipeline_required_tasks.adoc#required_tasks__tasks_found[Required tasks: Pipeline contains tasks]        
 * xref:packages/pipeline_required_tasks.adoc#required_tasks__required_tasks_list_present[Required tasks: Required task list is present in rule data]        
@@ -642,6 +649,9 @@ a| This package defines rules to confirm that all RPM packages listed in SBOMs s
 
 | xref:packages/release_rpm_signature.adoc[rpm_signature]
 a| This package provides rules for verifying the signatures of RPMs identified in the the SLSA Provenance attestation.
+
+| xref:packages/release_release_time_cve.adoc[release_time_cve]
+a| Check for fixed CRITICAL and IMPORTANT CVEs using CVE scan data produced at release-time by tasks in the collector pipeline, independently of the CVE scan report in build provenance, which is presumably older and hence less current than the release-time scan.
 
 | xref:packages/release_sbom.adoc[sbom]
 a| Checks general properties of the SBOMs associated with the image being validated. More specific rules for SPDX and CycloneDX SBOMs are in separate packages.
