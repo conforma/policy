@@ -660,7 +660,7 @@ test_allowed_olm_resource_kind if {
 
 # NetworkPolicy RBAC Tests
 
-base_network_policy_manifest := {
+unmanaged_network_policy_manifest := {
 	"apiVersion": "operators.coreos.com/v1alpha1",
 	"kind": "ClusterServiceVersion",
 	"metadata": {
@@ -685,6 +685,114 @@ base_network_policy_manifest := {
 			"deployments": [],
 		}},
 	},
+}
+
+test_network_policy_rbac_without_workload_creation if {
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": unmanaged_network_policy_manifest}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+base_network_policy_manifest := json.patch(unmanaged_network_policy_manifest, [{
+	"op": "replace",
+	"path": "/spec/install/spec/permissions",
+	"value": [{"rules": [{
+		"apiGroups": [""],
+		"resources": ["pods"],
+		"verbs": ["create"],
+	}]}],
+}])
+
+test_workload_creation_resource_pairs if {
+	pairs := [
+		["apps", "deployments"],
+		["apps", "statefulsets"],
+		["apps", "daemonsets"],
+		["apps", "replicasets"],
+		["apps.openshift.io", "deploymentconfigs"],
+		["batch", "jobs"],
+		["batch", "cronjobs"],
+		["", "pods"],
+		["", "replicationcontrollers"],
+	]
+	every pair in pairs {
+		rule := {"apiGroups": [pair[0]], "resources": [pair[1]], "verbs": ["create"]}
+		manifest := json.patch(unmanaged_network_policy_manifest, [{
+			"op": "replace",
+			"path": "/spec/install/spec/clusterPermissions",
+			"value": [{"rules": [rule]}],
+		}])
+		olm._manages_workloads(manifest)
+	}
+}
+
+test_network_policy_rbac_deploymentconfig_requires_rbac if {
+	manifest := json.patch(unmanaged_network_policy_manifest, [{
+		"op": "replace",
+		"path": "/spec/install/spec/clusterPermissions",
+		"value": [{"rules": [{
+			"apiGroups": ["apps.openshift.io"],
+			"resources": ["deploymentconfigs"],
+			"verbs": ["create"],
+		}]}],
+	}])
+
+	expected := {{
+		"code": "olm.required_network_policy_rbac_for_operands",
+		# regal ignore:line-length
+		"msg": `Operator "test-operator" version "1.2.3" is missing required NetworkPolicy RBAC (networking.k8s.io/networkpolicies with create, delete, and update/patch)`,
+	}}
+
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+		with data.rule_data.operator_network_policy_rbac_exceptions as {}
+}
+
+test_workload_creation_wildcards_and_namespaced_permissions if {
+	rules := [
+		{"apiGroups": ["apps"], "resources": ["deployments"], "verbs": ["*"]},
+		{"apiGroups": ["*"], "resources": ["pods"], "verbs": ["create"]},
+		{"apiGroups": ["batch"], "resources": ["*"], "verbs": ["create"]},
+		{"apiGroups": ["*"], "resources": ["*"], "verbs": ["*"]},
+	]
+	every rule in rules {
+		manifest := json.patch(unmanaged_network_policy_manifest, [{
+			"op": "replace",
+			"path": "/spec/install/spec/permissions",
+			"value": [{"rules": [rule]}],
+		}])
+		olm._manages_workloads(manifest)
+	}
+}
+
+test_workload_creation_ignores_unrelated_or_read_only_rbac if {
+	rules := [
+		{"apiGroups": ["apps"], "resources": ["deployments"], "verbs": ["get", "list"]},
+		{"apiGroups": ["batch"], "resources": ["deployments"], "verbs": ["create"]},
+		{"apiGroups": [""], "resources": ["pods/eviction"], "verbs": ["create"]},
+		{"apiGroups": ["machine.openshift.io"], "resources": ["machinesets"], "verbs": ["create"]},
+	]
+	every rule in rules {
+		manifest := json.patch(unmanaged_network_policy_manifest, [{
+			"op": "replace",
+			"path": "/spec/install/spec/clusterPermissions",
+			"value": [{"rules": [rule]}],
+		}])
+		not olm._manages_workloads(manifest)
+	}
+}
+
+test_workload_creation_ignores_olm_install_deployment if {
+	manifest := json.patch(unmanaged_network_policy_manifest, [{
+		"op": "replace",
+		"path": "/spec/install/spec/deployments",
+		"value": [{"name": "operator-controller"}],
+	}])
+	not olm._manages_workloads(manifest)
 }
 
 test_network_policy_rbac_with_all_required_verbs if {
@@ -1024,18 +1132,29 @@ test_network_policy_rbac_mixed_resources if {
 }
 
 test_network_policy_rbac_in_permissions if {
-	manifest_with_permissions := json.patch(base_network_policy_manifest, [{
-		"op": "add",
-		"path": "/spec/install/spec/permissions",
-		"value": [{
-			"serviceAccountName": "test-sa",
-			"rules": [{
-				"apiGroups": ["networking.k8s.io"],
-				"resources": ["networkpolicies"],
-				"verbs": ["create", "update", "patch", "delete"],
+	manifest_with_permissions := json.patch(base_network_policy_manifest, [
+		{
+			"op": "add",
+			"path": "/spec/install/spec/clusterPermissions",
+			"value": [{"rules": [{
+				"apiGroups": ["apps"],
+				"resources": ["deployments"],
+				"verbs": ["create"],
+			}]}],
+		},
+		{
+			"op": "add",
+			"path": "/spec/install/spec/permissions",
+			"value": [{
+				"serviceAccountName": "test-sa",
+				"rules": [{
+					"apiGroups": ["networking.k8s.io"],
+					"resources": ["networkpolicies"],
+					"verbs": ["create", "update", "patch", "delete"],
+				}],
 			}],
-		}],
-	}])
+		},
+	])
 
 	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest_with_permissions}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/", "operators.operatorframework.io.bundle.package.v1": "test-operator"}
