@@ -175,8 +175,6 @@ github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5 h1:0CwZNZbxp69SHPd
 github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5/go.mod h1:wHh0iHkYZB8zMSxRWpUBQtwG5a7fFgvEO+odwuTv2gs=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 h1:DklsrG3dyBCFEj5IhUbnKptjxatkF07cF2ak3yi77so=
 github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2/go.mod h1:WaHUgvxTVq04UNunO+XhnAqY/wQc+bxr74GqbsZ/Jqw=
-github.com/aws/aws-sdk-go v1.55.8 h1:JRmEUbU52aJQZ2AjX4q4Wu7t4uZjOu71uyNmaWlUkJQ=
-github.com/aws/aws-sdk-go v1.55.8/go.mod h1:ZkViS9AqA6otK+JBBNH2++sx1sgxrPKcSzPPvQkUtXk=
 github.com/aws/aws-sdk-go-v2 v1.42.0 h1:XvXMJTkFQtpBKIWZnmr9ZEOc2InWM2yldjXEJ/bymhA=
 github.com/aws/aws-sdk-go-v2 v1.42.0/go.mod h1:27+ACypSLljLAEKsCYOmrjKh83vuTRkuAe9Uv/3A4bg=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.8 h1:eBMB84YGghSocM7PsjmmPffTa+1FBUeNvGvFou6V/4o=
@@ -580,6 +578,8 @@ github.com/googleapis/gax-go/v2 v2.22.0 h1:PjIWBpgGIVKGoCXuiCoP64altEJCj3/Ei+kSU
 github.com/googleapis/gax-go/v2 v2.22.0/go.mod h1:irWBbALSr0Sk3qlqb9SyJ1h68WjgeFuiOzI4Rqw5+aY=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/gopherjs/gopherjs v0.0.0-20200217142428-fce0ec30dd00/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
+github.com/graph-gophers/graphql-go v1.9.0 h1:yu0ucKHLc5qGpRwLYKIWtr9bOoxovkWasuBrPQwlHls=
+github.com/graph-gophers/graphql-go v1.9.0/go.mod h1:23olKZ7duEvHlF/2ELEoSZaY1aNPfShjP782SOoNTyM=
 github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 h1:UH//fgunKIs4JdUbpDl1VZCDaL56wXCB/5+wF6uHfaI=
 github.com/grpc-ecosystem/go-grpc-middleware v1.4.0/go.mod h1:g5qyo/la0ALbONm6Vbp88Yd8NsDy6rZz+RcrMPxvld8=
 github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0 h1:QGLs/O40yoNK9vmy4rhUGBVyMf1lISBGtXRpsu/Qu/o=
@@ -671,8 +671,6 @@ github.com/jedisct1/go-minisign v0.0.0-20230811132847-661be99b8267 h1:TMtDYDHKYY
 github.com/jedisct1/go-minisign v0.0.0-20230811132847-661be99b8267/go.mod h1:h1nSAbGFqGVzn6Jyl1R/iCcBUHN4g+gW1u9CoBTrb9E=
 github.com/jellydator/ttlcache/v3 v3.4.0 h1:YS4P125qQS0tNhtL6aeYkheEaB/m8HCqdMMP4mnWdTY=
 github.com/jellydator/ttlcache/v3 v3.4.0/go.mod h1:Hw9EgjymziQD3yGsQdf1FqFdpp7YjFMd4Srg5EJlgD4=
-github.com/jmespath/go-jmespath v0.4.1-0.20220621161143-b0104c826a24 h1:liMMTbpW34dhU4az1GN0pTPADwNmvoRSeoZ6PItiqnY=
-github.com/jmespath/go-jmespath v0.4.1-0.20220621161143-b0104c826a24/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHWvzYPziyZiYoo=
 github.com/jmhodges/clock v1.2.0 h1:eq4kys+NI0PLngzaHEe7AmPT90XMGIEySD1JfV1PDIs=
 github.com/jmhodges/clock v1.2.0/go.mod h1:qKjhA7x7u/lQpPB1XAqX1b1lCI/w3/fNuYpI/ZjLynI=
 github.com/json-iterator/go v1.1.10/go.mod h1:KdQUCv79m/52Kvf8AW2vK1V8akMuk1QjK/uOdHXbAo4=
@@ -886,16 +884,16 @@ github.com/shibumi/go-pathspec v1.3.0 h1:QUyMZhFo0Md5B8zV8x2tesohbb5kfbpTi9rBnKh
 github.com/shibumi/go-pathspec v1.3.0/go.mod h1:Xutfslp817l2I1cZvgcfeMQJG5QnU2lh5tVaaMCl3jE=
 github.com/shteou/go-ignore v0.3.1 h1:/DVY4w06eKliWrbkwKfBHJgUleld+QAlmlQvfRQOigA=
 github.com/shteou/go-ignore v0.3.1/go.mod h1:hMVyBe+qt5/Z11W/Fxxf86b5SuL8kM29xNWLYob9Vos=
-github.com/sigstore/cosign/v3 v3.0.4 h1:SuEn9z8V0eyjF0PWxuGgQ7QSPWReNexLJovkZ3wLaf8=
-github.com/sigstore/cosign/v3 v3.0.4/go.mod h1:DJY5LPzHiI6bWpG/Q/NQUTfeASjkN8TDAUx1Nnt3I0I=
+github.com/sigstore/cosign/v3 v3.0.6 h1:k8XaUd9pmLknHBst/v0rUGHVdB4D9cfaBmWUaMAOocE=
+github.com/sigstore/cosign/v3 v3.0.6/go.mod h1:ckLRkVecfUCYxL8isHODY9lwyKmDaRCPn00p6yFxHg0=
 github.com/sigstore/fulcio v1.8.8 h1:AtVoVQ4R7YaP6RHIH9puHyB398CHS/9WYc6d+gKf5Y0=
 github.com/sigstore/fulcio v1.8.8/go.mod h1:RaFomAGGM7VZKAR9ZGqQhcf1Peryc9E1020/kbX8Uto=
 github.com/sigstore/protobuf-specs v0.5.1 h1:/5OPaNuolRJmQfeZLayJGFXMpsRJEdgC6ah1/+7Px7U=
 github.com/sigstore/protobuf-specs v0.5.1/go.mod h1:DRBzpFuE+LnvQMN10/dU6nBeKwVLGEQ6o2FovN2Rats=
 github.com/sigstore/rekor v1.5.3 h1:0Tyolw3zreRgm7PUW8dccFLXGBThi08278jI8EXNSr4=
 github.com/sigstore/rekor v1.5.3/go.mod h1:h3GK5dDqCcWJJZUJwdpKGSSmEV2GEjPUjJy3WTjBwzA=
-github.com/sigstore/rekor-tiles/v2 v2.0.1 h1:1Wfz15oSRNGF5Dzb0lWn5W8+lfO50ork4PGIfEKjZeo=
-github.com/sigstore/rekor-tiles/v2 v2.0.1/go.mod h1:Pjsbhzj5hc3MKY8FfVTYHBUHQEnP0ozC4huatu4x7OU=
+github.com/sigstore/rekor-tiles/v2 v2.2.1 h1:UmV1CBQ3SjxxPGpFmwDoOhoIwiKpM2Qm1pU5tPGmvNk=
+github.com/sigstore/rekor-tiles/v2 v2.2.1/go.mod h1:z8n6l6oidpaLjjE6rJERuQqY9X38ulnHZCXyL+DEL7U=
 github.com/sigstore/sigstore v1.10.8 h1:1Mgkxvkw4AXMfIP1DOjc6kw0GkUgA8pGVpveN/EfOq4=
 github.com/sigstore/sigstore v1.10.8/go.mod h1:f9+B/4iaYimvUkySyb2mvc73n3RLqNn24grHZM/ET8M=
 github.com/sigstore/sigstore-go v1.1.4 h1:wTTsgCHOfqiEzVyBYA6mDczGtBkN7cM8mPpjJj5QvMg=
@@ -994,8 +992,6 @@ github.com/timtadh/data-structures v0.5.3 h1:F2tEjoG9qWIyUjbvXVgJqEOGJPMIiYn7U5W
 github.com/timtadh/data-structures v0.5.3/go.mod h1:9R4XODhJ8JdWFEI8P/HJKqxuJctfBQw6fDibMQny2oU=
 github.com/timtadh/lexmachine v0.2.2 h1:g55RnjdYazm5wnKv59pwFcBJHOyvTPfDEoz21s4PHmY=
 github.com/timtadh/lexmachine v0.2.2/go.mod h1:GBJvD5OAfRn/gnp92zb9KTgHLB7akKyxmVivoYCcjQI=
-github.com/tink-crypto/tink-go-awskms/v2 v2.1.0 h1:N9UxlsOzu5mttdjhxkDLbzwtEecuXmlxZVo/ds7JKJI=
-github.com/tink-crypto/tink-go-awskms/v2 v2.1.0/go.mod h1:PxSp9GlOkKL9rlybW804uspnHuO9nbD98V/fDX4uSis=
 github.com/tink-crypto/tink-go-awskms/v3 v3.0.0 h1:XSohRhCkXAVI0iaCnWB/GS05TEmpnKurQmzaY1jzt3Y=
 github.com/tink-crypto/tink-go-awskms/v3 v3.0.0/go.mod h1:+7MXsShLzVbSQ6dI0Pe4JuZM52jD1jQ1itAygd/MDsA=
 github.com/tink-crypto/tink-go-gcpkms/v2 v2.2.0 h1:3B9i6XBXNTRspfkTC0asN5W0K6GhOSgcujNiECNRNb0=
@@ -1068,8 +1064,8 @@ github.com/zclconf/go-cty v1.16.2 h1:LAJSwc3v81IRBZyUVQDUdZ7hs3SYs9jv0eZJDWHD/70
 github.com/zclconf/go-cty v1.16.2/go.mod h1:VvMs5i0vgZdhYawQNq5kePSpLAoz8u1xvZgrPIxfnZE=
 github.com/zclconf/go-cty-debug v0.0.0-20240509010212-0d6042c53940 h1:4r45xpDWB6ZMSMNJFMOjqrGHynW3DIBuR2H9j0ug+Mo=
 github.com/zclconf/go-cty-debug v0.0.0-20240509010212-0d6042c53940/go.mod h1:CmBdvvj3nqzfzJ6nTCIwDTPZ56aVGvDrmztiO5g3qrM=
-gitlab.com/gitlab-org/api/client-go v1.11.0 h1:L+qzw4kiCf3jKdKHQAwiqYKITvzBrW/tl8ampxNLlv0=
-gitlab.com/gitlab-org/api/client-go v1.11.0/go.mod h1:adtVJ4zSTEJ2fP5Pb1zF4Ox1OKFg0MH43yxpb0T0248=
+gitlab.com/gitlab-org/api/client-go v1.46.0 h1:YxBWFZIFYKcGESCb9fpkwzouo+apyB9pr/XTWzNoL24=
+gitlab.com/gitlab-org/api/client-go v1.46.0/go.mod h1:FtgyU6g2HS5+fMhw6nLK96GBEEBx5MzntOiJWfIaiN8=
 go.etcd.io/etcd/api/v3 v3.6.8 h1:gqb1VN92TAI6G2FiBvWcqKtHiIjr4SU2GdXxTwyexbM=
 go.etcd.io/etcd/api/v3 v3.6.8/go.mod h1:qyQj1HZPUV3B5cbAL8scG62+fyz5dSxxu0w8pn28N6Q=
 go.etcd.io/etcd/client/pkg/v3 v3.6.8 h1:Qs/5C0LNFiqXxYf2GU8MVjYUEXJ6sZaYOz0zEqQgy50=
