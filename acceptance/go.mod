@@ -10,7 +10,7 @@ require (
 	github.com/cyberphone/json-canonicalization v0.0.0-20241213102144-19d51d7fe467
 	github.com/go-openapi/strfmt v0.26.4
 	github.com/google/go-containerregistry v0.21.7
-	github.com/sigstore/cosign/v3 v3.0.4
+	github.com/sigstore/cosign/v3 v3.0.6
 	github.com/sigstore/rekor v1.5.3
 	github.com/sigstore/sigstore v1.10.8
 )
@@ -280,7 +280,7 @@ require (
 	github.com/shteou/go-ignore v0.3.1 // indirect
 	github.com/sigstore/fulcio v1.8.8 // indirect
 	github.com/sigstore/protobuf-specs v0.5.1 // indirect
-	github.com/sigstore/rekor-tiles/v2 v2.0.1 // indirect
+	github.com/sigstore/rekor-tiles/v2 v2.2.1 // indirect
 	github.com/sigstore/sigstore-go v1.1.4 // indirect
 	github.com/sigstore/timestamp-authority/v2 v2.1.0 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
@@ -321,7 +321,7 @@ require (
 	github.com/yashtewari/glob-intersection v0.2.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20240726163527-a2c0da244d78 // indirect
 	github.com/zclconf/go-cty v1.16.2 // indirect
-	gitlab.com/gitlab-org/api/client-go v1.11.0 // indirect
+	gitlab.com/gitlab-org/api/client-go v1.46.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/detectors/gcp v1.44.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0 // indirect
