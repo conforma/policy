@@ -9,6 +9,7 @@ package step_images
 
 import rego.v1
 
+import data.lib.k8s
 import data.lib.metadata
 import data.lib.tkn_bundle
 
@@ -37,4 +38,38 @@ deny contains result if {
 		[step_index, image_ref],
 		image_ref,
 	)
+}
+
+# METADATA
+# title: Step images are valid (v2)
+# description: >-
+#   Confirm every existing Task step has a nonempty string image reference that is accessible.
+#   Missing and wrong-typed image values are rejected.
+# custom:
+#   short_name: step_images_accessible_v2
+#   effective_on: 2027-01-11T00:00:00Z
+#   failure_msg: Step %d uses missing or inaccessible image ref '%v'
+#   solution: >-
+#     Make sure the container image used in each step of the Task is pushed to the
+#     registry and that it can be fetched.
+#
+deny contains result if {
+	some task in tkn_bundle.tasks
+	task.kind == "Task"
+
+	some step_index, step in task.spec.steps
+	image_ref := object.get(step, "image", null)
+	not _image_accessible_v2(image_ref)
+
+	result := metadata.result_helper_with_term(
+		rego.metadata.chain(),
+		[step_index, image_ref],
+		k8s.name_version(task),
+	)
+}
+
+_image_accessible_v2(image_ref) if {
+	is_string(image_ref)
+	trim_space(image_ref) != ""
+	ec.oci.image_manifest(image_ref)
 }

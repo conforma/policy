@@ -100,7 +100,7 @@ test_outdated_warning if {
 		{
 			"code": "trusted_task.current",
 			# regal ignore:line-length
-			"msg": `A newer version of task "outdated-trusty-p" exists. Please update before 2099-01-01T00:00:00Z. The current bundle is "oci://registry.local/trusty:1.0@sha256:007da7edd19e5700000000000000000000000000000000007da7edd19e57" and the latest bundle ref is "sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"`,
+			"msg": `A newer version of task "outdated-trusty-p" exists. Please update before 2099-01-01T00:00:00Z. The current bundle is "oci://registry.local/trusty:1.0@sha256:007da7edd19e57000000000000000000000000000000000000007da7edd19e57" and the latest bundle ref is "sha256:d19e5700000000000000000000000000000000000000000000000000d19e5700"`,
 			"term": "trusty",
 		},
 	}
@@ -601,7 +601,7 @@ outdated_bundle_pipeline_task := {
 	"name": "outdated-trusty-p",
 	"ref": {"resolver": "bundles", "params": [
 		# regal ignore:line-length
-		{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:007da7edd19e5700000000000000000000000000000000007da7edd19e57"},
+		{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:007da7edd19e57000000000000000000000000000000000000007da7edd19e57"},
 		{"name": "name", "value": "trusty"},
 		{"name": "kind", "value": "task"},
 	]},
@@ -825,7 +825,7 @@ trusted_tasks_data := {
 			"effective_on": "2099-01-01T00:00:00Z",
 		},
 		{
-			"ref": "sha256:007da7edd19e5700000000000000000000000000000000007da7edd19e57",
+			"ref": "sha256:007da7edd19e57000000000000000000000000000000000000007da7edd19e57",
 			"effective_on": "2024-01-01T00:00:00Z",
 			"expires_on": "2099-01-01T00:00:00Z",
 		},
@@ -1430,4 +1430,20 @@ test_mock_image_manifests if {
 test_mock_image_manifest if {
 	result := _mock_image_manifest("any-ref")
 	assertions.assert_equal({}, result)
+}
+
+# G43 / RA29-DIGEST-SHAPE-001: preserve trust while restoring the pinning warning.
+test_task_malformed_digest_warning if {
+	every ref in ["registry.local/task:1.0", "registry.local/task:1.0@not-a-digest", "registry.local/task:1.0@sha256:"] {
+		att := _rules_make_attestation([_rules_make_task("pipeline-task", ref, "task")])
+		results := trusted_task.warn with input.attestations as [att]
+			with ec.oci.image_manifests as {}
+			with data.rule_data.trusted_task_rules_enabled as true
+			with data.rule_data.trusted_task_rules as {"allow": {"test": [{"pattern": "oci://registry.local/task*"}]}, "deny": {}}
+		assertions.assert_equal({r.code | some r in results}, {"trusted_task.pinned"})
+		assertions.assert_empty(trusted_task.deny) with input.attestations as [att]
+			with ec.oci.image_manifests as {}
+			with data.rule_data.trusted_task_rules_enabled as true
+			with data.rule_data.trusted_task_rules as {"allow": {"test": [{"pattern": "oci://registry.local/task*"}]}, "deny": {}}
+	}
 }

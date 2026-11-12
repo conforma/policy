@@ -61,7 +61,7 @@ Check for the existence of a task bundle. This rule will fail if the task is not
 [#task_bundle__unpinned_task_bundle]
 === link:#task_bundle__unpinned_task_bundle[Unpinned task bundle reference]
 
-Check if the Tekton Bundle used for the Tasks in the Pipeline definition is pinned to a digest.
+Check if the Tekton Bundle used for the Tasks in the Pipeline definition is pinned to a syntactically valid OCI digest.
 
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `Pipeline task '%s' uses an unpinned task bundle reference '%s'`

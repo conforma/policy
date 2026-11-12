@@ -22,6 +22,7 @@ empty_task_bundle_reference(tasks) := {task |
 # Returns a subset of tasks that use bundle references not pinned to a digest.
 unpinned_task_bundle(tasks) := {task |
 	some task in tasks
-	ref := image.parse(bundle(task))
-	ref.digest == ""
+	bundle_ref := bundle(task)
+	image.parse(bundle_ref)
+	not image.is_pinned(bundle_ref)
 }
