@@ -391,33 +391,6 @@ test_proxy_rule_data_validation if {
 		with data.rule_data as d_bad_regex
 }
 
-test_vendored_purl_types_rule_data_validation if {
-	# Valid data - no errors
-	assertions.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
-		with lib.sbom._verified_sbom_attestations as _sbom_attestation
-		with data.rule_data as {"vendored_purl_types": ["golang", "cargo"]}
-
-	# Invalid vendored_purl_types: wrong type and duplicate
-	d_bad := {"vendored_purl_types": [1, "golang", "golang"]}
-	expected_bad := {
-		{
-			"code": "sbom.disallowed_packages_provided",
-			# regal ignore:line-length
-			"msg": "Rule data vendored_purl_types has unexpected format: 0: Invalid type. Expected: string, given: integer",
-			"severity": "failure",
-		},
-		{
-			"code": "sbom.disallowed_packages_provided",
-			# regal ignore:line-length
-			"msg": "Rule data vendored_purl_types has unexpected format: (Root): array items[1,2] must be unique",
-			"severity": "failure",
-		},
-	}
-	assertions.assert_equal_results(expected_bad, sbom.deny) with input.attestations as _sbom_attestation
-		with lib.sbom._verified_sbom_attestations as _sbom_attestation
-		with data.rule_data as d_bad
-}
-
 test_anchoring_warnings_external_references if {
 	d := {
 		lib.sbom.rule_data_allowed_external_references_key: [

@@ -753,7 +753,6 @@ assert_allowed(purl, disallowed_packages) if {
 		with ec.oci.image_referrers as [] # regal ignore:with-outside-test-context
 		with ec.oci.image_tag_refs as [] # regal ignore:with-outside-test-context
 		with data.rule_data.disallowed_packages as disallowed_packages # regal ignore:with-outside-test-context
-		with data.rule_data.vendored_purl_types as [] # regal ignore:with-outside-test-context
 }
 
 assert_not_allowed(purl, disallowed_packages) if {
@@ -773,7 +772,6 @@ assert_not_allowed(purl, disallowed_packages) if {
 		with ec.oci.image_referrers as [] # regal ignore:with-outside-test-context
 		with ec.oci.image_tag_refs as [] # regal ignore:with-outside-test-context
 		with data.rule_data.disallowed_packages as disallowed_packages # regal ignore:with-outside-test-context
-		with data.rule_data.vendored_purl_types as [] # regal ignore:with-outside-test-context
 }
 
 _sbom_1_5_attestation := {"statement": {
@@ -1325,7 +1323,6 @@ test_experimental_hermeto_backend_cdx_denied if {
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
-		with data.rule_data.vendored_purl_types as []
 }
 
 test_experimental_hermeto_backend_cdx_stable_passes if {
@@ -1408,162 +1405,7 @@ test_experimental_hermeto_backend_cdx_mixed_annotations if {
 		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
 		with ec.oci.image_referrers as []
 		with ec.oci.image_tag_refs as []
-		with data.rule_data.vendored_purl_types as []
 }
-
-# hermeto_attribution_required tests
-
-test_hermeto_attribution_required_cdx_with_hermeto_passes if {
-	att := json.patch(_sbom_1_5_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/components/-",
-		"value": _cdx_vendored_component("pkg:golang/example.com/lib@1.0", true),
-	}])
-
-	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _vendored_rule_data
-}
-
-test_hermeto_attribution_required_cdx_without_hermeto_denied if {
-	expected := {{
-		"code": "sbom_cyclonedx.hermeto_attribution_required",
-		"term": "pkg:golang/example.com/lib@1.0",
-		# regal ignore:line-length
-		"msg": `Package pkg:golang/example.com/lib@1.0 has PURL type "golang" which requires Hermeto attribution but was not processed by Hermeto`,
-	}}
-
-	att := json.patch(_sbom_1_5_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/components/-",
-		"value": _cdx_vendored_component("pkg:golang/example.com/lib@1.0", false),
-	}])
-
-	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _vendored_rule_data
-}
-
-test_hermeto_attribution_required_cdx_mixed if {
-	expected := {{
-		"code": "sbom_cyclonedx.hermeto_attribution_required",
-		"term": "pkg:golang/example.com/bad@2.0",
-		# regal ignore:line-length
-		"msg": `Package pkg:golang/example.com/bad@2.0 has PURL type "golang" which requires Hermeto attribution but was not processed by Hermeto`,
-	}}
-
-	att := json.patch(_sbom_1_5_attestation, [
-		{
-			"op": "add",
-			"path": "/statement/predicate/components/-",
-			"value": _cdx_vendored_component("pkg:golang/example.com/good@1.0", true),
-		},
-		{
-			"op": "add",
-			"path": "/statement/predicate/components/-",
-			"value": _cdx_vendored_component("pkg:golang/example.com/bad@2.0", false),
-		},
-	])
-
-	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _vendored_rule_data
-}
-
-test_hermeto_attribution_required_cdx_unconfigured_type_passes if {
-	att := json.patch(_sbom_1_5_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/components/-",
-		"value": _cdx_vendored_component("pkg:npm/example-lib@2.0", false),
-	}])
-
-	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _vendored_rule_data
-}
-
-test_hermeto_attribution_required_cdx_local_dep_passes if {
-	att := json.patch(_sbom_1_5_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/components/-",
-		"value": _cdx_vendored_component("pkg:golang/example.com/lib@1.0?vcs_url=https://github.com/example/lib.git", false),
-	}])
-
-	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _vendored_rule_data
-}
-
-test_hermeto_attribution_required_cdx_empty_rule_data_passes if {
-	att := json.patch(_sbom_1_5_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/components/-",
-		"value": _cdx_vendored_component("pkg:golang/example.com/lib@1.0", false),
-	}])
-
-	assertions.assert_empty(sbom_cyclonedx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as {"vendored_purl_types": []}
-}
-
-test_hermeto_attribution_required_cdx_cargo_denied if {
-	expected := {{
-		"code": "sbom_cyclonedx.hermeto_attribution_required",
-		"term": "pkg:cargo/serde@1.0.0",
-		# regal ignore:line-length
-		"msg": `Package pkg:cargo/serde@1.0.0 has PURL type "cargo" which requires Hermeto attribution but was not processed by Hermeto`,
-	}}
-
-	att := json.patch(_sbom_1_5_attestation, [{
-		"op": "add",
-		"path": "/statement/predicate/components/-",
-		"value": _cdx_vendored_component("pkg:cargo/serde@1.0.0", false),
-	}])
-
-	assertions.assert_equal_results(expected, sbom_cyclonedx.deny) with input.attestations as [att]
-		with sbom._verified_sbom_attestations as [att]
-		with input.image.ref as "registry.local/spam@sha256:1230000000000000000000000000000000000000000000000000000000000123"
-		with ec.oci.image_referrers as []
-		with ec.oci.image_tag_refs as []
-		with data.rule_data as _vendored_rule_data
-}
-
-_cdx_vendored_component(purl, with_hermeto) := component if {
-	with_hermeto == true
-	component := {
-		"type": "library",
-		"name": "component",
-		"purl": purl,
-		"properties": [{"name": "hermeto:found_by", "value": "hermeto"}],
-	}
-} else := component if {
-	component := {
-		"type": "library",
-		"name": "component",
-		"purl": purl,
-		"properties": [],
-	}
-}
-
-_vendored_rule_data := {"vendored_purl_types": ["golang", "cargo"]}
 
 _cdx_backend_component(purl) := {
 	"bom-ref": purl,

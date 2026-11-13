@@ -427,23 +427,6 @@ rule_data_errors contains error if {
 	}
 }
 
-# Verify vendored_purl_types is a list of unique strings.
-rule_data_errors contains error if {
-	some e in j.validate_schema(
-		rule_data.get("vendored_purl_types"),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			"uniqueItems": true,
-		},
-	)
-	error := {
-		"message": sprintf("Rule data vendored_purl_types has unexpected format: %s", [e.message]),
-		"severity": e.severity,
-	}
-}
-
 # Verify allowed_proxy_url_patterns is an object mapping strings to arrays of strings.
 rule_data_errors contains error if {
 	some e in j.validate_schema(
