@@ -41,7 +41,7 @@ defaults := {
 	"skipped_test_attestation_results": ["SKIPPED"],
 	"warned_test_attestation_results": ["WARNED"],
 	#
-	# Used in release/cve.go
+	# Used in release/cve/cve.go
 	# Valid levels: "critical", "high", "medium", "low", and "unknown"
 	"restrict_cve_security_levels": ["critical", "high"],
 	"warn_cve_security_levels": [],
@@ -53,6 +53,20 @@ defaults := {
 		"medium": 0,
 		"low": 0,
 		"unknown": 0,
+	},
+	#
+	# Used in release/release_time_cve/release_time_cve.rego
+	# The functionality is similar to the above but since it's a full
+	# reimplementation let's keep the config separate.
+	# See also https://github.com/konflux-ci/architecture/pull/384
+	# Valid levels: "CRITICAL", "IMPORTANT". Lower levels are not reported.
+	# Note: It would be normal to use generic defaults here
+	# and set the real values in the rule data, e.g. here:
+	# https://github.com/release-engineering/rhtap-ec-policy/blob/main/data/rule_data.yml#L372
+	# but because we're in a hurry I want to roll this out with the desired defaults here.
+	"release_time_cve_leeway": {
+		"CRITICAL": 30,
+		"IMPORTANT": 60,
 	},
 	# Used in policy/release/slsa_source_correlated.rego
 	# According to https://pip.pypa.io/en/latest/topics/vcs-support/#vcs-support
@@ -208,6 +222,16 @@ get(key_name) := value if {
 	# If the key is not found, default to an empty list
 	value := []
 }
+
+# Returns untrusted data supplied at evaluation time, or an empty object when
+# the key or runtime data namespace is absent. Unlike get, this does not use
+# configured rule data or policy defaults (other than {}); callers must opt in
+# explicitly.
+runtime_data(key) := value if {
+	runtime := data.rule_data__runtime__
+	is_object(runtime)
+	value := object.get(runtime, key, {})
+} else := {}
 
 # Returns warnings for patterns in the given rule data key that lack effective ^ anchoring.
 anchoring_errors(key) := {error |
