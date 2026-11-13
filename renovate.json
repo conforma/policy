@@ -2,5 +2,17 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "github>conforma/.github//config/renovate/renovate.json"
-  ]
+  ],
+  "packageRules": [
+    {
+      "description": "Keep all OpenTelemetry Go modules in lockstep — they are released together and MVS forces alignment. Prevents per-CVE sibling-module PR fan-out (see #1924).",
+      "matchManagers": ["gomod"],
+      "matchPackageNames": ["go.opentelemetry.io/**"],
+      "groupName": "opentelemetry-go"
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "minimumReleaseAge": "0 days",
+    "groupName": "security updates ({{{manager}}})"
+  }
 }

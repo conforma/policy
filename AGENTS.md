@@ -11,7 +11,7 @@ make TEST="pattern" test     # Run tests matching regex
 make coverage                # Show uncovered lines
 make fmt                     # Format rego (run before every commit)
 make lint                    # Regal linter + license headers
-make ci                      # Full CI: quiet-test + acceptance + opa-check + conventions-check + fmt-check + lint + regal-test + generate-docs
+make ci                      # Full CI: quiet-test + acceptance + opa-check + conventions-check + fmt-check + lint + regal-test + generate-docs + check-go-directive
 make generate-docs           # Regenerate Antora docs from annotations (commit changed files)
 ```
 
@@ -30,6 +30,7 @@ opa check --strict path/to/file.rego  # Parse/type-check a single Rego file (mat
 - **Run `make fmt` before committing.** CI checks formatting.
 - **Run `make generate-docs` after changing policy annotations.** Commit the regenerated files.
 - All tools (ec, opa, conftest, regal) run via `go run` with versions pinned in go.mod — no local installs needed.
+- **Go directive lockstep:** All `go.mod` files in the repo (root, `acceptance/`, `docs/`) must declare the same `go` directive. CI enforces this via `make check-go-directive`. When bumping the Go version, update all `go.mod` files together.
 - Tests run network-isolated when `unshare` is available.
 - **Test attestation mock patterns:** Tests for `test_attestation` require Sigstore/OCI mock
   infrastructure (referrer descriptors, SLSA provenance builders, verify mocks). See

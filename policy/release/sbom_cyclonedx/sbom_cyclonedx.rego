@@ -121,6 +121,7 @@ deny contains result if {
 #   - redhat
 #   - redhat_rpms
 #   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
 #
 deny contains result if {
 	some index, s in sbom.cyclonedx_sboms
