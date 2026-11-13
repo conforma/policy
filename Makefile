@@ -45,13 +45,17 @@ else
 endif
 
 define COVERAGE
-@$(COVERAGE_CMD) | { \
+@set -o pipefail; \
+$(COVERAGE_CMD) | { \
 	T=$$(mktemp); tee "$${T}"; $(OPA) eval --format pretty \
 	--input "$${T}" \
 	--data hack/simplecov.rego \
 	data.hack.from_opa > coverage.json; \
-	rm -f "$${T}" || true ;\
-}
+	status=$$?; \
+	rm -f "$${T}" || true; \
+	exit "$${status}"; \
+} \
+| jq -j -r 'if .coverage < 100 then "ERROR: Code coverage threshold not met: got \(.coverage) instead of 100.00\n" | halt_error(1) else "" end'
 endef
 
 ##@ General
@@ -230,8 +234,12 @@ lint: ## Runs Rego linter
 lint-fix: ## Fix linting issues automagically
 	@go run github.com/google/addlicense -c '$(COPY)' -y '' -s $(LICENSE_IGNORE) .
 
+.PHONY: check-go-directive
+check-go-directive: ## Check that all go.mod files declare the same go directive as the root
+	@hack/check-go-directive.sh
+
 .PHONY: ci
-ci: quiet-test acceptance opa-check conventions-check fmt-check lint regal-test generate-docs ## Runs all checks and tests
+ci: quiet-test acceptance opa-check conventions-check fmt-check lint regal-test generate-docs check-go-directive ## Runs all checks and tests
 
 #--------------------------------------------------------------------
 
