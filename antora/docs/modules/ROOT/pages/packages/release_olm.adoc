@@ -48,7 +48,7 @@ Each image referenced by the OLM bundle should match an entry in the list of pre
 [#olm__required_network_policy_rbac_for_operands]
 === link:#olm__required_network_policy_rbac_for_operands[NetworkPolicy RBAC present in OLM bundle]
 
-Operators are required to manage the network policies of their operands. This rule verifies that operator bundles request sufficient RBAC permissions to manage NetworkPolicy lifecycle (create, delete, and update/patch) for networking.k8s.io/networkpolicies in their ClusterServiceVersion. Bundles whose operator name and major.minor version are listed in the `operator_network_policy_rbac_exceptions` rule data key are exempt from this requirement.
+Operators are required to manage the network policies of their operands. This rule applies when the ClusterServiceVersion grants permission to create a workload resource. It verifies that these bundles request sufficient RBAC permissions to manage NetworkPolicy lifecycle (create, delete, and update/patch) for networking.k8s.io/networkpolicies in their ClusterServiceVersion. Bundles whose operator name and major.minor version are listed in the `operator_network_policy_rbac_exceptions` rule data key are exempt from this requirement.
 
 *Solution*: Add a rule granting create, delete, and update/patch on networking.k8s.io/networkpolicies to the ClusterServiceVersion clusterPermissions or permissions, or add the operator name and its major.minor version to the operator_network_policy_rbac_exceptions rule data key.
 
