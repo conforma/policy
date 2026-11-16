@@ -23,6 +23,7 @@ readonly_repo: true
 env:
     runner:
         REVIEW_FINDING_SEVERITY_THRESHOLD: "high"
-        REVIEW_SKIP_AUTHORS: "renovate[bot]"
+        REVIEW_SKIP_AUTHORS: "renovate[bot],red-hat-konflux[bot]"
     sandbox:
         REVIEW_FINDING_SEVERITY_THRESHOLD: "high"
+        REVIEW_SKIP_AUTHORS: "renovate[bot],red-hat-konflux[bot]"
