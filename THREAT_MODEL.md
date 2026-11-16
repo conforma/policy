@@ -147,11 +147,69 @@ can contribute to.
 | `allowed_registry_prefixes` | Base images from untrusted registries permitted |
 | `allowed_builder_ids` | Builds from non-Tekton builders accepted |
 | `restrict_cve_security_levels` | CVE blocking thresholds raised |
-| `cve_leeway` | Unlimited grace period for known vulnerabilities |
+| `cve_leeway` / `release_time_cve_leeway` | Unlimited grace period for known vulnerabilities |
 | `allowed_predicate_types` | Non-SLSA attestation formats accepted |
 | `allowed_rpm_signature_keys` | Unsigned or foreign-signed RPMs permitted |
 | `pipeline_run_params` | Expected build parameters relaxed |
 | `pipeline_intention` | Operational mode of certain rules changed |
+
+#### 3.2.1 Evaluation-time runtime data (`data.rule_data__runtime__`)
+
+**Source**: The release collector is expected to produce release-time advisory
+results, supplied to OPA by the evaluation caller through
+`data.rule_data__runtime__.collector_data`. The producer and CLI ingestion path
+are outside this repository; their integrity controls must be confirmed as part
+of rollout. This is a separate evaluation-time input, not another level in the
+configured rule-data precedence cascade. `lib.rule_data.runtime_data(key)` reads
+only this namespace, with no fallback to ECP ruleData, data bundles, or policy
+defaults. `release_time_cve` is its first release-gate consumer and reads advisory
+records grouped by severity under `collector_data.RHSA`. The collector collates
+advisories across the entire snapshot. CVE results are scoped to the evaluated
+component by requiring `input.component_name` to appear in an advisory's
+`components` list. Advisories shared by multiple components apply to each listed
+component; components absent from all advisory lists receive no CVE results.
+
+**Trust boundary and integrity assumptions**: Runtime data is untrusted input,
+not a verified build attestation. The policy does not authenticate the collector,
+verify signatures on its output, or establish that the results are complete,
+fresh, and bound to the image being evaluated. Release-gate infrastructure must
+control the collector and injection path and prevent a developer from replacing,
+omitting, or replaying results. Controlling the ECP alone does not establish
+these properties for this separate input. A caller able to supply an empty
+result, omit an advisory, or alter its severity or release date can suppress a
+CVE violation without changing policy configuration. Component association also
+trusts the CLI-supplied `input.component_name` and the collector's component
+lists; matching those names does not itself prove image binding.
+
+**Validation and rollout behavior**: The single `runtime_data_format` deny
+reports missing or malformed runtime data by validating the raw namespace,
+rather than the empty-object fallback from `runtime_data()`. It requires an
+object namespace, `collector_data` and `RHSA` objects, and `CRITICAL` and
+`IMPORTANT` arrays. A successful empty collection is represented by
+`{"RHSA": {"CRITICAL": [], "IMPORTANT": []}}`. Severity groups
+must contain arrays of advisory objects with a non-empty `advisory` ID, an
+RFC 3339 `released_on` timestamp, and non-empty arrays of non-empty strings for
+both `cves` and affected `components`. Only CRITICAL and IMPORTANT severity
+groups are accepted and participate in CVE enforcement. Other record metadata
+is allowed. The same deny requires `input.component_name` to be a non-empty
+string, preventing a missing or malformed name from silently bypassing CVE
+checks. Collector schema validation remains snapshot-wide, including records
+for other components. Malformed records may not produce an advisory-grace-period
+result, but they produce a format result instead of silently passing.
+
+Both the advisory and format rules are scoped to release/production/staging
+pipeline intentions and are initially non-blocking warnings, with
+`effective_on: 2027-07-01T00:00:00Z`. The date will be brought forward once the
+collector integration is stable. At that date missing and malformed required
+data become blocking alongside expired CVE grace periods; the temporary
+concession is warning-only enforcement, not silent acceptance.
+
+**Required rollout follow-up**: Before blocking enforcement, confirm the
+producer, injection-path ownership, image binding, and freshness guarantees.
+Policy tests cover missing data, malformed records, and valid empty results;
+end-to-end collector/CLI tests must also establish that failed or incomplete
+collection cannot be presented as a successful empty result. Schema validation
+cannot prove collection success, completeness, authenticity, or freshness.
 
 ### 3.3 Trusted task data (`data.trusted_tasks`, `trusted_task_rules`)
 
@@ -377,6 +435,12 @@ developer. See CLI threat model IV-4 for the Snapshot trust model.
    sources (e.g., `oci::quay.io/conforma/policy-data:latest`) are typically
    fetched by tag. See CLI threat model open question 1 for the data source
    integrity discussion.
+
+7. **Runtime advisory data rollout (before 2027-07-01)**: confirm the release
+   collector/CLI ownership and integrity contract described in Section 3.2.1.
+   Required-data and advisory validation are implemented, initially as warnings.
+   Verify end-to-end collection failure reporting, image binding, and freshness
+   before bringing forward the shared enforcement date.
 
 ## 7. Provenance
 

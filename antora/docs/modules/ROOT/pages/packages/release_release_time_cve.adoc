@@ -1,0 +1,48 @@
+= Release-time CVE checks Package
+
+Check for fixed CRITICAL and IMPORTANT CVEs using CVE scan data produced at release-time by tasks in the collector pipeline, independently of the CVE scan report in build provenance, which is presumably older and hence less current than the release-time scan.
+
+== Package Name
+
+* `release_time_cve`
+
+== Rules Included
+
+[#release_time_cve__advisory_grace_period_expired]
+=== link:#release_time_cve__advisory_grace_period_expired[CVEs past their release-time grace period]
+
+Block releases containing CVEs in RHSA advisories after the severity-specific grace period. Without configuration the defaults are 30 days for CRITICAL and 60 for IMPORTANT. If `release_time_cve_leeway` is configured, omitted severities have no grace period (0 days). Advisory data is expected in the `collector_data` runtime data key under `RHSA`. Only advisories listing input.component_name in their components apply.
+
+*Solution*: Remediate the CVE before releasing the affected component.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s CVE %s in advisory %s was released on %s (grace period: %d days)`
+* Code: `release_time_cve.advisory_grace_period_expired`
+* Effective from: `2027-07-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/release_time_cve/release_time_cve.rego#L16[Source, window="_blank"]
+
+[#release_time_cve__runtime_data_format]
+=== link:#release_time_cve__runtime_data_format[Release-time CVE data format]
+
+Require runtime collector data with RHSA CRITICAL and IMPORTANT arrays and validate advisory IDs, release timestamps, CVE entries, and affected component names. Require input.component_name to associate advisories with the evaluated component. Empty severity arrays represent a successful collection with no advisories.
+
+*Solution*: Provide runtime collector_data with RHSA CRITICAL and IMPORTANT arrays containing advisory, released_on, cves, and components fields, and provide input.component_name as a non-empty string.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Release-time CVE data has unexpected format: %s`
+* Code: `release_time_cve.runtime_data_format`
+* Effective from: `2027-07-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/release_time_cve/release_time_cve.rego#L62[Source, window="_blank"]
+
+[#release_time_cve__rule_data_provided]
+=== link:#release_time_cve__rule_data_provided[Release-time CVE leeway rule data provided]
+
+Confirm that release_time_cve_leeway specifies non-negative integer day counts for the supported advisory severity levels.
+
+*Solution*: Set release_time_cve_leeway to an object of severity-to-days mappings.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `release_time_cve.rule_data_provided`
+* Effective from: `2027-07-01T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/release_time_cve/release_time_cve.rego#L94[Source, window="_blank"]

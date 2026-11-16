@@ -27,6 +27,18 @@ test_rule_data if {
 		with rule_data.defaults as {"key3": 10}
 }
 
+test_runtime_data if {
+	runtime := {"collector_data": {"RHSA": {}}, "scalar": 42}
+	assertions.assert_equal(rule_data.runtime_data("collector_data"), {"RHSA": {}}) with data.rule_data__runtime__ as runtime
+	assertions.assert_equal(rule_data.runtime_data("scalar"), 42) with data.rule_data__runtime__ as runtime
+	assertions.assert_equal(rule_data.runtime_data("missing"), {}) with data.rule_data__runtime__ as runtime
+}
+
+test_runtime_data_without_namespace if {
+	assertions.assert_equal(rule_data.runtime_data("collector_data"), {}) with data.rule_data__runtime__ as null
+	assertions.assert_equal(rule_data.runtime_data("collector_data"), {}) with data.rule_data__runtime__ as {}
+}
+
 # Need this for 100% coverage
 test_rule_data_defaults if {
 	assertions.assert_not_empty(rule_data.defaults)
