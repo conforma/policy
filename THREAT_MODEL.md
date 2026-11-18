@@ -163,7 +163,7 @@ of rollout. This is a separate evaluation-time input, not another level in the
 configured rule-data precedence cascade. `lib.rule_data.runtime_data(key)` reads
 only this namespace, with no fallback to ECP ruleData, data bundles, or policy
 defaults. `release_time_cve` is its first release-gate consumer and reads advisory
-records grouped by severity under `collector_data.RHSA`. The collector collates
+records grouped by severity under `collector_data.rhsa`. The collector collates
 advisories across the entire snapshot. CVE results are scoped to the evaluated
 component by requiring `input.component_name` to appear in an advisory's
 `components` list. Advisories shared by multiple components apply to each listed
@@ -184,9 +184,9 @@ lists; matching those names does not itself prove image binding.
 **Validation and rollout behavior**: The single `runtime_data_format` deny
 reports missing or malformed runtime data by validating the raw namespace,
 rather than the empty-object fallback from `runtime_data()`. It requires an
-object namespace, `collector_data` and `RHSA` objects, and `CRITICAL` and
+object namespace, `collector_data` and `rhsa` objects, and `CRITICAL` and
 `IMPORTANT` arrays. A successful empty collection is represented by
-`{"RHSA": {"CRITICAL": [], "IMPORTANT": []}}`. Severity groups
+`{"rhsa": {"CRITICAL": [], "IMPORTANT": []}}`. Severity groups
 must contain arrays of advisory objects with a non-empty `advisory` ID, an
 RFC 3339 `released_on` timestamp, and non-empty arrays of non-empty strings for
 both `cves` and affected `components`. Only CRITICAL and IMPORTANT severity
