@@ -207,10 +207,91 @@ test_rule_data_provided if {
 			"msg": "Rule data required_task_results has unexpected format: 5.result: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
+		{
+			"code": "results.rule_data_provided_v2",
+			"msg": "Rule data required_task_results has unexpected format: 0: Invalid type. Expected: object, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "results.rule_data_provided_v2",
+			"msg": "Rule data required_task_results has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+		{
+			"code": "results.rule_data_provided_v2",
+			"msg": "Rule data required_task_results has unexpected format: 3: Additional property foo is not allowed",
+			"severity": "warning",
+		},
+		{
+			"code": "results.rule_data_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data required_task_results has unexpected format: 4.task: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "results.rule_data_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data required_task_results has unexpected format: 5.result: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
 	}
 
 	assertions.assert_equal_results(results.deny, expected) with input as _mock_task
 		with data.rule_data as d
+}
+
+# A present but scalar `required_task_results` value must produce a format
+# rejection from the v2 rule instead of silently skipping the check. The legacy
+# rule_data_provided is untouched: a builtin error in its schema validation
+# still suppresses its result, which is the gap rule_data_provided_v2 closes.
+test_rule_data_provided_v2_scalar_rejected if {
+	expected := {{
+		"code": "results.rule_data_provided_v2",
+		"msg": "Rule data required_task_results has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(results.deny, expected) with input as _mock_task
+		with data.rule_data as {"required_task_results": 3}
+
+	expected_bool := {{
+		"code": "results.rule_data_provided_v2",
+		"msg": "Rule data required_task_results has unexpected format: (Root): Invalid type. Expected: array, given: boolean",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(results.deny, expected_bool) with input as _mock_task
+		with data.rule_data as {"required_task_results": true}
+}
+
+# A string value is malformed even when it contains JSON text for a valid
+# array: JSON text in a scalar must not be mistaken for a native array. A
+# native empty array stays an intentional no-op.
+test_rule_data_provided_v2_json_text_string_rejected if {
+	expected := {{
+		"code": "results.rule_data_provided_v2",
+		"msg": "Rule data required_task_results has unexpected format: (Root): Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(results.deny, expected) with input as _mock_task
+		with data.rule_data as {"required_task_results": "x"}
+
+	assertions.assert_equal_results(results.deny, expected) with input as _mock_task
+		with data.rule_data as {"required_task_results": "[]"}
+
+	assertions.assert_empty(results.deny) with input as _mock_task
+		with data.rule_data as {"required_task_results": []}
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_rule_data_provided_v2_precedence if {
+	expected := {{
+		"code": "results.rule_data_provided_v2",
+		"msg": "Rule data required_task_results has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(results.deny, expected) with input as _mock_task
+		with data.rule_data_custom as {"required_task_results": 3}
+		with data.rule_data as {"required_task_results": [{"task": "bacon", "result": "GRILLED"}]}
 }
 
 _mock_task := {
