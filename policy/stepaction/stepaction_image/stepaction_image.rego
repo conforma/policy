@@ -81,22 +81,54 @@ deny contains result if {
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
+# METADATA
+# title: Rule data provided (v2)
+# description: >-
+#   Confirm the `allowed_step_image_registry_prefixes` rule data is provided. Unlike rule_data,
+#   a present value of the wrong type (for example a scalar or a string containing JSON text) is
+#   rejected instead of silently skipping the check.
+# custom:
+#   short_name: rule_data_v2
+#   failure_msg: "%s"
+#   solution: >-
+#     Make sure the xref:cli:ROOT:configuration.adoc#_data_sources[data sources] contains a key
+#     'allowed_step_image_registry_prefixes' that contains a list of approved registries.
+#   collections:
+#   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some e in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+}
+
 ref_permitted(image_ref, allowed_prefixes) if {
 	some allowed_prefix in allowed_prefixes
 	startswith(image_ref, allowed_prefix)
 }
 
+_rule_data_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"type": "string"},
+	"uniqueItems": true,
+	"minItems": 1,
+}
+
 _rule_data_errors contains error if {
-	some e in j.validate_schema(
-		rule_data.get(_rule_data_key),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			"uniqueItems": true,
-			"minItems": 1,
-		},
-	)
+	some e in j.validate_schema(rule_data.get(_rule_data_key), _rule_data_schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+# _rule_data_errors_v2 mirrors _rule_data_errors but validates the value as
+# native rule data: a present scalar value is reported as a format violation
+# instead of raising a builtin error that suppresses the result, and a string
+# is never interpreted as serialized JSON.
+_rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(rule_data.get(_rule_data_key), _rule_data_schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
 		"severity": e.severity,
