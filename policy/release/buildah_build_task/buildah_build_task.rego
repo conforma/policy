@@ -100,6 +100,25 @@ deny contains result if {
 }
 
 # METADATA
+# title: disallowed_platform_patterns format (v2)
+# description: >-
+#   Confirm the `disallowed_platform_patterns` rule data, if provided matches the expected format.
+#   Unlike disallowed_platform_patterns_pattern, a present value of the wrong type (for example a
+#   scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+# custom:
+#   short_name: disallowed_platform_patterns_pattern_v2
+#   failure_msg: "%s"
+#   collections:
+#   - redhat
+#   - policy_data
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some error in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
+}
+
+# METADATA
 # title: PRIVILEGED_NESTED parameter
 # description: >-
 #   Verify the PRIVILEGED_NESTED parameter of a builder Tasks was not set to `true`.
@@ -204,16 +223,15 @@ _malformed_param_messages contains msg if {
 }
 
 # Verify disallowed_platform_patterns is a list of strings. Empty list is fine.
+_plat_patterns_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"type": "string"},
+	"uniqueItems": true,
+}
+
 _rule_data_errors contains error if {
-	some e in j.validate_schema(
-		rule_data.get(_plat_patterns_rule_data_key),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			"uniqueItems": true,
-		},
-	)
+	some e in j.validate_schema(rule_data.get(_plat_patterns_rule_data_key), _plat_patterns_schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [_plat_patterns_rule_data_key, e.message]),
 		"severity": e.severity,
@@ -234,6 +252,20 @@ _rule_data_errors contains error if {
 
 _rule_data_errors contains error if {
 	some error in rule_data.anchoring_errors(_plat_patterns_rule_data_key)
+}
+
+# _rule_data_errors_v2 mirrors the schema-based _rule_data_errors above but
+# validates the value as native rule data: a present scalar value is reported as
+# a format violation instead of raising a builtin error that suppresses the
+# result, and a string is never interpreted as serialized JSON. The regex
+# validity and anchoring checks in _rule_data_errors are intentionally not
+# mirrored here.
+_rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(rule_data.get(_plat_patterns_rule_data_key), _plat_patterns_schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [_plat_patterns_rule_data_key, e.message]),
+		"severity": e.severity,
+	}
 }
 
 _plat_patterns_rule_data_key := "disallowed_platform_patterns"
