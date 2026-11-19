@@ -43,3 +43,16 @@ Confirm the `allowed_step_image_registry_prefixes` rule data is provided.
 * FAILURE message: `%s`
 * Code: `stepaction_image.rule_data`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/stepaction/stepaction_image/stepaction_image.rego#L66[Source, window="_blank"]
+
+[#stepaction_image__rule_data_v2]
+=== link:#stepaction_image__rule_data_v2[Rule data provided (v2)]
+
+Confirm the `allowed_step_image_registry_prefixes` rule data is provided. Unlike rule_data, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+*Solution*: Make sure the xref:cli:ROOT:configuration.adoc#_data_sources[data sources] contains a key 'allowed_step_image_registry_prefixes' that contains a list of approved registries.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `stepaction_image.rule_data_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/stepaction/stepaction_image/stepaction_image.rego#L84[Source, window="_blank"]

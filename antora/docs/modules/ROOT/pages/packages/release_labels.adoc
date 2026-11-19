@@ -66,7 +66,7 @@ The parent image config is not accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Image config of the image %q, parent of image %q is inaccessible`
 * Code: `labels.inaccessible_parent_config`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L206[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L229[Source, window="_blank"]
 
 [#labels__inaccessible_parent_manifest]
 === link:#labels__inaccessible_parent_manifest[Inaccessible parent image manifest]
@@ -78,7 +78,7 @@ The parent image manifest is not accessible.
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `Manifest of the image %q, parent of image %q is inaccessible`
 * Code: `labels.inaccessible_parent_manifest`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L186[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L209[Source, window="_blank"]
 
 [#labels__optional_labels]
 === link:#labels__optional_labels[Optional labels]
@@ -115,3 +115,16 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * FAILURE message: `%s`
 * Code: `labels.rule_data_provided`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L166[Source, window="_blank"]
+
+[#labels__rule_data_provided_v2]
+=== link:#labels__rule_data_provided_v2[Rule data provided (v2)]
+
+Confirm the expected rule data keys have been provided in the expected format. The keys are `required_labels`,	`fbc_required_labels`, `optional_labels`, `fbc_optional_labels`, `disallowed_inherited_labels`, `fbc_disallowed_inherited_labels`, and `deprecated_labels`. Unlike rule_data_provided, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+*Solution*: If provided, ensure the rule data is in the expected format.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `labels.rule_data_provided_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/labels/labels.rego#L186[Source, window="_blank"]

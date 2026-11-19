@@ -32,3 +32,16 @@ Verify the rule data used by this package, `allowed_rpm_ostree_builder_image_pre
 * FAILURE message: `%s`
 * Code: `rpm_ostree_task.rule_data`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_ostree_task/rpm_ostree_task.rego#L40[Source, window="_blank"]
+
+[#rpm_ostree_task__rule_data_v2]
+=== link:#rpm_ostree_task__rule_data_v2[Rule data (v2)]
+
+Verify the rule data used by this package, `allowed_rpm_ostree_builder_image_prefixes`, is in the expected format. Unlike rule_data, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+*Solution*: Make sure the `allowed_rpm_ostree_builder_image_prefixes` rule data is in the expected format in the data source.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `rpm_ostree_task.rule_data_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_ostree_task/rpm_ostree_task.rego#L60[Source, window="_blank"]

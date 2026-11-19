@@ -3,5 +3,6 @@
 *** xref:packages/stepaction_stepaction_image.adoc#stepaction_image__permitted[Image comes from permitted registry]
 *** xref:packages/stepaction_stepaction_image.adoc#stepaction_image__accessible[Image is accessible]
 *** xref:packages/stepaction_stepaction_image.adoc#stepaction_image__rule_data[Rule data provided]
+*** xref:packages/stepaction_stepaction_image.adoc#stepaction_image__rule_data_v2[Rule data provided (v2)]
 ** xref:packages/stepaction_stepaction_kind.adoc[Tekton StepAction kind checks]
 *** xref:packages/stepaction_stepaction_kind.adoc#stepaction_kind__valid[StepAction definition has expected kind]
