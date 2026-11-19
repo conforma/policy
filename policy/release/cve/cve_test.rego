@@ -375,6 +375,35 @@ test_rule_data_provided if {
 			"msg": "Rule data warn_unpatched_cve_security_levels has unexpected format: 0: 0 must be one of the following: \"critical\", \"high\", \"medium\", \"low\", \"unknown\"",
 			"severity": "failure",
 		},
+		{
+			"code": "cve.rule_data_provided_v2",
+			"msg": "Rule data restrict_cve_security_levels has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+		{
+			"code": "cve.rule_data_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data restrict_cve_security_levels has unexpected format: 0: 0 must be one of the following: \"critical\", \"high\", \"medium\", \"low\", \"unknown\"",
+			"severity": "failure",
+		},
+		{
+			"code": "cve.rule_data_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data restrict_unpatched_cve_security_levels has unexpected format: 0: 0 must be one of the following: \"critical\", \"high\", \"medium\", \"low\", \"unknown\"",
+			"severity": "failure",
+		},
+		{
+			"code": "cve.rule_data_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data warn_cve_security_levels has unexpected format: 0: 0 must be one of the following: \"critical\", \"high\", \"medium\", \"low\", \"unknown\"",
+			"severity": "failure",
+		},
+		{
+			"code": "cve.rule_data_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data warn_unpatched_cve_security_levels has unexpected format: 0: 0 must be one of the following: \"critical\", \"high\", \"medium\", \"low\", \"unknown\"",
+			"severity": "failure",
+		},
 	}
 
 	assertions.assert_equal_results(cve.deny, expected) with input.attestations as _no_vuln_attestations
@@ -382,6 +411,79 @@ test_rule_data_provided if {
 		with ec.oci.image_manifest as _mock_image_manifest
 		with ec.oci.blob as _mock_blob
 		with data.rule_data as d
+}
+
+# RA09-CVE-RULE-DATA-ROOT-003: a present but scalar value for one of the four
+# CVE severity-list keys, or for cve_leeway, must produce a format rejection
+# from the v2 rule instead of silently skipping the check. The legacy
+# rule_data_provided stays silent: a builtin error in its schema validation
+# suppresses the result, which is the gap rule_data_provided_v2 closes.
+test_rule_data_provided_v2_scalar_rejected if {
+	some key in [
+		"restrict_cve_security_levels",
+		"warn_cve_security_levels",
+		"restrict_unpatched_cve_security_levels",
+		"warn_unpatched_cve_security_levels",
+	]
+	expected := {{
+		"code": "cve.rule_data_provided_v2",
+		"msg": sprintf("Rule data %s has unexpected format: (Root): Invalid type. Expected: array, given: integer", [key]),
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(cve.deny, expected) with input.attestations as _no_vuln_attestations
+		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with data.rule_data as {key: 1}
+
+	leeway_expected := {{
+		"code": "cve.rule_data_provided_v2",
+		"msg": "Rule data cve_leeway has unexpected format: (Root): Invalid type. Expected: object, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(cve.deny, leeway_expected) with input.attestations as _no_vuln_attestations
+		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with data.rule_data as {"cve_leeway": 1}
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_rule_data_provided_v2_precedence if {
+	expected := {{
+		"code": "cve.rule_data_provided_v2",
+		"msg": "Rule data restrict_cve_security_levels has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(cve.deny, expected) with input.attestations as _no_vuln_attestations
+		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with data.rule_data_custom as {"restrict_cve_security_levels": 1}
+		with data.rule_data as {"restrict_cve_security_levels": ["critical", "high"]}
+}
+
+# A valid severity list keeps reaching the consumer: low-severity
+# vulnerabilities are denied as blockers when configured.
+test_rule_data_provided_v2_valid_consumer_control if {
+	expected := {
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-9999-Low-0007\" vulnerability of low security level",
+			"term": "CVE-9999-Low-0007",
+		},
+		{
+			"code": "cve.cve_blockers",
+			"msg": "Found \"CVE-9999-Low-0008\" vulnerability of low security level",
+			"term": "CVE-9999-Low-0008",
+		},
+	}
+	assertions.assert_equal_results(cve.deny, expected) with input.attestations as _with_vuln_attestations
+		with input.image.ref as "registry.io/repository/image@sha256:image_digest"
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with data.rule_data as {"restrict_cve_security_levels": ["low"]}
 }
 
 test_leeway_rule_data_check if {
@@ -409,6 +511,21 @@ test_leeway_rule_data_check if {
 		},
 		{
 			"code": "cve.rule_data_provided",
+			"msg": "Rule data cve_leeway has unexpected format: high: Must be greater than or equal to 0",
+			"severity": "failure",
+		},
+		{
+			"code": "cve.rule_data_provided_v2",
+			"msg": "Rule data cve_leeway has unexpected format: (Root): Additional property blooper is not allowed",
+			"severity": "warning",
+		},
+		{
+			"code": "cve.rule_data_provided_v2",
+			"msg": "Rule data cve_leeway has unexpected format: critical: Invalid type. Expected: integer, given: string",
+			"severity": "failure",
+		},
+		{
+			"code": "cve.rule_data_provided_v2",
 			"msg": "Rule data cve_leeway has unexpected format: high: Must be greater than or equal to 0",
 			"severity": "failure",
 		},
