@@ -163,6 +163,7 @@ test_validate_schema_native_scalar_rejected if {
 		}],
 		j.validate_schema_native("x", array_schema),
 	)
+
 	# A string containing JSON text is a native string, not a JSON document:
 	# unlike validate_schema it must not be parsed and accepted as an array.
 	assertions.assert_equal(

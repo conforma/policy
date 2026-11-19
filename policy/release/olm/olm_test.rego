@@ -241,12 +241,20 @@ test_feature_annotations_format_custom_rule_data if {
 }
 
 test_required_olm_features_annotations_provided if {
-	expected_empty := {{
-		"code": "olm.required_olm_features_annotations_provided",
-		# regal ignore:line-length
-		"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Array must have at least 1 items",
-		"severity": "failure",
-	}}
+	expected_empty := {
+		{
+			"code": "olm.required_olm_features_annotations_provided",
+			# regal ignore:line-length
+			"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Array must have at least 1 items",
+			"severity": "failure",
+		},
+		{
+			"code": "olm.required_olm_features_annotations_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Array must have at least 1 items",
+			"severity": "failure",
+		},
+	}
 	assertions.assert_equal_results(olm.deny, expected_empty) with input.image.files as {"manifests/csv.yaml": manifest}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
@@ -283,12 +291,179 @@ test_required_olm_features_annotations_provided if {
 			"msg": "Rule data required_olm_features_annotations has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
+		{
+			"code": "olm.required_olm_features_annotations_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+		{
+			"code": "olm.required_olm_features_annotations_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data required_olm_features_annotations has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
 	}
 
 	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest}
 		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
 		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
 		with data.rule_data.required_olm_features_annotations as d
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+}
+
+# RA16-OLM-RULE-DATA-SCALAR-001: a present but scalar
+# required_olm_features_annotations value must produce a format rejection from
+# the v2 rule instead of the format result silently disappearing. The legacy
+# required_olm_features_annotations_provided stays silent: a builtin error in
+# its schema validation suppresses the result, which is the gap the v2 rule
+# closes.
+test_required_olm_features_annotations_provided_v2_scalar_rejected if {
+	integer_expected := {{
+		"code": "olm.required_olm_features_annotations_provided_v2",
+		# regal ignore:line-length
+		"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(olm.deny, integer_expected) with input.image.files as {"manifests/csv.yaml": manifest}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.required_olm_features_annotations as 1
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+
+	boolean_expected := {{
+		"code": "olm.required_olm_features_annotations_provided_v2",
+		# regal ignore:line-length
+		"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Invalid type. Expected: array, given: boolean",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(olm.deny, boolean_expected) with input.image.files as {"manifests/csv.yaml": manifest}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.required_olm_features_annotations as true
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+}
+
+# A scalar allowed_olm_image_registry_prefixes value is rejected by the same
+# v2 rule. The imageless CSV keeps the registry allow-list consumers out of
+# the picture so only the format rejection remains.
+test_required_olm_features_annotations_provided_v2_registry_prefix_scalar_rejected if {
+	csv := json.patch(manifest, [
+		{"op": "remove", "path": "/spec/relatedImages"},
+		{"op": "remove", "path": "/spec/install"},
+		{"op": "remove", "path": "/metadata/annotations/containerImage"},
+		{"op": "remove", "path": "/metadata/annotations/enclosurePicture"},
+	])
+
+	expected := {{
+		"code": "olm.required_olm_features_annotations_provided_v2",
+		# regal ignore:line-length
+		"msg": "Rule data allowed_olm_image_registry_prefixes has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": csv}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as 1
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+}
+
+# A string value is never interpreted as serialized JSON text by the v2 rule:
+# "[]" parses as a valid empty array for the legacy rule's JSON-text
+# interpretation and "notjson" raises a suppressed builtin error there, but
+# both are rejected as strings by the v2 rule. A native empty list keeps the
+# minItems rejection on both rules.
+test_required_olm_features_annotations_provided_v2_string_rejected if {
+	json_text_expected := {
+		{
+			"code": "olm.required_olm_features_annotations_provided",
+			# regal ignore:line-length
+			"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Array must have at least 1 items",
+			"severity": "failure",
+		},
+		{
+			"code": "olm.required_olm_features_annotations_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Invalid type. Expected: array, given: string",
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal_results(olm.deny, json_text_expected) with input.image.files as {"manifests/csv.yaml": manifest}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.required_olm_features_annotations as "[]"
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+
+	not_json_expected := {{
+		"code": "olm.required_olm_features_annotations_provided_v2",
+		# regal ignore:line-length
+		"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(olm.deny, not_json_expected) with input.image.files as {"manifests/csv.yaml": manifest}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.required_olm_features_annotations as "notjson"
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+
+	empty_expected := {
+		{
+			"code": "olm.required_olm_features_annotations_provided",
+			# regal ignore:line-length
+			"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Array must have at least 1 items",
+			"severity": "failure",
+		},
+		{
+			"code": "olm.required_olm_features_annotations_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Array must have at least 1 items",
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal_results(olm.deny, empty_expected) with input.image.files as {"manifests/csv.yaml": manifest}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.required_olm_features_annotations as []
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+}
+
+# A malformed high-priority override above a valid lower-priority list must
+# be rejected rather than silently using the lower-priority value.
+test_required_olm_features_annotations_provided_v2_precedence if {
+	expected := {{
+		"code": "olm.required_olm_features_annotations_provided_v2",
+		# regal ignore:line-length
+		"msg": "Rule data required_olm_features_annotations has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
+		with data.rule_data_custom as {"required_olm_features_annotations": 1}
+		with data.rule_data as {
+			"allowed_olm_image_registry_prefixes": ["registry.io"],
+			"required_olm_features_annotations": ["features.operators.openshift.io/disconnected"],
+			"allowed_olm_resource_kinds": ["ClusterServiceVersion"],
+		}
+}
+
+# The valid matching and nonmatching consumer controls keep working alongside
+# the v2 format rule.
+test_required_olm_features_annotations_provided_v2_consumer_controls if {
+	assertions.assert_empty(olm.deny) with input.image.files as {"manifests/csv.yaml": manifest}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.required_olm_features_annotations as ["features.operators.openshift.io/disconnected"]
+		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
+
+	expected := {{
+		"code": "olm.feature_annotations_format",
+		"msg": "The annotation \"features.operators.openshift.io/nonexistent\" is either missing or has an unexpected value",
+		"term": "features.operators.openshift.io/nonexistent",
+	}}
+	assertions.assert_equal_results(olm.deny, expected) with input.image.files as {"manifests/csv.yaml": manifest}
+		with input.image.config.Labels as {olm.manifestv1: "manifests/"}
+		with data.rule_data.allowed_olm_image_registry_prefixes as ["registry.io"]
+		with data.rule_data.required_olm_features_annotations as ["features.operators.openshift.io/nonexistent"]
 		with data.rule_data.allowed_olm_resource_kinds as ["ClusterServiceVersion"]
 }
 
