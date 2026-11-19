@@ -116,6 +116,29 @@ deny contains result if {
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
+# METADATA
+# title: Rule data provided (v2)
+# description: >-
+#   Confirm the expected rule data keys have been provided in the expected format. The keys are
+#   `allowed_gh_workflow_repos`, `allowed_gh_workflow_refs`, `allowed_gh_workflow_names`,
+#   and `allowed_gh_workflow_triggers`. Unlike rule_data_provided, a present value of the wrong
+#   type (for example a scalar or a string containing JSON text) is rejected instead of silently
+#   skipping the check.
+# custom:
+#   short_name: rule_data_provided_v2
+#   failure_msg: '%s'
+#   solution: If provided, ensure the rule data is in the expected format.
+#   collections:
+#   - github
+#   - policy_data
+#   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some e in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+}
+
 _check_extension(chain, key, extension) := result if {
 	value := _fulcio_extension_value(extension)
 	allowed := rule_data.get(key)
@@ -155,25 +178,39 @@ _REPOSITORY := {"id": 5, "name": "GitHub Workflow Repository"}
 _REF := {"id": 6, "name": "GitHub Workflow Ref"}
 
 _rule_data_errors contains error if {
-	keys := [
-		"allowed_gh_workflow_repos",
-		"allowed_gh_workflow_refs",
-		"allowed_gh_workflow_names",
-		"allowed_gh_workflow_triggers",
-	]
-	some key in keys
+	some key in _rule_data_keys
 
-	some e in j.validate_schema(
-		rule_data.get(key),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			"uniqueItems": true,
-		},
-	)
+	some e in j.validate_schema(rule_data.get(key), _rule_data_schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
 		"severity": e.severity,
 	}
+}
+
+# _rule_data_errors_v2 mirrors _rule_data_errors but validates the values as
+# native rule data: a present scalar value is reported as a format violation
+# instead of raising a builtin error that suppresses the result, and a string
+# is never interpreted as serialized JSON.
+_rule_data_errors_v2 contains error if {
+	some key in _rule_data_keys
+
+	some e in j.validate_schema_native(rule_data.get(key), _rule_data_schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_rule_data_keys := [
+	"allowed_gh_workflow_repos",
+	"allowed_gh_workflow_refs",
+	"allowed_gh_workflow_names",
+	"allowed_gh_workflow_triggers",
+]
+
+_rule_data_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"type": "string"},
+	"uniqueItems": true,
 }
