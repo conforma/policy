@@ -334,11 +334,18 @@ test_base_image_not_found_image_index if {
 }
 
 test_allowed_registries_provided if {
-	expected := {{
-		"code": "base_image_registries.allowed_registries_provided",
-		"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): Array must have at least 1 items",
-		"severity": "failure",
-	}}
+	expected := {
+		{
+			"code": "base_image_registries.allowed_registries_provided",
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): Array must have at least 1 items",
+			"severity": "failure",
+		},
+		{
+			"code": "base_image_registries.allowed_registries_provided_v2",
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): Array must have at least 1 items",
+			"severity": "failure",
+		},
+	}
 	assertions.assert_equal_results(expected, base_image_registries.deny) with data.rule_data as {}
 		with lib.sbom.cyclonedx_sboms as [{}]
 		with lib.sbom.spdx_sboms as [{}]
@@ -371,9 +378,135 @@ test_rule_data_validation if {
 			"msg": "allowed_registry_prefixes is configured without signing_identities. Migrate to signature-based verification by setting signing_identities in rule data.",
 			"severity": "warning",
 		},
+		{
+			"code": "base_image_registries.allowed_registries_provided_v2",
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+		{
+			"code": "base_image_registries.allowed_registries_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
 	}
 
 	assertions.assert_equal_results(base_image_registries.deny, expected) with data.rule_data as d
+		with lib.sbom.cyclonedx_sboms as [{}]
+		with lib.sbom.spdx_sboms as [{}]
+}
+
+# RA07-BASE-DATA-SCALAR-001: a present but scalar `allowed_registry_prefixes` value must produce
+# a format rejection from the v2 rule instead of silently skipping the check. The legacy
+# allowed_registries_provided is untouched: a builtin error in its schema validation still
+# suppresses its result, which is the gap the v2 rule closes.
+test_allowed_registries_provided_v2_scalar_rejected if {
+	expected := {{
+		"code": "base_image_registries.allowed_registries_provided_v2",
+		"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(base_image_registries.deny, expected) with data.rule_data as {"allowed_registry_prefixes": 1}
+		with lib.sbom.cyclonedx_sboms as [{}]
+		with lib.sbom.spdx_sboms as [{}]
+}
+
+# A non-JSON string value is rejected by the v2 rule only: the legacy rule is
+# silent because json.match_schema fails to parse the string as serialized
+# JSON, which suppresses its result.
+test_allowed_registries_provided_v2_string_rejected if {
+	expected := {{
+		"code": "base_image_registries.allowed_registries_provided_v2",
+		"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(base_image_registries.deny, expected) with data.rule_data as {"allowed_registry_prefixes": "x"}
+		with lib.sbom.cyclonedx_sboms as [{}]
+		with lib.sbom.spdx_sboms as [{}]
+}
+
+# A string containing JSON text for an array must not be mistaken for a
+# native array. The legacy rule parses it as an empty array and reports only
+# the container-level minItems diagnostic; the v2 rule reports the actual
+# string type.
+test_allowed_registries_provided_v2_json_text_string_rejected if {
+	expected := {
+		{
+			"code": "base_image_registries.allowed_registries_provided",
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): Array must have at least 1 items",
+			"severity": "failure",
+		},
+		{
+			"code": "base_image_registries.allowed_registries_provided_v2",
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): Invalid type. Expected: array, given: string",
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal_results(base_image_registries.deny, expected) with data.rule_data as {"allowed_registry_prefixes": "[]"}
+		with lib.sbom.cyclonedx_sboms as [{}]
+		with lib.sbom.spdx_sboms as [{}]
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_allowed_registries_provided_v2_precedence if {
+	expected := {{
+		"code": "base_image_registries.allowed_registries_provided_v2",
+		"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(base_image_registries.deny, expected) with data.rule_data_custom as {"allowed_registry_prefixes": 1}
+		with data.rule_data as {"allowed_registry_prefixes": ["registry.redhat.io/"]}
+		with lib.sbom.cyclonedx_sboms as [{}]
+		with lib.sbom.spdx_sboms as [{}]
+}
+
+# Shape controls locking in the current format contract: null and wrong-container values are
+# rejected by both rules with identical messages.
+test_allowed_registries_null_rejected if {
+	expected := {
+		{
+			"code": "base_image_registries.allowed_registries_provided",
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: Provided empty document for schema validation",
+			"severity": "failure",
+		},
+		{
+			"code": "base_image_registries.allowed_registries_provided_v2",
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: Provided empty document for schema validation",
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal_results(base_image_registries.deny, expected) with data.rule_data as {"allowed_registry_prefixes": null}
+		with lib.sbom.cyclonedx_sboms as [{}]
+		with lib.sbom.spdx_sboms as [{}]
+}
+
+test_allowed_registries_wrong_container_rejected if {
+	expected := {
+		{
+			"code": "base_image_registries.allowed_registries_provided",
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): Invalid type. Expected: array, given: object",
+			"severity": "failure",
+		},
+		{
+			"code": "base_image_registries.allowed_registries_provided_v2",
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): Invalid type. Expected: array, given: object",
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal_results(base_image_registries.deny, expected) with data.rule_data as {"allowed_registry_prefixes": {"foo": "bar"}}
+		with lib.sbom.cyclonedx_sboms as [{}]
+		with lib.sbom.spdx_sboms as [{}]
+}
+
+# The baseline permits an empty prefix list when the signing-identity condition allows it:
+# with a valid rh-release identity the minimum list length is zero and an explicit empty
+# array is schema-valid.
+test_allowed_registries_empty_array_valid_with_signing_identity if {
+	assertions.assert_empty(base_image_registries.deny) with data.rule_data as {
+		"signing_identities": {"rh-release": {"public_key": "-----BEGIN PUBLIC KEY-----\nMFkwEwYH...", "ignore_rekor": true}},
+		"allowed_registry_prefixes": [],
+	}
 		with lib.sbom.cyclonedx_sboms as [{}]
 		with lib.sbom.spdx_sboms as [{}]
 }
@@ -575,6 +708,18 @@ test_prefix_validation_with_signing_identity if {
 		},
 		{
 			"code": "base_image_registries.allowed_registries_provided",
+			# regal ignore:line-length
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "base_image_registries.allowed_registries_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data allowed_registry_prefixes has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+		{
+			"code": "base_image_registries.allowed_registries_provided_v2",
 			# regal ignore:line-length
 			"msg": "Rule data allowed_registry_prefixes has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
