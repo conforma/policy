@@ -424,7 +424,17 @@ test_rule_data_provided if {
 			"severity": "failure",
 		},
 		{
+			"code": "slsa_source_correlated.rule_data_provided_v2",
+			"msg": "Rule data supported_digests has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
+		{
 			"code": "slsa_source_correlated.rule_data_provided",
+			"msg": "Rule data supported_digests has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+		{
+			"code": "slsa_source_correlated.rule_data_provided_v2",
 			"msg": "Rule data supported_digests has unexpected format: (Root): array items[1,2] must be unique",
 			"severity": "failure",
 		},
@@ -433,9 +443,187 @@ test_rule_data_provided if {
 			"msg": "Rule data supported_vcs has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
+		{
+			"code": "slsa_source_correlated.rule_data_provided_v2",
+			"msg": "Rule data supported_vcs has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
 	}
 
 	assertions.assert_equal_results(slsa_source_correlated.deny, violations) with data.rule_data as d
+		with input.image as expected
+		with input.attestations as [_source_material_attestation("git+https://git.repository", "ref")]
+}
+
+# A present but scalar `supported_vcs` or `supported_digests` value must produce
+# a format rejection from the v2 rule instead of silently skipping the check.
+# The legacy rule_data_provided is untouched: a builtin error in its schema
+# validation still suppresses its result, which is the gap rule_data_provided_v2
+# closes. The consumer degrades to reporting no source code reference, since
+# reference collection cannot match against a scalar; the v2 format rejection
+# is what reports the malformed configuration.
+test_rule_data_provided_v2_scalar_rejected if {
+	expected_vcs := {
+		{
+			"code": "slsa_source_correlated.rule_data_provided_v2",
+			"msg": "Rule data supported_vcs has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "slsa_source_correlated.attested_source_code_reference",
+			"msg": "The attested material contains no source code reference",
+		},
+	}
+	assertions.assert_equal_results(slsa_source_correlated.deny, expected_vcs) with data.rule_data as {
+		"supported_vcs": 1,
+		"supported_digests": ["sha1"],
+	}
+		with input.image as expected
+		with input.attestations as [_source_material_attestation("git+https://git.repository", "ref")]
+
+	expected_digests := {
+		{
+			"code": "slsa_source_correlated.rule_data_provided_v2",
+			"msg": "Rule data supported_digests has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "slsa_source_correlated.attested_source_code_reference",
+			"msg": "The attested material contains no source code reference",
+		},
+	}
+	assertions.assert_equal_results(slsa_source_correlated.deny, expected_digests) with data.rule_data as {
+		"supported_vcs": ["git"],
+		"supported_digests": 1,
+	}
+		with input.image as expected
+		with input.attestations as [_source_material_attestation("git+https://git.repository", "ref")]
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_rule_data_provided_v2_precedence if {
+	expected_results := {
+		{
+			"code": "slsa_source_correlated.rule_data_provided_v2",
+			"msg": "Rule data supported_vcs has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "slsa_source_correlated.attested_source_code_reference",
+			"msg": "The attested material contains no source code reference",
+		},
+	}
+
+	assertions.assert_equal_results(slsa_source_correlated.deny, expected_results) with data.rule_data_custom as {"supported_vcs": 1}
+		with data.rule_data as {
+			"supported_vcs": ["git"],
+			"supported_digests": ["sha1"],
+		}
+		with input.image as expected
+		with input.attestations as [_source_material_attestation("git+https://git.repository", "ref")]
+}
+
+# A null value is rejected by both rules with the shared helper's argument
+# diagnostic: current behavior, locked in. As with any nonmatching value, the
+# consumer reports no source code reference.
+test_rule_data_null_rejected_by_both if {
+	msg := "Rule data supported_vcs has unexpected format: Provided empty document for schema validation"
+
+	expected_results := {
+		{
+			"code": "slsa_source_correlated.rule_data_provided",
+			"msg": msg,
+			"severity": "failure",
+		},
+		{
+			"code": "slsa_source_correlated.rule_data_provided_v2",
+			"msg": msg,
+			"severity": "failure",
+		},
+		{
+			"code": "slsa_source_correlated.attested_source_code_reference",
+			"msg": "The attested material contains no source code reference",
+		},
+	}
+
+	assertions.assert_equal_results(slsa_source_correlated.deny, expected_results) with data.rule_data as {
+		"supported_vcs": null,
+		"supported_digests": ["sha1"],
+	}
+		with input.image as expected
+		with input.attestations as [_source_material_attestation("git+https://git.repository", "ref")]
+}
+
+# A wrong-container value is rejected by both rules.
+test_rule_data_not_an_array if {
+	msg := "Rule data supported_vcs has unexpected format: (Root): Invalid type. Expected: array, given: object"
+
+	expected_results := {
+		{
+			"code": "slsa_source_correlated.rule_data_provided",
+			"msg": msg,
+			"severity": "failure",
+		},
+		{
+			"code": "slsa_source_correlated.rule_data_provided_v2",
+			"msg": msg,
+			"severity": "failure",
+		},
+		{
+			"code": "slsa_source_correlated.attested_source_code_reference",
+			"msg": "The attested material contains no source code reference",
+		},
+	}
+
+	assertions.assert_equal_results(slsa_source_correlated.deny, expected_results) with data.rule_data as {
+		"supported_vcs": {"chunky": "bacon"},
+		"supported_digests": ["sha1"],
+	}
+		with input.image as expected
+		with input.attestations as [_source_material_attestation("git+https://git.repository", "ref")]
+}
+
+# Empty lists are schema-valid: no format violations from either rule. The
+# consumer reports no source code reference, as with any nonmatching list:
+# current behavior, locked in.
+test_rule_data_empty_lists_valid if {
+	assertions.assert_equal_results(slsa_source_correlated.deny, {{
+		"code": "slsa_source_correlated.attested_source_code_reference",
+		"msg": "The attested material contains no source code reference",
+	}}) with data.rule_data as {
+		"supported_vcs": [],
+		"supported_digests": [],
+	}
+		with input.image as expected
+		with input.attestations as [_source_material_attestation("git+https://git.repository", "ref")]
+}
+
+# The keys absent from every configured source resolve to the valid defaults,
+# so a matching source reference produces no violations at all.
+test_rule_data_absent_uses_defaults if {
+	assertions.assert_empty(slsa_source_correlated.deny) with data.rule_data as {}
+		with input.image as expected
+		with input.attestations as [_source_material_attestation("git+https://git.repository", "ref")]
+}
+
+# Valid custom lists still reach the consumer rules: a matching list passes and
+# a nonmatching one is still denied, with no format violations.
+test_rule_data_valid_consumer_reached if {
+	assertions.assert_empty(slsa_source_correlated.deny) with data.rule_data as {
+		"supported_vcs": ["git"],
+		"supported_digests": ["sha1"],
+	}
+		with input.image as expected
+		with input.attestations as [_source_material_attestation("git+https://git.repository", "ref")]
+
+	assertions.assert_equal_results(slsa_source_correlated.deny, {{
+		"code": "slsa_source_correlated.attested_source_code_reference",
+		"msg": "The attested material contains no source code reference",
+	}}) with data.rule_data as {
+		"supported_vcs": ["svn"],
+		"supported_digests": ["sha1"],
+	}
 		with input.image as expected
 		with input.attestations as [_source_material_attestation("git+https://git.repository", "ref")]
 }
