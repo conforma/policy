@@ -982,8 +982,11 @@ test_rule_data_invalid_triggers_error if {
 		with data.rule_data.trusted_task_rules_enabled as true
 		with data.rule_data.supported_test_attestation_results as ["INVALID_VALUE"]
 
-	some r in results
-	r.code == "test_attestation.rule_data_provided"
+	# The wrong-item format issue fires on both the legacy and v2 rules.
+	some r_legacy in results
+	r_legacy.code == "test_attestation.rule_data_provided"
+	some r_v2 in results
+	r_v2.code == "test_attestation.rule_data_provided_v2"
 }
 
 # --- Custom rule data overrides (AC-1) ---
@@ -1003,6 +1006,285 @@ test_custom_failed_results if {
 
 	some r in results
 	r.code == "test_attestation.no_failed_tests"
+}
+
+# =============================================================================
+# NEW TESTS: EC-2234 rule_data_provided_v2
+# =============================================================================
+
+# RA27-RULE-DATA-SCALAR-SUPPRESSION and RA28-TEST-ATTESTATION-RULE-DATA-ROOT:
+# a present but scalar value for any of the six test attestation rule data
+# keys must produce a format rejection from the v2 rule instead of silently
+# skipping the check. The legacy rule_data_provided is untouched: a builtin
+# error in its schema validation still suppresses its result, which is the gap
+# rule_data_provided_v2 closes. Each control keeps the adverse status and
+# omits result counts so a positive-count branch cannot mask the lost
+# status-membership branch.
+test_rule_data_provided_v2_scalar_rejected if {
+	assertions.assert_equal_results(test_attestation.deny, _v2_format_error("failed_test_attestation_results", "integer")) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"failed_test_attestation_results": 1})
+
+	# The warned-status consumer is suppressed alongside the format rejection.
+	# The control uses a WARNED attestation so the default failed list cannot
+	# mask the lost warned-status branch.
+	assertions.assert_equal_results(test_attestation.deny, _v2_format_error("warned_test_attestation_results", "integer")) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_warned_no_details
+		with ec.oci.parsed_blob as _mock_blob_warned_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"warned_test_attestation_results": 1})
+
+	assertions.assert_empty(test_attestation.warn) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_warned_no_details
+		with ec.oci.parsed_blob as _mock_blob_warned_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"warned_test_attestation_results": 1})
+
+	assertions.assert_equal_results(test_attestation.deny, _v2_format_error("erred_test_attestation_results", "integer")) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_erred_result
+		with ec.oci.parsed_blob as _mock_blob_erred_result_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"erred_test_attestation_results": 1})
+
+	assertions.assert_equal_results(test_attestation.deny, _v2_format_error("skipped_test_attestation_results", "integer")) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_skipped
+		with ec.oci.parsed_blob as _mock_blob_skipped_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"skipped_test_attestation_results": 1})
+
+	# A scalar informative list cannot prove a failed test informative, so the
+	# failure consumer fires alongside the v2 rejection.
+	expected_informative := _v2_format_error("informative_test_attestations", "integer") | {{
+		"code": "test_attestation.no_failed_tests",
+		"msg": "Test attestation \"sanity-check\" has a failed result, failures: 0",
+		"term": "sanity-check",
+	}}
+	assertions.assert_equal_results(test_attestation.deny, expected_informative) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"informative_test_attestations": 1})
+
+	assertions.assert_empty(test_attestation.warn) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"informative_test_attestations": 1})
+
+	# With a scalar supported list no result is provably supported, so the
+	# unsupported-result consumer fires alongside the v2 rejection. The failed
+	# attestation also matches the default failed list.
+	expected_supported := (_v2_format_error("supported_test_attestation_results", "integer") | {{
+		"code": "test_attestation.no_failed_tests",
+		"msg": "Test attestation \"sanity-check\" has a failed result, failures: 0",
+		"term": "sanity-check",
+	}}) | {{
+		"code": "test_attestation.test_result_known",
+		"msg": "Test attestation \"sanity-check\" has an unsupported result value \"FAILED\"",
+		"term": "sanity-check",
+	}}
+	assertions.assert_equal_results(test_attestation.deny, expected_supported) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"supported_test_attestation_results": 1})
+}
+
+# Valid rule data still reaches the adverse consumers: a FAILED attestation
+# still denies with a matching failed-results list and does not with a
+# nonmatching one, and the erred and skipped consumers keep firing.
+test_rule_data_provided_v2_valid_data_reaches_consumers if {
+	assertions.assert_equal_results(test_attestation.deny, {{
+		"code": "test_attestation.no_failed_tests",
+		"msg": "Test attestation \"sanity-check\" has a failed result, failures: 0",
+		"term": "sanity-check",
+	}}) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"failed_test_attestation_results": ["FAILED"]})
+
+	assertions.assert_empty(test_attestation.deny) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"failed_test_attestation_results": ["SKIPPED"]})
+
+	assertions.assert_equal_results(test_attestation.deny, {{
+		"code": "test_attestation.no_erred_test_attestations",
+		"msg": "Test attestation \"lint-check\" has an erred result",
+		"term": "lint-check",
+	}}) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_erred_result
+		with ec.oci.parsed_blob as _mock_blob_erred_result_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"erred_test_attestation_results": ["ERROR"]})
+
+	assertions.assert_empty(test_attestation.deny) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_erred_result
+		with ec.oci.parsed_blob as _mock_blob_erred_result_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"erred_test_attestation_results": ["SKIPPED"]})
+
+	assertions.assert_equal_results(test_attestation.deny, {{
+		"code": "test_attestation.no_skipped_test_attestations",
+		"msg": "Test attestation \"fips-check\" has a skipped result",
+		"term": "fips-check",
+	}}) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_skipped
+		with ec.oci.parsed_blob as _mock_blob_skipped_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"skipped_test_attestation_results": ["SKIPPED"]})
+
+	assertions.assert_empty(test_attestation.deny) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_skipped
+		with ec.oci.parsed_blob as _mock_blob_skipped_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"skipped_test_attestation_results": ["ERROR"]})
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_rule_data_provided_v2_precedence if {
+	assertions.assert_equal_results(test_attestation.deny, _v2_format_error("failed_test_attestation_results", "integer")) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data_custom as {"failed_test_attestation_results": 1}
+		with data.rule_data as _rule_data({"failed_test_attestation_results": ["FAILED"]})
+}
+
+# Shape controls locking in the current behavior for the remaining root types:
+# a JSON-text string is rejected only by the v2 rule, while null,
+# wrong-container, wrong-item and duplicate values are rejected by both rules.
+test_rule_data_provided_v2_root_type_shapes if {
+	# A string containing JSON text for a valid array is not a native array...
+	assertions.assert_equal_results(test_attestation.deny, _v2_format_error("failed_test_attestation_results", "string")) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"failed_test_attestation_results": "[]"})
+
+	# ... unlike a native empty array, which is schema-valid and disables the check.
+	assertions.assert_empty(test_attestation.deny) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"failed_test_attestation_results": []})
+
+	# null is rejected by both rules.
+	expected_null := _with_v2_twins({{
+		"code": "test_attestation.rule_data_provided",
+		"msg": "Rule data failed_test_attestation_results has unexpected format: Provided empty document for schema validation",
+		"severity": "failure",
+	}})
+	assertions.assert_equal_results(test_attestation.deny, expected_null) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"failed_test_attestation_results": null})
+
+	# A wrong container is rejected by both rules.
+	expected_object := _with_v2_twins({{
+		"code": "test_attestation.rule_data_provided",
+		"msg": "Rule data failed_test_attestation_results has unexpected format: (Root): Invalid type. Expected: array, given: object",
+		"severity": "failure",
+	}})
+	assertions.assert_equal_results(test_attestation.deny, expected_object) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"failed_test_attestation_results": {}})
+
+	# Wrong-item control: the pipeline-test vocabulary is not valid here.
+	expected_wrong_item := _with_v2_twins({{
+		"code": "test_attestation.rule_data_provided",
+		"msg": `Rule data failed_test_attestation_results has unexpected format: 0: 0 must be one of the following: "PASSED", "FAILED", "WARNED", "ERROR", "SKIPPED"`,
+		"severity": "failure",
+	}})
+	assertions.assert_equal_results(test_attestation.deny, expected_wrong_item) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"failed_test_attestation_results": ["SUCCESS"]})
+
+	# Duplicates of a non-failed status, so the failed attestation does not
+	# match the list and only the format rules fire.
+	expected_duplicates := _with_v2_twins({{
+		"code": "test_attestation.rule_data_provided",
+		"msg": "Rule data failed_test_attestation_results has unexpected format: (Root): array items[0,1] must be unique",
+		"severity": "failure",
+	}})
+	assertions.assert_equal_results(test_attestation.deny, expected_duplicates) with input.image.ref as _image_ref
+		with ec.oci.image_referrers as _mock_referrers
+		with ec.sigstore.verify_attestation as _mock_verify_success
+		with ec.oci.blob as _mock_blob_failed_no_details
+		with ec.oci.parsed_blob as _mock_blob_failed_no_details_parsed
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.image_manifests as _mock_manifests
+		with data.rule_data as _rule_data({"failed_test_attestation_results": ["SKIPPED", "SKIPPED"]})
 }
 
 # =============================================================================
@@ -1264,3 +1546,36 @@ _mock_blob_dedup_no_ts_parsed(ref) := json.unmarshal(_mock_blob_dedup_no_ts(ref)
 _mock_blob_dedup_diff_names_parsed(ref) := json.unmarshal(_mock_blob_dedup_diff_names(ref))
 
 _mock_blob_dedup_all_no_ts_parsed(ref) := json.unmarshal(_mock_blob_dedup_all_no_ts(ref))
+
+# --- Helpers for the EC-2234 rule_data_provided_v2 tests ---
+#
+# A WARNED attestation without a warnings count, so a scalar warned-results
+# list cannot be masked by the count-based clause of _has_result.
+_mock_blob_warned_no_details(_) := _make_statement({
+	"result": "WARNED",
+	"configuration": [{"name": "deprecation-check"}],
+})
+
+_mock_blob_warned_no_details_parsed(ref) := json.unmarshal(_mock_blob_warned_no_details(ref))
+
+# Rule data builder used when replacing data.rule_data wholesale: the
+# replacement drops the trusted_task_rules keys the trust chain reads, so they
+# are always merged back in. No other test attestation rule data key is
+# defined in the example rule data.
+_rule_data(d) := object.union(_trusted_rule_data, d)
+
+_trusted_rule_data := {
+	"trusted_task_rules": _trusted_task_rules.trusted_task_rules,
+	"trusted_task_rules_enabled": true,
+}
+
+_v2_format_error(key, given) := {{
+	"code": "test_attestation.rule_data_provided_v2",
+	"msg": sprintf("Rule data %s has unexpected format: (Root): Invalid type. Expected: array, given: %s", [key, given]),
+	"severity": "failure",
+}}
+
+_with_v2_twins(results) := twins if {
+	v2 := {object.union(r, {"code": sprintf("%s_v2", [r.code])}) | some r in results}
+	twins := results | v2
+}

@@ -705,7 +705,145 @@ test_rule_data_provided if {
 		},
 	}
 
-	assertions.assert_equal_results(test.deny, expected) with data.rule_data as d
+	assertions.assert_equal_results(test.deny, _with_v2_twins(expected)) with data.rule_data as d
+}
+
+# RA26-TEST-RULE-DATA-SCALAR-001 and TEST-RULE-DATA-SCALAR-SHAPE: a present
+# but scalar value for any of the six test rule data keys must produce a
+# format rejection from the v2 rule instead of silently skipping the check.
+# The legacy rule_data_provided is untouched: a builtin error in its schema
+# validation still suppresses its result, which is the gap rule_data_provided_v2
+# closes. Each control keeps the adverse status and omits result counts so a
+# positive-count branch cannot mask the lost status-membership branch.
+test_rule_data_provided_v2_scalar_rejected if {
+	assertions.assert_equal_results(test.deny, _v2_format_error("failed_tests_results")) with input.attestations as _single_status_attestations("FAILURE", "failed_1")
+		with data.rule_data as {"failed_tests_results": 1}
+
+	assertions.assert_equal_results(test.deny, _v2_format_error("warned_tests_results")) with input.attestations as _single_status_attestations("WARNING", "warning_1")
+		with data.rule_data as {"warned_tests_results": 1}
+	assertions.assert_empty(test.warn) with input.attestations as _single_status_attestations("WARNING", "warning_1")
+		with data.rule_data as {"warned_tests_results": 1}
+
+	assertions.assert_equal_results(test.deny, _v2_format_error("erred_tests_results")) with input.attestations as _single_status_attestations("ERROR", "errored_1")
+		with data.rule_data as {"erred_tests_results": 1}
+
+	assertions.assert_equal_results(test.deny, _v2_format_error("skipped_tests_results")) with input.attestations as _single_status_attestations("SKIPPED", "skipped_1")
+		with data.rule_data as {"skipped_tests_results": 1}
+
+	# A scalar informative list cannot prove a failed test informative, so the
+	# failure consumer fires alongside the v2 rejection.
+	expected_informative := _v2_format_error("informative_tests") | {{
+		"code": "test.no_failed_tests",
+		"msg": "The Task \"failed_1\" from the build Pipeline reports a failed test",
+		"term": "failed_1",
+	}}
+	assertions.assert_equal_results(test.deny, expected_informative) with input.attestations as _single_status_attestations("FAILURE", "failed_1")
+		with data.rule_data as {"informative_tests": 1}
+	assertions.assert_empty(test.warn) with input.attestations as _single_status_attestations("FAILURE", "failed_1")
+		with data.rule_data as {"informative_tests": 1}
+
+	# With a scalar supported list no result is provably supported, so the
+	# unsupported-result consumer fires alongside the v2 rejection. A SUCCESS
+	# test keeps the other status consumers out of the picture.
+	expected_supported := _v2_format_error("supported_tests_results") | {{
+		"code": "test.test_results_known",
+		"msg": "The Task \"success_1\" from the build Pipeline has an unsupported test result \"SUCCESS\"",
+		"term": "success_1",
+	}}
+	assertions.assert_equal_results(test.deny, expected_supported) with input.attestations as _single_status_attestations("SUCCESS", "success_1")
+		with data.rule_data as {"supported_tests_results": 1}
+}
+
+# Valid rule data still reaches the adverse consumers: matching status lists
+# deny (or warn), and nonmatching or explicitly empty lists do not.
+test_rule_data_provided_v2_valid_data_reaches_consumers if {
+	d := {
+		"supported_tests_results": ["SUCCESS", "FAILURE", "WARNING", "SKIPPED", "ERROR"],
+		"failed_tests_results": ["FAILURE"],
+		"erred_tests_results": ["ERROR"],
+		"skipped_tests_results": ["SKIPPED"],
+		"warned_tests_results": ["WARNING"],
+		"informative_tests": [],
+	}
+
+	assertions.assert_equal_results(test.deny, {{
+		"code": "test.no_failed_tests",
+		"msg": "The Task \"failed_1\" from the build Pipeline reports a failed test",
+		"term": "failed_1",
+	}}) with input.attestations as _single_status_attestations("FAILURE", "failed_1")
+		with data.rule_data as d
+
+	# A nonmatching list leaves the failure test accepted.
+	assertions.assert_empty(test.deny) with input.attestations as _single_status_attestations("FAILURE", "failed_1")
+		with data.rule_data as object.union(d, {"failed_tests_results": ["ERROR"]})
+
+	# An explicit empty list is schema-valid and disables the failure check.
+	assertions.assert_empty(test.deny) with input.attestations as _single_status_attestations("FAILURE", "failed_1")
+		with data.rule_data as object.union(d, {"failed_tests_results": []})
+
+	assertions.assert_equal_results(test.deny, {{
+		"code": "test.no_erred_tests",
+		"msg": "The Task \"errored_1\" from the build Pipeline reports a test erred",
+		"term": "errored_1",
+	}}) with input.attestations as _single_status_attestations("ERROR", "errored_1")
+		with data.rule_data as d
+
+	assertions.assert_equal_results(test.deny, {{
+		"code": "test.no_skipped_tests",
+		"msg": "The Task \"skipped_1\" from the build Pipeline reports a test was skipped",
+		"term": "skipped_1",
+	}}) with input.attestations as _single_status_attestations("SKIPPED", "skipped_1")
+		with data.rule_data as d
+
+	assertions.assert_equal_results(test.warn, {{
+		"code": "test.no_test_warnings",
+		"msg": "The Task \"warning_1\" from the build Pipeline reports a test contains warnings",
+		"term": "warning_1",
+	}}) with input.attestations as _single_status_attestations("WARNING", "warning_1")
+		with data.rule_data as d
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_rule_data_provided_v2_precedence if {
+	assertions.assert_equal_results(test.deny, _v2_format_error("failed_tests_results")) with input.attestations as _single_status_attestations("FAILURE", "failed_1")
+		with data.rule_data_custom as {"failed_tests_results": 1}
+		with data.rule_data as {"failed_tests_results": ["FAILURE"]}
+}
+
+# Shape controls locking in the current behavior for the remaining root types:
+# a JSON-text string is rejected only by the v2 rule, while null and
+# wrong-container values are rejected by both rules.
+test_rule_data_provided_v2_root_type_shapes if {
+	expected_string := {{
+		"code": "test.rule_data_provided_v2",
+		"msg": "Rule data failed_tests_results has unexpected format: (Root): Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+
+	# A string containing JSON text for a valid array is not a native array...
+	assertions.assert_equal_results(test.deny, expected_string) with input.attestations as _single_status_attestations("FAILURE", "failed_1")
+		with data.rule_data as {"failed_tests_results": "[]"}
+
+	# ... unlike a native empty array, which is schema-valid and disables the check.
+	assertions.assert_empty(test.deny) with input.attestations as _single_status_attestations("FAILURE", "failed_1")
+		with data.rule_data as {"failed_tests_results": []}
+
+	expected_null := _with_v2_twins({{
+		"code": "test.rule_data_provided",
+		"msg": "Rule data failed_tests_results has unexpected format: Provided empty document for schema validation",
+		"severity": "failure",
+	}})
+	assertions.assert_equal_results(test.deny, expected_null) with input.attestations as _single_status_attestations("FAILURE", "failed_1")
+		with data.rule_data as {"failed_tests_results": null}
+
+	expected_object := _with_v2_twins({{
+		"code": "test.rule_data_provided",
+		"msg": "Rule data failed_tests_results has unexpected format: (Root): Invalid type. Expected: array, given: object",
+		"severity": "failure",
+	}})
+	assertions.assert_equal_results(test.deny, expected_object) with input.attestations as _single_status_attestations("FAILURE", "failed_1")
+		with data.rule_data as {"failed_tests_results": {}}
 }
 
 test_results_and_counts if {
@@ -769,6 +907,27 @@ test_results_and_counts if {
 }
 
 _bundle := "registry.img/spam@sha256:4e388ab32b10dc8dbc7e28144f552830adc74787c1e2c0824032078a79f227fb"
+
+# A single SLSA v1 attestation with one TEST_OUTPUT task result carrying the
+# given status and no result counts, so only status membership can trigger the
+# status consumers.
+_single_status_attestations(status, task_name) := [tekton_test.slsav1_attestation([tekton_test.with_results(tekton_test.slsav1_task(task_name), [{
+	"name": lib.task_test_result_name,
+	"value": {"result": status},
+}])])]
+
+_v2_format_error(key) := {{
+	"code": "test.rule_data_provided_v2",
+	"msg": sprintf("Rule data %s has unexpected format: (Root): Invalid type. Expected: array, given: integer", [key]),
+	"severity": "failure",
+}}
+
+# Container-level format issues fire on both the legacy and v2 rules with
+# identical messages; only the code differs by the "_v2" suffix.
+_with_v2_twins(results) := twins if {
+	v2 := {object.union(r, {"code": sprintf("%s_v2", [r.code])}) | some r in results}
+	twins := results | v2
+}
 
 # --- Test-result attestation mock infrastructure ---
 

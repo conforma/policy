@@ -174,7 +174,7 @@ test_rule_data_format_disallowed_date_ranges if {
 		some index, date in invalid_dates
 	}
 
-	assertions.assert_equal_results(schedule.deny, expected) with data.rule_data as {"disallowed_dates": invalid_dates}
+	assertions.assert_equal_results(schedule.deny, _with_v2_twins(expected)) with data.rule_data as {"disallowed_dates": invalid_dates}
 		with data.config.policy.when_ns as sunday
 }
 
@@ -337,7 +337,7 @@ test_rule_data_format_wildcards if {
 		some index, date in invalid_dates
 	}
 
-	assertions.assert_equal_results(schedule.deny, expected) with data.rule_data as {"disallowed_dates": invalid_dates}
+	assertions.assert_equal_results(schedule.deny, _with_v2_twins(expected)) with data.rule_data as {"disallowed_dates": invalid_dates}
 		with data.config.policy.when_ns as sunday
 }
 
@@ -409,7 +409,7 @@ test_rule_data_format_disallowed_weekdays if {
 		},
 	}
 
-	assertions.assert_equal_results(schedule.deny, expected) with data.rule_data as d
+	assertions.assert_equal_results(schedule.deny, _with_v2_twins(expected)) with data.rule_data as d
 		with data.config.policy.when_ns as sunday
 }
 
@@ -459,7 +459,7 @@ test_rule_data_format_disallowed_dates if {
 		},
 	}
 
-	assertions.assert_equal_results(schedule.deny, expected) with data.rule_data as d
+	assertions.assert_equal_results(schedule.deny, _with_v2_twins(expected)) with data.rule_data as d
 		with data.config.policy.when_ns as sunday
 }
 
@@ -477,19 +477,130 @@ test_rule_data_format_disallowed_dates_root_types if {
 		"pipeline_intention": "release",
 		"disallowed_dates": {"date": "2026-12-31"},
 	}
-	expected_object_error := {{
+	expected_object_error := _with_v2_twins({{
 		"code": "schedule.rule_data_provided",
 		"msg": "Rule data disallowed_dates has unexpected format: (Root): Invalid type. Expected: array, given: object",
 		"severity": "failure",
-	}}
+	}})
 	assertions.assert_equal_results(schedule.deny, expected_object_error) with data.rule_data as invalid_object_data
 		with data.config.policy.when_ns as _rfc_time_helper("2026-12-31")
+}
+
+# RA22-SCHEDULE-RULE-DATA-SCALAR-001: a present but scalar `disallowed_weekdays`
+# value must produce a format rejection from the v2 rule instead of silently
+# skipping the check. The legacy rule_data_provided is untouched: a builtin
+# error in its schema validation still suppresses its result, which is the gap
+# rule_data_provided_v2 closes. The audit control uses a "release" pipeline
+# intention and a fixed Monday evaluation time.
+test_rule_data_provided_v2_weekdays_scalar_rejected if {
+	expected_integer := {{
+		"code": "schedule.rule_data_provided_v2",
+		"msg": "Rule data disallowed_weekdays has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(schedule.deny, expected_integer) with data.rule_data as weekday_rule_data(1)
+		with data.config.policy.when_ns as monday
+
+	expected_boolean := {{
+		"code": "schedule.rule_data_provided_v2",
+		"msg": "Rule data disallowed_weekdays has unexpected format: (Root): Invalid type. Expected: array, given: boolean",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(schedule.deny, expected_boolean) with data.rule_data as weekday_rule_data(true)
+		with data.config.policy.when_ns as monday
+
+	# A string value is malformed even when it contains JSON text for a valid
+	# array: JSON text in a scalar must not be mistaken for a native array.
+	expected_string := {{
+		"code": "schedule.rule_data_provided_v2",
+		"msg": "Rule data disallowed_weekdays has unexpected format: (Root): Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(schedule.deny, expected_string) with data.rule_data as weekday_rule_data("x")
+		with data.config.policy.when_ns as monday
+	assertions.assert_equal_results(schedule.deny, expected_string) with data.rule_data as weekday_rule_data("[]")
+		with data.config.policy.when_ns as monday
+}
+
+# Unlike `disallowed_weekdays`, the legacy rule already marshals `disallowed_dates`
+# scalars before schema validation (see _schema_document), so a scalar value is
+# rejected by both rules with the same message; only the code differs.
+test_rule_data_provided_v2_dates_scalar_rejected if {
+	expected := _with_v2_twins({{
+		"code": "schedule.rule_data_provided",
+		"msg": "Rule data disallowed_dates has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}})
+	assertions.assert_equal_results(schedule.deny, expected) with data.rule_data as date_rule_data(1)
+		with data.config.policy.when_ns as monday
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_rule_data_provided_v2_precedence if {
+	expected := {{
+		"code": "schedule.rule_data_provided_v2",
+		"msg": "Rule data disallowed_weekdays has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(schedule.deny, expected) with data.rule_data_custom as weekday_rule_data(1)
+		with data.rule_data as weekday_rule_data(["friday"])
+		with data.config.policy.when_ns as monday
+}
+
+# Valid rule data still reaches the weekday restriction consumer: a matching
+# list denies, and a nonmatching, explicitly empty, or absent list does not.
+test_rule_data_provided_v2_valid_data_reaches_consumers if {
+	violation := {{
+		"code": "schedule.weekday_restriction",
+		"msg": "monday is a disallowed weekday: monday",
+	}}
+	assertions.assert_equal_results(schedule.deny, violation) with data.rule_data as weekday_rule_data(["monday"])
+		with data.config.policy.when_ns as monday
+
+	assertions.assert_empty(schedule.deny) with data.rule_data as weekday_rule_data(["friday"])
+		with data.config.policy.when_ns as monday
+
+	# An explicit empty list is schema-valid and intentionally disables the restriction.
+	assertions.assert_empty(schedule.deny) with data.rule_data as weekday_rule_data([])
+		with data.config.policy.when_ns as monday
+
+	# Absent keys fall back to empty data with no format errors.
+	assertions.assert_empty(schedule.deny) with data.rule_data as {"pipeline_intention": "release"}
+		with data.config.policy.when_ns as monday
+}
+
+# Shape controls locking in the current behavior for the remaining root types:
+# null and wrong-container values are rejected by both rules.
+test_rule_data_provided_v2_root_type_shapes if {
+	expected_null := _with_v2_twins({{
+		"code": "schedule.rule_data_provided",
+		"msg": "Rule data disallowed_weekdays has unexpected format: Provided empty document for schema validation",
+		"severity": "failure",
+	}})
+	assertions.assert_equal_results(schedule.deny, expected_null) with data.rule_data as weekday_rule_data(null)
+		with data.config.policy.when_ns as monday
+
+	expected_object := _with_v2_twins({{
+		"code": "schedule.rule_data_provided",
+		"msg": "Rule data disallowed_weekdays has unexpected format: (Root): Invalid type. Expected: array, given: object",
+		"severity": "failure",
+	}})
+	assertions.assert_equal_results(schedule.deny, expected_object) with data.rule_data as weekday_rule_data({})
+		with data.config.policy.when_ns as monday
 }
 
 _date_violation(date, specifications) := {{
 	"code": "schedule.date_restriction",
 	"msg": sprintf("%s is a disallowed date: %s", [date, concat(", ", specifications)]),
 }}
+
+# Container-level format issues fire on both the legacy and v2 rules with
+# identical messages; only the code differs by the "_v2" suffix.
+_with_v2_twins(results) := twins if {
+	v2 := {object.union(r, {"code": sprintf("%s_v2", [r.code])}) | some r in results}
+	twins := results | v2
+}
 
 sunday := _rfc_time_helper("2023-01-01")
 
