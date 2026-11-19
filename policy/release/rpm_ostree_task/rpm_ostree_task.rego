@@ -57,6 +57,28 @@ deny contains result if {
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
+# METADATA
+# title: Rule data (v2)
+# description: >-
+#   Verify the rule data used by this package, `allowed_rpm_ostree_builder_image_prefixes`, is in
+#   the expected format. Unlike rule_data, a present value of the wrong type (for example a scalar
+#   or a string containing JSON text) is rejected instead of silently skipping the check.
+# custom:
+#   short_name: rule_data_v2
+#   failure_msg: "%s"
+#   solution: >-
+#     Make sure the `allowed_rpm_ostree_builder_image_prefixes` rule data is in the expected format
+#     in the data source.
+#   collections:
+#   - redhat
+#   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some e in rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+}
+
 # Detect when an image reference is not pinned to a digest.
 builder_image_param_errors contains error if {
 	some image in _builder_images
@@ -101,27 +123,40 @@ builder_image_param_errors contains error if {
 }
 
 rule_data_errors contains error if {
-	schema := {
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "array",
-		"items": {"anyOf": [
-			{
-				"type": "object",
-				"properties": {"value": {"type": "string"}, "expires_on": {"type": "string"}},
-				"additionalProperties": false,
-				"required": ["value"],
-			},
-			{"type": "string"},
-		]},
-		"uniqueItems": true,
-	}
-
-	some e in j.validate_schema(rule_data.get(_rule_data_key), schema)
+	some e in j.validate_schema(rule_data.get(_rule_data_key), _rule_data_schema)
 
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
 		"severity": e.severity,
 	}
+}
+
+# rule_data_errors_v2 mirrors rule_data_errors but validates the value as
+# native rule data: a present scalar value is reported as a format violation
+# instead of raising a builtin error that suppresses the result, and a string
+# is never interpreted as serialized JSON.
+rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(rule_data.get(_rule_data_key), _rule_data_schema)
+
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_rule_data_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"anyOf": [
+		{
+			"type": "object",
+			"properties": {"value": {"type": "string"}, "expires_on": {"type": "string"}},
+			"additionalProperties": false,
+			"required": ["value"],
+		},
+		{"type": "string"},
+	]},
+	"uniqueItems": true,
 }
 
 # _builder_images is a set of image references. Each corresponding to the BUILDER_IMAGE parameter

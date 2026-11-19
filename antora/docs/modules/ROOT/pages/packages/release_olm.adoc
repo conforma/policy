@@ -43,7 +43,7 @@ Each image referenced by the OLM bundle should match an entry in the list of pre
 * FAILURE message: `The %q CSV image reference is not from an allowed registry.`
 * Code: `olm.allowed_registries`
 * Effective from: `2024-09-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L314[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L335[Source, window="_blank"]
 
 [#olm__required_network_policy_rbac_for_operands]
 === link:#olm__required_network_policy_rbac_for_operands[NetworkPolicy RBAC present in OLM bundle]
@@ -56,7 +56,7 @@ Operators are required to manage the network policies of their operands. This ru
 * FAILURE message: `Operator %q version %q is missing required NetworkPolicy RBAC (networking.k8s.io/networkpolicies with create, delete, and update/patch)`
 * Code: `olm.required_network_policy_rbac_for_operands`
 * Effective from: `2026-08-07T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L395[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L416[Source, window="_blank"]
 
 [#olm__allowed_resource_kinds]
 === link:#olm__allowed_resource_kinds[OLM bundle image manifests contain only allowed resource kinds]
@@ -68,7 +68,7 @@ Every manifest in an OLM bundle must be of an allowed resource kind, as defined 
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `The %q manifest kind is not in the list of OLM allowed resource kinds.`
 * Code: `olm.allowed_resource_kinds`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L370[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L391[Source, window="_blank"]
 
 [#olm__olm_bundle_multi_arch]
 === link:#olm__olm_bundle_multi_arch[OLM bundle images are not multi-arch]
@@ -81,7 +81,7 @@ OLM bundle images should be built for a single architecture. They should not be 
 * FAILURE message: `The %q bundle image is a multi-arch reference.`
 * Code: `olm.olm_bundle_multi_arch`
 * Effective from: `2025-05-01T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L348[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L369[Source, window="_blank"]
 
 [#olm__allowed_registries_related]
 === link:#olm__allowed_registries_related[Related images references are from allowed registries]
@@ -94,7 +94,7 @@ Each image indicated as a related image should match an entry in the list of pre
 * FAILURE message: `The %q related image reference is not from an allowed registry.`
 * Code: `olm.allowed_registries_related`
 * Effective from: `2025-04-15T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L237[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L258[Source, window="_blank"]
 
 [#olm__required_olm_features_annotations_provided]
 === link:#olm__required_olm_features_annotations_provided[Required OLM feature annotations list provided]
@@ -105,6 +105,17 @@ Confirm the `required_olm_features_annotations` rule data was provided, since it
 * FAILURE message: `%s`
 * Code: `olm.required_olm_features_annotations_provided`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L114[Source, window="_blank"]
+
+[#olm__required_olm_features_annotations_provided_v2]
+=== link:#olm__required_olm_features_annotations_provided_v2[Required OLM feature annotations list provided (v2)]
+
+Confirm the `required_olm_features_annotations` and `allowed_olm_image_registry_prefixes` rule data was provided, since it's required by the policy rules in this package. Unlike required_olm_features_annotations_provided, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `olm.required_olm_features_annotations_provided_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L131[Source, window="_blank"]
 
 [#olm__subscriptions_annotation_format]
 === link:#olm__subscriptions_annotation_format[Subscription annotation has expected value]
@@ -130,7 +141,7 @@ Check the input image for the presence of related images. Ensure that all images
 * FAILURE message: `The %q related image reference is not accessible.`
 * Code: `olm.inaccessible_related_images`
 * Effective from: `2025-03-10T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L203[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L224[Source, window="_blank"]
 
 [#olm__unmapped_references]
 === link:#olm__unmapped_references[Unmapped images in OLM bundle]
@@ -143,7 +154,7 @@ Check the OLM bundle image for the presence of unmapped image references. Unmapp
 * FAILURE message: `The %q CSV image reference is not in the snapshot or accessible.`
 * Code: `olm.unmapped_references`
 * Effective from: `2024-08-15T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L268[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L289[Source, window="_blank"]
 
 [#olm__unpinned_references]
 === link:#olm__unpinned_references[Unpinned images in OLM bundle]
@@ -168,7 +179,7 @@ Check the input snapshot for the presence of unpinned image references. Unpinned
 * FAILURE message: `The %q image reference is not pinned in the input snapshot.`
 * Code: `olm.unpinned_snapshot_references`
 * Effective from: `2024-08-15T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L131[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L152[Source, window="_blank"]
 
 [#olm__unpinned_related_images]
 === link:#olm__unpinned_related_images[Unpinned related images for a component]
@@ -180,4 +191,4 @@ Check the input image for the presence of related images. Ensure all related ima
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `%d related images are not pinned with a digest: %s.`
 * Code: `olm.unpinned_related_images`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L166[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/olm/olm.rego#L187[Source, window="_blank"]

@@ -90,22 +90,56 @@ deny contains result if {
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
+# METADATA
+# title: Allowed builder IDs provided (v2)
+# description: >-
+#   Confirm the `allowed_builder_ids` rule data was provided, since it is required by the policy
+#   rules in this package. Unlike allowed_builder_ids_provided, a present value of the wrong type
+#   (for example a scalar or a string containing JSON text) is rejected instead of silently
+#   skipping the check.
+# custom:
+#   short_name: allowed_builder_ids_provided_v2
+#   failure_msg: "%s"
+#   collections:
+#   - slsa3
+#   - redhat
+#   - redhat_rpms
+#   - policy_data
+#   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some e in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+}
+
 # Verify allowed_builder_ids is a non-empty list of strings
 _rule_data_errors contains error if {
-	some e in j.validate_schema(
-		rule_data.get(_rule_data_key),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			"uniqueItems": true,
-			"minItems": 1,
-		},
-	)
+	some e in j.validate_schema(rule_data.get(_rule_data_key), _rule_data_schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
 		"severity": e.severity,
 	}
+}
+
+# _rule_data_errors_v2 mirrors _rule_data_errors but validates the value as
+# native rule data: a present scalar value is reported as a format violation
+# instead of raising a builtin error that suppresses the result, and a string
+# is never interpreted as serialized JSON.
+_rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(rule_data.get(_rule_data_key), _rule_data_schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_rule_data_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"type": "string"},
+	"uniqueItems": true,
+	"minItems": 1,
 }
 
 _builder_id(att) := builder_id if {

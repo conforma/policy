@@ -19,7 +19,7 @@ Each RPM package listed in an SBOM must specify the repository id that it comes 
 * FAILURE message: `RPM repo id check failed: %s`
 * Code: `rpm_repos.ids_known`
 * Effective from: `2024-11-10T00:00:00Z`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_repos/rpm_repos.rego#L41[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_repos/rpm_repos.rego#L67[Source, window="_blank"]
 
 [#rpm_repos__rule_data_provided]
 === link:#rpm_repos__rule_data_provided[Known repo id list provided]
@@ -32,3 +32,16 @@ A list of known and permitted repository ids should be available in the rule dat
 * FAILURE message: `Rule data '%s' has unexpected format: %s`
 * Code: `rpm_repos.rule_data_provided`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_repos/rpm_repos.rego#L18[Source, window="_blank"]
+
+[#rpm_repos__rule_data_provided_v2]
+=== link:#rpm_repos__rule_data_provided_v2[Known repo id list provided (v2)]
+
+A list of known and permitted repository ids should be available in the rule data. Unlike rule_data_provided, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+*Solution*: Include a data source that provides a list of known repository ids under the 'known_rpm_repositories' key under the top level 'rule_data' key. This list can extended with the 'extra_rpm_repositories' rule data key. The contents of both lists are combined.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `Rule data '%s' has unexpected format: %s`
+* Code: `rpm_repos.rule_data_provided_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_repos/rpm_repos.rego#L41[Source, window="_blank"]

@@ -56,6 +56,32 @@ deny contains result if {
 }
 
 # METADATA
+# title: Disallowed packages list is provided (v2)
+# description: >-
+#   Confirm the `disallowed_packages` and `disallowed_attributes` rule data were
+#   provided, since they are required by the policy rules in this package.
+#   Unlike disallowed_packages_provided, a present value of the wrong type (for
+#   example a scalar or a string containing JSON text) is rejected instead of
+#   silently skipping the check.
+# custom:
+#   short_name: disallowed_packages_provided_v2
+#   failure_msg: "%s"
+#   solution: >-
+#     Provide a list of disallowed packages or package attributes in the
+#     expected format.
+#   collections:
+#   - redhat
+#   - policy_data
+#   - redhat_rpms
+#   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some error in lib.sbom.rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
+}
+
+# METADATA
 # title: SBOM signature verification failed
 # description: >-
 #   Report when signature verification fails for attached SBOM attestations or

@@ -184,6 +184,29 @@ deny contains result if {
 }
 
 # METADATA
+# title: Rule data provided (v2)
+# description: >-
+#   Confirm the expected rule data keys have been provided in the expected format. The keys are
+#   `required_labels`,	`fbc_required_labels`, `optional_labels`, `fbc_optional_labels`,
+#   `disallowed_inherited_labels`, `fbc_disallowed_inherited_labels`, and `deprecated_labels`.
+#   Unlike rule_data_provided, a present value of the wrong type (for example a scalar or a
+#   string containing JSON text) is rejected instead of silently skipping the check.
+# custom:
+#   short_name: rule_data_provided_v2
+#   failure_msg: '%s'
+#   solution: If provided, ensure the rule data is in the expected format.
+#   collections:
+#   - redhat
+#   - policy_data
+#   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some e in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+}
+
+# METADATA
 # title: Inaccessible parent image manifest
 # description: >-
 #   The parent image manifest is not accessible.
@@ -355,90 +378,104 @@ _required_labels_errors contains err if {
 }
 
 _rule_data_errors contains error if {
-	name_only := {
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "array",
-		"items": {
-			"type": "object",
-			"properties": {"name": {"type": "string"}, "effective_on": {"type": "string"}},
-			"additionalProperties": false,
-			"required": ["name"],
-		},
-		"uniqueItems": true,
-	}
-
-	name_and_description := {
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "array",
-		"items": {
-			"type": "object",
-			"properties": {
-				"name": {"type": "string"},
-				"description": {"type": "string"},
-				"effective_on": {"type": "string"},
-			},
-			"additionalProperties": false,
-			"required": ["name", "description"],
-		},
-		"uniqueItems": true,
-	}
-
-	name_description_and_values := {
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "array",
-		"items": {
-			"type": "object",
-			"properties": {
-				"name": {"type": "string"},
-				"description": {"type": "string"},
-				"effective_on": {"type": "string"},
-				"values": {
-					"type": "array",
-					"items": {"type": "string"},
-				},
-			},
-			"additionalProperties": false,
-			"required": ["name", "description"],
-		},
-		"uniqueItems": true,
-	}
-
-	deprecated := {
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "array",
-		"items": {
-			"type": "object",
-			"properties": {
-				"name": {"type": "string"},
-				"replacement": {"type": "string"},
-				"effective_on": {"type": "string"},
-			},
-			"additionalProperties": false,
-			"required": ["name", "replacement"],
-		},
-		"uniqueItems": true,
-	}
-
-	items := [
-		["required_labels", name_description_and_values],
-		["fbc_required_labels", name_description_and_values],
-		["optional_labels", name_and_description],
-		["fbc_optional_labels", name_and_description],
-		["disallowed_inherited_labels", name_only],
-		["optional_disallowed_inherited_labels", name_only],
-		["fbc_disallowed_inherited_labels", name_only],
-		["deprecated_labels", deprecated],
-	]
-	some item in items
+	some item in _rule_data_items
 	key := item[0]
 	schema := item[1]
 
-	some e in j.validate_schema(
-		rule_data.get(key),
-		schema,
-	)
+	some e in j.validate_schema(rule_data.get(key), schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
 		"severity": e.severity,
 	}
+}
+
+# _rule_data_errors_v2 mirrors _rule_data_errors but validates each value as
+# native rule data: a present scalar value is reported as a format violation
+# instead of raising a builtin error that suppresses the result, and a string
+# is never interpreted as serialized JSON.
+_rule_data_errors_v2 contains error if {
+	some item in _rule_data_items
+	key := item[0]
+	schema := item[1]
+
+	some e in j.validate_schema_native(rule_data.get(key), schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_rule_data_items := [
+	["required_labels", _name_description_and_values_schema],
+	["fbc_required_labels", _name_description_and_values_schema],
+	["optional_labels", _name_and_description_schema],
+	["fbc_optional_labels", _name_and_description_schema],
+	["disallowed_inherited_labels", _name_only_schema],
+	["optional_disallowed_inherited_labels", _name_only_schema],
+	["fbc_disallowed_inherited_labels", _name_only_schema],
+	["deprecated_labels", _deprecated_labels_schema],
+]
+
+_name_only_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {
+		"type": "object",
+		"properties": {"name": {"type": "string"}, "effective_on": {"type": "string"}},
+		"additionalProperties": false,
+		"required": ["name"],
+	},
+	"uniqueItems": true,
+}
+
+_name_and_description_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"},
+			"description": {"type": "string"},
+			"effective_on": {"type": "string"},
+		},
+		"additionalProperties": false,
+		"required": ["name", "description"],
+	},
+	"uniqueItems": true,
+}
+
+_name_description_and_values_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"},
+			"description": {"type": "string"},
+			"effective_on": {"type": "string"},
+			"values": {
+				"type": "array",
+				"items": {"type": "string"},
+			},
+		},
+		"additionalProperties": false,
+		"required": ["name", "description"],
+	},
+	"uniqueItems": true,
+}
+
+_deprecated_labels_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"},
+			"replacement": {"type": "string"},
+			"effective_on": {"type": "string"},
+		},
+		"additionalProperties": false,
+		"required": ["name", "replacement"],
+	},
+	"uniqueItems": true,
 }

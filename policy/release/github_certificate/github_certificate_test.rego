@@ -138,7 +138,18 @@ test_rule_data_provided if {
 			"severity": "failure",
 		},
 		{
+			"code": "github_certificate.rule_data_provided_v2",
+			"msg": "Rule data allowed_gh_workflow_repos has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+		{
 			"code": "github_certificate.rule_data_provided",
+			# regal ignore:line-length
+			"msg": "Rule data allowed_gh_workflow_repos has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "github_certificate.rule_data_provided_v2",
 			# regal ignore:line-length
 			"msg": "Rule data allowed_gh_workflow_repos has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
@@ -150,7 +161,19 @@ test_rule_data_provided if {
 			"severity": "failure",
 		},
 		{
+			"code": "github_certificate.rule_data_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data allowed_gh_workflow_refs has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
+		{
 			"code": "github_certificate.rule_data_provided",
+			# regal ignore:line-length
+			"msg": "Rule data allowed_gh_workflow_names has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "github_certificate.rule_data_provided_v2",
 			# regal ignore:line-length
 			"msg": "Rule data allowed_gh_workflow_names has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
@@ -161,12 +184,164 @@ test_rule_data_provided if {
 			"msg": "Rule data allowed_gh_workflow_triggers has unexpected format: 0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
+		{
+			"code": "github_certificate.rule_data_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data allowed_gh_workflow_triggers has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
 	}
 
 	signatures := [{"certificate": good_cert}]
 	assertions.assert_equal_results(github_certificate.deny, expected) with data.rule_data as d
 		with input.image.signatures as signatures
 }
+
+# RA11-RULE-DATA-SCALAR-001: a present but scalar GitHub workflow allow-list
+# value must produce a format rejection from the v2 rule instead of silently
+# removing the consumer result. The legacy rule_data_provided stays silent: a
+# builtin error in its schema validation suppresses the result, which is the
+# gap rule_data_provided_v2 closes. Only the target key is malformed; the
+# other lists stay valid and matching.
+test_rule_data_provided_v2_scalar_rejected if {
+	signatures := [{"certificate": good_cert}]
+	some key in [
+		"allowed_gh_workflow_repos",
+		"allowed_gh_workflow_refs",
+		"allowed_gh_workflow_names",
+		"allowed_gh_workflow_triggers",
+	]
+	expected := {{
+		"code": "github_certificate.rule_data_provided_v2",
+		# regal ignore:line-length
+		"msg": sprintf("Rule data %s has unexpected format: (Root): Invalid type. Expected: array, given: integer", [key]),
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
+		with data.rule_data as _with_rule_data(key, 1)
+}
+
+# A non-JSON string scalar is likewise rejected by the v2 rule. The consumer
+# mismatch may remain, but the format rejection must not disappear.
+test_rule_data_provided_v2_string_scalar_rejected if {
+	signatures := [{"certificate": good_cert}]
+	expected := {
+		{
+			"code": "github_certificate.rule_data_provided_v2",
+			"msg": "Rule data allowed_gh_workflow_repos has unexpected format: (Root): Invalid type. Expected: array, given: string",
+			"severity": "failure",
+		},
+		{
+			"code": "github_certificate.gh_workflow_repository",
+			"msg": "Repository \"lcarva/festoji\" not in allowed list: notjson",
+		},
+	}
+	assertions.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
+		with data.rule_data as _with_rule_data("allowed_gh_workflow_repos", "notjson")
+}
+
+# A string containing JSON text is a native string, not a JSON document: it
+# must be rejected by the v2 rule rather than parsed and accepted. A native
+# empty array intentionally disables the restriction instead.
+test_rule_data_provided_v2_json_text_string_rejected if {
+	signatures := [{"certificate": good_cert}]
+	expected := {
+		{
+			"code": "github_certificate.rule_data_provided_v2",
+			"msg": "Rule data allowed_gh_workflow_repos has unexpected format: (Root): Invalid type. Expected: array, given: string",
+			"severity": "failure",
+		},
+		{
+			"code": "github_certificate.gh_workflow_repository",
+			"msg": "Repository \"lcarva/festoji\" not in allowed list: []",
+		},
+	}
+	assertions.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
+		with data.rule_data as _with_rule_data("allowed_gh_workflow_repos", "[]")
+
+	# A native empty list disables the restriction: no format rejection, no
+	# consumer mismatch.
+	assertions.assert_empty(github_certificate.deny) with input.image.signatures as signatures
+		with data.rule_data as _with_rule_data("allowed_gh_workflow_repos", [])
+}
+
+# A null or wrong-container value keeps the existing diagnostics and fires on
+# both the legacy rule and its v2 successor.
+test_rule_data_provided_v2_null_and_object if {
+	signatures := [{"certificate": good_cert}]
+	expected := {
+		{
+			"code": "github_certificate.rule_data_provided",
+			"msg": "Rule data allowed_gh_workflow_repos has unexpected format: Provided empty document for schema validation",
+			"severity": "failure",
+		},
+		{
+			"code": "github_certificate.rule_data_provided_v2",
+			"msg": "Rule data allowed_gh_workflow_repos has unexpected format: Provided empty document for schema validation",
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
+		with data.rule_data as _with_rule_data("allowed_gh_workflow_repos", null)
+
+	expected_object := {
+		{
+			"code": "github_certificate.rule_data_provided",
+			"msg": "Rule data allowed_gh_workflow_repos has unexpected format: (Root): Invalid type. Expected: array, given: object",
+			"severity": "failure",
+		},
+		{
+			"code": "github_certificate.rule_data_provided_v2",
+			"msg": "Rule data allowed_gh_workflow_repos has unexpected format: (Root): Invalid type. Expected: array, given: object",
+			"severity": "failure",
+		},
+		{
+			"code": "github_certificate.gh_workflow_repository",
+			# regal ignore:line-length
+			"msg": "Repository \"lcarva/festoji\" not in allowed list: {\"lcarva/festoji\": true}",
+		},
+	}
+	assertions.assert_equal_results(github_certificate.deny, expected_object) with input.image.signatures as signatures
+		with data.rule_data as _with_rule_data("allowed_gh_workflow_repos", {"lcarva/festoji": true})
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_rule_data_provided_v2_precedence if {
+	signatures := [{"certificate": good_cert}]
+	expected := {{
+		"code": "github_certificate.rule_data_provided_v2",
+		"msg": "Rule data allowed_gh_workflow_repos has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
+		with data.rule_data_custom as {"allowed_gh_workflow_repos": 1}
+		with data.rule_data as _valid_matching_lists
+}
+
+# The valid matching and nonmatching consumer controls keep working alongside
+# the v2 format rule.
+test_rule_data_provided_v2_valid_consumer_controls if {
+	signatures := [{"certificate": good_cert}]
+	assertions.assert_empty(github_certificate.deny) with input.image.signatures as signatures
+		with data.rule_data as _valid_matching_lists
+
+	expected := {{
+		"code": "github_certificate.gh_workflow_repository",
+		"msg": "Repository \"lcarva/festoji\" not in allowed list: [\"cli\", \"policy\"]",
+	}}
+	assertions.assert_equal_results(github_certificate.deny, expected) with input.image.signatures as signatures
+		with data.rule_data as _with_rule_data("allowed_gh_workflow_repos", ["cli", "policy"])
+}
+
+_valid_matching_lists := {
+	"allowed_gh_workflow_repos": ["lcarva/festoji"],
+	"allowed_gh_workflow_refs": ["refs/heads/master"],
+	"allowed_gh_workflow_names": ["Package"],
+	"allowed_gh_workflow_triggers": ["push"],
+}
+
+_with_rule_data(target_key, value) := object.union(_valid_matching_lists, {target_key: value})
 
 # This is a certificate used when signing an image on GitHub. It
 # contains all the expected Fulcio GitHub extensions.

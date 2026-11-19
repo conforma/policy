@@ -249,6 +249,29 @@ deny contains result if {
 }
 
 # METADATA
+# title: Rule data provided (v2)
+# description: >-
+#   Confirm the expected rule data keys have been provided in the expected format. The keys are
+#   `supported_tests_results`, `failed_tests_results`, `informative_tests`, `erred_tests_results`,
+#   `skipped_tests_results`, and `warned_tests_results`. Unlike rule_data_provided, a present
+#   value of the wrong type (for example a scalar or a string containing JSON text) is rejected
+#   instead of silently skipping the check.
+# custom:
+#   short_name: rule_data_provided_v2
+#   failure_msg: '%s'
+#   solution: If provided, ensure the rule data is in the expected format.
+#   collections:
+#   - redhat
+#   - policy_data
+#   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some e in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+}
+
+# METADATA
 # title: Image digest is present in IMAGES_PROCESSED result
 # description: >-
 #   Ensure that task producing the IMAGES_PROCESSED result contains the
@@ -326,30 +349,7 @@ _resulted_in(results, key) := {result.name |
 }
 
 _rule_data_errors contains error if {
-	statuses := {
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "array",
-		"items": {"enum": ["SUCCESS", "FAILURE", "WARNING", "SKIPPED", "ERROR"]},
-		"uniqueItems": true,
-	}
-
-	strings_array := {
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "array",
-		"items": {"type": "string"},
-		"uniqueItems": true,
-	}
-
-	items := [
-		["supported_tests_results", statuses],
-		["failed_tests_results", statuses],
-		["erred_tests_results", statuses],
-		["skipped_tests_results", statuses],
-		["warned_tests_results", statuses],
-		["informative_tests", strings_array],
-	]
-
-	some item in items
+	some item in _rule_data_schema_items
 	key := item[0]
 	schema := item[1]
 
@@ -359,3 +359,42 @@ _rule_data_errors contains error if {
 		"severity": e.severity,
 	}
 }
+
+# _rule_data_errors_v2 mirrors _rule_data_errors but validates the value as
+# native rule data: a present scalar value is reported as a format violation
+# instead of raising a builtin error that suppresses the result, and a string
+# is never interpreted as serialized JSON.
+_rule_data_errors_v2 contains error if {
+	some item in _rule_data_schema_items
+	key := item[0]
+	schema := item[1]
+
+	some e in j.validate_schema_native(rule_data.get(key), schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_status_results_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"enum": ["SUCCESS", "FAILURE", "WARNING", "SKIPPED", "ERROR"]},
+	"uniqueItems": true,
+}
+
+_strings_array_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"type": "string"},
+	"uniqueItems": true,
+}
+
+_rule_data_schema_items := [
+	["supported_tests_results", _status_results_schema],
+	["failed_tests_results", _status_results_schema],
+	["erred_tests_results", _status_results_schema],
+	["skipped_tests_results", _status_results_schema],
+	["warned_tests_results", _status_results_schema],
+	["informative_tests", _strings_array_schema],
+]

@@ -20,6 +20,17 @@ Confirm the `allowed_builder_ids` rule data was provided, since it is required b
 * Code: `slsa_build_build_service.allowed_builder_ids_provided`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_build_service/slsa_build_build_service.rego#L73[Source, window="_blank"]
 
+[#slsa_build_build_service__allowed_builder_ids_provided_v2]
+=== link:#slsa_build_build_service__allowed_builder_ids_provided_v2[Allowed builder IDs provided (v2)]
+
+Confirm the `allowed_builder_ids` rule data was provided, since it is required by the policy rules in this package. Unlike allowed_builder_ids_provided, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `slsa_build_build_service.allowed_builder_ids_provided_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/slsa_build_build_service/slsa_build_build_service.rego#L93[Source, window="_blank"]
+
 [#slsa_build_build_service__slsa_builder_id_found]
 === link:#slsa_build_build_service__slsa_builder_id_found[SLSA Builder ID found]
 

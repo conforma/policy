@@ -20,6 +20,19 @@ Confirm the `disallowed_packages` and `disallowed_attributes` rule data were pro
 * Code: `sbom.disallowed_packages_provided`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom/sbom.rego#L37[Source, window="_blank"]
 
+[#sbom__disallowed_packages_provided_v2]
+=== link:#sbom__disallowed_packages_provided_v2[Disallowed packages list is provided (v2)]
+
+Confirm the `disallowed_packages` and `disallowed_attributes` rule data were provided, since they are required by the policy rules in this package. Unlike disallowed_packages_provided, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+*Solution*: Provide a list of disallowed packages or package attributes in the expected format.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `sbom.disallowed_packages_provided_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom/sbom.rego#L58[Source, window="_blank"]
+
 [#sbom__found]
 === link:#sbom__found[Found]
 
@@ -42,4 +55,4 @@ Report when signature verification fails for attached SBOM attestations or SBOMs
 * Rule type: [rule-type-indicator warning]#WARNING#
 * WARNING message: `%s`
 * Code: `sbom.signature_verification`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom/sbom.rego#L58[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/sbom/sbom.rego#L84[Source, window="_blank"]

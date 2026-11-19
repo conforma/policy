@@ -528,7 +528,17 @@ test_rule_data_provided if {
 			"severity": "failure",
 		},
 		{
+			"code": "labels.rule_data_provided_v2",
+			"msg": "Rule data deprecated_labels has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+		{
 			"code": "labels.rule_data_provided",
+			"msg": "Rule data deprecated_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "labels.rule_data_provided_v2",
 			"msg": "Rule data deprecated_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
 			"severity": "failure",
 		},
@@ -538,7 +548,17 @@ test_rule_data_provided if {
 			"severity": "warning",
 		},
 		{
+			"code": "labels.rule_data_provided_v2",
+			"msg": "Rule data deprecated_labels has unexpected format: 3: Additional property foo is not allowed",
+			"severity": "warning",
+		},
+		{
 			"code": "labels.rule_data_provided",
+			"msg": "Rule data disallowed_inherited_labels has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+		{
+			"code": "labels.rule_data_provided_v2",
 			"msg": "Rule data disallowed_inherited_labels has unexpected format: (Root): array items[1,2] must be unique",
 			"severity": "failure",
 		},
@@ -549,7 +569,18 @@ test_rule_data_provided if {
 			"severity": "failure",
 		},
 		{
+			"code": "labels.rule_data_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_inherited_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
+			"severity": "failure",
+		},
+		{
 			"code": "labels.rule_data_provided",
+			"msg": "Rule data disallowed_inherited_labels has unexpected format: 3: Additional property foo is not allowed",
+			"severity": "warning",
+		},
+		{
+			"code": "labels.rule_data_provided_v2",
 			"msg": "Rule data disallowed_inherited_labels has unexpected format: 3: Additional property foo is not allowed",
 			"severity": "warning",
 		},
@@ -560,7 +591,18 @@ test_rule_data_provided if {
 			"severity": "failure",
 		},
 		{
+			"code": "labels.rule_data_provided_v2",
+			# regal ignore:line-length
+			"msg": "Rule data fbc_disallowed_inherited_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
+			"severity": "failure",
+		},
+		{
 			"code": "labels.rule_data_provided",
+			"msg": "Rule data fbc_optional_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "labels.rule_data_provided_v2",
 			"msg": "Rule data fbc_optional_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
 			"severity": "failure",
 		},
@@ -570,7 +612,17 @@ test_rule_data_provided if {
 			"severity": "failure",
 		},
 		{
+			"code": "labels.rule_data_provided_v2",
+			"msg": "Rule data fbc_required_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
+			"severity": "failure",
+		},
+		{
 			"code": "labels.rule_data_provided",
+			"msg": "Rule data optional_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "labels.rule_data_provided_v2",
 			"msg": "Rule data optional_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
 			"severity": "failure",
 		},
@@ -580,7 +632,17 @@ test_rule_data_provided if {
 			"severity": "failure",
 		},
 		{
+			"code": "labels.rule_data_provided_v2",
+			"msg": "Rule data required_labels has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
+		{
 			"code": "labels.rule_data_provided",
+			"msg": "Rule data required_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "labels.rule_data_provided_v2",
 			"msg": "Rule data required_labels has unexpected format: 0: Invalid type. Expected: object, given: integer",
 			"severity": "failure",
 		},
@@ -590,7 +652,17 @@ test_rule_data_provided if {
 			"severity": "warning",
 		},
 		{
+			"code": "labels.rule_data_provided_v2",
+			"msg": "Rule data required_labels has unexpected format: 3: Additional property foo is not allowed",
+			"severity": "warning",
+		},
+		{
 			"code": "labels.rule_data_provided",
+			"msg": "Rule data required_labels has unexpected format: 4.values.0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "labels.rule_data_provided_v2",
 			"msg": "Rule data required_labels has unexpected format: 4.values.0: Invalid type. Expected: string, given: integer",
 			"severity": "failure",
 		},
@@ -606,6 +678,188 @@ test_rule_data_provided if {
 		with ec.oci.blob as _mock_blob
 		with ec.oci.parsed_blob as _mock_parsed_blob
 		with data.rule_data as d
+}
+
+# RA13-FMT: a present but scalar `required_labels` value must produce a format
+# rejection from the v2 rule instead of silently skipping the check. The legacy
+# rule_data_provided is untouched: a builtin error in its schema validation still
+# suppresses its result, which is the gap the v2 rule closes.
+test_rule_data_provided_v2_scalar_rejected if {
+	expected := {{
+		"code": "labels.rule_data_provided_v2",
+		"msg": "Rule data required_labels has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as _test_ref_with_labels({
+		"name": "test-image",
+		"description": "test image",
+		"summary": "test",
+		"vendor": "Acme, Inc.",
+	})
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
+		with data.rule_data as {"required_labels": 1}
+}
+
+# A string value is malformed even when it contains JSON text for a valid
+# array: JSON text in a scalar must not be mistaken for a native array. The
+# labels schemas have no minimum length, so the legacy rule accepts "[]" as a
+# valid empty array and stays silent.
+test_rule_data_provided_v2_string_rejected if {
+	expected := {{
+		"code": "labels.rule_data_provided_v2",
+		"msg": "Rule data required_labels has unexpected format: (Root): Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	ref := _test_ref_with_labels({
+		"name": "test-image",
+		"description": "test image",
+		"summary": "test",
+		"vendor": "Acme, Inc.",
+	})
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
+		with data.rule_data as {"required_labels": "x"}
+
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as ref
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
+		with data.rule_data as {"required_labels": "[]"}
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_rule_data_provided_v2_precedence if {
+	expected := {{
+		"code": "labels.rule_data_provided_v2",
+		"msg": "Rule data required_labels has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as _test_ref_with_labels({
+		"name": "test-image",
+		"description": "test image",
+		"summary": "test",
+		"vendor": "Acme, Inc.",
+	})
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
+		with data.rule_data_custom as {"required_labels": 1}
+		with data.rule_data as {"required_labels": [{"name": "name", "description": "Name of the image."}]}
+}
+
+# Shape controls locking in the current format contract: null and wrong-container values are
+# rejected by both rules with identical messages.
+test_rule_data_null_rejected if {
+	expected := {
+		{
+			"code": "labels.rule_data_provided",
+			"msg": "Rule data required_labels has unexpected format: Provided empty document for schema validation",
+			"severity": "failure",
+		},
+		{
+			"code": "labels.rule_data_provided_v2",
+			"msg": "Rule data required_labels has unexpected format: Provided empty document for schema validation",
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as _test_ref_with_labels({
+		"name": "test-image",
+		"description": "test image",
+		"summary": "test",
+		"vendor": "Acme, Inc.",
+	})
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
+		with data.rule_data as {"required_labels": null}
+}
+
+test_rule_data_wrong_container_rejected if {
+	expected := {
+		{
+			"code": "labels.rule_data_provided",
+			"msg": "Rule data required_labels has unexpected format: (Root): Invalid type. Expected: array, given: object",
+			"severity": "failure",
+		},
+		{
+			"code": "labels.rule_data_provided_v2",
+			"msg": "Rule data required_labels has unexpected format: (Root): Invalid type. Expected: array, given: object",
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as _test_ref_with_labels({
+		"name": "test-image",
+		"description": "test image",
+		"summary": "test",
+		"vendor": "Acme, Inc.",
+	})
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
+		with data.rule_data as {"required_labels": {"foo": "bar"}}
+}
+
+# An explicitly empty list and an absent key are both valid no-ops for the
+# labels rule data: there is no minimum length and the checks are data-driven.
+test_rule_data_empty_array_valid if {
+	assertions.assert_empty(labels.deny | labels.warn) with input.image.ref as _test_ref_with_labels({
+		"name": "test-image",
+		"description": "test image",
+		"summary": "test",
+		"vendor": "Acme, Inc.",
+	})
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
+		with data.rule_data as {"required_labels": []}
+}
+
+test_rule_data_absent_keys_valid if {
+	assertions.assert_empty(labels.deny | labels.warn) with input.image.ref as _test_ref_with_labels({
+		"name": "test-image",
+		"description": "test image",
+		"summary": "test",
+		"vendor": "Acme, Inc.",
+	})
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
+		with data.rule_data as {}
+}
+
+# Valid data must still reach the consumer rule: with valid `required_labels`
+# data a missing label is reported by labels.required_labels.
+test_required_labels_consumer_with_custom_data if {
+	expected := {{
+		"code": "labels.required_labels",
+		"msg": "The required \"name\" label is missing. Label description: Name of the image.",
+		"term": "name",
+	}}
+	assertions.assert_equal_results(labels.deny, expected) with input.image.ref as _test_ref_with_labels({
+		"description": "test image",
+		"summary": "test",
+		"vendor": "Acme, Inc.",
+	})
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
+		with data.rule_data as {"required_labels": [{"name": "name", "description": "Name of the image."}]}
+
+	assertions.assert_empty(labels.deny | labels.warn) with input.image.ref as _test_ref_with_labels({
+		"name": "test-image",
+		"description": "test image",
+		"summary": "test",
+		"vendor": "Acme, Inc.",
+	})
+		with ec.oci.image_manifest as _mock_image_manifest
+		with ec.oci.blob as _mock_blob
+		with ec.oci.parsed_blob as _mock_parsed_blob
+		with data.rule_data as {"required_labels": [{"name": "name", "description": "Name of the image."}]}
 }
 
 test_strip_digest if {

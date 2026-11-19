@@ -101,6 +101,33 @@ deny contains result if {
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
 }
 
+# METADATA
+# title: Allowed base image registry prefixes list or signing identity was provided (v2)
+# description: >-
+#   Confirm that either the `allowed_registry_prefixes` or a `signing_identities`
+#   entry was provided, since at least one is required by the policy rules
+#   in this package. Unlike allowed_registries_provided, a present value of the
+#   wrong type (for example a scalar or a string containing JSON text) is rejected
+#   instead of silently skipping the check.
+# custom:
+#   short_name: allowed_registries_provided_v2
+#   failure_msg: "%s"
+#   solution: >-
+#     Make sure to configure either a signing identity under the `rh-release` key in
+#     the `signing_identities` xref:signing_identities.adoc#_signing_identities_structure[configuration]
+#     or a list of trusted registry prefixes in `allowed_registry_prefixes`.
+#   collections:
+#   - minimal
+#   - redhat
+#   - policy_data
+#   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some error in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [error.message], error.severity)
+}
+
 _image_ref_permitted(image_ref) if {
 	allowed_prefixes := rule_data.get(_rule_data_key)
 	some allowed_prefix in allowed_prefixes
@@ -182,16 +209,7 @@ _cyclonedx_image_ref(component) := image_ref if {
 }
 
 _rule_data_errors contains error if {
-	some e in j.validate_schema(
-		rule_data.get(_rule_data_key),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			"uniqueItems": true,
-			"minItems": _prefixes_min_items,
-		},
-	)
+	some e in j.validate_schema(rule_data.get(_rule_data_key), _rule_data_schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
 		"severity": e.severity,
@@ -216,6 +234,27 @@ _rule_data_errors contains error if {
 # config, and presence).
 _rule_data_errors contains error if {
 	some error in sigstore.identity_rule_data_errors(_signing_identity_name)
+}
+
+# _rule_data_errors_v2 mirrors the schema-based _rule_data_errors rule for
+# `allowed_registry_prefixes` but validates the value as native rule data: a present
+# scalar value is reported as a format violation instead of raising a builtin error that
+# suppresses the result, and a string is never interpreted as serialized JSON. The
+# signing-identity and deprecation diagnostics stay on the legacy rule only.
+_rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(rule_data.get(_rule_data_key), _rule_data_schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [_rule_data_key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_rule_data_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"type": "string"},
+	"uniqueItems": true,
+	"minItems": _prefixes_min_items,
 }
 
 _rule_data_key := "allowed_registry_prefixes"

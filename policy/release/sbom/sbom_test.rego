@@ -95,7 +95,7 @@ test_rule_data_validation if {
 		],
 	}
 
-	expected := {
+	expected := _format_rule_expected({
 		{
 			"code": "sbom.disallowed_packages_provided",
 			"msg": "Rule data disallowed_packages has unexpected format: 0: Must validate at least one schema (anyOf)",
@@ -287,7 +287,7 @@ test_rule_data_validation if {
 			"msg": "Pattern \"[\" at index 8 in disallowed_attributes except_when is not effectively anchored with ^",
 			"severity": "warning",
 		},
-	}
+	})
 
 	assertions.assert_equal_results(sbom.deny, expected) with input.attestations as _sbom_attestation
 		with lib.sbom._verified_sbom_attestations as _sbom_attestation
@@ -335,7 +335,7 @@ test_proxy_rule_data_validation if {
 		"proxy_enabled_purl_types": [1, "maven", "maven"],
 		"allowed_proxy_url_patterns": {},
 	}
-	expected_bad_purl_types := {
+	expected_bad_purl_types := _format_rule_expected({
 		{
 			"code": "sbom.disallowed_packages_provided",
 			# regal ignore:line-length
@@ -348,7 +348,7 @@ test_proxy_rule_data_validation if {
 			"msg": "Rule data proxy_enabled_purl_types has unexpected format: (Root): array items[1,2] must be unique",
 			"severity": "failure",
 		},
-	}
+	})
 	assertions.assert_equal_results(expected_bad_purl_types, sbom.deny) with input.attestations as _sbom_attestation
 		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d_bad_purl_types
@@ -358,12 +358,12 @@ test_proxy_rule_data_validation if {
 		"proxy_enabled_purl_types": [],
 		"allowed_proxy_url_patterns": {"maven": "not-an-array"},
 	}
-	expected_bad_patterns := {{
+	expected_bad_patterns := _format_rule_expected({{
 		"code": "sbom.disallowed_packages_provided",
 		# regal ignore:line-length
 		"msg": "Rule data allowed_proxy_url_patterns has unexpected format: maven: Invalid type. Expected: array, given: string",
 		"severity": "failure",
-	}}
+	}})
 	assertions.assert_equal_results(expected_bad_patterns, sbom.deny) with input.attestations as _sbom_attestation
 		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d_bad_patterns
@@ -373,7 +373,7 @@ test_proxy_rule_data_validation if {
 		"proxy_enabled_purl_types": [],
 		"allowed_proxy_url_patterns": {"maven": ["(?=a)?b"]},
 	}
-	expected_bad_regex := {
+	expected_bad_regex := _format_rule_expected({
 		{
 			"code": "sbom.disallowed_packages_provided",
 			"msg": "\"(?=a)?b\" is not a valid regular expression for PURL type \"maven\"",
@@ -385,10 +385,122 @@ test_proxy_rule_data_validation if {
 			"msg": "Pattern \"(?=a)?b\" for PURL type \"maven\" in allowed_proxy_url_patterns is not effectively anchored with ^",
 			"severity": "warning",
 		},
-	}
+	})
 	assertions.assert_equal_results(expected_bad_regex, sbom.deny) with input.attestations as _sbom_attestation
 		with lib.sbom._verified_sbom_attestations as _sbom_attestation
 		with data.rule_data as d_bad_regex
+}
+
+# RA31-SBOM-RULE-DATA-SCALAR-001: a present but scalar disallowed_packages
+# value must produce a format rejection from the v2 rule instead of the
+# format result silently disappearing, even when a matching SBOM package is
+# present in the attestation. The legacy disallowed_packages_provided stays
+# silent: a builtin error in its schema validation suppresses the result,
+# which is the gap the v2 rule closes.
+test_rule_data_provided_v2_scalar_rejected if {
+	integer_expected := {{
+		"code": "sbom.disallowed_packages_provided_v2",
+		"msg": "Rule data disallowed_packages has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(sbom.deny, integer_expected) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
+		with data.rule_data as {"disallowed_packages": 1}
+
+	string_expected := {{
+		"code": "sbom.disallowed_packages_provided_v2",
+		"msg": "Rule data disallowed_packages has unexpected format: (Root): Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(sbom.deny, string_expected) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
+		with data.rule_data as {"disallowed_packages": "bad"}
+
+	boolean_expected := {{
+		"code": "sbom.disallowed_packages_provided_v2",
+		"msg": "Rule data disallowed_packages has unexpected format: (Root): Invalid type. Expected: array, given: boolean",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(sbom.deny, boolean_expected) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
+		with data.rule_data as {"disallowed_packages": false}
+}
+
+# RA33-CDX-RULEDATA-SCALAR-001: scalar values of disallowed_attributes,
+# allowed_external_references, and disallowed_external_references are
+# rejected independently by the v2 rule.
+test_rule_data_provided_v2_other_keys_scalar_rejected if {
+	keys := [
+		lib.sbom.rule_data_attributes_key,
+		lib.sbom.rule_data_allowed_external_references_key,
+		lib.sbom.rule_data_disallowed_external_references_key,
+	]
+
+	some key in keys
+	msg := sprintf("Rule data %s has unexpected format: (Root): Invalid type. Expected: array, given: integer", [key])
+	expected := {{
+		"code": "sbom.disallowed_packages_provided_v2",
+		"msg": msg,
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(sbom.deny, expected) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
+		with data.rule_data as {key: 1}
+}
+
+# CDX-001: scalar proxy rule data values are rejected by the v2 rule. A
+# string proxy_enabled_purl_types is never interpreted as serialized JSON
+# text, and a scalar allowed_proxy_url_patterns is rejected as an integer.
+test_rule_data_provided_v2_proxy_scalar_rejected if {
+	purl_types_expected := {{
+		"code": "sbom.disallowed_packages_provided_v2",
+		"msg": "Rule data proxy_enabled_purl_types has unexpected format: (Root): Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(sbom.deny, purl_types_expected) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
+		with data.rule_data as {"proxy_enabled_purl_types": "maven"}
+
+	patterns_expected := {{
+		"code": "sbom.disallowed_packages_provided_v2",
+		"msg": "Rule data allowed_proxy_url_patterns has unexpected format: (Root): Invalid type. Expected: object, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(sbom.deny, patterns_expected) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
+		with data.rule_data as {"allowed_proxy_url_patterns": 1}
+}
+
+# A malformed high-priority override above a valid lower-priority list must
+# be rejected rather than silently using the lower-priority value.
+test_rule_data_provided_v2_precedence if {
+	expected := {{
+		"code": "sbom.disallowed_packages_provided_v2",
+		"msg": "Rule data disallowed_packages has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(sbom.deny, expected) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
+		with data.rule_data_custom as {"disallowed_packages": 1}
+		with data.rule_data as {"disallowed_packages": [{"purl": "pkg:golang/k8s.io/client-go", "format": "semverv", "min": "v0.1.0"}]}
+}
+
+# Valid rule data keeps both format rules silent while the SBOMs are being
+# consumed: the matching and nonmatching package controls live in the
+# sbom_cyclonedx and sbom_spdx packages.
+test_rule_data_provided_v2_valid_consumer_controls if {
+	assertions.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
+		with data.rule_data as {
+			"disallowed_packages": [{"purl": "pkg:golang/k8s.io/client-go", "format": "semverv", "min": "v0.1.0"}],
+			"disallowed_attributes": [{"name": "some_attr", "value": "some_val"}],
+			"proxy_enabled_purl_types": ["maven"],
+			"allowed_proxy_url_patterns": {"maven": ["^https://proxy\\.example\\.com/.*"]},
+		}
+
+	assertions.assert_empty(sbom.deny) with input.attestations as _sbom_attestation
+		with lib.sbom._verified_sbom_attestations as _sbom_attestation
+		with data.rule_data as {"disallowed_packages": [{"purl": "pkg:golang/nonexistent", "format": "semverv", "min": "v0.0.1"}]}
 }
 
 test_anchoring_warnings_external_references if {
@@ -403,7 +515,7 @@ test_anchoring_warnings_external_references if {
 		],
 	}
 
-	expected := {
+	expected := _format_rule_expected({
 		{
 			"code": "sbom.disallowed_packages_provided",
 			# regal ignore:line-length
@@ -416,7 +528,7 @@ test_anchoring_warnings_external_references if {
 			"msg": "Pattern \"evil.com\" at index 1 in disallowed_external_references is not effectively anchored with ^",
 			"severity": "warning",
 		},
-	}
+	})
 
 	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
 		with lib.sbom._verified_sbom_attestations as _sbom_attestation
@@ -443,12 +555,12 @@ test_anchoring_warnings_package_sources if {
 		{"type": "generic", "patterns": ["registry.example.com"]},
 	]}
 
-	expected := {{
+	expected := _format_rule_expected({{
 		"code": "sbom.disallowed_packages_provided",
 		# regal ignore:line-length
 		"msg": "Pattern \"registry.example.com\" at index 1 in allowed_package_sources is not effectively anchored with ^",
 		"severity": "warning",
-	}}
+	}})
 
 	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
 		with lib.sbom._verified_sbom_attestations as _sbom_attestation
@@ -461,12 +573,12 @@ test_anchoring_warnings_proxy_url_patterns if {
 		"npm": ["proxy.example.com"],
 	}}
 
-	expected := {{
+	expected := _format_rule_expected({{
 		"code": "sbom.disallowed_packages_provided",
 		# regal ignore:line-length
 		"msg": "Pattern \"proxy.example.com\" for PURL type \"npm\" in allowed_proxy_url_patterns is not effectively anchored with ^",
 		"severity": "warning",
-	}}
+	}})
 
 	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
 		with lib.sbom._verified_sbom_attestations as _sbom_attestation
@@ -480,12 +592,12 @@ test_anchoring_warnings_except_when if {
 		"except_when": [{"purl_qualifier": "repo", "patterns": ["console\\.redhat\\.com"]}],
 	}]}
 
-	expected := {{
+	expected := _format_rule_expected({{
 		"code": "sbom.disallowed_packages_provided",
 		# regal ignore:line-length
 		"msg": "Pattern \"console\\\\.redhat\\\\.com\" at index 0 in disallowed_attributes except_when is not effectively anchored with ^",
 		"severity": "warning",
-	}}
+	}})
 
 	assertions.assert_equal_results(expected, sbom.deny) with input.attestations as _sbom_attestation
 		with lib.sbom._verified_sbom_attestations as _sbom_attestation
@@ -584,6 +696,14 @@ _mock_verify_attestation_failure(_, _) := {"success": false, "errors": ["verific
 _mock_verify_image_success(_, _) := {"errors": []}
 
 _mock_verify_image_failure(_, _) := {"errors": ["verification failed"]}
+
+# The v2 twin of disallowed_packages_provided reports the same diagnostics
+# under a _v2 code, so expected sets are shared across both rules.
+_format_rule_expected(results) := {result |
+	some base in results
+	some code in {"sbom.disallowed_packages_provided", "sbom.disallowed_packages_provided_v2"}
+	result := object.union(base, {"code": code})
+}
 
 _sbom_attestation := [_spdx_sbom_attestation, _cyclonedx_sbom_attestation]
 

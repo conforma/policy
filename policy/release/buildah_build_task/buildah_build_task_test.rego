@@ -355,6 +355,18 @@ test_plat_patterns_rule_data_validation if {
 			"msg": "Pattern \"(?=a)?b\" in disallowed_platform_patterns is not effectively anchored with ^",
 			"severity": "warning",
 		},
+		{
+			"code": "buildah_build_task.disallowed_platform_patterns_pattern_v2",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_platform_patterns has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
+		{
+			"code": "buildah_build_task.disallowed_platform_patterns_pattern_v2",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_platform_patterns has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
 	}
 
 	assertions.assert_equal_results(buildah_build_task.deny, expected) with data.rule_data as d
@@ -375,6 +387,149 @@ test_plat_patterns_anchoring_warning if {
 
 	d_ineffective := {"disallowed_platform_patterns": ["^.*linux/amd64"]}
 	assertions.assert_not_empty(buildah_build_task.deny) with data.rule_data as d_ineffective
+}
+
+# A present but scalar `disallowed_platform_patterns` value must produce a format
+# rejection from the v2 rule instead of silently skipping the check. The legacy
+# disallowed_platform_patterns_pattern is untouched: a builtin error in its schema
+# validation still suppresses its result, which is the gap the v2 rule closes.
+# The platform_param consumer and the regex-validity and anchoring checks are
+# silently undefined for a scalar, so only the v2 rule fires.
+test_plat_patterns_rule_data_v2_scalar_rejected if {
+	attestation := _attestation("buildah", {"parameters": {"PLATFORM": "linux-root/arm64"}}, _results)
+
+	expected_int := {{
+		"code": "buildah_build_task.disallowed_platform_patterns_pattern_v2",
+		# regal ignore:line-length
+		"msg": "Rule data disallowed_platform_patterns has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(buildah_build_task.deny, expected_int) with input.attestations as [attestation]
+		with data.rule_data as {"disallowed_platform_patterns": 1}
+
+	expected_str := {{
+		"code": "buildah_build_task.disallowed_platform_patterns_pattern_v2",
+		# regal ignore:line-length
+		"msg": "Rule data disallowed_platform_patterns has unexpected format: (Root): Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(buildah_build_task.deny, expected_str) with input.attestations as [attestation]
+		with data.rule_data as {"disallowed_platform_patterns": "x"}
+
+	expected_bool := {{
+		"code": "buildah_build_task.disallowed_platform_patterns_pattern_v2",
+		# regal ignore:line-length
+		"msg": "Rule data disallowed_platform_patterns has unexpected format: (Root): Invalid type. Expected: array, given: boolean",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(buildah_build_task.deny, expected_bool) with input.attestations as [attestation]
+		with data.rule_data as {"disallowed_platform_patterns": true}
+}
+
+# A string value is malformed even when it contains JSON text for a valid array:
+# the legacy rule parses the JSON text and accepts it as a valid empty array,
+# while the v2 rule rejects the string itself. A native empty array stays a
+# valid intentional no-op that disables the restriction.
+test_plat_patterns_rule_data_v2_json_text_string_rejected if {
+	attestation := _attestation("buildah", {"parameters": {"PLATFORM": "linux-root/arm64"}}, _results)
+
+	expected := {{
+		"code": "buildah_build_task.disallowed_platform_patterns_pattern_v2",
+		# regal ignore:line-length
+		"msg": "Rule data disallowed_platform_patterns has unexpected format: (Root): Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(buildah_build_task.deny, expected) with input.attestations as [attestation]
+		with data.rule_data as {"disallowed_platform_patterns": "[]"}
+
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation]
+		with data.rule_data as {"disallowed_platform_patterns": []}
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_plat_patterns_rule_data_v2_precedence if {
+	attestation := _attestation("buildah", {"parameters": {"PLATFORM": "linux-root/arm64"}}, _results)
+
+	expected := {{
+		"code": "buildah_build_task.disallowed_platform_patterns_pattern_v2",
+		# regal ignore:line-length
+		"msg": "Rule data disallowed_platform_patterns has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+
+	assertions.assert_equal_results(buildah_build_task.deny, expected) with input.attestations as [attestation]
+		with data.rule_data_custom as {"disallowed_platform_patterns": 1}
+		with data.rule_data as {"disallowed_platform_patterns": ["^linux-root/"]}
+}
+
+# Valid rule data still reaches the platform_param consumer: a PLATFORM value
+# matching a disallowed pattern is denied, a nonmatching value passes, and a
+# native empty list disables the restriction.
+test_plat_patterns_rule_data_valid_controls if {
+	attestation_matching := _attestation("buildah", {"parameters": {"PLATFORM": "linux-root/arm64"}}, _results)
+	attestation_passing := _attestation("buildah", {"parameters": {"PLATFORM": "linux/arm64"}}, _results)
+
+	d := {"disallowed_platform_patterns": ["^linux-root/"]}
+
+	expected := {{
+		"code": "buildah_build_task.platform_param",
+		"msg": "PLATFORM parameter value \"linux-root/arm64\" is disallowed by regex \"^linux-root/\"",
+	}}
+	assertions.assert_equal_results(buildah_build_task.deny, expected) with input.attestations as [attestation_matching]
+		with data.rule_data as d
+
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_passing]
+		with data.rule_data as d
+
+	assertions.assert_empty(buildah_build_task.deny) with input.attestations as [attestation_matching]
+		with data.rule_data as {"disallowed_platform_patterns": []}
+}
+
+# Shape controls locking in the current behavior of both format rules for a null
+# value and a wrong-container value.
+test_plat_patterns_rule_data_shape_controls if {
+	attestation := _attestation("buildah", {"parameters": {"PLATFORM": "linux/arm64"}}, _results)
+
+	expected_null := {
+		{
+			"code": "buildah_build_task.disallowed_platform_patterns_pattern",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_platform_patterns has unexpected format: Provided empty document for schema validation",
+			"severity": "failure",
+		},
+		{
+			"code": "buildah_build_task.disallowed_platform_patterns_pattern_v2",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_platform_patterns has unexpected format: Provided empty document for schema validation",
+			"severity": "failure",
+		},
+	}
+	assertions.assert_equal_results(buildah_build_task.deny, expected_null) with input.attestations as [attestation]
+		with data.rule_data as {"disallowed_platform_patterns": null}
+
+	# A wrong-container object value is rejected by both format rules; its values
+	# still reach the platform_param consumer, which is existing behavior.
+	expected_object := {
+		{
+			"code": "buildah_build_task.disallowed_platform_patterns_pattern",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_platform_patterns has unexpected format: (Root): Invalid type. Expected: array, given: object",
+			"severity": "failure",
+		},
+		{
+			"code": "buildah_build_task.disallowed_platform_patterns_pattern_v2",
+			# regal ignore:line-length
+			"msg": "Rule data disallowed_platform_patterns has unexpected format: (Root): Invalid type. Expected: array, given: object",
+			"severity": "failure",
+		},
+		{
+			"code": "buildah_build_task.platform_param",
+			"msg": "PLATFORM parameter value \"linux/arm64\" is disallowed by regex \"^linux/\"",
+		},
+	}
+	assertions.assert_equal_results(buildah_build_task.deny, expected_object) with input.attestations as [attestation]
+		with data.rule_data as {"disallowed_platform_patterns": {"linux": "^linux/"}}
 }
 
 test_privileged_nested_param if {

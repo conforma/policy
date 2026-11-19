@@ -102,3 +102,16 @@ Confirm the expected rule data keys have been provided in the expected format. T
 * FAILURE message: `%s`
 * Code: `cve.rule_data_provided`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L222[Source, window="_blank"]
+
+[#cve__rule_data_provided_v2]
+=== link:#cve__rule_data_provided_v2[Rule data provided (v2)]
+
+Confirm the expected rule data keys have been provided in the expected format. The keys are `restrict_cve_security_levels`,	`warn_cve_security_levels`, `restrict_unpatched_cve_security_levels`, and `warn_unpatched_cve_security_levels`. Unlike rule_data_provided, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+*Solution*: If provided, ensure the rule data is in the expected format.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `cve.rule_data_provided_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/cve/cve.rego#L243[Source, window="_blank"]
