@@ -20,7 +20,7 @@ import data.lib.time as lib_time
 #   grace period. Without configuration the defaults are 30 days for CRITICAL
 #   and 60 for IMPORTANT. If `release_time_cve_leeway` is configured,
 #   omitted severities have no grace period (0 days).
-#   Advisory data is expected in the `collector_data` runtime data key under `RHSA`.
+#   Advisory data is expected in the `collector_data` runtime data key under `rhsa`.
 #   Only advisories listing input.component_name in their components apply.
 # custom:
 #   short_name: advisory_grace_period_expired
@@ -41,7 +41,7 @@ import data.lib.time as lib_time
 deny contains result if {
 	metadata.pipeline_intention_match(rego.metadata.chain())
 
-	rhsa := object.get(rule_data.runtime_data("collector_data"), "RHSA", {})
+	rhsa := object.get(rule_data.runtime_data("collector_data"), "rhsa", {})
 	some severity, grace_days in _grace_period_days
 	some advisory in rhsa[severity]
 	input.component_name in advisory.components
@@ -62,7 +62,7 @@ deny contains result if {
 # METADATA
 # title: Release-time CVE data format
 # description: >-
-#   Require runtime collector data with RHSA CRITICAL and IMPORTANT arrays and
+#   Require runtime collector data with `rhsa` CRITICAL and IMPORTANT arrays and
 #   validate advisory IDs, release timestamps, CVE entries, and affected component
 #   names. Require input.component_name to associate advisories with the evaluated
 #   component. Empty severity arrays represent a successful collection with no advisories.
@@ -70,7 +70,7 @@ deny contains result if {
 #   short_name: runtime_data_format
 #   failure_msg: 'Release-time CVE data has unexpected format: %s'
 #   solution: >-
-#     Provide runtime collector_data with RHSA CRITICAL and IMPORTANT arrays
+#     Provide runtime collector_data with `rhsa` CRITICAL and IMPORTANT arrays
 #     containing advisory, released_on, cves, and components fields, and provide
 #     input.component_name as a non-empty string.
 #   pipeline_intention:
@@ -166,8 +166,8 @@ _runtime_data_errors contains e.message if {
 		"required": ["collector_data"],
 		"properties": {"collector_data": {
 			"type": "object",
-			"required": ["RHSA"],
-			"properties": {"RHSA": {
+			"required": ["rhsa"],
+			"properties": {"rhsa": {
 				"type": "object",
 				"required": ["CRITICAL", "IMPORTANT"],
 				"properties": {
@@ -184,13 +184,13 @@ _runtime_data_errors contains e.message if {
 # checker also accepts date-only strings, which that parser cannot evaluate.
 # Only report parser errors when the format check passes, to avoid duplicates.
 _runtime_data_errors contains message if {
-	some severity, advisories in _runtime_data.collector_data.RHSA
+	some severity, advisories in _runtime_data.collector_data.rhsa
 	is_array(advisories)
 	some index, advisory in advisories
 	is_string(advisory.released_on)
 	[true, _] = json.match_schema(json.marshal(advisory.released_on), {"type": "string", "format": "date-time"})
 	not time.parse_rfc3339_ns(advisory.released_on)
-	message := sprintf("collector_data.RHSA.%s.%d.released_on: Must be an RFC 3339 timestamp", [severity, index])
+	message := sprintf("collector_data.rhsa.%s.%d.released_on: Must be an RFC 3339 timestamp", [severity, index])
 }
 
 _rule_data_key := "release_time_cve_leeway"

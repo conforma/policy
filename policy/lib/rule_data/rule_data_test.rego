@@ -28,8 +28,8 @@ test_rule_data if {
 }
 
 test_runtime_data if {
-	runtime := {"collector_data": {"RHSA": {}}, "scalar": 42}
-	assertions.assert_equal(rule_data.runtime_data("collector_data"), {"RHSA": {}}) with data.rule_data__runtime__ as runtime
+	runtime := {"collector_data": {"rhsa": {}}, "scalar": 42}
+	assertions.assert_equal(rule_data.runtime_data("collector_data"), {"rhsa": {}}) with data.rule_data__runtime__ as runtime
 	assertions.assert_equal(rule_data.runtime_data("scalar"), 42) with data.rule_data__runtime__ as runtime
 	assertions.assert_equal(rule_data.runtime_data("missing"), {}) with data.rule_data__runtime__ as runtime
 }
