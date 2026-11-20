@@ -16,6 +16,7 @@
 *** xref:packages/release_attestation_type.adoc[Attestation type]
 **** xref:packages/release_attestation_type.adoc#attestation_type__deprecated_policy_attestation_format[Deprecated policy attestation format]
 **** xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type[Known attestation type found]
+**** xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_type_v2[Known attestation type found (v2)]
 **** xref:packages/release_attestation_type.adoc#attestation_type__known_attestation_types_provided[Known attestation types provided]
 **** xref:packages/release_attestation_type.adoc#attestation_type__pipelinerun_attestation_found[PipelineRun attestation found]
 *** xref:packages/release_base_image_registries.adoc[Base image checks]

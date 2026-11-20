@@ -43,6 +43,36 @@ deny contains result if {
 }
 
 # METADATA
+# title: Known attestation type found (v2)
+# description: >-
+#   Confirm each selected PipelineRun statement has a known attestation type, including a named
+#   rejection when the _type field is missing.
+# custom:
+#   short_name: known_attestation_type_v2
+#   effective_on: 2027-01-11T00:00:00Z
+#   failure_msg: Unknown or missing attestation type '%v'
+#   solution: >-
+#     Make sure the "_type" field in the attestation is supported. Supported types are configured
+#     in xref:cli:ROOT:configuration.adoc#_data_sources[data sources].
+#   collections:
+#   - minimal
+#   - redhat
+#   - redhat_rpms
+#   - slsa3
+#   - redhat_security
+#   depends_on:
+#   - attestation_type.pipelinerun_attestation_found
+#
+deny contains result if {
+	some att in lib.pipelinerun_attestations
+
+	# regal ignore:leaked-internal-reference
+	att_type := object.get(att.statement, "_type", null)
+	not att_type in rule_data.get(_rule_data_key)
+	result := metadata.result_helper(rego.metadata.chain(), [att_type])
+}
+
+# METADATA
 # title: Known attestation types provided
 # description: Confirm the `known_attestation_types` rule data was provided.
 # custom:

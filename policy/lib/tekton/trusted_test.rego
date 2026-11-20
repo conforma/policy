@@ -1086,7 +1086,7 @@ same_date_trusted_bundle_task := {"spec": {"taskRef": {"resolver": "bundles", "p
 
 outdated_trusted_bundle_task := {"spec": {"taskRef": {"resolver": "bundles", "params": [
 	# regal ignore:line-length
-	{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:007da7edd19e5700000000000000000000000000000000007da7edd19e57"},
+	{"name": "bundle", "value": "registry.local/trusty:1.0@sha256:007da7edd19e57000000000000000000000000000000000000007da7edd19e57"},
 	{"name": "name", "value": "trusty"},
 	{"name": "kind", "value": "task"},
 ]}}}
@@ -1425,7 +1425,7 @@ trusted_tasks := {
 			"expires_on": "2099-01-01T00:00:00Z",
 		},
 		{
-			"ref": "sha256:007da7edd19e5700000000000000000000000000000000007da7edd19e57",
+			"ref": "sha256:007da7edd19e57000000000000000000000000000000000000007da7edd19e57",
 			"expires_on": "2099-01-01T00:00:00Z",
 		},
 		{
@@ -1763,4 +1763,16 @@ test_mock_image_manifests if {
 test_mock_image_manifest if {
 	result := _mock_image_manifest("any-ref")
 	assertions.assert_equal({}, result)
+}
+
+test_unpinned_task_references_digest_shape if {
+	every ref in ["registry.local/task:1.0", "registry.local/task:1.0@not-a-digest", "registry.local/task:1.0@sha256:"] {
+		task := {"name": "task", "ref": {"resolver": "bundles", "params": [{"name": "bundle", "value": ref}]}}
+		assertions.assert_equal(tekton.unpinned_task_references([task]), {task})
+	}
+	valid := "registry.local/task:1.0@sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+	tasks := [{"name": "task", "taskRef": {"bundle": valid}}, {"taskSpec": {"steps": []}}, trusted_git_task]
+	assertions.assert_empty(tekton.unpinned_task_references(tasks))
+	local_task := {"taskRef": {"name": "task"}}
+	assertions.assert_equal(tekton.unpinned_task_references([local_task]), {local_task})
 }
