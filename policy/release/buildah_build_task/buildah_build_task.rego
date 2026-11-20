@@ -100,32 +100,9 @@ deny contains result if {
 }
 
 # METADATA
-# title: PRIVILEGED_NESTED parameter
-# description: >-
-#   Verify the PRIVILEGED_NESTED parameter of a builder Tasks was not set to `true`.
-# custom:
-#   short_name: privileged_nested_param
-#   failure_msg: setting PRIVILEGED_NESTED parameter to true is not allowed
-#   solution: >-
-#     Setting PRIVILEGED_NESTED parameter to true is not allowed for most container
-#     image builds. Either set the parameter value to false or use a policy config
-#     that excludes this policy rule.
-#   collections:
-#   - redhat
-#   - redhat_security
-#   depends_on:
-#   - attestation_type.known_attestation_type
-#
-deny contains result if {
-	some param in _privileged_nested_params
-	trim_space(param) == "true"
-	result := metadata.result_helper(rego.metadata.chain(), [])
-}
-
-# METADATA
 # title: Build task parameters are well-formed
 # description: >-
-#   Verify that the DOCKERFILE, ADD_CAPABILITIES, PLATFORM and PRIVILEGED_NESTED
+#   Verify that the DOCKERFILE, ADD_CAPABILITIES and PLATFORM
 #   parameters of a builder Task, when present, are provided as strings. A
 #   non-string value (null, number, object or array), or a malformed parameter
 #   container that hides the parameters entirely, would otherwise be silently
@@ -174,13 +151,8 @@ _platform_params contains param if {
 	param := tekton.task_param(buildah_task, "PLATFORM")
 }
 
-_privileged_nested_params contains param if {
-	some buildah_task in _buildah_tasks
-	param := tekton.task_param(buildah_task, "PRIVILEGED_NESTED")
-}
-
 # The build task parameters that must be strings when present.
-_string_param_names := {"DOCKERFILE", "ADD_CAPABILITIES", "PLATFORM", "PRIVILEGED_NESTED"}
+_string_param_names := {"DOCKERFILE", "ADD_CAPABILITIES", "PLATFORM"}
 
 _malformed_params contains name if {
 	some buildah_task in _buildah_tasks
