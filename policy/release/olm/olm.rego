@@ -396,7 +396,8 @@ deny contains result if {
 # title: NetworkPolicy RBAC present in OLM bundle
 # description: >-
 #   Operators are required to manage the network policies of their operands.
-#   This rule verifies that operator bundles request sufficient RBAC permissions
+#   This rule applies when the ClusterServiceVersion grants permission to create
+#   a workload resource. It verifies that these bundles request sufficient RBAC permissions
 #   to manage NetworkPolicy lifecycle (create, delete, and update/patch) for
 #   networking.k8s.io/networkpolicies in their ClusterServiceVersion.
 #   Bundles whose operator name and major.minor version are listed in the
@@ -419,6 +420,7 @@ deny contains result if {
 #   effective_on: 2026-08-07T00:00:00Z
 deny contains result if {
 	some manifest in _csv_manifests
+	_manages_workloads(manifest)
 	not _network_policy_rbac_excepted(manifest)
 	not _has_network_policy_rbac(manifest)
 	result := metadata.result_helper(rego.metadata.chain(), [_operator_package_name, manifest.spec.version])
@@ -436,6 +438,39 @@ _network_policy_rbac_excepted(manifest) if {
 	exceptions := rule_data.get("operator_network_policy_rbac_exceptions")
 	version := _major_minor_version(manifest.spec.version)
 	version in exceptions[_operator_package_name]
+}
+
+_workload_resources := [
+	["apps", "deployments"],
+	["apps", "statefulsets"],
+	["apps", "daemonsets"],
+	["apps", "replicasets"],
+	["apps.openshift.io", "deploymentconfigs"],
+	["batch", "jobs"],
+	["batch", "cronjobs"],
+	["", "pods"],
+	["", "replicationcontrollers"],
+]
+
+_manages_workloads(manifest) if {
+	permissions := array.concat(
+		object.get(manifest, ["spec", "install", "spec", "permissions"], []),
+		object.get(manifest, ["spec", "install", "spec", "clusterPermissions"], []),
+	)
+	some permission in permissions
+	some rule in object.get(permission, "rules", [])
+	_matches_workload_permission(object.get(rule, "verbs", []), "create")
+	some pair in _workload_resources
+	_matches_workload_permission(object.get(rule, "apiGroups", []), pair[0])
+	_matches_workload_permission(object.get(rule, "resources", []), pair[1])
+}
+
+_matches_workload_permission(values, expected) if {
+	expected in values
+}
+
+_matches_workload_permission(values, _) if {
+	"*" in values
 }
 
 _has_network_policy_rbac(manifest) if {
