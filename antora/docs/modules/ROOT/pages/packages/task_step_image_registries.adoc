@@ -20,6 +20,19 @@ Confirm the `allowed_step_image_registry_prefixes` rule data was provided, since
 * Code: `step_image_registries.step_image_registry_prefix_list_provided`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_image_registries/step_image_registries.rego#L49[Source, window="_blank"]
 
+[#step_image_registries__step_image_registry_prefix_list_provided_v2]
+=== link:#step_image_registries__step_image_registry_prefix_list_provided_v2[Permitted step image registry prefix list provided (v2)]
+
+Confirm the `allowed_step_image_registry_prefixes` rule data was provided, since it's required by the policy rules in this package. Unlike step_image_registry_prefix_list_provided, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+*Solution*: Make sure the xref:cli:ROOT:configuration.adoc#_data_sources[data sources] contains a key 'allowed_step_image_registry_prefixes' that contains a list of approved registries that can be used to run tasks in the build pipeline.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `step_image_registries.step_image_registry_prefix_list_provided_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/task/step_image_registries/step_image_registries.rego#L69[Source, window="_blank"]
+
 [#step_image_registries__step_images_permitted]
 === link:#step_image_registries__step_images_permitted[Step images come from permitted registry]
 

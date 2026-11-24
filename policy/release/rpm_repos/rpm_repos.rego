@@ -39,6 +39,32 @@ deny contains result if {
 }
 
 # METADATA
+# title: Known repo id list provided (v2)
+# description: >-
+#   A list of known and permitted repository ids should be available in the rule data. Unlike
+#   rule_data_provided, a present value of the wrong type (for example a scalar or a string
+#   containing JSON text) is rejected instead of silently skipping the check.
+# custom:
+#   short_name: rule_data_provided_v2
+#   failure_msg: "Rule data '%s' has unexpected format: %s"
+#   solution: >-
+#     Include a data source that provides a list of known repository ids under the
+#     'known_rpm_repositories' key under the top level 'rule_data' key. This list can
+#     extended with the 'extra_rpm_repositories' rule data key. The contents of both
+#     lists are combined.
+#   collections:
+#   - redhat
+#   - redhat_rpms
+#   - policy_data
+#   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some e in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [_rule_data_key, e.message], e.severity)
+}
+
+# METADATA
 # title: All rpms have known repo ids
 # description: >-
 #   Each RPM package listed in an SBOM must specify the repository id that it comes from,
@@ -65,18 +91,25 @@ deny contains result if {
 }
 
 _rule_data_errors contains error if {
-	some error in j.validate_schema(
-		_known_repo_ids,
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			# The list of repo IDs is a combination of two different lists which are often managed
-			# by different people. It's ok if those overlap.
-			"uniqueItems": false,
-			"minItems": 1,
-		},
-	)
+	some error in j.validate_schema(_known_repo_ids, _rule_data_schema)
+}
+
+# _rule_data_errors_v2 mirrors _rule_data_errors but validates the combined
+# repository list as native rule data: a present scalar value is reported as a
+# format violation instead of raising a builtin error that suppresses the
+# result, and a string is never interpreted as serialized JSON.
+_rule_data_errors_v2 contains error if {
+	some error in j.validate_schema_native(_known_repo_ids, _rule_data_schema)
+}
+
+_rule_data_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"type": "string"},
+	# The list of repo IDs is a combination of two different lists which are often managed
+	# by different people. It's ok if those overlap.
+	"uniqueItems": false,
+	"minItems": 1,
 }
 
 _repo_id_errors[bad_purl] := msg if {

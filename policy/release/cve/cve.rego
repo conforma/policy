@@ -240,6 +240,30 @@ deny contains result if {
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
+# METADATA
+# title: Rule data provided (v2)
+# description: >-
+#   Confirm the expected rule data keys have been provided in the expected format. The keys are
+#   `restrict_cve_security_levels`,	`warn_cve_security_levels`,
+#   `restrict_unpatched_cve_security_levels`, and `warn_unpatched_cve_security_levels`.
+#   Unlike rule_data_provided, a present value of the wrong type (for example a scalar or a string
+#   containing JSON text) is rejected instead of silently skipping the check.
+# custom:
+#   short_name: rule_data_provided_v2
+#   failure_msg: '%s'
+#   solution: If provided, ensure the rule data is in the expected format.
+#   collections:
+#   - minimal
+#   - redhat
+#   - policy_data
+#   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some e in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+}
+
 # A sanity check for the data format. Clair reports
 # are expected to have a vulnerabilities key.
 _has_clair_vulnerabilities if {
@@ -404,23 +428,9 @@ _compute_leeway(vuln, severity) := effective_on if {
 } else := object.get(vuln, "issued", null)
 
 _rule_data_errors contains error if {
-	keys := [
-		"restrict_cve_security_levels",
-		"warn_cve_security_levels",
-		"restrict_unpatched_cve_security_levels",
-		"warn_unpatched_cve_security_levels",
-	]
-	some key in keys
+	some key in _security_level_keys
 
-	some e in j.validate_schema(
-		rule_data.get(key),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"enum": ["critical", "high", "medium", "low", "unknown"]},
-			"uniqueItems": true,
-		},
-	)
+	some e in j.validate_schema(rule_data.get(key), _security_levels_schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
 		"severity": e.severity,
@@ -428,29 +438,60 @@ _rule_data_errors contains error if {
 }
 
 _rule_data_errors contains error if {
-	leeway_days := {
-		"type": "integer",
-		"minimum": 0,
-	}
-	some e in j.validate_schema(
-		rule_data.get("cve_leeway"),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "object",
-			"properties": {
-				"critical": leeway_days,
-				"high": leeway_days,
-				"medium": leeway_days,
-				"low": leeway_days,
-				"unknown": leeway_days,
-			},
-			"additionalProperties": false,
-		},
-	)
+	some e in j.validate_schema(rule_data.get("cve_leeway"), _leeway_schema)
 	error := {
 		"message": sprintf("Rule data cve_leeway has unexpected format: %s", [e.message]),
 		"severity": e.severity,
 	}
+}
+
+# _rule_data_errors_v2 mirrors _rule_data_errors but validates the values as
+# native rule data: a present scalar value is reported as a format violation
+# instead of raising a builtin error that suppresses the result, and a string
+# is never interpreted as serialized JSON.
+_rule_data_errors_v2 contains error if {
+	some key in _security_level_keys
+
+	some e in j.validate_schema_native(rule_data.get(key), _security_levels_schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(rule_data.get("cve_leeway"), _leeway_schema)
+	error := {
+		"message": sprintf("Rule data cve_leeway has unexpected format: %s", [e.message]),
+		"severity": e.severity,
+	}
+}
+
+_security_level_keys := [
+	"restrict_cve_security_levels",
+	"warn_cve_security_levels",
+	"restrict_unpatched_cve_security_levels",
+	"warn_unpatched_cve_security_levels",
+]
+
+_security_levels_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"enum": ["critical", "high", "medium", "low", "unknown"]},
+	"uniqueItems": true,
+}
+
+_leeway_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"properties": {
+		"critical": {"type": "integer", "minimum": 0},
+		"high": {"type": "integer", "minimum": 0},
+		"medium": {"type": "integer", "minimum": 0},
+		"low": {"type": "integer", "minimum": 0},
+		"unknown": {"type": "integer", "minimum": 0},
+	},
+	"additionalProperties": false,
 }
 
 # Collect all issues from all providers, sources, and dependencies (including transitive)

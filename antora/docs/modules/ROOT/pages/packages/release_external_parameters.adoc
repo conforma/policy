@@ -30,6 +30,19 @@ Confirm the `pipeline_run_params` rule data was provided.
 * Code: `external_parameters.pipeline_run_params_provided`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/external_parameters/external_parameters.rego#L43[Source, window="_blank"]
 
+[#external_parameters__pipeline_run_params_provided_v2]
+=== link:#external_parameters__pipeline_run_params_provided_v2[PipelineRun params provided (v2)]
+
+Confirm the `pipeline_run_params` rule data was provided in the expected format. Unlike pipeline_run_params_provided, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+*Solution*: Provide a non-empty list of expected PipelineRun parameters.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `external_parameters.pipeline_run_params_provided_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/external_parameters/external_parameters.rego#L59[Source, window="_blank"]
+
 [#external_parameters__restrict_shared_volumes]
 === link:#external_parameters__restrict_shared_volumes[Restrict shared volumes]
 
@@ -38,4 +51,4 @@ Verify the PipelineRun did not use any pre-existing PersistentVolumeClaim worksp
 * Rule type: [rule-type-indicator failure]#FAILURE#
 * FAILURE message: `PipelineRun uses shared volumes, %v.`
 * Code: `external_parameters.restrict_shared_volumes`
-* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/external_parameters/external_parameters.rego#L59[Source, window="_blank"]
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/external_parameters/external_parameters.rego#L79[Source, window="_blank"]

@@ -98,29 +98,33 @@ deny contains result if {
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
+# METADATA
+# title: Rule data provided (v2)
+# description: >-
+#   Confirm schedule rule data keys use the expected formats. `disallowed_dates` must be a unique
+#   array of strings; see Date Restriction for supported date and range formats.
+#   `disallowed_weekdays` remains a unique array of weekday names. Unlike rule_data_provided,
+#   a present value of the wrong type (for example a scalar or a string containing JSON text)
+#   is rejected instead of silently skipping the check.
+# custom:
+#   short_name: rule_data_provided_v2
+#   failure_msg: '%s'
+#   solution: If provided, ensure the rule data is in the expected format.
+#   collections:
+#   - redhat
+#   - policy_data
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	# (For this one let's do it always)
+	some e in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+}
+
 _rule_data_errors contains error if {
 	key := "disallowed_weekdays"
 
-	# JSON Schema doesn't allow case insensitive enum types. So here we define a list of all the
-	# weekdays as "title-case", lower case, and upper case.
-	titled_weekdays := ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
-	weekdays := array.concat(
-		array.concat(
-			titled_weekdays,
-			[lower(d) | some d in titled_weekdays],
-		),
-		[upper(d) | some d in titled_weekdays],
-	)
-
-	some e in j.validate_schema(
-		rule_data.get(key),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"enum": weekdays},
-			"uniqueItems": true,
-		},
-	)
+	some e in j.validate_schema(rule_data.get(key), _disallowed_weekdays_schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
 		"severity": e.severity,
@@ -135,12 +139,7 @@ _rule_data_errors contains error if {
 
 	some e in j.validate_schema(
 		_schema_document(rule_data.get(key)),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			"uniqueItems": true,
-		},
+		_disallowed_dates_schema,
 	)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
@@ -158,6 +157,68 @@ _rule_data_errors contains error if {
 		"message": sprintf("Rule data %s has unexpected format: %d: Invalid date %q", [key, index, date]),
 		"severity": "failure",
 	}
+}
+
+# _rule_data_errors_v2 mirrors _rule_data_errors but validates the values as
+# native rule data: a present scalar value is reported as a format violation
+# instead of raising a builtin error that suppresses the result, and a string
+# is never interpreted as serialized JSON.
+_rule_data_errors_v2 contains error if {
+	key := "disallowed_weekdays"
+
+	some e in j.validate_schema_native(rule_data.get(key), _disallowed_weekdays_schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_rule_data_errors_v2 contains error if {
+	key := "disallowed_dates"
+
+	some e in j.validate_schema_native(rule_data.get(key), _disallowed_dates_schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_rule_data_errors_v2 contains error if {
+	key := "disallowed_dates"
+	dates := rule_data.get(key)
+	is_array(dates)
+	some index, date in dates
+	not _valid_date_spec(date)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %d: Invalid date %q", [key, index, date]),
+		"severity": "failure",
+	}
+}
+
+# JSON Schema doesn't allow case insensitive enum types. So here we define a list of all the
+# weekdays as "title-case", lower case, and upper case.
+_titled_weekdays := ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+_weekday_names := array.concat(
+	array.concat(
+		_titled_weekdays,
+		[lower(d) | some d in _titled_weekdays],
+	),
+	[upper(d) | some d in _titled_weekdays],
+)
+
+_disallowed_weekdays_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"enum": _weekday_names},
+	"uniqueItems": true,
+}
+
+_disallowed_dates_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"type": "string"},
+	"uniqueItems": true,
 }
 
 # Validate concrete/wildcard singles and ranges, e.g. '2026-12-31', '*-12-31',

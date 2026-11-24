@@ -42,3 +42,14 @@ Confirm the expected `allowed_rpm_signature_keys` rule data key has been provide
 * Code: `rpm_signature.rule_data_provided`
 * Effective from: `2024-10-05T00:00:00Z`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L59[Source, window="_blank"]
+
+[#rpm_signature__rule_data_provided_v2]
+=== link:#rpm_signature__rule_data_provided_v2[Rule data provided (v2)]
+
+Confirm the expected `allowed_rpm_signature_keys` rule data key has been provided in the expected format. Unlike rule_data_provided, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `rpm_signature.rule_data_provided_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/rpm_signature/rpm_signature.rego#L79[Source, window="_blank"]

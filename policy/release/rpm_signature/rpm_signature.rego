@@ -76,6 +76,27 @@ deny contains result if {
 	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
 }
 
+# METADATA
+# title: Rule data provided (v2)
+# description: >-
+#   Confirm the expected `allowed_rpm_signature_keys` rule data key has been provided in the
+#   expected format. Unlike rule_data_provided, a present value of the wrong type (for example
+#   a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+# custom:
+#   short_name: rule_data_provided_v2
+#   failure_msg: '%s'
+#   collections:
+#   - redhat
+#   - redhat_rpms
+#   - policy_data
+#   - redhat_security
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some e in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+}
+
 _allowed_rpm_signature_keys := rule_data.get("allowed_rpm_signature_keys")
 
 _signature_keys contains key if {
@@ -104,16 +125,7 @@ _result_format_errors contains msg if {
 }
 
 _rule_data_errors contains error if {
-	some e in j.validate_schema(
-		_allowed_rpm_signature_keys,
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			"uniqueItems": true,
-			"minItems": 1,
-		},
-	)
+	some e in j.validate_schema(_allowed_rpm_signature_keys, _rule_data_schema)
 	error := {
 		"message": sprintf("Rule data has unexpected format: %s", [e.message]),
 		"severity": e.severity,
@@ -127,6 +139,28 @@ _rule_data_errors contains error if {
 		"message": sprintf("Unexpected format of signing key %q", [key]),
 		"severity": "failure",
 	}
+}
+
+# _rule_data_errors_v2 mirrors the schema check of _rule_data_errors but
+# validates the value as native rule data: a present scalar value is reported
+# as a format violation instead of raising a builtin error that suppresses the
+# result, and a string is never interpreted as serialized JSON. The
+# signing-key format check above is not twinned: the legacy rule keeps
+# enforcing it.
+_rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(_allowed_rpm_signature_keys, _rule_data_schema)
+	error := {
+		"message": sprintf("Rule data has unexpected format: %s", [e.message]),
+		"severity": e.severity,
+	}
+}
+
+_rule_data_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"type": "string"},
+	"uniqueItems": true,
+	"minItems": 1,
 }
 
 _is_valid_key(key) if {

@@ -66,6 +66,11 @@ test_rule_data_provided if {
 			"severity": "failure",
 		},
 		{
+			"code": "rpm_signature.rule_data_provided_v2",
+			"msg": "Rule data has unexpected format: 0: Invalid type. Expected: string, given: integer",
+			"severity": "failure",
+		},
+		{
 			"code": "rpm_signature.rule_data_provided",
 			"msg": "Unexpected format of signing key '\\x01'",
 			"severity": "failure",
@@ -75,19 +80,130 @@ test_rule_data_provided if {
 			"msg": "Rule data has unexpected format: (Root): array items[1,2] must be unique",
 			"severity": "failure",
 		},
+		{
+			"code": "rpm_signature.rule_data_provided_v2",
+			"msg": "Rule data has unexpected format: (Root): array items[1,2] must be unique",
+			"severity": "failure",
+		},
 	}
 
 	assertions.assert_equal_results(rpm_signature.deny, expected) with data.rule_data as d
 }
 
 test_rule_data_not_provided if {
+	expected := {
+		{
+			"code": "rpm_signature.rule_data_provided",
+			"msg": "Rule data has unexpected format: (Root): Array must have at least 1 items",
+			"severity": "failure",
+		},
+		{
+			"code": "rpm_signature.rule_data_provided_v2",
+			"msg": "Rule data has unexpected format: (Root): Array must have at least 1 items",
+			"severity": "failure",
+		},
+	}
+
+	assertions.assert_equal_results(rpm_signature.deny, expected) with data.rule_data as {}
+}
+
+# A present but scalar `allowed_rpm_signature_keys` value must produce a format
+# rejection from the v2 rule instead of silently skipping the check. The legacy
+# rule_data_provided is untouched: a builtin error in its schema validation
+# still suppresses its result, which is the gap rule_data_provided_v2 closes.
+test_rule_data_provided_v2_scalar_rejected if {
+	expected_string := {{
+		"code": "rpm_signature.rule_data_provided_v2",
+		"msg": "Rule data has unexpected format: (Root): Invalid type. Expected: array, given: string",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(rpm_signature.deny, expected_string) with data.rule_data.allowed_rpm_signature_keys as "abcdef0123456789"
+
+	expected_number := {{
+		"code": "rpm_signature.rule_data_provided_v2",
+		"msg": "Rule data has unexpected format: (Root): Invalid type. Expected: array, given: integer",
+		"severity": "failure",
+	}}
+	assertions.assert_equal_results(rpm_signature.deny, expected_number) with data.rule_data.allowed_rpm_signature_keys as 1
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_rule_data_provided_v2_precedence if {
 	expected := {{
-		"code": "rpm_signature.rule_data_provided",
-		"msg": "Rule data has unexpected format: (Root): Array must have at least 1 items",
+		"code": "rpm_signature.rule_data_provided_v2",
+		"msg": "Rule data has unexpected format: (Root): Invalid type. Expected: array, given: integer",
 		"severity": "failure",
 	}}
 
-	assertions.assert_equal_results(rpm_signature.deny, expected) with data.rule_data as {}
+	assertions.assert_equal_results(rpm_signature.deny, expected) with data.rule_data_custom as {"allowed_rpm_signature_keys": 1}
+		with data.rule_data as {"allowed_rpm_signature_keys": ["abcdef0123456789"]}
+}
+
+# A null value is rejected by both rules with the shared helper's argument
+# diagnostic: current behavior, locked in.
+test_rule_data_null_rejected_by_both if {
+	msg := "Rule data has unexpected format: Provided empty document for schema validation"
+
+	expected := {
+		{
+			"code": "rpm_signature.rule_data_provided",
+			"msg": msg,
+			"severity": "failure",
+		},
+		{
+			"code": "rpm_signature.rule_data_provided_v2",
+			"msg": msg,
+			"severity": "failure",
+		},
+	}
+
+	assertions.assert_equal_results(rpm_signature.deny, expected) with data.rule_data.allowed_rpm_signature_keys as null
+}
+
+# A wrong-container value is rejected by both rules. The legacy rule also
+# reports the object's values as badly formatted signing keys, since its
+# signing-key check iterates the value: current behavior, locked in.
+test_rule_data_not_an_array if {
+	msg := "Rule data has unexpected format: (Root): Invalid type. Expected: array, given: object"
+
+	expected := {
+		{
+			"code": "rpm_signature.rule_data_provided",
+			"msg": msg,
+			"severity": "failure",
+		},
+		{
+			"code": "rpm_signature.rule_data_provided_v2",
+			"msg": msg,
+			"severity": "failure",
+		},
+		{
+			"code": "rpm_signature.rule_data_provided",
+			"msg": "Unexpected format of signing key \"bacon\"",
+			"severity": "failure",
+		},
+	}
+
+	assertions.assert_equal_results(rpm_signature.deny, expected) with data.rule_data.allowed_rpm_signature_keys as {"chunky": "bacon"}
+}
+
+# A valid list, including the special "unsigned" value, produces no format
+# violations from either rule.
+test_rule_data_valid if {
+	assertions.assert_empty(rpm_signature.deny) with data.rule_data.allowed_rpm_signature_keys as ["unsigned", "abcdef0123456789"]
+}
+
+# A schema-valid list with a badly formatted signing key is only reported by
+# the legacy rule: the signing-key format check has no v2 twin.
+test_rule_data_invalid_signing_key_legacy_only if {
+	expected := {{
+		"code": "rpm_signature.rule_data_provided",
+		"msg": "Unexpected format of signing key \"xyz\"",
+		"severity": "failure",
+	}}
+
+	assertions.assert_equal_results(rpm_signature.deny, expected) with data.rule_data.allowed_rpm_signature_keys as ["xyz"]
 }
 
 _attestation_v0_2(result_value) := lib_test.att_mock_helper_ref(

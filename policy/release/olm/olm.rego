@@ -129,6 +129,27 @@ deny contains result if {
 }
 
 # METADATA
+# title: Required OLM feature annotations list provided (v2)
+# description: >-
+#   Confirm the `required_olm_features_annotations` and `allowed_olm_image_registry_prefixes`
+#   rule data was provided, since it's required by the policy rules in this package.
+#   Unlike required_olm_features_annotations_provided, a present value of the wrong type
+#   (for example a scalar or a string containing JSON text) is rejected instead of silently
+#   skipping the check.
+# custom:
+#   short_name: required_olm_features_annotations_provided_v2
+#   failure_msg: "%s"
+#   collections:
+#   - redhat
+#   - policy_data
+#   effective_on: 2027-01-11T00:00:00Z
+#
+deny contains result if {
+	some e in _rule_data_errors_v2
+	result := metadata.result_helper_with_severity(rego.metadata.chain(), [e.message], e.severity)
+}
+
+# METADATA
 # title: Unpinned images in input snapshot
 # description: >-
 #   Check the input snapshot for the presence of unpinned image references.
@@ -653,20 +674,32 @@ _csv_manifests contains manifest if {
 # Verify allowed_olm_image_registry_prefixes & required_olm_features_annotations are non-empty list of strings
 _rule_data_errors contains error if {
 	some rule_data_key in _rule_data_keys
-	some e in j.validate_schema(
-		rule_data.get(rule_data_key),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			"uniqueItems": true,
-			"minItems": 1,
-		},
-	)
+	some e in j.validate_schema(rule_data.get(rule_data_key), _rule_data_schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_key, e.message]),
 		"severity": e.severity,
 	}
+}
+
+# _rule_data_errors_v2 mirrors _rule_data_errors but validates the values as
+# native rule data: a present scalar value is reported as a format violation
+# instead of raising a builtin error that suppresses the result, and a string
+# is never interpreted as serialized JSON.
+_rule_data_errors_v2 contains error if {
+	some rule_data_key in _rule_data_keys
+	some e in j.validate_schema_native(rule_data.get(rule_data_key), _rule_data_schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+_rule_data_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"type": "string"},
+	"uniqueItems": true,
+	"minItems": 1,
 }
 
 _rule_data_keys := [

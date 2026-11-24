@@ -20,6 +20,19 @@ Confirm that either the `allowed_registry_prefixes` or a `signing_identities` en
 * Code: `base_image_registries.allowed_registries_provided`
 * https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/base_image_registries/base_image_registries.rego#L80[Source, window="_blank"]
 
+[#base_image_registries__allowed_registries_provided_v2]
+=== link:#base_image_registries__allowed_registries_provided_v2[Allowed base image registry prefixes list or signing identity was provided (v2)]
+
+Confirm that either the `allowed_registry_prefixes` or a `signing_identities` entry was provided, since at least one is required by the policy rules in this package. Unlike allowed_registries_provided, a present value of the wrong type (for example a scalar or a string containing JSON text) is rejected instead of silently skipping the check.
+
+*Solution*: Make sure to configure either a signing identity under the `rh-release` key in the `signing_identities` xref:signing_identities.adoc#_signing_identities_structure[configuration] or a list of trusted registry prefixes in `allowed_registry_prefixes`.
+
+* Rule type: [rule-type-indicator failure]#FAILURE#
+* FAILURE message: `%s`
+* Code: `base_image_registries.allowed_registries_provided_v2`
+* Effective from: `2027-01-11T00:00:00Z`
+* https://github.com/conforma/policy/blob/{page-origin-refhash}/policy/release/base_image_registries/base_image_registries.rego#L104[Source, window="_blank"]
+
 [#base_image_registries__base_image_permitted]
 === link:#base_image_registries__base_image_permitted[Base image is permitted]
 

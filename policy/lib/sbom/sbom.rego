@@ -215,33 +215,7 @@ image_ref_from_purl(raw_purl) := image_ref if {
 
 # Verify disallowed_packages is an array of objects
 rule_data_errors contains error if {
-	some e in j.validate_schema(rule_data.get(rule_data_packages_key), {
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "array",
-		"uniqueItems": true,
-		"items": {
-			"type": "object",
-			"properties": {
-				"purl": {"type": "string"},
-				"format": {"enum": ["semver", "semverv"]},
-				"min": {"type": "string"},
-				"max": {"type": "string"},
-				"exceptions": {
-					"type": "array",
-					"uniqueItems": true,
-					"items": {
-						"type": "object",
-						"properties": {"subpath": {"type": "string"}},
-					},
-				},
-			},
-			"additionalProperties": false,
-			"anyOf": [
-				{"required": ["purl", "format", "min"]},
-				{"required": ["purl", "format", "max"]},
-			],
-		},
-	})
+	some e in j.validate_schema(rule_data.get(rule_data_packages_key), _packages_schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_packages_key, e.message]),
 		"severity": e.severity,
@@ -281,36 +255,7 @@ rule_data_errors contains error if {
 
 # Verify disallowed_attributes is an array of name value pairs
 rule_data_errors contains error if {
-	some e in j.validate_schema(rule_data.get(rule_data_attributes_key), {
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "array",
-		"uniqueItems": true,
-		"items": {
-			"type": "object",
-			"properties": {
-				"name": {"type": "string"},
-				"value": {"type": "string"},
-				"effective_on": {"type": "string", "format": "date-time"},
-				"except_when": {
-					"type": "array",
-					"items": {
-						"type": "object",
-						"properties": {
-							"purl_qualifier": {"type": "string"},
-							"patterns": {
-								"type": "array",
-								"items": {"type": "string", "format": "regex"},
-							},
-						},
-						"required": ["purl_qualifier", "patterns"],
-						"additionalProperties": false,
-					},
-				},
-			},
-			"additionalProperties": false,
-			"required": ["name"],
-		},
-	})
+	some e in j.validate_schema(rule_data.get(rule_data_attributes_key), _attributes_schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_attributes_key, e.message]),
 		"severity": e.severity,
@@ -334,20 +279,7 @@ rule_data_errors contains error if {
 
 # Verify allowed_external_references is an array of type/url pairs
 rule_data_errors contains error if {
-	some e in j.validate_schema(rule_data.get(rule_data_allowed_external_references_key), {
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "array",
-		"uniqueItems": true,
-		"items": {
-			"type": "object",
-			"properties": {
-				"type": {"type": "string"},
-				"url": {"type": "string"},
-			},
-			"additionalProperties": false,
-			"required": ["type", "url"],
-		},
-	})
+	some e in j.validate_schema(rule_data.get(rule_data_allowed_external_references_key), _external_references_schema)
 	error := {
 		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_allowed_external_references_key, e.message]),
 		"severity": e.severity,
@@ -356,20 +288,7 @@ rule_data_errors contains error if {
 
 # Verify disallowed_external_references is an array of type/url pairs
 rule_data_errors contains error if {
-	some e in j.validate_schema(rule_data.get(rule_data_disallowed_external_references_key), {
-		"$schema": "http://json-schema.org/draft-07/schema#",
-		"type": "array",
-		"uniqueItems": true,
-		"items": {
-			"type": "object",
-			"properties": {
-				"type": {"type": "string"},
-				"url": {"type": "string"},
-			},
-			"additionalProperties": false,
-			"required": ["type", "url"],
-		},
-	})
+	some e in j.validate_schema(rule_data.get(rule_data_disallowed_external_references_key), _external_references_schema)
 
 	error := {
 		# regal ignore:line-length
@@ -380,28 +299,7 @@ rule_data_errors contains error if {
 
 # Verify allowed_package_sources is array of purl/regex list pairs
 rule_data_errors contains error if {
-	some e in j.validate_schema(
-		rule_data.get(rule_data_allowed_package_sources_key),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {
-				"type": "object",
-				"properties": {
-					"type": {"type": "string"},
-					"patterns": {
-						"type": "array",
-						"items": {
-							"type": "string",
-							"format": "regex",
-						},
-					},
-				},
-				"required": ["type", "patterns"],
-				"additionalProperties": false,
-			},
-		},
-	)
+	some e in j.validate_schema(rule_data.get(rule_data_allowed_package_sources_key), _allowed_package_sources_schema)
 
 	error := {
 		# regal ignore:line-length
@@ -412,15 +310,7 @@ rule_data_errors contains error if {
 
 # Verify proxy_enabled_purl_types is a list of unique strings.
 rule_data_errors contains error if {
-	some e in j.validate_schema(
-		rule_data.get("proxy_enabled_purl_types"),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "array",
-			"items": {"type": "string"},
-			"uniqueItems": true,
-		},
-	)
+	some e in j.validate_schema(rule_data.get("proxy_enabled_purl_types"), _proxy_enabled_purl_types_schema)
 	error := {
 		"message": sprintf("Rule data proxy_enabled_purl_types has unexpected format: %s", [e.message]),
 		"severity": e.severity,
@@ -429,18 +319,7 @@ rule_data_errors contains error if {
 
 # Verify allowed_proxy_url_patterns is an object mapping strings to arrays of strings.
 rule_data_errors contains error if {
-	some e in j.validate_schema(
-		rule_data.get("allowed_proxy_url_patterns"),
-		{
-			"$schema": "http://json-schema.org/draft-07/schema#",
-			"type": "object",
-			"additionalProperties": {
-				"type": "array",
-				"items": {"type": "string"},
-				"uniqueItems": true,
-			},
-		},
-	)
+	some e in j.validate_schema(rule_data.get("allowed_proxy_url_patterns"), _allowed_proxy_url_patterns_schema)
 	error := {
 		"message": sprintf("Rule data allowed_proxy_url_patterns has unexpected format: %s", [e.message]),
 		"severity": e.severity,
@@ -524,6 +403,194 @@ rule_data_errors contains error if {
 # config to migrate), so no "missing key" warning is emitted.
 rule_data_errors contains error if {
 	some error in sigstore.optional_identity_rule_data_errors(_sbom_identity_name)
+}
+
+# rule_data_errors_v2 contains every error from rule_data_errors plus the
+# native-value schema rejections of the same keys: a present scalar value is
+# reported as a format violation instead of raising a builtin error that
+# suppresses the result, and a string value is never interpreted as serialized
+# JSON. Diagnostics that both interpretations produce identically are
+# deduplicated by the set.
+rule_data_errors_v2 contains error if {
+	some error in rule_data_errors
+}
+
+rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(rule_data.get(rule_data_packages_key), _packages_schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_packages_key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(rule_data.get(rule_data_attributes_key), _attributes_schema)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_attributes_key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(
+		rule_data.get(rule_data_allowed_external_references_key),
+		_external_references_schema,
+	)
+	error := {
+		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_allowed_external_references_key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(
+		rule_data.get(rule_data_disallowed_external_references_key),
+		_external_references_schema,
+	)
+	error := {
+		# regal ignore:line-length
+		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_disallowed_external_references_key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(
+		rule_data.get(rule_data_allowed_package_sources_key),
+		_allowed_package_sources_schema,
+	)
+	error := {
+		# regal ignore:line-length
+		"message": sprintf("Rule data %s has unexpected format: %s", [rule_data_allowed_package_sources_key, e.message]),
+		"severity": e.severity,
+	}
+}
+
+rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(rule_data.get("proxy_enabled_purl_types"), _proxy_enabled_purl_types_schema)
+	error := {
+		"message": sprintf("Rule data proxy_enabled_purl_types has unexpected format: %s", [e.message]),
+		"severity": e.severity,
+	}
+}
+
+rule_data_errors_v2 contains error if {
+	some e in j.validate_schema_native(rule_data.get("allowed_proxy_url_patterns"), _allowed_proxy_url_patterns_schema)
+	error := {
+		"message": sprintf("Rule data allowed_proxy_url_patterns has unexpected format: %s", [e.message]),
+		"severity": e.severity,
+	}
+}
+
+_packages_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"uniqueItems": true,
+	"items": {
+		"type": "object",
+		"properties": {
+			"purl": {"type": "string"},
+			"format": {"enum": ["semver", "semverv"]},
+			"min": {"type": "string"},
+			"max": {"type": "string"},
+			"exceptions": {
+				"type": "array",
+				"uniqueItems": true,
+				"items": {
+					"type": "object",
+					"properties": {"subpath": {"type": "string"}},
+				},
+			},
+		},
+		"additionalProperties": false,
+		"anyOf": [
+			{"required": ["purl", "format", "min"]},
+			{"required": ["purl", "format", "max"]},
+		],
+	},
+}
+
+_attributes_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"uniqueItems": true,
+	"items": {
+		"type": "object",
+		"properties": {
+			"name": {"type": "string"},
+			"value": {"type": "string"},
+			"effective_on": {"type": "string", "format": "date-time"},
+			"except_when": {
+				"type": "array",
+				"items": {
+					"type": "object",
+					"properties": {
+						"purl_qualifier": {"type": "string"},
+						"patterns": {
+							"type": "array",
+							"items": {"type": "string", "format": "regex"},
+						},
+					},
+					"required": ["purl_qualifier", "patterns"],
+					"additionalProperties": false,
+				},
+			},
+		},
+		"additionalProperties": false,
+		"required": ["name"],
+	},
+}
+
+_external_references_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"uniqueItems": true,
+	"items": {
+		"type": "object",
+		"properties": {
+			"type": {"type": "string"},
+			"url": {"type": "string"},
+		},
+		"additionalProperties": false,
+		"required": ["type", "url"],
+	},
+}
+
+_allowed_package_sources_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {
+		"type": "object",
+		"properties": {
+			"type": {"type": "string"},
+			"patterns": {
+				"type": "array",
+				"items": {
+					"type": "string",
+					"format": "regex",
+				},
+			},
+		},
+		"required": ["type", "patterns"],
+		"additionalProperties": false,
+	},
+}
+
+_proxy_enabled_purl_types_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "array",
+	"items": {"type": "string"},
+	"uniqueItems": true,
+}
+
+_allowed_proxy_url_patterns_schema := {
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"additionalProperties": {
+		"type": "array",
+		"items": {"type": "string"},
+		"uniqueItems": true,
+	},
 }
 
 # _sbom_identity_name is the key of the SBOM signing identity within the

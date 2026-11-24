@@ -14,7 +14,13 @@ test_repo_id_data_empty if {
 		"severity": "failure",
 	}
 
-	assertions.assert_equal_results({expected}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as []
+	expected_v2 := {
+		"code": "rpm_repos.rule_data_provided_v2",
+		"msg": "Rule data 'known_rpm_repositories' has unexpected format: (Root): Array must have at least 1 items",
+		"severity": "failure",
+	}
+
+	assertions.assert_equal_results({expected, expected_v2}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as []
 }
 
 test_repo_id_data_not_an_array if {
@@ -27,7 +33,16 @@ test_repo_id_data_not_an_array if {
 		"severity": "failure",
 	}
 
-	assertions.assert_equal_results({expected}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as {"chunky": "bacon"}
+	expected_v2 := {
+		"code": "rpm_repos.rule_data_provided_v2",
+		"msg": sprintf("%s %s", [
+			"Rule data 'known_rpm_repositories' has unexpected format:",
+			"(Root): Invalid type. Expected: array, given: object",
+		]),
+		"severity": "failure",
+	}
+
+	assertions.assert_equal_results({expected, expected_v2}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as {"chunky": "bacon"}
 }
 
 test_repo_id_data_not_strings if {
@@ -37,7 +52,95 @@ test_repo_id_data_not_strings if {
 		"severity": "failure",
 	}
 
-	assertions.assert_equal_results({expected}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as ["spam", 42]
+	expected_v2 := {
+		"code": "rpm_repos.rule_data_provided_v2",
+		"msg": "Rule data 'known_rpm_repositories' has unexpected format: 1: Invalid type. Expected: string, given: integer",
+		"severity": "failure",
+	}
+
+	assertions.assert_equal_results({expected, expected_v2}, rpm_repos.deny) with data.rule_data.known_rpm_repositories as ["spam", 42]
+}
+
+# A present but scalar `known_rpm_repositories` value must produce a format
+# rejection from the v2 rule instead of silently skipping the check. The legacy
+# rule_data_provided is untouched: a builtin error in its schema validation
+# still suppresses its result, which is the gap rule_data_provided_v2 closes.
+test_rule_data_provided_v2_scalar_rejected if {
+	expected := {{
+		"code": "rpm_repos.rule_data_provided_v2",
+		"msg": sprintf("%s %s", [
+			"Rule data 'known_rpm_repositories' has unexpected format:",
+			"(Root): Invalid type. Expected: array, given: string",
+		]),
+		"severity": "failure",
+	}}
+
+	assertions.assert_equal_results(rpm_repos.deny, expected) with data.rule_data.known_rpm_repositories as "known"
+}
+
+# A malformed high-priority override must be rejected rather than silently
+# falling back to valid lower-priority data.
+test_rule_data_provided_v2_precedence if {
+	expected := {{
+		"code": "rpm_repos.rule_data_provided_v2",
+		"msg": sprintf("%s %s", [
+			"Rule data 'known_rpm_repositories' has unexpected format:",
+			"(Root): Invalid type. Expected: array, given: string",
+		]),
+		"severity": "failure",
+	}}
+
+	assertions.assert_equal_results(rpm_repos.deny, expected) with data.rule_data_custom as {"known_rpm_repositories": "known"}
+		with data.rule_data as {"known_rpm_repositories": fake_repo_id_list}
+}
+
+# A null value is rejected by both rules with the shared helper's argument
+# diagnostic: current behavior, locked in.
+test_rule_data_null_rejected_by_both if {
+	msg := "Rule data 'known_rpm_repositories' has unexpected format: Provided empty document for schema validation"
+
+	expected := {
+		{
+			"code": "rpm_repos.rule_data_provided",
+			"msg": msg,
+			"severity": "failure",
+		},
+		{
+			"code": "rpm_repos.rule_data_provided_v2",
+			"msg": msg,
+			"severity": "failure",
+		},
+	}
+
+	assertions.assert_equal_results(expected, rpm_repos.deny) with data.rule_data.known_rpm_repositories as null
+}
+
+# The key absent from every configured source resolves to an empty list, which
+# fails the minimum-items check on both rules: the data must be provided.
+test_rule_data_absent_rejected_by_both if {
+	msg := "Rule data 'known_rpm_repositories' has unexpected format: (Root): Array must have at least 1 items"
+
+	expected := {
+		{
+			"code": "rpm_repos.rule_data_provided",
+			"msg": msg,
+			"severity": "failure",
+		},
+		{
+			"code": "rpm_repos.rule_data_provided_v2",
+			"msg": msg,
+			"severity": "failure",
+		},
+	}
+
+	assertions.assert_equal_results(expected, rpm_repos.deny) with data.rule_data as {}
+}
+
+# Duplicates are allowed: the combined repository list is assembled from two
+# independently managed lists that may overlap, so no uniqueness violation is
+# reported by either rule.
+test_rule_data_duplicates_allowed if {
+	assertions.assert_empty(rpm_repos.deny) with data.rule_data as {"known_rpm_repositories": ["rhel-23-for-spam-9-rpms", "rhel-23-for-spam-9-rpms"]}
 }
 
 test_repo_id_all if {
