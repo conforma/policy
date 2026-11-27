@@ -1,6 +1,6 @@
 module github.com/conforma/policy/docs
 
-go 1.26.0
+go 1.26.10
 
 require github.com/open-policy-agent/opa v1.12.3
 
