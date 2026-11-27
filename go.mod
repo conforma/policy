@@ -1,6 +1,6 @@
 module github.com/conforma/policy
 
-go 1.26.8
+go 1.26.10
 
 require (
 	github.com/conforma/cli v0.9.64
