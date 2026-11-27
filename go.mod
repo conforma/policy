@@ -410,3 +410,5 @@ require (
 replace muzzammil.xyz/jsonc => github.com/muhammadmuzzammil1998/jsonc v1.0.0
 
 replace github.com/olekukonko/tablewriter => github.com/olekukonko/tablewriter v0.0.5
+
+replace github.com/containerd/containerd/v2 => github.com/containerd/containerd/v2 v2.4.2
