@@ -3,12 +3,12 @@ module github.com/conforma/policy
 go 1.26.10
 
 require (
-	github.com/conforma/cli v0.9.64
+	github.com/conforma/cli v0.9.118
 	github.com/google/addlicense v1.2.0
 	github.com/open-policy-agent/conftest v0.68.2
 	github.com/open-policy-agent/regal v0.37.0
 	github.com/tektoncd/cli v0.46.4
-	oras.land/oras v1.3.3
+	oras.land/oras v1.3.6
 )
 
 require (
@@ -109,7 +109,6 @@ require (
 	github.com/common-nighthawk/go-figure v0.0.0-20210622060536-734e95fb86be // indirect
 	github.com/conforma/crds/api v0.1.7 // indirect
 	github.com/conforma/go-gather v1.2.0 // indirect
-	github.com/containerd/console v1.0.5 // indirect
 	github.com/containerd/containerd/v2 v2.4.2 // indirect
 	github.com/containerd/errdefs v1.0.0 // indirect
 	github.com/containerd/log v0.2.0 // indirect
@@ -422,7 +421,7 @@ require (
 	knative.dev/eventing v0.49.2 // indirect
 	knative.dev/pkg v0.0.0-20260622140654-39ebae2ee2dc // indirect
 	olympos.io/encoding/edn v0.0.0-20201019073823-d3554ca0b0a3 // indirect
-	oras.land/oras-go/v2 v2.6.2 // indirect
+	oras.land/oras-go/v2 v2.7.0 // indirect
 	sigs.k8s.io/controller-runtime v0.19.0 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/kustomize/api v0.16.0 // indirect
@@ -436,4 +435,4 @@ require (
 
 exclude google.golang.org/grpc/stats/opentelemetry v0.0.0-20241028142157-ada6787961b3
 
-replace github.com/google/go-containerregistry => github.com/conforma/go-containerregistry v0.20.7-0.20251103083939-3459088e4bae
+replace github.com/google/go-containerregistry => github.com/conforma/go-containerregistry v0.20.7
