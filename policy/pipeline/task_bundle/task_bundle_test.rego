@@ -204,3 +204,20 @@ test_mock_image_manifest if {
 	result := _mock_image_manifest("any-ref")
 	assertions.assert_equal({}, result)
 }
+
+# G43 / RA03-BUNDLE-DIGEST-SHAPE-001: an allow pattern must not hide
+# the advisory when only the bundle's digest suffix becomes malformed.
+test_bundle_malformed_digest_warning if {
+	every ref in ["registry.local/task:1.0", "registry.local/task:1.0@not-a-digest", "registry.local/task:1.0@sha256:"] {
+		task := {"name": "task", "taskRef": {"bundle": ref}}
+		results := task_bundle.warn with input.spec.tasks as [task]
+			with ec.oci.image_manifests as {}
+			with data.rule_data.trusted_task_rules_enabled as true
+			with data.rule_data.trusted_task_rules as {"allow": {"test": [{"pattern": "oci://registry.local/task*"}]}, "deny": {}}
+		assertions.assert_equal({r.code | some r in results}, {"task_bundle.unpinned_task_bundle"})
+		assertions.assert_empty(task_bundle.deny) with input.spec.tasks as [task]
+			with ec.oci.image_manifests as {}
+			with data.rule_data.trusted_task_rules_enabled as true
+			with data.rule_data.trusted_task_rules as {"allow": {"test": [{"pattern": "oci://registry.local/task*"}]}, "deny": {}}
+	}
+}

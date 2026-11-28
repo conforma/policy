@@ -3,6 +3,7 @@ package lib.tekton
 import rego.v1
 
 import data.lib.arrays
+import data.lib.image
 import data.lib.json as j
 import data.lib.sigstore
 import data.lib.time as time_lib
@@ -50,7 +51,18 @@ untagged_task_references(tasks) := {task |
 # Returns a subset of tasks that use unpinned Task references.
 unpinned_task_references(tasks) := {task |
 	some task in tasks
-	not task_ref(task).pinned
+	not _advisory_reference_pinned(task_ref(task))
+}
+
+# Validate OCI digest syntax for advisories without changing the normalized
+# reference used by trust matching. Git and inline references keep their pins.
+_advisory_reference_pinned(ref) if {
+	image.is_pinned(ref.bundle)
+}
+
+_advisory_reference_pinned(ref) if {
+	not ref.bundle
+	ref.pinned
 }
 
 # =============================================================================

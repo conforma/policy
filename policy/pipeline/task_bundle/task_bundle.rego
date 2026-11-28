@@ -47,7 +47,7 @@ _manifests := ec.oci.image_manifests(_all_bundle_refs) if {
 # title: Unpinned task bundle reference
 # description: >-
 #   Check if the Tekton Bundle used for the Tasks in the Pipeline definition
-#   is pinned to a digest.
+#   is pinned to a syntactically valid OCI digest.
 # custom:
 #   short_name: unpinned_task_bundle
 #   failure_msg: Pipeline task '%s' uses an unpinned task bundle reference '%s'
